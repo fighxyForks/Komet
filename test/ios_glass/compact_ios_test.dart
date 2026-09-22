@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/frontend/screens/chats/chat/view/chat_app_bar.dart';
 import 'package:komet/frontend/screens/chats/chat/view/chat_header.dart';
+import 'package:komet/frontend/screens/chats/chat/view/scroll_down_button.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
 import 'package:komet/frontend/widgets/settings_card.dart';
 import 'package:komet/frontend/widgets/sliding_pill_nav.dart';
@@ -53,6 +56,31 @@ Widget _app(Widget body) => MaterialApp(
   home: Scaffold(body: body),
 );
 
+Widget _header(BuildContext context, String name) {
+  return ChatHeaderRow(
+    glossy: false,
+    frosted: false,
+    cs: Theme.of(context).colorScheme,
+    embedded: false,
+    chatId: 0,
+    heroTag: 'header-$name',
+    name: name,
+    imageUrl: '',
+    chatType: 'CHAT',
+    isOfficial: false,
+    myId: 1,
+    headerStatus: ValueNotifier<String>('в сети'),
+    scheduledCount: ValueNotifier<int>(0),
+    otherUnread: ValueNotifier<int>(0),
+    showCall: true,
+    onClose: null,
+    onOpenInfo: () {},
+    onOpenScheduled: () {},
+    onCall: () {},
+    onMenu: (_) {},
+  );
+}
+
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -63,11 +91,11 @@ void main() {
 
   tearDown(AppIosGlass.debugReset);
 
-  test('высоты шапки и панели уменьшаются только в iOS-режиме', () {
+  test('высоты шапки и панели задаются только в iOS-режиме', () {
     expect(ChatAppBar.headerHeight(glossy: true, ios: true), 56);
     expect(ChatAppBar.headerHeight(glossy: true, ios: false), 76);
     expect(ChatAppBar.headerHeight(glossy: false, ios: false), kToolbarHeight);
-    expect(SlidingPillNav.heightFor(ios: true), 58);
+    expect(SlidingPillNav.heightFor(ios: true), 62);
     expect(SlidingPillNav.heightFor(ios: false), 68);
   });
 
@@ -163,5 +191,81 @@ void main() {
     );
     final label = tester.widget<Text>(find.text('Защита'));
     expect(label.style?.fontWeight, IosType.body);
+  });
+
+  testWidgets('капсула с названием подстраивается под длину', (tester) async {
+    Future<double> widthFor(String name) async {
+      await tester.pumpWidget(
+        _app(
+          Builder(
+            builder: (context) => Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(height: 56, child: _header(context, name)),
+            ),
+          ),
+        ),
+      );
+      return tester
+          .getSize(find.byKey(const ValueKey('chat-header-title')))
+          .width;
+    }
+
+    final short = await widthFor('Аня');
+    final long = await widthFor(
+      'Очень длинное синтетическое название группы для проверки',
+    );
+    expect(short, lessThan(long));
+    final back = tester.getRect(find.byKey(const ValueKey('chat-header-back')));
+    final actions = tester.getRect(
+      find.byKey(const ValueKey('chat-header-actions')),
+    );
+    final title = tester.getRect(
+      find.byKey(const ValueKey('chat-header-title')),
+    );
+    expect(title.left, greaterThan(back.right));
+    expect(title.right, lessThanOrEqualTo(actions.left));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('кнопка «вниз» на одной линии с микрофоном', (tester) async {
+    final controller = AnimationController(vsync: const TestVSync(), value: 1);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        Stack(
+          children: [
+            ScrollDownButton(
+              composerHeight: ValueNotifier<double>(70),
+              materialComposer: false,
+              composerUnderlap: true,
+              frosted: true,
+              liquidChrome: false,
+              pillBackdrop: null,
+              scrollDownCurved: controller,
+              newMessageCount: ValueNotifier<int>(0),
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+    final screen = tester.getSize(find.byType(Stack).first).width;
+    final button = tester.getCenter(
+      find.byKey(const ValueKey('ios-scroll-down')),
+    );
+    const micCenterFromRight =
+        ScrollDownButton.iosActionInset + ScrollDownButton.iosActionSize / 2;
+    expect(screen - button.dx, closeTo(micCenterFromRight, 0.01));
+  });
+
+  test('цвет значков статус-бара следует фону', () {
+    expect(
+      IosPalette.overlayFor(Colors.white).statusBarBrightness,
+      SystemUiOverlayStyle.dark.statusBarBrightness,
+    );
+    expect(
+      IosPalette.overlayFor(Colors.black).statusBarBrightness,
+      SystemUiOverlayStyle.light.statusBarBrightness,
+    );
   });
 }

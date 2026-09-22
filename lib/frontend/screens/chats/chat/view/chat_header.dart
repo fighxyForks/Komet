@@ -113,6 +113,9 @@ class ChatHeaderRow extends StatelessWidget {
   double? get _pillBlur =>
       frosted && !liquid && backdropVisible ? AppFrost.sigma : null;
 
+  Widget _alignTitle(bool ios, Widget pill) =>
+      ios ? Align(alignment: Alignment.centerLeft, child: pill) : pill;
+
   Widget _headerAction(
     bool ios, {
     Key? key,
@@ -187,106 +190,111 @@ class ChatHeaderRow extends StatelessWidget {
           ),
           SizedBox(width: ios ? 6 : 8),
           Expanded(
-            child: _chromePill(
-              context,
-              key: const ValueKey('chat-header-title'),
-              onTap: onOpenInfo,
-              padding: ios
-                  ? const EdgeInsets.fromLTRB(5, 5, 14, 5)
-                  : const EdgeInsets.fromLTRB(6, 6, 16, 6),
-              child: Row(
-                children: [
-                  _withOnlineDot(
-                    cs,
-                    _heroAvatar(
-                      ios ? 36 : 44,
-                      (d) => chatId == 0
-                          ? CircleAvatar(
-                              radius: d / 2,
-                              backgroundColor: cs.primary,
-                              child: Icon(
-                                Symbols.bookmark,
-                                fill: 1,
-                                color: cs.onPrimary,
-                                size: d * 0.5,
-                              ),
-                            )
-                          : imageUrl.isNotEmpty
-                          ? CircleAvatar(
-                              radius: d / 2,
-                              backgroundImage: CachedNetworkImageProvider(
-                                imageUrl,
-                                maxWidth: 144,
-                                maxHeight: 144,
-                              ),
-                            )
-                          : CircleAvatar(
-                              radius: d / 2,
-                              backgroundColor: cs.primaryContainer,
-                              child: Text(
-                                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                style: TextStyle(
-                                  color: cs.onPrimaryContainer,
-                                  fontSize: d * 0.36,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: displayFontOf(context),
+            child: _alignTitle(
+              ios,
+              _chromePill(
+                context,
+                key: const ValueKey('chat-header-title'),
+                onTap: onOpenInfo,
+                padding: ios
+                    ? const EdgeInsets.fromLTRB(5, 5, 14, 5)
+                    : const EdgeInsets.fromLTRB(6, 6, 16, 6),
+                child: Row(
+                  mainAxisSize: ios ? MainAxisSize.min : MainAxisSize.max,
+                  children: [
+                    _withOnlineDot(
+                      cs,
+                      _heroAvatar(
+                        ios ? 36 : 44,
+                        (d) => chatId == 0
+                            ? CircleAvatar(
+                                radius: d / 2,
+                                backgroundColor: cs.primary,
+                                child: Icon(
+                                  Symbols.bookmark,
+                                  fill: 1,
+                                  color: cs.onPrimary,
+                                  size: d * 0.5,
                                 ),
-                              ),
-                            ),
-                    ),
-                  ),
-                  SizedBox(width: ios ? 10 : 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: ProfileHeroName(
-                                tag: heroTag,
-                                text: name,
-                                style: nameStyle,
+                              )
+                            : imageUrl.isNotEmpty
+                            ? CircleAvatar(
+                                radius: d / 2,
+                                backgroundImage: CachedNetworkImageProvider(
+                                  imageUrl,
+                                  maxWidth: 144,
+                                  maxHeight: 144,
+                                ),
+                              )
+                            : CircleAvatar(
+                                radius: d / 2,
+                                backgroundColor: cs.primaryContainer,
                                 child: Text(
-                                  name,
-                                  style: nameStyle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                  style: TextStyle(
+                                    color: cs.onPrimaryContainer,
+                                    fontSize: d * 0.36,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: displayFontOf(context),
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (isOfficial) ...[
-                              const SizedBox(width: 4),
-                              Icon(
-                                Symbols.verified,
-                                color: cs.primary,
-                                size: 16,
-                                weight: 600,
-                                fill: 1,
+                      ),
+                    ),
+                    SizedBox(width: ios ? 10 : 12),
+                    Flexible(
+                      fit: ios ? FlexFit.loose : FlexFit.tight,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: ProfileHeroName(
+                                  tag: heroTag,
+                                  text: name,
+                                  style: nameStyle,
+                                  child: Text(
+                                    name,
+                                    style: nameStyle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ),
+                              if (isOfficial) ...[
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Symbols.verified,
+                                  color: cs.primary,
+                                  size: 16,
+                                  weight: 600,
+                                  fill: 1,
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                        ValueListenableBuilder<String>(
-                          valueListenable: headerStatus,
-                          builder: (context, status, _) => Text(
-                            status,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: cs.onSurfaceVariant,
-                              fontSize: ios ? 12.5 : 13,
-                              height: ios ? 1.15 : null,
-                              fontWeight: FontWeight.w400,
+                          ),
+                          ValueListenableBuilder<String>(
+                            valueListenable: headerStatus,
+                            builder: (context, status, _) => Text(
+                              status,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: cs.onSurfaceVariant,
+                                fontSize: ios ? 12.5 : 13,
+                                height: ios ? 1.15 : null,
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -11,6 +11,7 @@ import '../../core/config/app_visual_style.dart';
 import 'animated_lottie_icon.dart';
 import 'glass/glass_capsule.dart';
 import 'glass/ios_glass.dart';
+import 'glass/ios_palette.dart';
 import 'glossy_pill.dart';
 import 'liquid_glass.dart';
 
@@ -48,7 +49,7 @@ class PillNavGeometry {
 
   static double iosInnerWidth(double available, int itemCount) => math.max(
     math.min(available, itemCount * 56.0),
-    math.min(available * 0.82, itemCount * 80.0),
+    math.min(available * 0.78, itemCount * 80.0),
   );
 }
 
@@ -65,6 +66,7 @@ class SlidingPillNav extends StatelessWidget {
   final Color? borderColor;
   final bool iconsOnly;
   final BackdropKey? backdropKey;
+  final List<String?> badges;
 
   const SlidingPillNav({
     super.key,
@@ -80,10 +82,11 @@ class SlidingPillNav extends StatelessWidget {
     this.borderColor,
     this.iconsOnly = false,
     this.backdropKey,
+    this.badges = const [],
   });
 
   static const double height = 68;
-  static const double iosHeight = 58;
+  static const double iosHeight = 62;
 
   static double heightFor({required bool ios}) => ios ? iosHeight : height;
 
@@ -234,8 +237,8 @@ class SlidingPillNav extends StatelessWidget {
   Widget _buildIosNav(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final visualSel = position.round().clamp(0, items.length - 1);
-    const inset = 6.0;
-    const innerRadius = 26 * iosHeight / height;
+    const inset = 4.0;
+    const thumbRadius = (iosHeight - inset * 2) / 2;
     return GlassCapsule(
       key: const ValueKey('ios-tab-bar'),
       height: iosHeight,
@@ -246,28 +249,45 @@ class SlidingPillNav extends StatelessWidget {
           AnimatedPositioned(
             duration: animationDuration,
             curve: Curves.easeOutCubic,
-            left: position * geometry.inactiveWidth + 4,
+            left: position * geometry.inactiveWidth + inset,
             top: inset,
             bottom: inset,
-            width: geometry.activeWidth - 8,
+            width: geometry.inactiveWidth - inset * 2,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(innerRadius),
+                color: IosPalette.selectedTab(cs),
+                borderRadius: BorderRadius.circular(thumbRadius),
               ),
             ),
           ),
-          _buildCells(
-            cs.copyWith(onPrimary: cs.primary),
-            visualSel,
-            radius: innerRadius,
+          SizedBox(
+            width: geometry.navInnerW,
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  SizedBox(
+                    width: geometry.inactiveWidth,
+                    child: _IosTabCell(
+                      key: ValueKey('ios-tab-$i'),
+                      item: items[i],
+                      selected: i == visualSel,
+                      badge: i < badges.length ? badges[i] : null,
+                      onTap: () => onTap(i),
+                      onLongPress:
+                          (onItemLongPress == null || !items[i].longPressable)
+                          ? null
+                          : (pos) => onItemLongPress!(i, pos),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCells(ColorScheme cs, int visualSel, {double radius = 26}) {
+  Widget _buildCells(ColorScheme cs, int visualSel) {
     return SizedBox(
       width: geometry.navInnerW,
       child: Row(
@@ -277,7 +297,7 @@ class SlidingPillNav extends StatelessWidget {
             curve: Curves.easeOutCubic,
             width: _interpWidth(i),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
+              borderRadius: BorderRadius.circular(26),
               child: _PillNavCell(
                 item: items[i],
                 selected: i == visualSel,
@@ -384,6 +404,101 @@ class _PillNavCell extends StatelessWidget {
                   ],
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _IosTabCell extends StatelessWidget {
+  final PillNavItem item;
+  final bool selected;
+  final String? badge;
+  final VoidCallback onTap;
+  final void Function(Offset globalPosition)? onLongPress;
+
+  const _IosTabCell({
+    super.key,
+    required this.item,
+    required this.selected,
+    required this.badge,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final color = selected ? cs.primary : IosPalette.label(cs);
+    final label = badge;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      onLongPressStart: onLongPress == null
+          ? null
+          : (d) => onLongPress!(d.globalPosition),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: item.label,
+        excludeSemantics: true,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 44,
+              height: 28,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Icon(item.icon, size: 26, fill: 1, weight: 500, color: color),
+                  if (label != null && label.isNotEmpty)
+                    Positioned(
+                      left: 26,
+                      top: -4,
+                      child: Container(
+                        key: const ValueKey('ios-tab-badge'),
+                        height: 18,
+                        constraints: const BoxConstraints(minWidth: 18),
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: IosPalette.badgeRed,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: IosPalette.background(cs),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              item.label,
+              maxLines: 1,
+              overflow: TextOverflow.visible,
+              softWrap: false,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

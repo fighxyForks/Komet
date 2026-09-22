@@ -6,6 +6,8 @@ import 'package:komet/backend/modules/messages.dart' show CachedMessage;
 import 'package:komet/core/config/app_chat_chrome.dart';
 import 'package:komet/core/config/app_frost.dart';
 
+import 'package:komet/frontend/widgets/glass/ios_palette.dart';
+
 import 'chat_header.dart';
 import 'frosted_panel.dart';
 import 'search_view.dart';
@@ -167,6 +169,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           : null,
       foregroundColor: cs.onSurface,
       surfaceTintColor: Colors.transparent,
+      systemOverlayStyle: IosPalette.overlayFor(cs.surface),
       iconTheme: IconThemeData(color: cs.onSurface),
       elevation: 0,
       toolbarHeight: height,

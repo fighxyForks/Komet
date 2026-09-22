@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:komet/backend/modules/messages.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'dart:math';
@@ -25,6 +27,7 @@ import '../../widgets/chat_menu_overlay.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/swipe_route.dart';
@@ -53,6 +56,7 @@ import '../digital_id/digital_id_web_screen.dart';
 import '../../widgets/account_switcher_overlay.dart';
 import 'chat/view/chat_list_shimmer.dart';
 import 'chat/view/chat_list_tile.dart';
+import 'chat/view/ios_chat_row.dart';
 import 'chat/view/chat_preview_line.dart';
 import '../../widgets/connection_status.dart';
 import '../../../backend/api.dart';
@@ -244,6 +248,25 @@ class _ChatListScreenState extends State<ChatListScreen>
       animationAsset: AppAnimations.settings,
     ),
   ];
+
+  static const List<PillNavItem> _iosNavItems = [
+    PillNavItem(icon: Symbols.forum, label: 'Чаты'),
+    PillNavItem(icon: Symbols.call, label: 'Звонки'),
+    PillNavItem(icon: Symbols.account_circle, label: 'Контакты'),
+    PillNavItem(
+      icon: Symbols.settings,
+      label: 'Настройки',
+      longPressable: true,
+    ),
+  ];
+
+  String? _iosChatsBadge() {
+    var unread = 0;
+    for (final chat in _chats) {
+      if (chat.unreadCount > 0 && !chat.isMuted) unread++;
+    }
+    return unread == 0 ? null : (unread > 99 ? '99+' : '$unread');
+  }
 
   double _navPageAnimStart = 0;
   double _navPageAnimEnd = 0;
@@ -1732,8 +1755,9 @@ class _ChatListScreenState extends State<ChatListScreen>
   Widget _buildPinnedChatsHeader(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final ios = IosGlass.of(context);
+    final iosTopBar = ios && !_shareMode && !widget.forwardMode;
     return ColoredBox(
-      color: cs.surface,
+      color: ios ? IosPalette.grouped(cs) : cs.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1752,172 +1776,181 @@ class _ChatListScreenState extends State<ChatListScreen>
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 6, 20, 3),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      if (_shareMode)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: 4,
+                          if (iosTopBar)
+                            _buildIosTopBar(cs)
+                          else
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 6, 20, 3),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        if (_shareMode)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: 4,
+                                            ),
+                                            child: ios
+                                                ? GlassIconButton(
+                                                    key: const ValueKey(
+                                                      'share-back',
+                                                    ),
+                                                    icon: Symbols
+                                                        .arrow_back_ios_new,
+                                                    iconSize: 20,
+                                                    tooltip:
+                                                        MaterialLocalizations.of(
+                                                          context,
+                                                        ).backButtonTooltip,
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).maybePop(),
+                                                  )
+                                                : IconButton(
+                                                    key: const ValueKey(
+                                                      'share-back',
+                                                    ),
+                                                    visualDensity:
+                                                        VisualDensity.compact,
+                                                    icon: Icon(
+                                                      Symbols.arrow_back,
+                                                      color: cs.onSurface,
+                                                      weight: 500,
+                                                    ),
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).maybePop(),
+                                                  ),
                                           ),
-                                          child: ios
-                                              ? GlassIconButton(
-                                                  key: const ValueKey(
-                                                    'share-back',
-                                                  ),
-                                                  icon: Symbols
-                                                      .arrow_back_ios_new,
-                                                  iconSize: 20,
-                                                  tooltip:
-                                                      MaterialLocalizations.of(
-                                                        context,
-                                                      ).backButtonTooltip,
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).maybePop(),
-                                                )
-                                              : IconButton(
-                                                  key: const ValueKey(
-                                                    'share-back',
-                                                  ),
-                                                  visualDensity:
-                                                      VisualDensity.compact,
-                                                  icon: Icon(
-                                                    Symbols.arrow_back,
-                                                    color: cs.onSurface,
-                                                    weight: 500,
-                                                  ),
-                                                  onPressed: () => Navigator.of(
-                                                    context,
-                                                  ).maybePop(),
-                                                ),
-                                        ),
-                                      if (AppStories.current.value &&
-                                          !_shareMode &&
-                                          _pullRatio < 0.8 &&
-                                          storiesModule.hasAny)
-                                        Opacity(
-                                          opacity: 1.0 - _pullRatio,
-                                          child: GestureDetector(
-                                            behavior: HitTestBehavior.opaque,
-                                            onTap: () => _openStories(0),
-                                            child: SizedBox(
-                                              width:
-                                                  (FoldedStoryStack.widthFor(
+                                        if (AppStories.current.value &&
+                                            !_shareMode &&
+                                            _pullRatio < 0.8 &&
+                                            storiesModule.hasAny)
+                                          Opacity(
+                                            opacity: 1.0 - _pullRatio,
+                                            child: GestureDetector(
+                                              behavior: HitTestBehavior.opaque,
+                                              onTap: () => _openStories(0),
+                                              child: SizedBox(
+                                                width:
+                                                    (FoldedStoryStack.widthFor(
+                                                          storiesModule
+                                                              .previews
+                                                              .length,
+                                                        ) +
+                                                        8) *
+                                                    (1.0 - _pullRatio),
+                                                height:
+                                                    FoldedStoryStack.outerSize,
+                                                child: OverflowBox(
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  maxWidth:
+                                                      FoldedStoryStack.widthFor(
                                                         storiesModule
                                                             .previews
                                                             .length,
-                                                      ) +
-                                                      8) *
-                                                  (1.0 - _pullRatio),
-                                              height:
-                                                  FoldedStoryStack.outerSize,
-                                              child: OverflowBox(
-                                                alignment: Alignment.centerLeft,
-                                                maxWidth:
-                                                    FoldedStoryStack.widthFor(
-                                                      storiesModule
-                                                          .previews
-                                                          .length,
-                                                    ),
-                                                child: FoldedStoryStack(
-                                                  previews:
-                                                      storiesModule.previews,
-                                                  opacity: 1.0 - _pullRatio,
+                                                      ),
+                                                  child: FoldedStoryStack(
+                                                    previews:
+                                                        storiesModule.previews,
+                                                    opacity: 1.0 - _pullRatio,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      Flexible(
-                                        child: Text(
-                                          _shareMode &&
-                                                  _selectedChats.isNotEmpty
-                                              ? '${_selectedChats.length} '
-                                                    '${pluralRu(_selectedChats.length, 'получатель', 'получателя', 'получателей')}'
-                                              : connectionStatusLabel(
-                                                      _sessionState,
-                                                    ) ??
-                                                    (_profile?.firstName ??
-                                                        'Чат'),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: cs.onSurface,
-                                            fontSize: 20,
-                                            fontWeight: ios
-                                                ? IosType.largeTitle
-                                                : FontWeight.w600,
-                                            fontFamily: displayFontOf(context),
+                                        Flexible(
+                                          child: Text(
+                                            _shareMode &&
+                                                    _selectedChats.isNotEmpty
+                                                ? '${_selectedChats.length} '
+                                                      '${pluralRu(_selectedChats.length, 'получатель', 'получателя', 'получателей')}'
+                                                : connectionStatusLabel(
+                                                        _sessionState,
+                                                      ) ??
+                                                      (_profile?.firstName ??
+                                                          'Чат'),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              color: cs.onSurface,
+                                              fontSize: 20,
+                                              fontWeight: ios
+                                                  ? IosType.largeTitle
+                                                  : FontWeight.w600,
+                                              fontFamily: displayFontOf(
+                                                context,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                if (ios)
-                                  _buildIosTopActions()
-                                else
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (!widget.forwardMode &&
-                                          !widget.archiveMode &&
-                                          !_shareMode)
-                                        IconButton(
-                                          key: const ValueKey(
-                                            'downloads-button',
+                                  const SizedBox(width: 4),
+                                  if (ios)
+                                    _buildIosTopActions()
+                                  else
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (!widget.forwardMode &&
+                                            !widget.archiveMode &&
+                                            !_shareMode)
+                                          IconButton(
+                                            key: const ValueKey(
+                                              'downloads-button',
+                                            ),
+                                            tooltip: AppLocalizations.of(
+                                              context,
+                                            )!.downloadsTooltip,
+                                            icon: Icon(
+                                              Symbols.download_for_offline,
+                                              color: cs.outline,
+                                              weight: 400,
+                                            ),
+                                            onPressed: () =>
+                                                unawaited(_openDownloads()),
                                           ),
-                                          tooltip: AppLocalizations.of(
-                                            context,
-                                          )!.downloadsTooltip,
+                                        PopupMenuButton<int>(
                                           icon: Icon(
-                                            Symbols.download_for_offline,
+                                            Symbols.more_vert,
                                             color: cs.outline,
                                             weight: 400,
                                           ),
-                                          onPressed: () =>
-                                              unawaited(_openDownloads()),
-                                        ),
-                                      PopupMenuButton<int>(
-                                        icon: Icon(
-                                          Symbols.more_vert,
-                                          color: cs.outline,
-                                          weight: 400,
-                                        ),
-                                        offset: const Offset(0, 48),
-                                        elevation: 4,
-                                        color: cs.surfaceContainerHigh,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
+                                          offset: const Offset(0, 48),
+                                          elevation: 4,
+                                          color: cs.surfaceContainerHigh,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                           ),
+                                          onSelected: _onOverflowMenuSelected,
+                                          itemBuilder: (context) => [
+                                            _buildPopupMenuItem(
+                                              1,
+                                              'Избранное',
+                                              Symbols.bookmark,
+                                            ),
+                                            _buildPopupMenuItem(
+                                              2,
+                                              'Прочитать всё',
+                                              Symbols.done_all,
+                                            ),
+                                          ],
                                         ),
-                                        onSelected: _onOverflowMenuSelected,
-                                        itemBuilder: (context) => [
-                                          _buildPopupMenuItem(
-                                            1,
-                                            'Избранное',
-                                            Symbols.bookmark,
-                                          ),
-                                          _buildPopupMenuItem(
-                                            2,
-                                            'Прочитать всё',
-                                            Symbols.done_all,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                              ],
+                                      ],
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
                           if (AppStories.current.value)
                             SizedBox(
                               height: 96 * _pullRatio,
@@ -1927,9 +1960,11 @@ class _ChatListScreenState extends State<ChatListScreen>
                               ),
                             ),
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 3, 20, 8),
+                            padding: ios
+                                ? const EdgeInsets.fromLTRB(16, 0, 16, 10)
+                                : const EdgeInsets.fromLTRB(20, 3, 20, 8),
                             child: ios
-                                ? GlassSearchCapsule(
+                                ? IosFlatSearchBar(
                                     key: const ValueKey('chat-list-search'),
                                     hint: widget.forwardMode
                                         ? 'Пересылка...'
@@ -2342,7 +2377,11 @@ class _ChatListScreenState extends State<ChatListScreen>
     double navInnerW,
     double bottomInset,
   ) {
-    final geometry = PillNavGeometry.fromInnerWidth(navInnerW, 4);
+    final ios = IosGlass.of(context);
+    final badges = ios ? [_iosChatsBadge()] : const <String?>[];
+    final geometry = ios
+        ? PillNavGeometry.equal(navInnerW / 4, 4)
+        : PillNavGeometry.fromInnerWidth(navInnerW, 4);
     final inactiveWidth = geometry.inactiveWidth;
     final bubbleW = geometry.activeWidth - 8;
 
@@ -2424,7 +2463,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                         inactiveWidth
                   : _currentNavIndex.toDouble();
               return SlidingPillNav(
-                items: _chatsNavItems,
+                items: ios ? _iosNavItems : _chatsNavItems,
+                badges: badges,
                 position: position,
                 animationDuration: _navDragging
                     ? Duration.zero
@@ -2451,8 +2491,10 @@ class _ChatListScreenState extends State<ChatListScreen>
     if (widget.archiveMode) {
       return _buildArchiveScaffold(cs);
     }
-    return Scaffold(
-      backgroundColor: cs.surface,
+    final ios = IosGlass.of(context);
+    final iosChatsTop = ios && _currentNavIndex == 0;
+    final scaffold = Scaffold(
+      backgroundColor: ios ? IosPalette.background(cs) : cs.surface,
       body: SafeArea(
         bottom: false,
         child: LayoutBuilder(
@@ -2626,74 +2668,53 @@ class _ChatListScreenState extends State<ChatListScreen>
                             ),
                           Positioned(
                             right: 20,
-                            bottom: IosGlass.of(context)
-                                ? bottomInset +
-                                      22 +
-                                      SlidingPillNav.heightFor(ios: true)
-                                : bottomInset + 90,
-                            child: IosGlass.of(context)
-                                ? GlassIconButton(
-                                    key: const ValueKey('ios-create-button'),
-                                    icon: Symbols.add,
-                                    size: 46,
-                                    iconSize: 24,
-                                    tooltip: MaterialLocalizations.of(
-                                      context,
-                                    ).showMenuTooltip,
-                                    onPressedAt: _showIosCreateMenu,
-                                  )
-                                : ValueListenableBuilder<VisualStyle>(
-                                    valueListenable: AppVisualStyle.current,
-                                    builder: (context, style, child) =>
-                                        ValueListenableBuilder<NavPillStyle>(
-                                          valueListenable:
-                                              AppNavPillStyle.current,
-                                          builder: (context, navStyle, child) {
-                                            final liquid =
-                                                style.glossyChrome &&
-                                                NavPillMaterial.isLiquid(
-                                                  navStyle,
-                                                );
-                                            final frost =
-                                                style.glossyChrome &&
-                                                NavPillMaterial.isFrost(
-                                                  navStyle,
-                                                );
-                                            return GlossyPill(
-                                              onTap: _toggleFab,
-                                              color: frost || liquid
-                                                  ? AppFrost.glassTint(cs)
-                                                  : cs.primaryContainer,
-                                              blurSigma: frost
-                                                  ? AppFrost.sigma
-                                                  : null,
-                                              liquid: liquid,
-                                              backdropKey: _frostBackdrop,
-                                              borderRadius:
-                                                  BorderRadius.circular(28),
-                                              elevated: true,
-                                              depth: 12,
-                                              child: child!,
-                                            );
-                                          },
-                                          child: child,
-                                        ),
-                                    child: SizedBox(
-                                      width: 56,
-                                      height: 56,
-                                      child: Center(
-                                        child: Transform.rotate(
-                                          angle: val * (pi / 4),
-                                          child: Icon(
-                                            Symbols.add,
-                                            color: cs.onPrimaryContainer,
-                                            size: 28,
-                                            weight: 400,
-                                          ),
-                                        ),
-                                      ),
+                            bottom: bottomInset + 90,
+                            child: ValueListenableBuilder<VisualStyle>(
+                              valueListenable: AppVisualStyle.current,
+                              builder: (context, style, child) =>
+                                  ValueListenableBuilder<NavPillStyle>(
+                                    valueListenable: AppNavPillStyle.current,
+                                    builder: (context, navStyle, child) {
+                                      final liquid =
+                                          style.glossyChrome &&
+                                          NavPillMaterial.isLiquid(navStyle);
+                                      final frost =
+                                          style.glossyChrome &&
+                                          NavPillMaterial.isFrost(navStyle);
+                                      return GlossyPill(
+                                        onTap: _toggleFab,
+                                        color: frost || liquid
+                                            ? AppFrost.glassTint(cs)
+                                            : cs.primaryContainer,
+                                        blurSigma: frost
+                                            ? AppFrost.sigma
+                                            : null,
+                                        liquid: liquid,
+                                        backdropKey: _frostBackdrop,
+                                        borderRadius: BorderRadius.circular(28),
+                                        elevated: true,
+                                        depth: 12,
+                                        child: child!,
+                                      );
+                                    },
+                                    child: child,
+                                  ),
+                              child: SizedBox(
+                                width: 56,
+                                height: 56,
+                                child: Center(
+                                  child: Transform.rotate(
+                                    angle: val * (pi / 4),
+                                    child: Icon(
+                                      Symbols.add,
+                                      color: cs.onPrimaryContainer,
+                                      size: 28,
+                                      weight: 400,
                                     ),
                                   ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ],
@@ -2705,6 +2726,31 @@ class _ChatListScreenState extends State<ChatListScreen>
             );
           },
         ),
+      ),
+    );
+    if (!ios) return scaffold;
+    final top = MediaQuery.paddingOf(context).top;
+    final topColor = iosChatsTop
+        ? IosPalette.grouped(cs)
+        : IosPalette.background(cs);
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: IosPalette.overlayFor(topColor),
+      child: Stack(
+        children: [
+          scaffold,
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: top,
+            child: IgnorePointer(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                color: topColor,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -3161,7 +3207,9 @@ class _ChatListScreenState extends State<ChatListScreen>
     bool messageItalic, {
     String prefix = '',
     ChatPreviewMedia? media,
+    int maxLines = 1,
   }) {
+    final ios = IosGlass.of(context);
     if (draft != null) {
       return Text.rich(
         TextSpan(
@@ -3170,8 +3218,7 @@ class _ChatListScreenState extends State<ChatListScreen>
               text: 'Черновик: ',
               style: TextStyle(
                 color: cs.error,
-                fontWeight: IosGlass.of(context) ? IosType.name : null,
-                fontStyle: IosGlass.of(context) ? FontStyle.normal : null,
+                fontWeight: ios ? IosType.name : null,
               ),
             ),
             TextSpan(
@@ -3179,11 +3226,11 @@ class _ChatListScreenState extends State<ChatListScreen>
               style: TextStyle(color: cs.outline),
             ),
           ],
-          style: const TextStyle(
-            fontSize: 14,
+          style: TextStyle(
+            fontSize: ios ? 15 : 14,
             fontWeight: FontWeight.w400,
-            fontStyle: FontStyle.italic,
-            height: 1.2,
+            fontStyle: ios ? FontStyle.normal : FontStyle.italic,
+            height: ios ? 1.25 : 1.2,
           ),
         ),
         maxLines: 1,
@@ -3196,11 +3243,12 @@ class _ChatListScreenState extends State<ChatListScreen>
       ranges: messageRanges,
       media: media,
       italic: messageItalic,
+      maxLines: maxLines,
       style: TextStyle(
-        color: cs.outline,
-        fontSize: 14,
+        color: ios ? IosPalette.secondaryLabel(cs) : cs.outline,
+        fontSize: ios ? 15 : 14,
         fontWeight: FontWeight.w400,
-        height: 1.2,
+        height: ios ? 1.25 : 1.2,
       ),
     );
   }
@@ -3270,6 +3318,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     final Widget? statusIcon = (ownStatus != null && draft == null)
         ? _ownStatusIcon(cs, ownStatus, ownRead)
         : null;
+    final ios = IosGlass.of(context);
+    final iosSender = ios && previewPrefix.endsWith(': ')
+        ? previewPrefix.substring(0, previewPrefix.length - 2)
+        : '';
+    final linePrefix = iosSender.isEmpty ? previewPrefix : '';
+    final previewLines = ios && iosSender.isEmpty ? 2 : 1;
     final canDecryptPreview =
         isEncrypted &&
         draft == null &&
@@ -3288,7 +3342,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                 messageRanges,
                 draft,
                 messageItalic,
-                prefix: previewPrefix,
+                prefix: linePrefix,
+                maxLines: previewLines,
                 media: previewMedia,
               ),
               MessageDecryptionState.wrongKey => _buildPreviewLine(
@@ -3297,7 +3352,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                 const [],
                 draft,
                 true,
-                prefix: previewPrefix,
+                prefix: linePrefix,
+                maxLines: previewLines,
               ),
               MessageDecryptionState.unavailable => _buildPreviewLine(
                 cs,
@@ -3305,7 +3361,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                 const [],
                 draft,
                 true,
-                prefix: previewPrefix,
+                prefix: linePrefix,
+                maxLines: previewLines,
               ),
               MessageDecryptionState.decrypted => _buildPreviewLine(
                 cs,
@@ -3313,7 +3370,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                 const [],
                 draft,
                 messageItalic,
-                prefix: previewPrefix,
+                prefix: linePrefix,
+                maxLines: previewLines,
               ),
             },
           )
@@ -3323,7 +3381,8 @@ class _ChatListScreenState extends State<ChatListScreen>
             messageRanges,
             draft,
             messageItalic,
-            prefix: previewPrefix,
+            prefix: linePrefix,
+            maxLines: previewLines,
             media: previewMedia,
           );
 
@@ -3333,7 +3392,9 @@ class _ChatListScreenState extends State<ChatListScreen>
     final story = (_isSelectionMode || widget.forwardMode)
         ? null
         : _storyPreviewFor(storyOwnerId);
-    final avatarRadius = story == null ? 24.0 : 20.0;
+    final avatarRadius = ios
+        ? (story == null ? 30.0 : 26.0)
+        : (story == null ? 24.0 : 20.0);
 
     // #***! id "0" это Избранное — метка-закладка вместо буквы "И"
     final isSavedMessages = id == '0';
@@ -3354,14 +3415,14 @@ class _ChatListScreenState extends State<ChatListScreen>
               Symbols.bookmark,
               fill: 1,
               color: cs.onPrimary,
-              size: story == null ? 26 : 22,
+              size: ios ? 30 : (story == null ? 26 : 22),
             )
           : (imageUrl.isEmpty
                 ? Text(
                     name.isNotEmpty ? name[0].toUpperCase() : '?',
                     style: TextStyle(
                       color: cs.onSurfaceVariant,
-                      fontSize: story == null ? 20 : 17,
+                      fontSize: ios ? 24 : (story == null ? 20 : 17),
                     ),
                   )
                 : null),
@@ -3387,6 +3448,45 @@ class _ChatListScreenState extends State<ChatListScreen>
               ),
             ),
           );
+    final Widget avatarStack = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        avatarCircle,
+        if (isEncrypted)
+          Positioned(
+            left: -2,
+            bottom: -2,
+            child: EncryptionLockBadge(size: 18, verified: isVerified),
+          ),
+        if (isSelected)
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: cs.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: cs.surface, width: 2),
+              ),
+              child: Icon(Symbols.check, color: cs.onPrimary, size: 14),
+            ),
+          )
+        else if (hasCall)
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: ChatCallBadge(borderColor: cs.surface),
+          )
+        else if (presenceUserId != 0)
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: OnlineDot(userId: presenceUserId, borderColor: cs.surface),
+          ),
+      ],
+    );
     return SpringyTap(
       key: ValueKey('chat_$id'),
       child: InkWell(
@@ -3446,197 +3546,180 @@ class _ChatListScreenState extends State<ChatListScreen>
         onLongPress: (widget.forwardMode || _shareMode)
             ? null
             : () => _toggleSelection(id),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          color: isSelected
-              ? cs.primary.withValues(alpha: 0.08)
-              : Colors.transparent,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    avatarCircle,
-                    if (isEncrypted)
-                      Positioned(
-                        left: -2,
-                        bottom: -2,
-                        child: EncryptionLockBadge(
-                          size: 18,
-                          verified: isVerified,
-                        ),
-                      ),
-                    if (isSelected)
-                      Positioned(
-                        right: -2,
-                        bottom: -2,
-                        child: Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: cs.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: cs.surface, width: 2),
-                          ),
-                          child: Icon(
-                            Symbols.check,
-                            color: cs.onPrimary,
-                            size: 14,
-                          ),
-                        ),
-                      )
-                    else if (hasCall)
-                      Positioned(
-                        right: -2,
-                        bottom: -2,
-                        child: ChatCallBadge(borderColor: cs.surface),
-                      )
-                    else if (presenceUserId != 0)
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: OnlineDot(
-                          userId: presenceUserId,
-                          borderColor: cs.surface,
-                        ),
-                      ),
-                  ],
+        child: ios
+            ? IosChatRow(
+                avatar: avatarStack,
+                name: name,
+                time: time,
+                titleIcon: titleIcon,
+                isVerified: isVerified,
+                isMuted: isMuted,
+                isPinned: isPinned,
+                isSelected: isSelected,
+                statusIcon: statusIcon,
+                sender: draft == null ? iosSender : '',
+                body: ActivitySubtitle(
+                  chatId: int.tryParse(id) ?? 0,
+                  group: chatType != 'DIALOG',
+                  child: messageLine,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 5),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                unreadCount: unreadCount,
+                hasMention: hasMention,
+                miniApp: hasMiniApp
+                    ? _miniAppButton(
+                        cs,
+                        botId: presenceUserId,
+                        chatId: int.tryParse(id) ?? 0,
+                        name: name,
+                      )
+                    : null,
+              )
+            : AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                color: isSelected
+                    ? cs.primary.withValues(alpha: 0.08)
+                    : Colors.transparent,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      avatarStack,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SizedBox(
+                          height: 48,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Expanded(
+                              Padding(
+                                padding: const EdgeInsets.only(top: 5),
                                 child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (titleIcon != null) ...[
-                                      Icon(
-                                        titleIcon,
-                                        color: cs.outline,
-                                        size: 15,
-                                        weight: 500,
-                                        fill: 1,
-                                      ),
-                                      const SizedBox(width: 4),
-                                    ],
-                                    Flexible(
-                                      child: Text(
-                                        name,
-                                        style: TextStyle(
-                                          color: cs.onSurface,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.1,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                    Expanded(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (titleIcon != null) ...[
+                                            Icon(
+                                              titleIcon,
+                                              color: cs.outline,
+                                              size: 15,
+                                              weight: 500,
+                                              fill: 1,
+                                            ),
+                                            const SizedBox(width: 4),
+                                          ],
+                                          Flexible(
+                                            child: Text(
+                                              name,
+                                              style: TextStyle(
+                                                color: cs.onSurface,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                height: 1.1,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (isVerified) ...[
+                                            const SizedBox(width: 4),
+                                            Icon(
+                                              Symbols.verified,
+                                              color: cs.primary,
+                                              size: 16,
+                                              weight: 600,
+                                              fill: 1,
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ),
-                                    if (isVerified) ...[
+                                    if (isMuted) ...[
                                       const SizedBox(width: 4),
                                       Icon(
-                                        Symbols.verified,
+                                        Symbols.notifications_off,
+                                        color: cs.outlineVariant,
+                                        size: 14,
+                                        weight: 400,
+                                      ),
+                                    ],
+                                    if (isPinned) ...[
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Symbols.keep,
+                                        color: cs.outlineVariant,
+                                        size: 14,
+                                        weight: 400,
+                                      ),
+                                    ],
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      time,
+                                      style: TextStyle(
+                                        color: cs.outline,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                      child: ActivitySubtitle(
+                                        chatId: int.tryParse(id) ?? 0,
+                                        group: chatType != 'DIALOG',
+                                        child: messageLine,
+                                      ),
+                                    ),
+                                    ?statusIcon,
+                                    const SizedBox(width: 8),
+                                    if (hasMention) ...[
+                                      _countBadge(cs, '@', muted: isMuted),
+                                      const SizedBox(width: 4),
+                                    ],
+                                    if (unreadCount > 0)
+                                      _countBadge(
+                                        cs,
+                                        unreadCount.toString(),
+                                        muted: isMuted,
+                                      )
+                                    else if (isRead)
+                                      Icon(
+                                        Symbols.done_all,
                                         color: cs.primary,
                                         size: 16,
-                                        weight: 600,
-                                        fill: 1,
+                                        weight: 400,
+                                      ),
+                                    if (hasMiniApp) ...[
+                                      const SizedBox(width: 8),
+                                      _miniAppButton(
+                                        cs,
+                                        botId: presenceUserId,
+                                        chatId: int.tryParse(id) ?? 0,
+                                        name: name,
                                       ),
                                     ],
                                   ],
                                 ),
                               ),
-                              if (isMuted) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Symbols.notifications_off,
-                                  color: cs.outlineVariant,
-                                  size: 14,
-                                  weight: 400,
-                                ),
-                              ],
-                              if (isPinned) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Symbols.keep,
-                                  color: cs.outlineVariant,
-                                  size: 14,
-                                  weight: 400,
-                                ),
-                              ],
-                              const SizedBox(width: 8),
-                              Text(
-                                time,
-                                style: TextStyle(
-                                  color: cs.outline,
-                                  fontSize: 12,
-                                ),
-                              ),
                             ],
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: ActivitySubtitle(
-                                  chatId: int.tryParse(id) ?? 0,
-                                  group: chatType != 'DIALOG',
-                                  child: messageLine,
-                                ),
-                              ),
-                              ?statusIcon,
-                              const SizedBox(width: 8),
-                              if (hasMention) ...[
-                                _countBadge(cs, '@', muted: isMuted),
-                                const SizedBox(width: 4),
-                              ],
-                              if (unreadCount > 0)
-                                _countBadge(
-                                  cs,
-                                  unreadCount.toString(),
-                                  muted: isMuted,
-                                )
-                              else if (isRead)
-                                Icon(
-                                  Symbols.done_all,
-                                  color: cs.primary,
-                                  size: 16,
-                                  weight: 400,
-                                ),
-                              if (hasMiniApp) ...[
-                                const SizedBox(width: 8),
-                                _miniAppButton(
-                                  cs,
-                                  botId: presenceUserId,
-                                  chatId: int.tryParse(id) ?? 0,
-                                  name: name,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
+              ),
       ),
     );
   }
@@ -3828,6 +3911,57 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
+  Widget _buildIosTopBar(ColorScheme cs) {
+    final status = connectionStatusLabel(_sessionState);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+      child: SizedBox(
+        height: GlassStyle.buttonSize,
+        child: Row(
+          children: [
+            GlassIconButton(
+              key: const ValueKey('overflow-button'),
+              icon: Symbols.more_horiz,
+              tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+              onPressedAt: _showIosOverflowMenu,
+            ),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (status != null) ...[
+                    const CupertinoActivityIndicator(radius: 9),
+                    const SizedBox(width: 8),
+                  ],
+                  Flexible(
+                    child: Text(
+                      status ?? 'Чаты',
+                      key: const ValueKey('ios-chat-list-title'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: IosPalette.label(cs),
+                        fontSize: 17,
+                        fontWeight: IosType.title,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            GlassIconButton(
+              key: const ValueKey('ios-create-button'),
+              icon: Symbols.edit_square,
+              iconSize: 21,
+              tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+              onPressedAt: _showIosCreateMenu,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildIosTopActions() {
     return GlassButtonGroup(
       items: [
@@ -3853,6 +3987,11 @@ class _ChatListScreenState extends State<ChatListScreen>
       context: context,
       anchorRect: anchor,
       items: [
+        ChatMenuItem(
+          icon: Symbols.download_for_offline,
+          label: AppLocalizations.of(context)!.downloadsTooltip,
+          onTap: () => unawaited(_openDownloads()),
+        ),
         ChatMenuItem(
           icon: Symbols.bookmark,
           label: 'Избранное',

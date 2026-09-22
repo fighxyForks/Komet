@@ -19,6 +19,8 @@ class ScrollDownButton extends StatelessWidget {
   final VoidCallback onTap;
 
   static const double _scrollDownSize = 46.0;
+  static const double iosActionInset = 12.0;
+  static const double iosActionSize = 46.0;
   static const double _materialIconSlot = 48.0;
 
   const ScrollDownButton({
@@ -40,7 +42,9 @@ class ScrollDownButton extends StatelessWidget {
     return ValueListenableBuilder<double>(
       valueListenable: composerHeight,
       builder: (context, height, child) => Positioned(
-        right: materialComposer
+        right: IosGlass.of(context)
+            ? iosActionInset + (iosActionSize - _scrollDownSize) / 2
+            : materialComposer
             ? (_materialIconSlot - _scrollDownSize) / 2
             : 16,
         bottom: (composerUnderlap ? height : 0) + 12,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import 'glass_capsule.dart';
+import 'ios_palette.dart';
 import 'ios_glass.dart';
 
 class GlassSwitch extends StatelessWidget {
@@ -21,52 +22,6 @@ class GlassSwitch extends StatelessWidget {
       value: value,
       onChanged: onChanged,
       activeTrackColor: cs.primary,
-    );
-  }
-}
-
-class GlassSearchCapsule extends StatelessWidget {
-  final String hint;
-  final VoidCallback? onTap;
-  final double height;
-
-  const GlassSearchCapsule({
-    super.key,
-    required this.hint,
-    this.onTap,
-    this.height = 44,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Semantics(
-      button: onTap != null,
-      label: hint,
-      child: GlassCapsule(
-        height: height,
-        onTap: onTap,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        child: Row(
-          children: [
-            Icon(
-              Symbols.search,
-              size: 20,
-              weight: 500,
-              color: cs.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                hint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 16),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -94,6 +49,48 @@ class GlassSegmentThumb extends StatelessWidget {
             offset: const Offset(0, 2),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class IosFlatSearchBar extends StatelessWidget {
+  final String hint;
+  final VoidCallback? onTap;
+  final double height;
+
+  const IosFlatSearchBar({
+    super.key,
+    required this.hint,
+    this.onTap,
+    this.height = 42,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final color = IosPalette.secondaryLabel(cs);
+    return Semantics(
+      button: onTap != null,
+      label: hint,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(
+            color: IosPalette.searchFill(cs),
+            borderRadius: BorderRadius.circular(height / 2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Symbols.search, size: 20, weight: 500, color: color),
+              const SizedBox(width: 6),
+              Text(hint, style: TextStyle(color: color, fontSize: 17)),
+            ],
+          ),
+        ),
       ),
     );
   }
