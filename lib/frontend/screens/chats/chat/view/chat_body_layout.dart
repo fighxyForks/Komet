@@ -218,8 +218,8 @@ class ChatBodyLayout extends StatelessWidget {
         ],
         Positioned(
           top: pinnedBannerTop,
-          left: 8,
-          right: 8,
+          left: AppIosGlass.active.value ? 16 : 8,
+          right: AppIosGlass.active.value ? 16 : 8,
           child: MeasureSize(
             onHeight: (value) => pinnedBannerHeight.value = value,
             child: Column(

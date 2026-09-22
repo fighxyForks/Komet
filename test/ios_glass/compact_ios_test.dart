@@ -5,9 +5,12 @@ import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/frontend/screens/chats/chat/view/chat_app_bar.dart';
 import 'package:komet/frontend/screens/chats/chat/view/chat_header.dart';
+import 'package:komet/frontend/screens/chats/chat/view/message_row_widgets.dart';
 import 'package:komet/frontend/screens/chats/chat/view/scroll_down_button.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_palette.dart';
+import 'package:komet/frontend/widgets/media_playback_pill.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
 import 'package:komet/frontend/widgets/settings_card.dart';
 import 'package:komet/frontend/widgets/sliding_pill_nav.dart';
@@ -267,5 +270,59 @@ void main() {
       IosPalette.overlayFor(Colors.black).statusBarBrightness,
       SystemUiOverlayStyle.light.statusBarBrightness,
     );
+  });
+
+  testWidgets('закреп — компактная стеклянная капсула как в шапке', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        Align(
+          alignment: Alignment.topCenter,
+          child: PinnedMessageBanner(
+            text: 'Синтетическое закреплённое сообщение',
+            isPreview: false,
+            floating: true,
+            onTap: () {},
+          ),
+        ),
+      ),
+    );
+    final banner = find.byKey(const ValueKey('ios-pinned-banner'));
+    expect(tester.widget(banner), isA<GlassCapsule>());
+    expect(tester.widget<GlassCapsule>(banner).allowNative, isTrue);
+    expect(tester.getSize(banner).height, lessThanOrEqualTo(50));
+  });
+
+  testWidgets('кнопка «вниз» — нативное стекло', (tester) async {
+    final controller = AnimationController(vsync: const TestVSync(), value: 1);
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      _app(
+        Stack(
+          children: [
+            ScrollDownButton(
+              composerHeight: ValueNotifier<double>(70),
+              materialComposer: false,
+              composerUnderlap: true,
+              frosted: true,
+              liquidChrome: false,
+              pillBackdrop: null,
+              scrollDownCurved: controller,
+              newMessageCount: ValueNotifier<int>(0),
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+    final button = tester.widget<GlassCapsule>(
+      find.byKey(const ValueKey('ios-scroll-down')),
+    );
+    expect(button.allowNative, isTrue);
+  });
+
+  test('плашка голосового в iOS выше и заметнее', () {
+    expect(MediaPlaybackPill.iosHeight, greaterThan(MediaPlaybackPill.height));
   });
 }

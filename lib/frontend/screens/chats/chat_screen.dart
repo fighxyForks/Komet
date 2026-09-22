@@ -472,6 +472,7 @@ class _ChatScreenState extends State<ChatScreen>
   static const double _avgMessageHeight = 72.0;
   static const double _historyPrefetchExtent = _avgMessageHeight * 8;
   static const double _pinnedBannerLift = 6.0;
+  static const double _iosPinnedBannerGap = 6.0;
   static const double _unreadSeparatorHeight = 30.0;
   static const double _unreadSeparatorInset = 72.0;
   static const double _unreadAnchorFallbackAlignment = 0.3;
@@ -4507,8 +4508,8 @@ class _ChatScreenState extends State<ChatScreen>
         ChatAppBar.headerHeight(
                 glossy: glossy,
                 ios: AppIosGlass.active.value,
-              ) -
-        _pinnedBannerLift;
+              ) +
+        (AppIosGlass.active.value ? _iosPinnedBannerGap : -_pinnedBannerLift);
   }
 
   double _defaultEdgeVignetteHeight() {
