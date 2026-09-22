@@ -133,7 +133,7 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
         self.withRecorder(result) { $0.setTorch(on: on, result: result) }
       case "stop":
         self.withRecorder(result) { $0.stop(result: result) }
-      case "dispose":
+      case "distribute":
         self.videoNote?.dispose()
         self.videoNote = nil
         result(nil)
