@@ -13,6 +13,9 @@ import '../../core/utils/format.dart';
 import '../../core/utils/haptics.dart';
 import '../../l10n/app_localizations.dart';
 import 'custom_notification.dart';
+import 'glass/glass_capsule.dart';
+import 'glass/glass_menu.dart';
+import 'glass/ios_glass.dart';
 import 'komet_avatar.dart';
 import 'lottie_image.dart';
 import 'small_spinner.dart';
@@ -298,6 +301,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
   List<Offset> _buttonCenters = const [];
   List<Rect> _buttonHitRects = const [];
   Rect _menuRect = Rect.zero;
+  late final VoidCallback _releaseGlass;
   bool _initialized = false;
 
   int _hoveredIndex = -1;
@@ -318,6 +322,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
   @override
   void initState() {
     super.initState();
+    _releaseGlass = GlassSuppression.hold();
     if (_reactionsEnabled) {
       EmojiKeywordIndex.instance.ensureLoaded();
     }
@@ -538,6 +543,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
 
   @override
   void dispose() {
+    _releaseGlass();
     _animController.dispose();
     _expandController.dispose();
     widget.controller.removeListener(_onControllerUpdate);
@@ -1023,21 +1029,8 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       ),
     );
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
-        borderRadius: borderRadius,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: borderRadius,
-        child: GestureDetector(
+    final ios = IosGlass.of(context);
+    final surface = GestureDetector(
           onTap: () {},
           behavior: HitTestBehavior.opaque,
           child: Stack(
@@ -1076,8 +1069,53 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
                 ),
             ],
           ),
-        ),
+        );
+    if (ios) {
+      return GlassBackground(
+        key: const ValueKey('ios-reaction-strip'),
+        borderRadius: borderRadius,
+        tint: GlassMenuStyle.tint(cs),
+        sigma: 30,
+        child: surface,
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: borderRadius,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
+      child: ClipRRect(borderRadius: borderRadius, child: surface),
+    );
+  }
+
+  Widget _menuSurface(
+    ColorScheme cs, {
+    required Widget child,
+    Key? iosKey,
+  }) {
+    if (IosGlass.of(context)) {
+      return GlassBackground(
+        key: iosKey,
+        borderRadius: BorderRadius.circular(GlassMenuStyle.radius),
+        tint: GlassMenuStyle.tint(cs),
+        sigma: 30,
+        child: Material(type: MaterialType.transparency, child: child),
+      );
+    }
+    return Material(
+      color: cs.surfaceContainerHigh,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      elevation: 8,
+      shadowColor: Colors.black.withValues(alpha: 0.4),
+      child: child,
     );
   }
 
@@ -1219,12 +1257,9 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       width: panelWidth,
       child: GestureDetector(
         onTap: () {},
-        child: Material(
-          color: cs.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(16),
-          clipBehavior: Clip.antiAlias,
-          elevation: 8,
-          shadowColor: Colors.black.withValues(alpha: 0.4),
+        child: _menuSurface(
+          cs,
+          iosKey: const ValueKey('ios-message-panel'),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxHeight),
             child: Column(
@@ -1559,12 +1594,9 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
           alignment: tapAnchored
               ? Alignment(-1.0, _showBelow ? -1.0 : 1.0)
               : Alignment(widget.isMe ? 1.0 : -1.0, _showBelow ? -1.0 : 1.0),
-          child: Material(
-            color: cs.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            elevation: 8,
-            shadowColor: Colors.black.withValues(alpha: 0.4),
+          child: _menuSurface(
+            cs,
+            iosKey: const ValueKey('ios-message-actions'),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

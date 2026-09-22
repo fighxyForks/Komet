@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../widgets/small_spinner.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 
 // #***! плашка с датой между группами сообщений
 class DateSeparatorLabel extends StatelessWidget {
@@ -45,6 +47,28 @@ class DateSeparatorLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    if (floating && IosGlass.of(context)) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Center(
+          child: GlassBackground(
+            key: const ValueKey('ios-floating-date'),
+            shadow: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              child: Text(
+                _formatDateLabel(date),
+                style: TextStyle(
+                  color: cs.onSurface,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: EdgeInsets.symmetric(vertical: floating ? 2 : 8),
       child: Center(
