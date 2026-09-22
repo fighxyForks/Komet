@@ -897,6 +897,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appearanceVisualStyleLiquidGlass => 'Liquid Glass';
 
   @override
+  String get appearanceIosGlassTitle => 'Интерфейс iOS 26';
+
+  @override
+  String get appearanceIosGlassSubtitle =>
+      'Кнопки, меню и панели в стиле Liquid Glass. На iOS 26 и новее включено по умолчанию.';
+
+  @override
+  String get iosChannelMute => 'Выключить звук';
+
+  @override
+  String get iosChannelUnmute => 'Включить звук';
+
+  @override
+  String get iosChatSearch => 'Поиск';
+
+  @override
   String get appearanceGlassMaterial => 'Стекло';
 
   @override

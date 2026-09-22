@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -16,6 +17,8 @@ import '../../l10n/app_localizations.dart';
 import '../widgets/chat_menu_overlay.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/custom_notification.dart';
+import '../widgets/glass/glass_capsule.dart';
+import '../widgets/glass/ios_glass.dart';
 import '../widgets/small_spinner.dart';
 import '../widgets/sheet_helpers.dart';
 import '../widgets/share_unopenable_file.dart';
@@ -200,6 +203,27 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       ),
     );
     if (clear != true || !mounted) return;
+    await _confirmClear();
+  }
+
+  void _showIosSettingsMenu(Rect anchor) {
+    final l10n = AppLocalizations.of(context)!;
+    showChatMenu(
+      context: context,
+      anchorRect: anchor,
+      items: [
+        ChatMenuItem(
+          icon: Symbols.delete_sweep,
+          label: l10n.downloadsClearHistory,
+          destructive: true,
+          onTap: () => unawaited(_confirmClear()),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmClear() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showConfirmDialog(
       context,
       title: l10n.downloadsClearTitle,
@@ -217,23 +241,45 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final ios = IosGlass.of(context);
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 4,
+        leadingWidth: ios ? 64 : null,
+        leading: ios && Navigator.of(context).canPop()
+            ? Center(
+                child: GlassIconButton(
+                  key: const ValueKey('downloads-back'),
+                  icon: Symbols.arrow_back_ios_new,
+                  iconSize: 20,
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+              )
+            : null,
         title: Text(
           l10n.downloadsTitle,
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),
         actions: [
-          TextButton(
-            key: const ValueKey('downloads-settings'),
-            onPressed: _settings,
-            child: Text(l10n.downloadsSettings),
-          ),
-          const SizedBox(width: 8),
+          if (ios)
+            GlassIconButton(
+              key: const ValueKey('downloads-settings'),
+              icon: Symbols.tune,
+              iconSize: 21,
+              tooltip: l10n.downloadsSettings,
+              onPressedAt: _showIosSettingsMenu,
+            )
+          else
+            TextButton(
+              key: const ValueKey('downloads-settings'),
+              onPressed: _settings,
+              child: Text(l10n.downloadsSettings),
+            ),
+          SizedBox(width: ios ? 12 : 8),
         ],
       ),
       body: _loading
@@ -398,7 +444,10 @@ class _DownloadTile extends StatelessWidget {
               builder: (buttonContext) => IconButton(
                 key: ValueKey('download-more-${record.cacheName}'),
                 tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-                icon: Icon(Symbols.more_vert, color: cs.onSurfaceVariant),
+                icon: Icon(
+                  IosGlass.of(context) ? Symbols.more_horiz : Symbols.more_vert,
+                  color: cs.onSurfaceVariant,
+                ),
                 onPressed: () => _openMenu(buttonContext),
               ),
             ),

@@ -335,6 +335,11 @@
   "appearanceVisualStyleMaterialYou": "Material You",
   "appearanceVisualStyleGlossy": "Glossy",
   "appearanceVisualStyleLiquidGlass": "Liquid Glass",
+  "appearanceIosGlassTitle": "iOS 26 interface",
+  "appearanceIosGlassSubtitle": "Liquid Glass buttons, menus and bars. On by default on iOS 26 and later.",
+  "iosChannelMute": "Mute",
+  "iosChannelUnmute": "Unmute",
+  "iosChatSearch": "Search",
   "appearanceGlassMaterial": "Glass",
   "appearanceChatChromeTitle": "Chat screen elements",
   "appearanceChatChromeSubtitle": "Background of the top and bottom panels: color, blur, or transparent. With blur or transparency, messages scroll under the panels",
@@ -1195,13 +1200,37 @@
   },
   "blacklistEmpty": "Nobody is blocked",
   "joinRequestsTitle": "Join requests",
+  "@joinRequestsTitle": {
+    "description": "Join requests screen title."
+  },
   "joinRequestsEmpty": "No pending requests",
+  "@joinRequestsEmpty": {
+    "description": "Empty state for the join requests list."
+  },
   "joinRequestsApprove": "Approve",
+  "@joinRequestsApprove": {
+    "description": "Approve join request button."
+  },
   "joinRequestsDecline": "Decline",
+  "@joinRequestsDecline": {
+    "description": "Decline join request button."
+  },
   "joinRequestsApproved": "Request approved",
+  "@joinRequestsApproved": {
+    "description": "Notification after approving a join request."
+  },
   "joinRequestsDeclined": "Request declined",
+  "@joinRequestsDeclined": {
+    "description": "Notification after declining a join request."
+  },
   "joinRequestsActionFailed": "Failed, try again",
+  "@joinRequestsActionFailed": {
+    "description": "Notification when a join request action failed."
+  },
   "joinRequestsLoadError": "Failed to load requests",
+  "@joinRequestsLoadError": {
+    "description": "Notification when join requests failed to load."
+  },
   "blacklistLoadError": "Failed to load the blacklist",
   "videoEditorQualityLow": "Small size",
   "videoEditorQualityHigh": "High quality",

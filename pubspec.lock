@@ -1171,6 +1171,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.2.0"
+  native_liquid_glass:
+    dependency: "direct main"
+    description:
+      name: native_liquid_glass
+      sha256: "1df94e5998f7eb5fe57a8fff5228f9c9b1650f26aa6d6799b2c78dcc73f5261a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1"
   native_toolchain_c:
     dependency: transitive
     description:
@@ -1924,10 +1932,10 @@ packages:
     dependency: transitive
     description:
       name: vector_math
-      sha256: f36f9f3be64c6198714492bb455c11056e33e2f85d9a0b676a48301e44fdcf47
+      sha256: "92b9910f66ed1057fd4da7b040ae7c74cafacf885bdc81be496928d5049b032d"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.2"
+    version: "2.4.3"
   video_player:
     dependency: "direct main"
     description:
@@ -2066,4 +2074,4 @@ packages:
     version: "3.1.3"
 sdks:
   dart: ">=3.11.0 <4.0.0"
-  flutter: ">=3.38.4"
+  flutter: ">=3.41.2"

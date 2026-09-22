@@ -2,13 +2,14 @@ import 'package:flutter/widgets.dart';
 
 import '../config/app_bubble_behavior.dart';
 import '../config/app_bubble_shape.dart';
+import '../config/app_ios_glass.dart';
 
 // #***! 20 обычный угол, 4 срезанный на стыке с соседним
 const double kBubbleBigRadius = 20;
 const double kBubbleSmallRadius = 4;
 
-const Radius _big = Radius.circular(kBubbleBigRadius);
-const Radius _small = Radius.circular(kBubbleSmallRadius);
+const double kIosBubbleRadius = 19;
+const double kIosBubbleJoinRadius = 7;
 
 // #***! скругления зависят от места в группе и настроек
 BorderRadius computeBubbleRadius({
@@ -19,30 +20,36 @@ BorderRadius computeBubbleRadius({
   required BubbleBehavior behavior,
   bool hasPhotoWithCaption = false,
   bool hasMultiplePhotosNoCaption = false,
+  bool? ios,
 }) {
+  final iosShape = ios ?? AppIosGlass.active.value;
+  final big = Radius.circular(iosShape ? kIosBubbleRadius : kBubbleBigRadius);
+  final small = Radius.circular(
+    iosShape ? kIosBubbleJoinRadius : kBubbleSmallRadius,
+  );
   final isSingle = isTop && isBottom;
 
   // #***! фото с подписью, низ срезан потому что снизу текст
   if (hasPhotoWithCaption && (isTop || isBottom)) {
     return BorderRadius.only(
-      topLeft: _big,
-      topRight: _big,
-      bottomLeft: isMe ? _big : _small,
-      bottomRight: _small,
+      topLeft: big,
+      topRight: big,
+      bottomLeft: isMe ? big : small,
+      bottomRight: small,
     );
   }
 
   // #***! альбом без подписи, срезаны углы на стыках
   if (hasMultiplePhotosNoCaption && isBottom) {
     return BorderRadius.only(
-      topLeft: isMe ? _big : _small,
-      topRight: _small,
-      bottomLeft: isMe ? _big : _small,
-      bottomRight: isMe ? _small : _big,
+      topLeft: isMe ? big : small,
+      topRight: small,
+      bottomLeft: isMe ? big : small,
+      bottomRight: isMe ? small : big,
     );
   }
 
-  final base = style == BubbleStyle.desktop ? _small : _big;
+  final base = style == BubbleStyle.desktop && !iosShape ? small : big;
   Radius tl = base, tr = base, bl = base, br = base;
 
   // #***! неизменяемая форма или одиночное, углы одинаковые
@@ -58,23 +65,23 @@ BorderRadius computeBubbleRadius({
   // #***! в группе срезается угол со стороны отправителя
   if (isTop) {
     if (isMe) {
-      br = _small;
+      br = small;
     } else {
-      bl = _small;
+      bl = small;
     }
   } else if (isBottom) {
     if (isMe) {
-      tr = _small;
+      tr = small;
     } else {
-      tl = _small;
+      tl = small;
     }
   } else {
     if (isMe) {
-      tr = _small;
-      br = _small;
+      tr = small;
+      br = small;
     } else {
-      tl = _small;
-      bl = _small;
+      tl = small;
+      bl = small;
     }
   }
 

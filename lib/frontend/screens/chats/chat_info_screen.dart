@@ -37,7 +37,9 @@ import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/formatted_message_text.dart';
 import '../../widgets/reload_on_reconnect.dart';
+import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glossy_pill.dart';
+import '../../widgets/settings_card.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/profile_header_scroll.dart';
 import '../../widgets/profile_hero.dart';
@@ -1651,6 +1653,34 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     );
   }
 
+  Widget _card(
+    ColorScheme cs, {
+    required Widget child,
+    VoidCallback? onTap,
+    EdgeInsetsGeometry padding = EdgeInsets.zero,
+  }) {
+    if (IosGlass.of(context)) {
+      return IosGroupedSection(
+        radius: 18,
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(padding: padding, child: child),
+          ),
+        ),
+      );
+    }
+    return GlossyPill(
+      onTap: onTap,
+      color: cs.surfaceContainerHigh,
+      borderRadius: BorderRadius.circular(14),
+      padding: padding,
+      depth: 6,
+      child: child,
+    );
+  }
+
   Widget _actionBtn(
     ColorScheme cs,
     IconData icon,
@@ -1660,12 +1690,10 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     bool slashed = false,
   }) {
     return Expanded(
-      child: GlossyPill(
+      child: _card(
+        cs,
         onTap: onTap,
-        color: cs.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(14),
         padding: const EdgeInsets.symmetric(vertical: 10),
-        depth: 6,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1697,12 +1725,10 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     String label, [
     VoidCallback? onTap,
   ]) {
-    return GlossyPill(
+    return _card(
+      cs,
       onTap: onTap,
-      color: cs.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(14),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-      depth: 6,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -1787,11 +1813,9 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     String value, {
     bool isLink = false,
   }) {
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(14),
+    return _card(
+      cs,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      depth: 6,
       child: SizedBox(
         width: double.infinity,
         child: Column(
@@ -1819,11 +1843,9 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   }
 
   Widget _linkCard(ColorScheme cs, String link, {required bool isPublic}) {
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(14),
+    return _card(
+      cs,
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 14),
-      depth: 6,
       child: Row(
         children: [
           Expanded(
@@ -1870,11 +1892,9 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     const int collapsedLines = 3;
     final isLong = desc.length > 120;
 
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(14),
+    return _card(
+      cs,
       padding: const EdgeInsets.all(16),
-      depth: 6,
       child: SizedBox(
         width: double.infinity,
         child: Column(
@@ -2145,11 +2165,9 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   }
 
   Widget _buildInfoRowsCard(ColorScheme cs) {
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(14),
+    return _card(
+      cs,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-      depth: 6,
       child: _buildAllInfoRows(cs),
     );
   }

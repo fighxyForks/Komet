@@ -8,6 +8,8 @@ import '../../core/media/media_playback.dart';
 import '../../core/utils/format.dart';
 import '../../core/utils/haptics.dart';
 import '../../l10n/app_localizations.dart';
+import 'glass/glass_capsule.dart';
+import 'glass/ios_glass.dart';
 import 'max_link_nav.dart';
 
 class MediaPlaybackPill extends StatelessWidget {
@@ -276,74 +278,82 @@ class _PillSurface extends StatelessWidget {
         ? ''
         : formatClock(DateTime.fromMillisecondsSinceEpoch(time!));
 
-    return Padding(
-      padding: margin,
-      child: ClipRRect(
-        borderRadius: radius,
-        child: Material(
-          color: cs.surfaceContainerHigh,
-          child: InkWell(
-            onTap: onOpen,
-            child: SizedBox(
-              height: MediaPlaybackPill.height,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Row(
-                      children: [
-                        AnimatedBuilder(
-                          animation: tick,
-                          builder: (context, _) => _IconTap(
-                            icon: isPlaying()
-                                ? Symbols.pause
-                                : Symbols.play_arrow,
-                            color: cs.primary,
-                            size: 19,
-                            onTap: onToggle,
-                          ),
+    final ios = IosGlass.of(context);
+    final surface = ClipRRect(
+      borderRadius: radius,
+      child: Material(
+        color: ios ? Colors.transparent : cs.surfaceContainerHigh,
+        child: InkWell(
+          onTap: onOpen,
+          child: SizedBox(
+            height: MediaPlaybackPill.height,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Row(
+                    children: [
+                      AnimatedBuilder(
+                        animation: tick,
+                        builder: (context, _) => _IconTap(
+                          icon: isPlaying()
+                              ? Symbols.pause
+                              : Symbols.play_arrow,
+                          color: cs.primary,
+                          size: 19,
+                          onTap: onToggle,
                         ),
-                        Expanded(
-                          child: Text(
-                            label ?? '$author ${l10n.playbackPillAt} $clock',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: cs.onSurfaceVariant,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                        if (onSpeed != null)
-                          _SpeedChip(label: _speedLabel(), onTap: onSpeed!),
-                        _IconTap(
-                          icon: Symbols.close,
-                          color: cs.onSurfaceVariant,
-                          size: 17,
-                          onTap: onClose,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: AnimatedBuilder(
-                      animation: tick,
-                      builder: (context, child) => FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: progress(),
-                        child: child,
                       ),
-                      child: Container(height: 2, color: cs.primary),
-                    ),
+                      Expanded(
+                        child: Text(
+                          label ?? '$author ${l10n.playbackPillAt} $clock',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: cs.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      if (onSpeed != null)
+                        _SpeedChip(label: _speedLabel(), onTap: onSpeed!),
+                      _IconTap(
+                        icon: Symbols.close,
+                        color: cs.onSurfaceVariant,
+                        size: 17,
+                        onTap: onClose,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: AnimatedBuilder(
+                    animation: tick,
+                    builder: (context, child) => FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progress(),
+                      child: child,
+                    ),
+                    child: Container(height: 2, color: cs.primary),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+    return Padding(
+      padding: margin,
+      child: ios
+          ? GlassBackground(
+              key: const ValueKey('ios-playback-pill'),
+              borderRadius: radius,
+              child: surface,
+            )
+          : surface,
     );
   }
 }

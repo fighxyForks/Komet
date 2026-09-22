@@ -20,6 +20,11 @@ import '../../widgets/decrypted_text.dart';
 import '../../widgets/encryption_lock_badge.dart';
 import '../../widgets/online_dot.dart';
 import '../../widgets/custom_notification.dart';
+import '../../../core/config/app_ios_glass.dart';
+import '../../widgets/chat_menu_overlay.dart';
+import '../../widgets/glass/glass_capsule.dart';
+import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/swipe_route.dart';
@@ -1594,7 +1599,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     _navPageAnimEnd = index.toDouble();
     setState(() => _currentNavIndex = index);
     activeNavTab.value = index;
-    _navPageAnimController.forward(from: 0);
+    final releaseGlass = AppIosGlass.nativeViews
+        ? GlassSuppression.hold()
+        : null;
+    _navPageAnimController
+        .forward(from: 0)
+        .whenCompleteOrCancel(() => releaseGlass?.call());
     if (index == 0) _scheduleInformerPresentation();
   }
 
@@ -1721,6 +1731,7 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   Widget _buildPinnedChatsHeader(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
     return ColoredBox(
       color: cs.surface,
       child: Column(
@@ -1754,19 +1765,37 @@ class _ChatListScreenState extends State<ChatListScreen>
                                           padding: const EdgeInsets.only(
                                             right: 4,
                                           ),
-                                          child: IconButton(
-                                            key: const ValueKey('share-back'),
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            icon: Icon(
-                                              Symbols.arrow_back,
-                                              color: cs.onSurface,
-                                              weight: 500,
-                                            ),
-                                            onPressed: () => Navigator.of(
-                                              context,
-                                            ).maybePop(),
-                                          ),
+                                          child: ios
+                                              ? GlassIconButton(
+                                                  key: const ValueKey(
+                                                    'share-back',
+                                                  ),
+                                                  icon: Symbols
+                                                      .arrow_back_ios_new,
+                                                  iconSize: 20,
+                                                  tooltip:
+                                                      MaterialLocalizations.of(
+                                                        context,
+                                                      ).backButtonTooltip,
+                                                  onPressed: () => Navigator.of(
+                                                    context,
+                                                  ).maybePop(),
+                                                )
+                                              : IconButton(
+                                                  key: const ValueKey(
+                                                    'share-back',
+                                                  ),
+                                                  visualDensity:
+                                                      VisualDensity.compact,
+                                                  icon: Icon(
+                                                    Symbols.arrow_back,
+                                                    color: cs.onSurface,
+                                                    weight: 500,
+                                                  ),
+                                                  onPressed: () => Navigator.of(
+                                                    context,
+                                                  ).maybePop(),
+                                                ),
                                         ),
                                       if (AppStories.current.value &&
                                           !_shareMode &&
@@ -1821,7 +1850,9 @@ class _ChatListScreenState extends State<ChatListScreen>
                                           style: TextStyle(
                                             color: cs.onSurface,
                                             fontSize: 20,
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: ios
+                                                ? IosType.largeTitle
+                                                : FontWeight.w600,
                                             fontFamily: displayFontOf(context),
                                           ),
                                         ),
@@ -1830,53 +1861,60 @@ class _ChatListScreenState extends State<ChatListScreen>
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (!widget.forwardMode &&
-                                        !widget.archiveMode &&
-                                        !_shareMode)
-                                      IconButton(
-                                        key: const ValueKey('downloads-button'),
-                                        tooltip: AppLocalizations.of(
-                                          context,
-                                        )!.downloadsTooltip,
+                                if (ios)
+                                  _buildIosTopActions()
+                                else
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (!widget.forwardMode &&
+                                          !widget.archiveMode &&
+                                          !_shareMode)
+                                        IconButton(
+                                          key: const ValueKey(
+                                            'downloads-button',
+                                          ),
+                                          tooltip: AppLocalizations.of(
+                                            context,
+                                          )!.downloadsTooltip,
+                                          icon: Icon(
+                                            Symbols.download_for_offline,
+                                            color: cs.outline,
+                                            weight: 400,
+                                          ),
+                                          onPressed: () =>
+                                              unawaited(_openDownloads()),
+                                        ),
+                                      PopupMenuButton<int>(
                                         icon: Icon(
-                                          Symbols.download_for_offline,
+                                          Symbols.more_vert,
                                           color: cs.outline,
                                           weight: 400,
                                         ),
-                                        onPressed: () =>
-                                            unawaited(_openDownloads()),
-                                      ),
-                                    PopupMenuButton<int>(
-                                      icon: Icon(
-                                        Symbols.more_vert,
-                                        color: cs.outline,
-                                        weight: 400,
-                                      ),
-                                      offset: const Offset(0, 48),
-                                      elevation: 4,
-                                      color: cs.surfaceContainerHigh,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      onSelected: _onOverflowMenuSelected,
-                                      itemBuilder: (context) => [
-                                        _buildPopupMenuItem(
-                                          1,
-                                          'Избранное',
-                                          Symbols.bookmark,
+                                        offset: const Offset(0, 48),
+                                        elevation: 4,
+                                        color: cs.surfaceContainerHigh,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
                                         ),
-                                        _buildPopupMenuItem(
-                                          2,
-                                          'Прочитать всё',
-                                          Symbols.done_all,
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                        onSelected: _onOverflowMenuSelected,
+                                        itemBuilder: (context) => [
+                                          _buildPopupMenuItem(
+                                            1,
+                                            'Избранное',
+                                            Symbols.bookmark,
+                                          ),
+                                          _buildPopupMenuItem(
+                                            2,
+                                            'Прочитать всё',
+                                            Symbols.done_all,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                               ],
                             ),
                           ),
@@ -1890,50 +1928,62 @@ class _ChatListScreenState extends State<ChatListScreen>
                             ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 3, 20, 8),
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: (widget.forwardMode || _shareMode)
-                                  ? null
-                                  : _openSearch,
-                              child: GlossyPill(
-                                color: cs.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(50),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                depth: 6,
-                                child: SizedBox(
-                                  height: 44,
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Symbols.search,
-                                        color: cs.outline,
-                                        size: 20,
-                                        weight: 400,
+                            child: ios
+                                ? GlassSearchCapsule(
+                                    key: const ValueKey('chat-list-search'),
+                                    hint: widget.forwardMode
+                                        ? 'Пересылка...'
+                                        : 'Поиск',
+                                    onTap: (widget.forwardMode || _shareMode)
+                                        ? null
+                                        : _openSearch,
+                                  )
+                                : GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: (widget.forwardMode || _shareMode)
+                                        ? null
+                                        : _openSearch,
+                                    child: GlossyPill(
+                                      color: cs.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(50),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
                                       ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        widget.forwardMode
-                                            ? 'Пересылка...'
-                                            : 'Поиск',
-                                        style: TextStyle(
-                                          color: cs.outline,
-                                          fontSize: 15,
+                                      depth: 6,
+                                      child: SizedBox(
+                                        height: 44,
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Symbols.search,
+                                              color: cs.outline,
+                                              size: 20,
+                                              weight: 400,
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(
+                                              widget.forwardMode
+                                                  ? 'Пересылка...'
+                                                  : 'Поиск',
+                                              style: TextStyle(
+                                                color: cs.outline,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ),
                           ),
                         ],
                       ),
               ),
             ),
           ),
-          if (_folders.length > 1)
+          if (_folders.length > 1 && ios && !_showFoldersShimmer)
+            _buildIosFolderStrip()
+          else if (_folders.length > 1)
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutCubic,
@@ -2288,6 +2338,7 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   Widget _buildDockedBottomNav(
     ColorScheme cs,
+    double pageW,
     double navInnerW,
     double bottomInset,
   ) {
@@ -2315,11 +2366,12 @@ class _ChatListScreenState extends State<ChatListScreen>
       return best;
     }
 
+    final side = IosGlass.of(context) ? (pageW - navInnerW - 4) / 2 : 8.0;
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
-      left: 8,
-      right: 8,
+      left: side,
+      right: side,
       bottom: _isSelectionMode ? -100 : bottomInset + 10.0,
       child: RepaintBoundary(
         child: GestureDetector(
@@ -2419,7 +2471,9 @@ class _ChatListScreenState extends State<ChatListScreen>
             final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
             final pageW = constraints.maxWidth;
             final pageH = constraints.maxHeight;
-            final navInnerW = pageW - 20;
+            final navInnerW = IosGlass.of(context)
+                ? PillNavGeometry.iosInnerWidth(pageW - 20, 4)
+                : pageW - 20;
             final totalWeight = 5.2;
             final unitWidth = navInnerW / totalWeight;
             final inactiveWidth = unitWidth * 1.0;
@@ -2520,7 +2574,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                     ),
                   ),
                 ),
-                _buildDockedBottomNav(cs, navInnerW, bottomInset),
+                _buildDockedBottomNav(cs, pageW, navInnerW, bottomInset),
                 AnimatedBuilder(
                   animation: Listenable.merge([
                     _fabController,
@@ -2572,53 +2626,74 @@ class _ChatListScreenState extends State<ChatListScreen>
                             ),
                           Positioned(
                             right: 20,
-                            bottom: bottomInset + 90,
-                            child: ValueListenableBuilder<VisualStyle>(
-                              valueListenable: AppVisualStyle.current,
-                              builder: (context, style, child) =>
-                                  ValueListenableBuilder<NavPillStyle>(
-                                    valueListenable: AppNavPillStyle.current,
-                                    builder: (context, navStyle, child) {
-                                      final liquid =
-                                          style.glossyChrome &&
-                                          NavPillMaterial.isLiquid(navStyle);
-                                      final frost =
-                                          style.glossyChrome &&
-                                          NavPillMaterial.isFrost(navStyle);
-                                      return GlossyPill(
-                                        onTap: _toggleFab,
-                                        color: frost || liquid
-                                            ? AppFrost.glassTint(cs)
-                                            : cs.primaryContainer,
-                                        blurSigma: frost
-                                            ? AppFrost.sigma
-                                            : null,
-                                        liquid: liquid,
-                                        backdropKey: _frostBackdrop,
-                                        borderRadius: BorderRadius.circular(28),
-                                        elevated: true,
-                                        depth: 12,
-                                        child: child!,
-                                      );
-                                    },
-                                    child: child,
-                                  ),
-                              child: SizedBox(
-                                width: 56,
-                                height: 56,
-                                child: Center(
-                                  child: Transform.rotate(
-                                    angle: val * (pi / 4),
-                                    child: Icon(
-                                      Symbols.add,
-                                      color: cs.onPrimaryContainer,
-                                      size: 28,
-                                      weight: 400,
+                            bottom: IosGlass.of(context)
+                                ? bottomInset +
+                                      22 +
+                                      SlidingPillNav.heightFor(ios: true)
+                                : bottomInset + 90,
+                            child: IosGlass.of(context)
+                                ? GlassIconButton(
+                                    key: const ValueKey('ios-create-button'),
+                                    icon: Symbols.add,
+                                    size: 46,
+                                    iconSize: 24,
+                                    tooltip: MaterialLocalizations.of(
+                                      context,
+                                    ).showMenuTooltip,
+                                    onPressedAt: _showIosCreateMenu,
+                                  )
+                                : ValueListenableBuilder<VisualStyle>(
+                                    valueListenable: AppVisualStyle.current,
+                                    builder: (context, style, child) =>
+                                        ValueListenableBuilder<NavPillStyle>(
+                                          valueListenable:
+                                              AppNavPillStyle.current,
+                                          builder: (context, navStyle, child) {
+                                            final liquid =
+                                                style.glossyChrome &&
+                                                NavPillMaterial.isLiquid(
+                                                  navStyle,
+                                                );
+                                            final frost =
+                                                style.glossyChrome &&
+                                                NavPillMaterial.isFrost(
+                                                  navStyle,
+                                                );
+                                            return GlossyPill(
+                                              onTap: _toggleFab,
+                                              color: frost || liquid
+                                                  ? AppFrost.glassTint(cs)
+                                                  : cs.primaryContainer,
+                                              blurSigma: frost
+                                                  ? AppFrost.sigma
+                                                  : null,
+                                              liquid: liquid,
+                                              backdropKey: _frostBackdrop,
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              elevated: true,
+                                              depth: 12,
+                                              child: child!,
+                                            );
+                                          },
+                                          child: child,
+                                        ),
+                                    child: SizedBox(
+                                      width: 56,
+                                      height: 56,
+                                      child: Center(
+                                        child: Transform.rotate(
+                                          angle: val * (pi / 4),
+                                          child: Icon(
+                                            Symbols.add,
+                                            color: cs.onPrimaryContainer,
+                                            size: 28,
+                                            weight: 400,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            ),
                           ),
                         ],
                       ],
@@ -2920,6 +2995,91 @@ class _ChatListScreenState extends State<ChatListScreen>
     return true;
   }
 
+  Widget _buildIosFolderStrip() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+      child: GlassCapsule(
+        key: const ValueKey('ios-folder-strip'),
+        height: 40,
+        padding: const EdgeInsets.all(3),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            const minWidthPerFolder = 76.0;
+            final fits =
+                _folders.length * minWidthPerFolder <= constraints.maxWidth;
+            if (fits) {
+              return Row(
+                children: [
+                  for (final folder in _folders)
+                    Expanded(
+                      key: ValueKey('ios-folder-${folder.id}'),
+                      child: _buildIosFolderChip(folder),
+                    ),
+                ],
+              );
+            }
+            return ListView.builder(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: _folders.length,
+              itemBuilder: (context, i) => KeyedSubtree(
+                key: ValueKey('ios-folder-${_folders[i].id}'),
+                child: _buildIosFolderChip(_folders[i]),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIosFolderChip(ChatFolder folder) {
+    final cs = Theme.of(context).colorScheme;
+    final isSelected = _selectedFolderId == folder.id;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        Haptics.selection();
+        _selectFolder(folder.id);
+      },
+      onLongPress: () {
+        Haptics.medium();
+        showFolderActionSheet(context, folder: folder);
+      },
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              opacity: isSelected ? 1 : 0,
+              child: const GlassSegmentThumb(radius: 17),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Center(
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 180),
+                style: TextStyle(
+                  color: isSelected ? cs.onSurface : cs.onSurfaceVariant,
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+                child: Text(
+                  _folderChipLabel(folder),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFolderChip(ChatFolder folder) {
     final cs = Theme.of(context).colorScheme;
     final folderId = folder.id;
@@ -3008,7 +3168,11 @@ class _ChatListScreenState extends State<ChatListScreen>
           children: [
             TextSpan(
               text: 'Черновик: ',
-              style: TextStyle(color: cs.error),
+              style: TextStyle(
+                color: cs.error,
+                fontWeight: IosGlass.of(context) ? IosType.name : null,
+                fontStyle: IosGlass.of(context) ? FontStyle.normal : null,
+              ),
             ),
             TextSpan(
               text: draft,
@@ -3563,6 +3727,35 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
+  void _showIosCreateMenu(Rect anchor) {
+    showChatMenu(
+      context: context,
+      anchorRect: anchor,
+      items: [
+        ChatMenuItem(
+          icon: Symbols.group_add,
+          label: 'Создать группу',
+          onTap: () => showCreateGroupFlow(context),
+        ),
+        ChatMenuItem(
+          icon: Symbols.campaign,
+          label: 'Создать канал',
+          onTap: () => showCreateChannelFlow(context),
+        ),
+        ChatMenuItem(
+          icon: Symbols.person_add,
+          label: 'Создать контакт',
+          onTap: () => showAddContactSheet(context),
+        ),
+        ChatMenuItem(
+          icon: Symbols.create_new_folder,
+          label: 'Создать папку',
+          onTap: () => showFolderEditSheet(context),
+        ),
+      ],
+    );
+  }
+
   Widget _buildFabMenu() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -3632,6 +3825,45 @@ class _ChatListScreenState extends State<ChatListScreen>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildIosTopActions() {
+    return GlassButtonGroup(
+      items: [
+        if (!widget.forwardMode && !widget.archiveMode && !_shareMode)
+          GlassGroupItem(
+            key: const ValueKey('downloads-button'),
+            icon: Symbols.download_for_offline,
+            tooltip: AppLocalizations.of(context)!.downloadsTooltip,
+            onPressed: () => unawaited(_openDownloads()),
+          ),
+        GlassGroupItem(
+          key: const ValueKey('overflow-button'),
+          icon: Symbols.more_horiz,
+          tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+          onPressedAt: _showIosOverflowMenu,
+        ),
+      ],
+    );
+  }
+
+  void _showIosOverflowMenu(Rect anchor) {
+    showChatMenu(
+      context: context,
+      anchorRect: anchor,
+      items: [
+        ChatMenuItem(
+          icon: Symbols.bookmark,
+          label: 'Избранное',
+          onTap: () => _onOverflowMenuSelected(1),
+        ),
+        ChatMenuItem(
+          icon: Symbols.done_all,
+          label: 'Прочитать всё',
+          onTap: () => _onOverflowMenuSelected(2),
+        ),
+      ],
     );
   }
 

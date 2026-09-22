@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../frontend/widgets/liquid_glass.dart';
+import 'app_ios_glass.dart';
 import 'persisted_setting.dart';
 
 // #***! фон поля ввода
@@ -14,6 +15,10 @@ class ComposerMaterial {
   static bool isFrost(ComposerBackground value) =>
       value == ComposerBackground.frostBlur ||
       (value == ComposerBackground.liquidGlass && !LiquidGlass.isSupported);
+
+  static ComposerBackground get effective => AppIosGlass.active.value
+      ? ComposerBackground.frostBlur
+      : AppComposerBackground.current.value;
 }
 
 // #***! настройка фона поля ввода

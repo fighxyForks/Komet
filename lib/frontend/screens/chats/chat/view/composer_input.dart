@@ -15,8 +15,11 @@ import 'package:komet/frontend/screens/chats/chat/upload_status.dart';
 import 'package:komet/frontend/screens/chats/chat/video_note_controller.dart';
 import 'package:komet/frontend/screens/chats/chat/voice_record_controller.dart';
 import 'package:komet/frontend/widgets/composer_morph_icon.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';
+import 'package:komet/frontend/widgets/lottie_slash_icon.dart';
 import 'package:komet/frontend/widgets/paste_media_scope.dart';
 import 'package:komet/frontend/widgets/reply_preview.dart';
 import 'package:komet/frontend/widgets/rich_message_controller.dart';
@@ -59,6 +62,7 @@ class ComposerInputBar extends StatelessWidget {
     this.channelSubscribing = false,
     this.canPostToChannel = false,
     this.onSubscribe,
+    this.onOpenSearch,
     this.showStickerButton = true,
     this.showAttachButton = true,
     this.forceSend = false,
@@ -66,6 +70,7 @@ class ComposerInputBar extends StatelessWidget {
     this.hintText,
     this.bottomSafe = true,
     this.vignette = false,
+    this.iosGlass = false,
   });
 
   final String chatType;
@@ -103,6 +108,7 @@ class ComposerInputBar extends StatelessWidget {
   final bool channelSubscribing;
   final bool canPostToChannel;
   final VoidCallback? onSubscribe;
+  final VoidCallback? onOpenSearch;
   final bool showStickerButton;
   final bool showAttachButton;
   final bool forceSend;
@@ -110,6 +116,7 @@ class ComposerInputBar extends StatelessWidget {
   final String? hintText;
   final bool bottomSafe;
   final bool vignette;
+  final bool iosGlass;
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +133,60 @@ class ComposerInputBar extends StatelessWidget {
 
     final isChannel = chatType == "CHANNEL";
     final isGroup = chatType == "CHAT" || chatType == "GROUP";
+    final ios = IosGlass.of(context);
+    if (ios && (isChannel || isGroup) && !hasForward && !channelSubscribed) {
+      return _iosChannelBar(
+        context,
+        key: const ValueKey('ios-subscribe'),
+        onTap: channelSubscribing ? null : onSubscribe,
+        child: channelSubscribing
+            ? SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: cs.primary,
+                ),
+              )
+            : Text(
+                isChannel ? 'Подписаться' : 'Вступить',
+                style: TextStyle(
+                  color: cs.primary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+      );
+    }
+    if (ios && isChannel && !hasForward && !canPostToChannel) {
+      return _iosChannelBar(
+        context,
+        key: const ValueKey('ios-mute'),
+        onTap: onToggleMute,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LottieSlashIcon(
+              asset: 'assets/lottie/ic_notifications_on_to_off.json',
+              slashed: isMuted,
+              color: cs.onSurface,
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isMuted
+                  ? AppLocalizations.of(context)!.iosChannelUnmute
+                  : AppLocalizations.of(context)!.iosChannelMute,
+              style: TextStyle(
+                color: cs.onSurface,
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     if ((isChannel || isGroup) && !hasForward && !channelSubscribed) {
       return SafeArea(
         child: Padding(
@@ -490,6 +551,8 @@ class ComposerInputBar extends StatelessWidget {
                                                     ? Colors.transparent
                                                     : recording
                                                     ? cs.error
+                                                    : iosGlass && sendMode
+                                                    ? cs.primary
                                                     : _frost
                                                     ? AppFrost.glassTint(cs)
                                                     : cs.surfaceContainerHighest,
@@ -529,7 +592,9 @@ class ComposerInputBar extends StatelessWidget {
                                                                 ? cs.error
                                                                 : cs.onError)
                                                           : sendMode
-                                                          ? cs.primary
+                                                          ? (iosGlass
+                                                                ? cs.onPrimary
+                                                                : cs.primary)
                                                           : _flat
                                                           ? cs.onSurfaceVariant
                                                           : cs.onSurface,
@@ -599,7 +664,7 @@ class ComposerInputBar extends StatelessWidget {
 
   bool get _translucent => _frost || _liquid;
 
-  double get _controlSize => _flat ? 48 : 54;
+  double get _controlSize => iosGlass ? 46 : (_flat ? 48 : 54);
 
   double get _barSideInset => _flat ? 0 : 12;
 
@@ -628,6 +693,13 @@ class ComposerInputBar extends StatelessWidget {
   }
 
   Widget _fieldSurface(ColorScheme cs, Widget child) {
+    if (iosGlass) {
+      return GlassCapsule(
+        key: const ValueKey('ios-composer-field'),
+        borderRadius: BorderRadius.circular(_controlSize / 2),
+        child: child,
+      );
+    }
     if (_flat) return child;
     return GlossyPill(
       color: _translucent
@@ -674,6 +746,15 @@ class ComposerInputBar extends StatelessWidget {
     VoidCallback? onTap,
     VoidCallback? onLongPress,
   }) {
+    if (iosGlass) {
+      return GlassCapsule(
+        key: const ValueKey('ios-composer-action'),
+        tint: color.a >= 1 ? color : null,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: child,
+      );
+    }
     if (_flat) {
       return Material(
         color: color,
@@ -1107,6 +1188,41 @@ class ComposerInputBar extends StatelessWidget {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _iosChannelBar(
+    BuildContext context, {
+    required Key key,
+    required VoidCallback? onTap,
+    required Widget child,
+  }) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: GlassCapsule(
+                key: key,
+                height: 50,
+                onTap: onTap,
+                child: Center(child: child),
+              ),
+            ),
+            if (onOpenSearch != null) ...[
+              const SizedBox(width: 10),
+              GlassIconButton(
+                key: const ValueKey('ios-channel-search'),
+                icon: Symbols.search,
+                size: 50,
+                tooltip: AppLocalizations.of(context)!.iosChatSearch,
+                onPressed: onOpenSearch,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

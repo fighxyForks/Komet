@@ -11,6 +11,8 @@ import 'package:komet/frontend/screens/stories/story_owner_info.dart';
 import 'package:komet/frontend/screens/stories/story_ring.dart';
 import 'package:komet/frontend/screens/stories/story_viewer_screen.dart';
 import 'package:komet/frontend/widgets/encryption_lock_badge.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/online_dot.dart';
 import 'package:komet/frontend/widgets/profile_hero.dart';
@@ -75,35 +77,92 @@ class ChatHeaderRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) =>
-      glossy ? _glossyRow(context) : _materialRow(context);
+  Widget build(BuildContext context) => glossy || IosGlass.of(context)
+      ? _glossyRow(context)
+      : _materialRow(context);
+
+  Widget _chromePill(
+    BuildContext context, {
+    required Widget child,
+    Key? key,
+    VoidCallback? onTap,
+    EdgeInsetsGeometry padding = EdgeInsets.zero,
+  }) {
+    if (IosGlass.of(context)) {
+      return GlassCapsule(
+        key: key,
+        onTap: onTap,
+        padding: padding,
+        child: child,
+      );
+    }
+    return GlossyPill(
+      key: key,
+      color: _pillColor,
+      blurSigma: _pillBlur,
+      liquid: liquid,
+      backdropKey: backdropKey,
+      onTap: onTap,
+      padding: padding,
+      child: child,
+    );
+  }
 
   Color? get _pillColor => frosted || liquid ? AppFrost.glassTint(cs) : null;
 
   double? get _pillBlur =>
       frosted && !liquid && backdropVisible ? AppFrost.sigma : null;
 
+  Widget _headerAction(
+    bool ios, {
+    Key? key,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    if (!ios) {
+      return IconButton(
+        key: key,
+        icon: Icon(icon, weight: 500, color: cs.onSurface),
+        onPressed: onPressed,
+      );
+    }
+    return GestureDetector(
+      key: key,
+      behavior: HitTestBehavior.opaque,
+      onTap: onPressed,
+      child: SizedBox(
+        width: 42,
+        height: 46,
+        child: Center(
+          child: Icon(icon, size: 22, weight: 500, color: cs.onSurface),
+        ),
+      ),
+    );
+  }
+
   Widget _glossyRow(BuildContext context) {
+    final ios = IosGlass.of(context);
     final nameStyle = TextStyle(
       color: cs.onSurface,
-      fontSize: 17,
+      fontSize: ios ? 16 : 17,
+      height: ios ? 1.15 : null,
       fontWeight: FontWeight.w600,
       fontFamily: displayFontOf(context),
     );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+      padding: ios
+          ? const EdgeInsets.fromLTRB(12, 3, 12, 7)
+          : const EdgeInsets.fromLTRB(10, 4, 10, 8),
       child: Row(
         children: [
           _backWithBadge(
             cs,
             SizedBox(
-              width: 56,
-              height: 56,
-              child: GlossyPill(
-                color: _pillColor,
-                blurSigma: _pillBlur,
-                liquid: liquid,
-                backdropKey: backdropKey,
+              width: ios ? 46 : 56,
+              height: ios ? 46 : 56,
+              child: _chromePill(
+                context,
+                key: const ValueKey('chat-header-back'),
                 onTap: () {
                   if (embedded) {
                     onClose?.call();
@@ -113,30 +172,34 @@ class ChatHeaderRow extends StatelessWidget {
                 },
                 child: Center(
                   child: Icon(
-                    embedded ? Symbols.close : Symbols.arrow_back,
+                    embedded
+                        ? Symbols.close
+                        : (ios
+                              ? Symbols.arrow_back_ios_new
+                              : Symbols.arrow_back),
                     color: cs.onSurface,
                     weight: 500,
-                    size: 24,
+                    size: ios ? 21 : 24,
                   ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: ios ? 6 : 8),
           Expanded(
-            child: GlossyPill(
-              color: _pillColor,
-              blurSigma: _pillBlur,
-              liquid: liquid,
-              backdropKey: backdropKey,
+            child: _chromePill(
+              context,
+              key: const ValueKey('chat-header-title'),
               onTap: onOpenInfo,
-              padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
+              padding: ios
+                  ? const EdgeInsets.fromLTRB(5, 5, 14, 5)
+                  : const EdgeInsets.fromLTRB(6, 6, 16, 6),
               child: Row(
                 children: [
                   _withOnlineDot(
                     cs,
                     _heroAvatar(
-                      44,
+                      ios ? 36 : 44,
                       (d) => chatId == 0
                           ? CircleAvatar(
                               radius: d / 2,
@@ -172,7 +235,7 @@ class ChatHeaderRow extends StatelessWidget {
                             ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: ios ? 10 : 12),
                   Expanded(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -214,7 +277,8 @@ class ChatHeaderRow extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: cs.onSurfaceVariant,
-                              fontSize: 13,
+                              fontSize: ios ? 12.5 : 13,
+                              height: ios ? 1.15 : null,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
@@ -226,47 +290,33 @@ class ChatHeaderRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          GlossyPill(
-            color: _pillColor,
-            blurSigma: _pillBlur,
-            liquid: liquid,
-            backdropKey: backdropKey,
+          SizedBox(width: ios ? 6 : 8),
+          _chromePill(
+            context,
+            key: const ValueKey('chat-header-actions'),
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: SizedBox(
-              height: 56,
+              height: ios ? 46 : 56,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ValueListenableBuilder<int>(
                     valueListenable: scheduledCount,
                     builder: (_, count, _) => count > 0
-                        ? IconButton(
-                            icon: Icon(
-                              Symbols.schedule,
-                              weight: 500,
-                              color: cs.onSurface,
-                            ),
+                        ? _headerAction(
+                            ios,
+                            icon: Symbols.schedule,
                             onPressed: onOpenScheduled,
                           )
                         : const SizedBox.shrink(),
                   ),
                   if (showCall)
-                    IconButton(
-                      icon: Icon(
-                        Symbols.call,
-                        weight: 500,
-                        color: cs.onSurface,
-                      ),
-                      onPressed: onCall,
-                    ),
+                    _headerAction(ios, icon: Symbols.call, onPressed: onCall),
                   Builder(
-                    builder: (btnContext) => IconButton(
-                      icon: Icon(
-                        Symbols.more_vert,
-                        weight: 500,
-                        color: cs.onSurface,
-                      ),
+                    builder: (btnContext) => _headerAction(
+                      ios,
+                      key: const ValueKey('chat-header-menu'),
+                      icon: ios ? Symbols.more_horiz : Symbols.more_vert,
                       onPressed: () => onMenu(btnContext),
                     ),
                   ),

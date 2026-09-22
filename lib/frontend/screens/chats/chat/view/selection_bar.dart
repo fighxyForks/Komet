@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/backend/modules/messages.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import '../../../../../core/config/app_fonts.dart';
 
@@ -75,36 +77,59 @@ class SelectionTopBar extends StatelessWidget {
       );
     }
 
-    Widget actionBtn(IconData icon, VoidCallback onTap) => IconButton(
-      icon: Icon(icon, weight: 500, color: cs.onSurface),
-      onPressed: onTap,
-    );
+    final ios = IosGlass.of(context);
+    final size = ios ? 46.0 : 56.0;
+    Widget actionBtn(IconData icon, VoidCallback onTap) => ios
+        ? GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+            child: SizedBox(
+              width: 42,
+              height: 46,
+              child: Center(
+                child: Icon(icon, size: 22, weight: 500, color: cs.onSurface),
+              ),
+            ),
+          )
+        : IconButton(
+            icon: Icon(icon, weight: 500, color: cs.onSurface),
+            onPressed: onTap,
+          );
+    Widget pill({
+      required Widget child,
+      VoidCallback? onTap,
+      EdgeInsetsGeometry padding = EdgeInsets.zero,
+    }) => ios
+        ? GlassCapsule(onTap: onTap, padding: padding, child: child)
+        : GlossyPill(onTap: onTap, padding: padding, child: child);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+      padding: ios
+          ? const EdgeInsets.fromLTRB(12, 3, 12, 7)
+          : const EdgeInsets.fromLTRB(10, 4, 10, 8),
       child: Row(
         children: [
           SizedBox(
-            width: 56,
-            height: 56,
-            child: GlossyPill(
+            width: size,
+            height: size,
+            child: pill(
               onTap: onClear,
               child: Center(
                 child: Icon(
                   Symbols.close,
                   color: cs.onSurface,
                   weight: 500,
-                  size: 24,
+                  size: ios ? 21 : 24,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: ios ? 6 : 8),
           Expanded(
-            child: GlossyPill(
+            child: pill(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: SizedBox(
-                height: 56,
+                height: size,
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -113,7 +138,7 @@ class SelectionTopBar extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 18,
+                      fontSize: ios ? 16 : 18,
                       fontWeight: FontWeight.w600,
                       fontFamily: displayFontOf(context),
                     ),
@@ -122,11 +147,11 @@ class SelectionTopBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          GlossyPill(
+          SizedBox(width: ios ? 6 : 8),
+          pill(
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: SizedBox(
-              height: 56,
+              height: size,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

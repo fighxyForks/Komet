@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'app_ios_glass.dart';
 import 'app_visual_style.dart';
 import 'persisted_setting.dart';
 
@@ -13,6 +14,10 @@ class ComposerChrome {
     ComposerStyle.glossy => true,
     ComposerStyle.materialYou => false,
   };
+
+  static ComposerStyle get effective => AppIosGlass.active.value
+      ? ComposerStyle.glossy
+      : AppComposerStyle.current.value;
 }
 
 // #***! настройка стиля поля ввода

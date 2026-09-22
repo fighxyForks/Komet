@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:komet/backend/modules/chats.dart' show CachedChat;
 import 'package:komet/core/config/app_chat_chrome.dart';
+import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/core/config/app_visual_style.dart';
 import 'package:komet/core/storage/chat_wallpaper_store.dart' show ChatWallpaper;
 import 'package:komet/frontend/screens/chats/chat/command_panel_controller.dart';
@@ -187,7 +188,8 @@ class ChatBodyLayout extends StatelessWidget {
           senderAvatar: searchSenderAvatar,
         ),
         if (vignette) ...[
-          if (AppVisualStyle.current.value.glossyChrome)
+          if (AppVisualStyle.current.value.glossyChrome ||
+              AppIosGlass.active.value)
             Positioned(
               top: 0,
               left: 0,
