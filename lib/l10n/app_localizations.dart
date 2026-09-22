@@ -1772,6 +1772,18 @@ abstract class AppLocalizations {
   /// **'Liquid Glass'**
   String get appearanceVisualStyleLiquidGlass;
 
+  /// No description provided for @appearanceIosGlassTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'iOS 26 interface'**
+  String get appearanceIosGlassTitle;
+
+  /// No description provided for @appearanceIosGlassSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquid Glass buttons, menus and bars. On by default on iOS 26 and later.'**
+  String get appearanceIosGlassSubtitle;
+
   /// No description provided for @appearanceGlassMaterial.
   ///
   /// In en, this message translates to:
@@ -5307,27 +5319,51 @@ abstract class AppLocalizations {
   String get blacklistEmpty;
 
   /// Join requests screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Join requests'**
   String get joinRequestsTitle;
 
   /// Empty state for the join requests list.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
   String get joinRequestsEmpty;
 
   /// Approve join request button.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
   String get joinRequestsApprove;
 
   /// Decline join request button.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
   String get joinRequestsDecline;
 
   /// Notification after approving a join request.
+  ///
+  /// In en, this message translates to:
+  /// **'Request approved'**
   String get joinRequestsApproved;
 
   /// Notification after declining a join request.
+  ///
+  /// In en, this message translates to:
+  /// **'Request declined'**
   String get joinRequestsDeclined;
 
   /// Notification when a join request action failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed, try again'**
   String get joinRequestsActionFailed;
 
   /// Notification when join requests failed to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load requests'**
   String get joinRequestsLoadError;
 
   /// No description provided for @blacklistLoadError.

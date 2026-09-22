@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -7,6 +9,7 @@ import '../../widgets/connection_status.dart';
 import '../../../core/config/app_bubble_behavior.dart';
 import '../../../core/config/app_bubble_shape.dart';
 import '../../../core/config/app_pill_gradient.dart';
+import '../../../core/config/app_ios_glass.dart';
 import '../../../core/config/app_visual_style.dart';
 import '../../../core/config/app_chat_chrome.dart';
 import '../../../core/config/app_composer_background.dart';
@@ -18,6 +21,8 @@ import '../../../core/utils/debouncer.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
+import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/liquid_glass.dart';
 import '../../widgets/settings_card.dart';
 import '../../../core/config/app_shape.dart';
@@ -226,9 +231,71 @@ class _VisualStyleCard extends StatelessWidget {
               );
             },
           ),
+          if (AppIosGlass.supported) ...[
+            const SizedBox(height: 16),
+            const IosGlassToggleRow(),
+          ],
         ],
       ),
     );
+  }
+}
+
+class IosGlassToggleRow extends StatelessWidget {
+  const IosGlassToggleRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppIosGlass.enabled,
+      builder: (context, enabled, _) => MergeSemantics(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _toggle(!enabled),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.appearanceIosGlassTitle,
+                      style: TextStyle(
+                        color: cs.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.appearanceIosGlassSubtitle,
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 13,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              GlassSwitch(
+                key: const ValueKey('ios-glass-switch'),
+                value: enabled,
+                onChanged: _toggle,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _toggle(bool value) {
+    Haptics.selection();
+    unawaited(GlassSuppression.during(() => AppIosGlass.save(value)));
   }
 }
 

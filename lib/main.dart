@@ -8,6 +8,8 @@ import 'package:kolibri/kolibri.dart' show initKolibri;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:native_liquid_glass/native_liquid_glass.dart'
+    show LiquidGlassNavigatorObserver;
 import 'package:video_player_media_kit/video_player_media_kit.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:m3e_collection/m3e_collection.dart';
@@ -49,6 +51,7 @@ import 'core/config/app_link_preview.dart';
 import 'core/config/app_media_cache.dart';
 import 'core/config/app_video_note_quality.dart';
 import 'core/config/app_pill_gradient.dart';
+import 'core/config/app_ios_glass.dart';
 import 'core/config/app_visual_style.dart';
 import 'core/config/app_chat_chrome.dart';
 import 'core/config/app_composer_background.dart';
@@ -99,6 +102,7 @@ import 'frontend/debug/performance_monitor.dart';
 import 'frontend/screens/auth/login_screen.dart';
 import 'frontend/widgets/adaptive_shell.dart';
 import 'frontend/widgets/custom_notification.dart';
+import 'frontend/widgets/glass/ios_glass.dart';
 import 'frontend/widgets/liquid_glass.dart';
 import 'frontend/widgets/mesh_gradient_background.dart';
 import 'frontend/widgets/small_spinner.dart';
@@ -229,6 +233,7 @@ void main(List<String> args) async {
   final amoledFuture = AppAmoled.load();
   final pillGradientFuture = AppPillGradient.load();
   final visualStyleFuture = AppVisualStyle.load();
+  final iosGlassFuture = AppIosGlass.load();
   final liquidGlassFuture = LiquidGlass.load();
   final meshGradientFuture = MeshGradient.load();
   final chatChromeFuture = AppChatChrome.load();
@@ -298,6 +303,7 @@ void main(List<String> args) async {
     amoledFuture,
     pillGradientFuture,
     visualStyleFuture,
+    iosGlassFuture,
     liquidGlassFuture,
     meshGradientFuture,
     chatChromeFuture,
@@ -1086,7 +1092,11 @@ class KometAppState extends State<KometApp>
               theme: _lightTheme,
               darkTheme: _darkTheme,
               navigatorKey: KometApp.navigatorKey,
-              navigatorObservers: [appRouteObserver, PerfRouteObserver()],
+              navigatorObservers: [
+                appRouteObserver,
+                PerfRouteObserver(),
+                LiquidGlassNavigatorObserver(),
+              ],
               builder: (context, child) {
                 return ValueListenableBuilder<double>(
                   valueListenable: fontScale,
@@ -1117,6 +1127,8 @@ class KometAppState extends State<KometApp>
                           value: overlayStyle.copyWith(
                             statusBarColor: Colors.transparent,
                           ),
+                          child: IosGlass(
+                          child: IosGlassAppearance(
                           child: Stack(
                           fit: StackFit.expand,
                           clipBehavior: Clip.none,
@@ -1152,6 +1164,8 @@ class KometAppState extends State<KometApp>
                             ),
                             if (fpsOn) const FpsOverlayLayer(),
                           ],
+                          ),
+                          ),
                           ),
                         );
                       },

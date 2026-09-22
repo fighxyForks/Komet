@@ -895,6 +895,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appearanceVisualStyleLiquidGlass => 'Liquid Glass';
 
   @override
+  String get appearanceIosGlassTitle => 'iOS 26 interface';
+
+  @override
+  String get appearanceIosGlassSubtitle =>
+      'Liquid Glass buttons, menus and bars. On by default on iOS 26 and later.';
+
+  @override
   String get appearanceGlassMaterial => 'Glass';
 
   @override

@@ -293,6 +293,8 @@
   "appearanceVisualStyleMaterialYou": "Material You",
   "appearanceVisualStyleGlossy": "Glossy",
   "appearanceVisualStyleLiquidGlass": "Liquid Glass",
+  "appearanceIosGlassTitle": "Интерфейс iOS 26",
+  "appearanceIosGlassSubtitle": "Кнопки, меню и панели в стиле Liquid Glass. На iOS 26 и новее включено по умолчанию.",
   "appearanceGlassMaterial": "Стекло",
   "appearanceChatChromeTitle": "Элементы экрана чата",
   "appearanceChatChromeSubtitle": "Фон панелей ввода и верхнего бара",

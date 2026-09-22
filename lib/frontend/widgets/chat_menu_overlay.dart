@@ -3,26 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../core/config/app_ios_glass.dart';
 import '../../core/utils/haptics.dart';
 import 'animated_overlay_popup.dart';
+import 'chat_menu_item.dart';
+import 'glass/glass_menu.dart';
 
-class ChatMenuItem {
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final bool showChevron;
-  final bool dividerAfter;
-  final bool destructive;
-
-  const ChatMenuItem({
-    required this.icon,
-    required this.label,
-    this.onTap,
-    this.showChevron = false,
-    this.dividerAfter = false,
-    this.destructive = false,
-  });
-}
+export 'chat_menu_item.dart';
 
 void showChatMenu({
   required BuildContext context,
@@ -32,6 +19,16 @@ void showChatMenu({
   Widget? footer,
   bool compact = false,
 }) {
+  if (AppIosGlass.active.value) {
+    showGlassMenu(
+      context: context,
+      anchorRect: anchorRect,
+      items: items,
+      header: header,
+      footer: footer,
+    );
+    return;
+  }
   final overlay = Overlay.of(context, rootOverlay: true);
   late OverlayEntry entry;
   entry = OverlayEntry(
