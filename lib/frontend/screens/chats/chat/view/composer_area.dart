@@ -92,6 +92,7 @@ class ComposerArea extends StatelessWidget {
   final bool channelSubscribing;
   final bool canPostToChannel;
   final VoidCallback onSubscribe;
+  final VoidCallback? onOpenSearch;
 
   final void Function(StickerItem sticker) onStickerTap;
   final void Function(Animoji animoji) onEmojiTap;
@@ -156,6 +157,7 @@ class ComposerArea extends StatelessWidget {
     required this.channelSubscribing,
     this.canPostToChannel = false,
     required this.onSubscribe,
+    this.onOpenSearch,
     required this.onStickerTap,
     required this.onEmojiTap,
     required this.selectedIds,
@@ -287,6 +289,7 @@ class ComposerArea extends StatelessWidget {
                   canPostToChannel: canPostToChannel,
                   channelSubscribing: channelSubscribing,
                   onSubscribe: onSubscribe,
+                  onOpenSearch: onOpenSearch,
                   showStickerButton: !commentsMode && selectedCommand == null,
                   showAttachButton: !commentsMode && selectedCommand == null,
                   forceSend: commentsMode || selectedCommand != null,

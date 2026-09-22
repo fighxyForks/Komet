@@ -17,6 +17,8 @@ import 'package:komet/core/utils/haptics.dart';
 import 'package:komet/core/utils/text_format.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
 import 'package:komet/frontend/widgets/directional_drag_recognizer.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';
 import 'package:komet/frontend/widgets/message_actions_overlay.dart'
     show
@@ -174,8 +176,11 @@ class PinnedMessageBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
     final content = Material(
-      color: frosted
+      color: ios
+          ? Colors.transparent
+          : frosted
           ? AppFrost.glassTint(cs)
           : floating
           ? cs.surfaceContainerHigh.withValues(alpha: 0.92)
@@ -235,6 +240,17 @@ class PinnedMessageBanner extends StatelessWidget {
     );
 
     final bottomBorder = Border(bottom: AppFrost.hairline(cs));
+
+    if (ios) {
+      return GlassBackground(
+        key: const ValueKey('ios-pinned-banner'),
+        borderRadius: floating
+            ? (borderRadius ?? BorderRadius.circular(22))
+            : BorderRadius.zero,
+        shadow: floating,
+        child: content,
+      );
+    }
 
     if (frosted) {
       return GlassSurface(

@@ -7,6 +7,8 @@ import 'package:komet/core/config/app_animations.dart';
 import 'package:komet/core/config/app_chat_chrome.dart';
 import 'package:komet/core/utils/format.dart';
 import 'package:komet/frontend/widgets/animated_lottie_icon.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/komet_avatar.dart';
 import 'package:komet/frontend/widgets/small_spinner.dart';
@@ -74,6 +76,61 @@ class SearchTopBar extends StatelessWidget {
       ),
       onPressed: () => search.submit(search.searchController.text),
     );
+
+    if (IosGlass.of(context)) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: Row(
+          children: [
+            GlassIconButton(
+              key: const ValueKey('ios-search-back'),
+              icon: Symbols.arrow_back_ios_new,
+              iconSize: 20,
+              size: 48,
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              onPressed: onClose,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: GlassCapsule(
+                key: const ValueKey('ios-search-field'),
+                height: 48,
+                padding: const EdgeInsets.only(left: 14, right: 2),
+                child: Row(
+                  children: [
+                    Icon(
+                      Symbols.search,
+                      size: 20,
+                      weight: 500,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(child: field),
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: search.searchController,
+                      builder: (context, value, _) => value.text.isEmpty
+                          ? const SizedBox(width: 12)
+                          : IconButton(
+                              tooltip: MaterialLocalizations.of(
+                                context,
+                              ).deleteButtonTooltip,
+                              icon: Icon(
+                                Symbols.cancel,
+                                fill: 1,
+                                size: 20,
+                                color: cs.onSurfaceVariant,
+                              ),
+                              onPressed: search.searchController.clear,
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     if (!glossy) {
       return Padding(

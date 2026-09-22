@@ -1784,6 +1784,24 @@ abstract class AppLocalizations {
   /// **'Liquid Glass buttons, menus and bars. On by default on iOS 26 and later.'**
   String get appearanceIosGlassSubtitle;
 
+  /// No description provided for @iosChannelMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get iosChannelMute;
+
+  /// No description provided for @iosChannelUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get iosChannelUnmute;
+
+  /// No description provided for @iosChatSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get iosChatSearch;
+
   /// No description provided for @appearanceGlassMaterial.
   ///
   /// In en, this message translates to:

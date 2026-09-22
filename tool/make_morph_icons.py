@@ -663,6 +663,8 @@ CAM_OFF = 0xE04C
 SEND = 0xE163
 VOLUME_UP = 0xE050
 VOLUME_OFF = 0xE04F
+NOTIFICATIONS = 0xE7F5
+NOTIFICATIONS_OFF = 0xE7F6
 FLASH_ON = 0xE3E7
 FLASH_OFF = 0xE3E6
 
@@ -992,6 +994,12 @@ SLASH_SPECS = [
     dict(
         name='ic_volume_on_to_off',
         plain_cp=VOLUME_UP, slashed_cp=VOLUME_OFF,
+        fill=1.0,
+        scale=[(0, 100), (11, 92), (DUR, 100)],
+    ),
+    dict(
+        name='ic_notifications_on_to_off',
+        plain_cp=NOTIFICATIONS, slashed_cp=NOTIFICATIONS_OFF,
         fill=1.0,
         scale=[(0, 100), (11, 92), (DUR, 100)],
     ),

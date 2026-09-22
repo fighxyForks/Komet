@@ -11,6 +11,8 @@ import 'package:komet/frontend/screens/stories/story_owner_info.dart';
 import 'package:komet/frontend/screens/stories/story_ring.dart';
 import 'package:komet/frontend/screens/stories/story_viewer_screen.dart';
 import 'package:komet/frontend/widgets/encryption_lock_badge.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/online_dot.dart';
 import 'package:komet/frontend/widgets/profile_hero.dart';
@@ -75,8 +77,36 @@ class ChatHeaderRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) =>
-      glossy ? _glossyRow(context) : _materialRow(context);
+  Widget build(BuildContext context) => glossy || IosGlass.of(context)
+      ? _glossyRow(context)
+      : _materialRow(context);
+
+  Widget _chromePill(
+    BuildContext context, {
+    required Widget child,
+    Key? key,
+    VoidCallback? onTap,
+    EdgeInsetsGeometry padding = EdgeInsets.zero,
+  }) {
+    if (IosGlass.of(context)) {
+      return GlassCapsule(
+        key: key,
+        onTap: onTap,
+        padding: padding,
+        child: child,
+      );
+    }
+    return GlossyPill(
+      key: key,
+      color: _pillColor,
+      blurSigma: _pillBlur,
+      liquid: liquid,
+      backdropKey: backdropKey,
+      onTap: onTap,
+      padding: padding,
+      child: child,
+    );
+  }
 
   Color? get _pillColor => frosted || liquid ? AppFrost.glassTint(cs) : null;
 
@@ -84,6 +114,7 @@ class ChatHeaderRow extends StatelessWidget {
       frosted && !liquid && backdropVisible ? AppFrost.sigma : null;
 
   Widget _glossyRow(BuildContext context) {
+    final ios = IosGlass.of(context);
     final nameStyle = TextStyle(
       color: cs.onSurface,
       fontSize: 17,
@@ -91,19 +122,19 @@ class ChatHeaderRow extends StatelessWidget {
       fontFamily: displayFontOf(context),
     );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
+      padding: ios
+          ? const EdgeInsets.fromLTRB(12, 8, 12, 12)
+          : const EdgeInsets.fromLTRB(10, 4, 10, 8),
       child: Row(
         children: [
           _backWithBadge(
             cs,
             SizedBox(
-              width: 56,
-              height: 56,
-              child: GlossyPill(
-                color: _pillColor,
-                blurSigma: _pillBlur,
-                liquid: liquid,
-                backdropKey: backdropKey,
+              width: ios ? 48 : 56,
+              height: ios ? 48 : 56,
+              child: _chromePill(
+                context,
+                key: const ValueKey('chat-header-back'),
                 onTap: () {
                   if (embedded) {
                     onClose?.call();
@@ -113,10 +144,12 @@ class ChatHeaderRow extends StatelessWidget {
                 },
                 child: Center(
                   child: Icon(
-                    embedded ? Symbols.close : Symbols.arrow_back,
+                    embedded
+                        ? Symbols.close
+                        : (ios ? Symbols.arrow_back_ios_new : Symbols.arrow_back),
                     color: cs.onSurface,
                     weight: 500,
-                    size: 24,
+                    size: ios ? 21 : 24,
                   ),
                 ),
               ),
@@ -124,19 +157,19 @@ class ChatHeaderRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: GlossyPill(
-              color: _pillColor,
-              blurSigma: _pillBlur,
-              liquid: liquid,
-              backdropKey: backdropKey,
+            child: _chromePill(
+              context,
+              key: const ValueKey('chat-header-title'),
               onTap: onOpenInfo,
-              padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
+              padding: ios
+                  ? const EdgeInsets.fromLTRB(4, 4, 14, 4)
+                  : const EdgeInsets.fromLTRB(6, 6, 16, 6),
               child: Row(
                 children: [
                   _withOnlineDot(
                     cs,
                     _heroAvatar(
-                      44,
+                      ios ? 40 : 44,
                       (d) => chatId == 0
                           ? CircleAvatar(
                               radius: d / 2,
@@ -227,14 +260,12 @@ class ChatHeaderRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          GlossyPill(
-            color: _pillColor,
-            blurSigma: _pillBlur,
-            liquid: liquid,
-            backdropKey: backdropKey,
+          _chromePill(
+            context,
+            key: const ValueKey('chat-header-actions'),
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: SizedBox(
-              height: 56,
+              height: ios ? 48 : 56,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -262,8 +293,9 @@ class ChatHeaderRow extends StatelessWidget {
                     ),
                   Builder(
                     builder: (btnContext) => IconButton(
+                      key: const ValueKey('chat-header-menu'),
                       icon: Icon(
-                        Symbols.more_vert,
+                        ios ? Symbols.more_horiz : Symbols.more_vert,
                         weight: 500,
                         color: cs.onSurface,
                       ),

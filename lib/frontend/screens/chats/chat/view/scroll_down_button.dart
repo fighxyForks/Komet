@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/core/config/app_frost.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 
 class ScrollDownButton extends StatelessWidget {
@@ -61,19 +63,27 @@ class ScrollDownButton extends StatelessWidget {
                   clipBehavior: Clip.none,
                   children: [
                     Positioned.fill(
-                      child: GlossyPill(
-                        color: frosted || liquidChrome
-                            ? AppFrost.glassTint(cs)
-                            : null,
-                        blurSigma: frosted && !liquidChrome && backdropVisible
-                            ? AppFrost.sigma
-                            : null,
-                        liquid: liquidChrome,
-                        backdropKey: pillBackdrop,
-                        elevated: true,
-                        onTap: onTap,
-                        child: child!,
-                      ),
+                      child: IosGlass.of(context)
+                          ? GlassCapsule(
+                              key: const ValueKey('ios-scroll-down'),
+                              allowNative: false,
+                              onTap: onTap,
+                              child: child!,
+                            )
+                          : GlossyPill(
+                              color: frosted || liquidChrome
+                                  ? AppFrost.glassTint(cs)
+                                  : null,
+                              blurSigma:
+                                  frosted && !liquidChrome && backdropVisible
+                                  ? AppFrost.sigma
+                                  : null,
+                              liquid: liquidChrome,
+                              backdropKey: pillBackdrop,
+                              elevated: true,
+                              onTap: onTap,
+                              child: child!,
+                            ),
                     ),
                     Positioned(
                       top: -5,

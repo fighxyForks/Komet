@@ -84,6 +84,7 @@ import 'chat/view/chat_app_bar.dart';
 import 'chat/view/composer_area.dart';
 import 'chat/view/chat_body_layout.dart';
 import 'chat/view/shimmer_loading.dart';
+import '../../../core/config/app_ios_glass.dart';
 import '../../../core/config/app_visual_style.dart';
 import '../../../core/config/app_chat_chrome.dart';
 import 'package:komet/core/config/app_composer_background.dart';
@@ -512,11 +513,26 @@ class _ChatScreenState extends State<ChatScreen>
     return _materialComposer && !_composerFrosted;
   }
 
+  bool get _glossyChrome =>
+      AppIosGlass.active.value || AppVisualStyle.current.value.glossyChrome;
+
+  bool get _searchInBottomBar {
+    if (!AppIosGlass.active.value || _pendingForwards.value.isNotEmpty) {
+      return false;
+    }
+    final isChannel = widget.chatType == 'CHANNEL';
+    final isGroup = widget.chatType == 'CHAT' || widget.chatType == 'GROUP';
+    if ((isChannel || isGroup) && _previewChat) return true;
+    return isChannel && !(chat?.iAmAdmin(_myId) ?? false);
+  }
+
   bool get _liquidChrome =>
+      !AppIosGlass.active.value &&
       AppVisualStyle.current.value.glossyChrome &&
       ChatChromeMaterial.isLiquid(AppChatChrome.current.value);
 
   ChatChromeStyle get _effectiveChrome {
+    if (AppIosGlass.active.value) return ChatChromeStyle.transparent;
     final chrome = AppChatChrome.current.value;
     if (chrome == ChatChromeStyle.liquidGlass) {
       return ChatChromeStyle.transparent;
@@ -614,6 +630,7 @@ class _ChatScreenState extends State<ChatScreen>
     _scrollController.addListener(_scheduleReadMarker);
     MediaPlayback.instance.enterChat(widget.chatId);
     AppVisualStyle.current.addListener(_onVisualStyleChanged);
+    AppIosGlass.active.addListener(_onVisualStyleChanged);
     AppChatChrome.current.addListener(_onVisualStyleChanged);
     AppComposerStyle.current.addListener(_onVisualStyleChanged);
     AppComposerBackground.current.addListener(_onVisualStyleChanged);
@@ -1049,7 +1066,7 @@ class _ChatScreenState extends State<ChatScreen>
     final separator =
         _unreadSeparatorKey.currentContext?.size?.height ??
         _unreadSeparatorHeight;
-    final glossy = AppVisualStyle.current.value.glossyChrome;
+    final glossy = _glossyChrome;
     final chromeBottom = _effectiveChrome == ChatChromeStyle.color
         ? 0.0
         : MediaQuery.paddingOf(context).top +
@@ -2169,6 +2186,7 @@ class _ChatScreenState extends State<ChatScreen>
     _scrollController.removeListener(_scrollNav.updateScrollDownVisible);
     _readMarker.dispose();
     AppVisualStyle.current.removeListener(_onVisualStyleChanged);
+    AppIosGlass.active.removeListener(_onVisualStyleChanged);
     MediaPlayback.instance.leaveChat(widget.chatId);
     AppChatChrome.current.removeListener(_onVisualStyleChanged);
     AppComposerStyle.current.removeListener(_onVisualStyleChanged);
@@ -2690,6 +2708,7 @@ class _ChatScreenState extends State<ChatScreen>
       canPostToChannel: chat?.iAmAdmin(_myId) ?? false,
       channelSubscribing: _subscribing,
       onSubscribe: _subscribeChannel,
+      onOpenSearch: _openSearch,
       onStickerTap: _mediaSend.sendSticker,
       onEmojiTap: _insertAnimoji,
       selectedIds: _selectedIds,
@@ -3100,7 +3119,12 @@ class _ChatScreenState extends State<ChatScreen>
           dividerAfter: true,
           onTap: _toggleChatMute,
         ),
-        ChatMenuItem(icon: Symbols.search, label: 'Поиск', onTap: _openSearch),
+        if (!_searchInBottomBar)
+          ChatMenuItem(
+            icon: Symbols.search,
+            label: 'Поиск',
+            onTap: _openSearch,
+          ),
         ChatMenuItem(
           icon: Symbols.wallpaper,
           label: 'Изменить обои',
@@ -4429,7 +4453,7 @@ class _ChatScreenState extends State<ChatScreen>
                     liquidChrome: _liquidChrome,
                     barBackdrop: _barBackdrop,
                     pillBackdrop: _pillBackdrop,
-                    glossyChrome: AppVisualStyle.current.value.glossyChrome,
+                    glossyChrome: _glossyChrome,
                     embedded: widget.embedded,
                     chatId: widget.chatId,
                     heroTag: _profileHeroTag,
@@ -4475,14 +4499,14 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   double _pinnedBannerTop() {
-    final glossy = AppVisualStyle.current.value.glossyChrome;
+    final glossy = _glossyChrome;
     return MediaQuery.paddingOf(context).top +
         (glossy ? _glossyHeaderHeight : kToolbarHeight) -
         _pinnedBannerLift;
   }
 
   double _defaultEdgeVignetteHeight() {
-    final glossy = AppVisualStyle.current.value.glossyChrome;
+    final glossy = _glossyChrome;
     return MediaQuery.paddingOf(context).top +
         (glossy ? _glossyHeaderHeight : kToolbarHeight);
   }
@@ -4562,7 +4586,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   double _floatingDateTop(double pinnedHeight) {
     if (AppChatChrome.current.value == ChatChromeStyle.color) {
-      final glossy = AppVisualStyle.current.value.glossyChrome;
+      final glossy = _glossyChrome;
       return glossy ? 2 : 4;
     }
     final hasBanner =
