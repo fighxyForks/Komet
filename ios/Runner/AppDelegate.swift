@@ -44,6 +44,7 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       registerNotifications(messenger)
       registerScreen(messenger)
       registerClipboard(messenger)
+      registerNativeGlass(messenger)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -170,6 +171,20 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
   private func registerClipboard(_ messenger: FlutterBinaryMessenger) {
     method("ru.komet.app/clipboard", messenger) { call, result in
       KometClipboard.handle(call, result: result)
+    }
+  }
+
+  private func registerNativeGlass(_ messenger: FlutterBinaryMessenger) {
+    method("komet/native_glass", messenger) { [weak self] call, result in
+      guard call.method == "setBrightness",
+            let brightness = call.arguments as? String,
+            ["dark", "light", "system"].contains(brightness) else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      self?.window?.overrideUserInterfaceStyle = brightness == "system"
+        ? .unspecified : (brightness == "dark" ? .dark : .light)
+      result(nil)
     }
   }
 
