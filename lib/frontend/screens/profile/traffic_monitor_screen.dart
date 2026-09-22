@@ -14,6 +14,7 @@ import '../../../core/utils/format.dart';
 import '../../widgets/custom_notification.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class TrafficMonitorScreen extends StatefulWidget {
   const TrafficMonitorScreen({super.key});
@@ -250,7 +251,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
                   ],
                 ),
               ),
-              Switch(value: on, onChanged: (v) => _monitor.setEnabled(v)),
+              GlassSwitch(value: on, onChanged: (v) => _monitor.setEnabled(v)),
             ],
           );
         },

@@ -21,6 +21,7 @@ import 'blacklist_screen.dart';
 import 'password_entry_screen.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 const bool _showFamilyProtection = false;
 
@@ -522,7 +523,7 @@ class _SecurityScreenState extends State<SecurityScreen>
               cs,
               icon: Symbols.filter_alt,
               label: l10n.securityShowContact,
-              trailingWidget: Switch(
+              trailingWidget: GlassSwitch(
                 value: contentLevelAccess,
                 onChanged: (v) => _updateSetting('CONTENT_LEVEL_ACCESS', v),
               ),
@@ -611,7 +612,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                       ],
                     ),
                   ),
-                  Switch(
+                  GlassSwitch(
                     value: isSafeMode,
                     onChanged: _isSaving ? null : _setSafeMode,
                   ),
@@ -762,7 +763,7 @@ class _SecurityScreenState extends State<SecurityScreen>
             cs,
             icon: Symbols.description,
             label: l10n.securityReadReceipts,
-            trailingWidget: Switch(
+            trailingWidget: GlassSwitch(
               value: showReadMark,
               onChanged: (v) => _updateConfidentialSetting(
                 'SHOW_READ_MARK',
@@ -781,7 +782,7 @@ class _SecurityScreenState extends State<SecurityScreen>
             cs,
             icon: Symbols.keyboard_alt,
             label: l10n.securityAltKeyboard,
-            trailingWidget: Switch(
+            trailingWidget: GlassSwitch(
               value: altKeyboard,
               onChanged: (v) => _updateConfidentialSetting('ALT_KEYBOARD', v),
             ),
@@ -797,7 +798,7 @@ class _SecurityScreenState extends State<SecurityScreen>
             cs,
             icon: Symbols.warning,
             label: l10n.securityUnsafeFiles,
-            trailingWidget: Switch(
+            trailingWidget: GlassSwitch(
               value: unsafeFiles,
               onChanged: (v) => _updateConfidentialSetting('UNSAFE_FILES', v),
             ),
@@ -813,7 +814,7 @@ class _SecurityScreenState extends State<SecurityScreen>
             cs,
             icon: Symbols.mic,
             label: l10n.securityAudioTranscription,
-            trailingWidget: Switch(
+            trailingWidget: GlassSwitch(
               value: audioTranscription,
               onChanged: (v) => _updateConfidentialSetting(
                 'AUDIO_TRANSCRIPTION_ENABLED',

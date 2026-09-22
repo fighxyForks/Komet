@@ -9,6 +9,7 @@ import '../../widgets/custom_notification.dart';
 import '../chats/chat_wallpaper_preview_screen.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class ChatBackgroundScreen extends StatefulWidget {
   const ChatBackgroundScreen({super.key});
@@ -207,7 +208,7 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Switch(
+                GlassSwitch(
                   value: enabled,
                   onChanged: (v) => AppWallpaperTint.save(v),
                 ),

@@ -7,6 +7,7 @@ import 'package:komet/backend/modules/messages.dart'
 import 'package:komet/frontend/commands/commands.dart' show SlashCommand;
 import 'package:komet/core/config/app_chat_chrome.dart';
 import 'package:komet/core/config/app_composer_background.dart';
+import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/core/config/app_composer_style.dart';
 import 'package:komet/core/config/app_frost.dart';
 import 'package:komet/core/media/clipboard/clipboard_media.dart';
@@ -248,8 +249,9 @@ class ComposerArea extends StatelessWidget {
                   chatType: commentsMode ? 'CHAT' : chatType,
                   chrome: chrome,
                   vignette: chromeVignette,
-                  style: AppComposerStyle.current.value,
-                  background: AppComposerBackground.current.value,
+                  style: ComposerChrome.effective,
+                  background: ComposerMaterial.effective,
+                  iosGlass: AppIosGlass.active.value,
                   backdropKey: pillBackdrop,
                   attachAnim: attachAnim,
                   replyTo: replyTo,
@@ -340,7 +342,7 @@ class ComposerArea extends StatelessWidget {
     );
     Widget wrapChrome(Widget child) {
       if (composerFrosted) {
-        if (ComposerChrome.isGlossy(AppComposerStyle.current.value)) {
+        if (ComposerChrome.isGlossy(ComposerChrome.effective)) {
           return child;
         }
         return FrostedPanel(

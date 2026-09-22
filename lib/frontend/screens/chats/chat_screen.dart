@@ -496,13 +496,13 @@ class _ChatScreenState extends State<ChatScreen>
   ChatWallpaper? _wallpaper;
 
   bool get _composerFrosted =>
-      AppComposerBackground.current.value != ComposerBackground.standard;
+      ComposerMaterial.effective != ComposerBackground.standard;
 
   bool get _composerUnderlap =>
       AppChatChrome.current.value != ChatChromeStyle.color || _composerFrosted;
 
   bool get _materialComposer =>
-      !ComposerChrome.isGlossy(AppComposerStyle.current.value);
+      !ComposerChrome.isGlossy(ComposerChrome.effective);
 
   bool get _composerPaintsSurface {
     if (!_commentsMode &&

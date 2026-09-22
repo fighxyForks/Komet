@@ -10,6 +10,7 @@ import '../../../core/plugins/plugin_store.dart';
 import '../../../core/plugins/plugin_updater.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class PluginsScreen extends StatefulWidget {
   const PluginsScreen({super.key});
@@ -287,7 +288,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
                         PluginSignatureStatus.unsigned => 'Не подписан',
                       }}',
                     ),
-                    trailing: Switch(
+                    trailing: GlassSwitch(
                       value: plugin.enabled,
                       onChanged: (value) => PluginStore.instance.setEnabled(
                         plugin.manifest.id,

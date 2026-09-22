@@ -5,6 +5,7 @@ import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../widgets/color_wheel_picker.dart';
 import '../../widgets/mesh_gradient_background.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class CustomGradientResult {
   final List<Color> colors;
@@ -184,7 +185,7 @@ class _CustomGradientEditorScreenState
                       ],
                     ),
                   ),
-                  Switch(
+                  GlassSwitch(
                     value: _animated,
                     onChanged: _colors.length > 1
                         ? (v) => setState(() => _animated = v)

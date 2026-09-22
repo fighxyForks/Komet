@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/config/app_shape.dart';
+import 'glass/glass_controls.dart';
+import 'glass/ios_glass.dart';
 import 'glossy_pill.dart';
 
 class SettingsPanel extends StatelessWidget {
@@ -19,12 +21,76 @@ class SettingsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    if (IosGlass.of(context)) {
+      return IosGroupedSection(
+        color: color,
+        child: Padding(padding: padding, child: child),
+      );
+    }
     return GlossyPill(
       color: color ?? cs.surfaceContainerHigh,
       borderRadius: AppShape.cardRadius,
       padding: padding,
       depth: 6,
       child: child,
+    );
+  }
+}
+
+class IosGroupedSection extends StatelessWidget {
+  static const double defaultRadius = 26;
+
+  final Widget child;
+  final Color? color;
+  final double radius;
+
+  const IosGroupedSection({
+    super.key,
+    required this.child,
+    this.color,
+    this.radius = IosGroupedSection.defaultRadius,
+  });
+
+  static Color background(ColorScheme cs) => cs.brightness == Brightness.dark
+      ? cs.surfaceContainerHigh
+      : cs.surfaceContainerLowest;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: ColoredBox(color: color ?? background(cs), child: child),
+    );
+  }
+}
+
+class IosSettingsIcon extends StatelessWidget {
+  final IconData icon;
+  final Color? color;
+
+  const IosSettingsIcon({super.key, required this.icon, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final base = color ?? cs.primary;
+    return Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        color: base,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        icon,
+        size: 19,
+        weight: 500,
+        fill: 1,
+        color: ThemeData.estimateBrightnessForColor(base) == Brightness.dark
+            ? Colors.white
+            : Colors.black,
+      ),
     );
   }
 }
@@ -37,6 +103,26 @@ class SettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    if (IosGlass.of(context)) {
+      return IosGroupedSection(
+        child: Column(
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              children[i],
+              if (i != children.length - 1)
+                Padding(
+                  padding: const EdgeInsets.only(left: 62),
+                  child: Divider(
+                    height: 0.5,
+                    thickness: 0.5,
+                    color: cs.outlineVariant.withValues(alpha: 0.5),
+                  ),
+                ),
+            ],
+          ],
+        ),
+      );
+    }
     return GlossyPill(
       color: cs.surfaceContainerHigh,
       borderRadius: AppShape.cardRadius,
@@ -95,7 +181,15 @@ class SettingsToggleTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               child: Row(
                 children: [
-                  Icon(icon, color: cs.onSurfaceVariant, size: 22, weight: 400),
+                  if (IosGlass.of(context))
+                    IosSettingsIcon(icon: icon)
+                  else
+                    Icon(
+                      icon,
+                      color: cs.onSurfaceVariant,
+                      size: 22,
+                      weight: 400,
+                    ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -124,7 +218,7 @@ class SettingsToggleTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Switch(value: value, onChanged: onChanged),
+                  GlassSwitch(value: value, onChanged: onChanged),
                 ],
               ),
             ),
@@ -170,12 +264,14 @@ class SettingsNavTile extends StatelessWidget {
           child: Row(
             children: [
               leading ??
-                  Icon(
-                    icon,
-                    color: tintColor ?? cs.onSurfaceVariant,
-                    size: 22,
-                    weight: 400,
-                  ),
+                  (IosGlass.of(context) && icon != null
+                      ? IosSettingsIcon(icon: icon!, color: tintColor)
+                      : Icon(
+                          icon,
+                          color: tintColor ?? cs.onSurfaceVariant,
+                          size: 22,
+                          weight: 400,
+                        )),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(

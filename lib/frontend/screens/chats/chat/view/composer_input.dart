@@ -70,6 +70,7 @@ class ComposerInputBar extends StatelessWidget {
     this.hintText,
     this.bottomSafe = true,
     this.vignette = false,
+    this.iosGlass = false,
   });
 
   final String chatType;
@@ -115,6 +116,7 @@ class ComposerInputBar extends StatelessWidget {
   final String? hintText;
   final bool bottomSafe;
   final bool vignette;
+  final bool iosGlass;
 
   @override
   Widget build(BuildContext context) {
@@ -549,6 +551,8 @@ class ComposerInputBar extends StatelessWidget {
                                                     ? Colors.transparent
                                                     : recording
                                                     ? cs.error
+                                                    : iosGlass && sendMode
+                                                    ? cs.primary
                                                     : _frost
                                                     ? AppFrost.glassTint(cs)
                                                     : cs.surfaceContainerHighest,
@@ -588,7 +592,9 @@ class ComposerInputBar extends StatelessWidget {
                                                                 ? cs.error
                                                                 : cs.onError)
                                                           : sendMode
-                                                          ? cs.primary
+                                                          ? (iosGlass
+                                                                ? cs.onPrimary
+                                                                : cs.primary)
                                                           : _flat
                                                           ? cs.onSurfaceVariant
                                                           : cs.onSurface,
@@ -687,6 +693,13 @@ class ComposerInputBar extends StatelessWidget {
   }
 
   Widget _fieldSurface(ColorScheme cs, Widget child) {
+    if (iosGlass) {
+      return GlassCapsule(
+        key: const ValueKey('ios-composer-field'),
+        borderRadius: BorderRadius.circular(_controlSize / 2),
+        child: child,
+      );
+    }
     if (_flat) return child;
     return GlossyPill(
       color: _translucent
@@ -733,6 +746,15 @@ class ComposerInputBar extends StatelessWidget {
     VoidCallback? onTap,
     VoidCallback? onLongPress,
   }) {
+    if (iosGlass) {
+      return GlassCapsule(
+        key: const ValueKey('ios-composer-action'),
+        tint: color.a >= 1 ? color : null,
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: child,
+      );
+    }
     if (_flat) {
       return Material(
         color: color,

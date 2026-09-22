@@ -583,7 +583,7 @@ class _GradientToggleCard extends StatelessWidget {
           ),
           ValueListenableBuilder<bool>(
             valueListenable: AppPillGradient.current,
-            builder: (context, value, _) => Switch(
+            builder: (context, value, _) => GlassSwitch(
               value: value,
               onChanged: (v) {
                 Haptics.selection();
@@ -632,7 +632,7 @@ class _SpectrumToggleCard extends StatelessWidget {
           ),
           ValueListenableBuilder<bool>(
             valueListenable: AppSpectrumBackground.current,
-            builder: (context, value, _) => Switch(
+            builder: (context, value, _) => GlassSwitch(
               value: value,
               onChanged: (v) {
                 Haptics.selection();

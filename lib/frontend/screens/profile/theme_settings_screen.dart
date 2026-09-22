@@ -19,6 +19,7 @@ import '../../widgets/mesh_gradient_background.dart';
 import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
 import 'custom_gradient_editor_screen.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
@@ -322,7 +323,7 @@ class _AmoledCardState extends State<_AmoledCard> {
             ValueListenableBuilder<bool>(
               valueListenable: AppAmoled.current,
               builder: (context, value, _) {
-                return Switch(
+                return GlassSwitch(
                   value: value,
                   onChanged: (v) {
                     Haptics.selection();

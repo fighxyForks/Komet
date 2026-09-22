@@ -16,6 +16,7 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 typedef _ChatType = ({int filter, IconData icon, String label});
 
@@ -584,7 +585,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
             style: TextStyle(color: cs.onSurface, fontSize: 15),
           ),
         ),
-        Switch(
+        GlassSwitch(
           value: value,
           onChanged: _busy
               ? null
