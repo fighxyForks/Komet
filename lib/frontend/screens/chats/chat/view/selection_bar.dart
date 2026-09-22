@@ -247,6 +247,20 @@ class SelectionBottomBar extends StatelessWidget {
       ),
     );
     final iconWidget = Icon(icon, color: cs.onSurface, size: 22, weight: 500);
+    if (IosGlass.of(context)) {
+      return GlassCapsule(
+        key: ValueKey('ios-selection-$label'),
+        height: 46,
+        onTap: onTap,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: iconLeading
+              ? [iconWidget, const SizedBox(width: 8), textWidget]
+              : [textWidget, const SizedBox(width: 8), iconWidget],
+        ),
+      );
+    }
     return GlossyPill(
       onTap: onTap,
       color: Color.alphaBlend(
