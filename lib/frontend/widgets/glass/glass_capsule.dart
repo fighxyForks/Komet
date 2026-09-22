@@ -18,6 +18,29 @@ class GlassStyle {
   static const double buttonSize = 44;
   static const BorderRadius capsule = BorderRadius.all(Radius.circular(999));
 
+  static const List<double> vibrancy = [
+    1.62992,
+    -0.57216,
+    -0.05776,
+    0,
+    0,
+    -0.17008,
+    1.22784,
+    -0.05776,
+    0,
+    0,
+    -0.17008,
+    -0.57216,
+    1.74224,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+  ];
+
   static Color tint(ColorScheme cs) => cs.brightness == Brightness.dark
       ? cs.surfaceContainerHigh.withValues(alpha: 0.55)
       : cs.surfaceContainerLowest.withValues(alpha: 0.68);
@@ -71,7 +94,10 @@ class GlassBackground extends StatelessWidget {
       child: ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+          filter: ui.ImageFilter.compose(
+            outer: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+            inner: const ColorFilter.matrix(GlassStyle.vibrancy),
+          ),
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: borderRadius,
@@ -103,6 +129,8 @@ class GlassCapsule extends StatelessWidget {
   final double? height;
   final bool allowNative;
   final bool shadow;
+  final Color? fallbackTint;
+  final double fallbackSigma;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -116,6 +144,8 @@ class GlassCapsule extends StatelessWidget {
     this.height,
     this.allowNative = true,
     this.shadow = true,
+    this.fallbackTint,
+    this.fallbackSigma = GlassStyle.sigma,
     this.onTap,
     this.onLongPress,
   });
@@ -150,7 +180,8 @@ class GlassCapsule extends StatelessWidget {
         }
         final surface = GlassBackground(
           borderRadius: borderRadius ?? GlassStyle.capsule,
-          tint: tint,
+          tint: fallbackTint ?? tint,
+          sigma: fallbackSigma,
           shadow: shadow,
           child: SizedBox(width: width, height: height, child: content),
         );

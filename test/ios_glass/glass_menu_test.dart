@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/frontend/widgets/chat_menu_overlay.dart';
+import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/glass_menu.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -64,7 +65,22 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('glass-menu')), findsOneWidget);
       expect(find.byType(GlassMenuRow), findsNWidgets(2));
-      expect(GlassSuppression.count.value, 1);
+      expect(GlassSuppression.count.value, 0);
+      final panel = tester.widget(find.byKey(const ValueKey('glass-menu')));
+      expect(panel, isA<GlassCapsule>());
+      expect((panel as GlassCapsule).allowNative, isTrue);
+      expect(
+        tester.getSize(find.byType(GlassMenuRow).first).height,
+        GlassMenuStyle.rowHeight,
+      );
+      expect(
+        tester.widget<Text>(find.text('Избранное')).style?.fontSize,
+        GlassMenuStyle.fontSize,
+      );
+      expect(
+        tester.getSize(find.byKey(const ValueKey('glass-menu'))).width,
+        GlassMenuStyle.width,
+      );
 
       await tester.tap(find.text('Избранное'));
       await tester.pumpAndSettle();
