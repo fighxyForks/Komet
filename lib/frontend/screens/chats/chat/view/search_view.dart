@@ -79,14 +79,14 @@ class SearchTopBar extends StatelessWidget {
 
     if (IosGlass.of(context)) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        padding: const EdgeInsets.fromLTRB(12, 3, 12, 7),
         child: Row(
           children: [
             GlassIconButton(
               key: const ValueKey('ios-search-back'),
               icon: Symbols.arrow_back_ios_new,
               iconSize: 20,
-              size: 48,
+              size: 46,
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: onClose,
             ),
@@ -94,7 +94,7 @@ class SearchTopBar extends StatelessWidget {
             Expanded(
               child: GlassCapsule(
                 key: const ValueKey('ios-search-field'),
-                height: 48,
+                height: 46,
                 padding: const EdgeInsets.only(left: 14, right: 2),
                 child: Row(
                   children: [

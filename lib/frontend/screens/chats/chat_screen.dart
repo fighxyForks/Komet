@@ -471,7 +471,6 @@ class _ChatScreenState extends State<ChatScreen>
 
   static const double _avgMessageHeight = 72.0;
   static const double _historyPrefetchExtent = _avgMessageHeight * 8;
-  static const double _glossyHeaderHeight = 76.0;
   static const double _pinnedBannerLift = 6.0;
   static const double _unreadSeparatorHeight = 30.0;
   static const double _unreadSeparatorInset = 72.0;
@@ -1070,7 +1069,10 @@ class _ChatScreenState extends State<ChatScreen>
     final chromeBottom = _effectiveChrome == ChatChromeStyle.color
         ? 0.0
         : MediaQuery.paddingOf(context).top +
-              (glossy ? _glossyHeaderHeight : kToolbarHeight) +
+              ChatAppBar.headerHeight(
+                glossy: glossy,
+                ios: AppIosGlass.active.value,
+              ) +
               _pinnedBannerHeight.value;
     final desiredTop = chromeBottom + separator + _unreadSeparatorInset;
     return (desiredTop / listBox.size.height).clamp(0.0, 0.5);
@@ -4454,6 +4456,7 @@ class _ChatScreenState extends State<ChatScreen>
                     barBackdrop: _barBackdrop,
                     pillBackdrop: _pillBackdrop,
                     glossyChrome: _glossyChrome,
+                    iosGlass: AppIosGlass.active.value,
                     embedded: widget.embedded,
                     chatId: widget.chatId,
                     heroTag: _profileHeroTag,
@@ -4501,14 +4504,20 @@ class _ChatScreenState extends State<ChatScreen>
   double _pinnedBannerTop() {
     final glossy = _glossyChrome;
     return MediaQuery.paddingOf(context).top +
-        (glossy ? _glossyHeaderHeight : kToolbarHeight) -
+        ChatAppBar.headerHeight(
+                glossy: glossy,
+                ios: AppIosGlass.active.value,
+              ) -
         _pinnedBannerLift;
   }
 
   double _defaultEdgeVignetteHeight() {
     final glossy = _glossyChrome;
     return MediaQuery.paddingOf(context).top +
-        (glossy ? _glossyHeaderHeight : kToolbarHeight);
+        ChatAppBar.headerHeight(
+                glossy: glossy,
+                ios: AppIosGlass.active.value,
+              );
   }
 
   Widget _buildMessagesArea() {

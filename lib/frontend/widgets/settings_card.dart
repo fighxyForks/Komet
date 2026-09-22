@@ -200,7 +200,9 @@ class SettingsToggleTile extends StatelessWidget {
                           style: TextStyle(
                             color: cs.onSurface,
                             fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: IosGlass.of(context)
+                                ? IosType.body
+                                : FontWeight.w500,
                           ),
                         ),
                         if (subtitle != null) ...[
@@ -279,7 +281,9 @@ class SettingsNavTile extends StatelessWidget {
                   style: TextStyle(
                     color: tintColor ?? cs.onSurface,
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: IosGlass.of(context)
+                        ? IosType.body
+                        : FontWeight.w500,
                   ),
                 ),
               ),

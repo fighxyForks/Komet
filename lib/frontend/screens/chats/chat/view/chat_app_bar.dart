@@ -15,6 +15,10 @@ import '../chat_search_controller.dart';
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   static const double _glossyHeaderHeight = 76.0;
   static const double _glossySearchHeight = 58.0;
+  static const double _iosHeaderHeight = 56.0;
+
+  static double headerHeight({required bool glossy, required bool ios}) =>
+      ios ? _iosHeaderHeight : (glossy ? _glossyHeaderHeight : kToolbarHeight);
   static const double _edgeFadeHeight = 24.0;
 
   final ColorScheme cs;
@@ -27,6 +31,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final BackdropKey? pillBackdrop;
 
   final bool glossyChrome;
+  final bool iosGlass;
 
   final bool embedded;
   final int chatId;
@@ -71,6 +76,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.barBackdrop,
     required this.pillBackdrop,
     required this.glossyChrome,
+    this.iosGlass = false,
     required this.embedded,
     required this.chatId,
     required this.heroTag,
@@ -104,6 +110,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   double get _height {
     final searchT = Curves.easeOut.transform(searchAnim.value.clamp(0.0, 1.0));
+    if (iosGlass) return _iosHeaderHeight;
     return glossyChrome
         ? ui.lerpDouble(_glossyHeaderHeight, _glossySearchHeight, searchT)!
         : kToolbarHeight;

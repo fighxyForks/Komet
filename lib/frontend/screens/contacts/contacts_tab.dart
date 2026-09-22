@@ -24,6 +24,7 @@ import 'open_contact_profile.dart';
 import '../../../core/config/app_frost.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/ios_glass.dart';
 
 enum _SearchMode { phone, id }
 
@@ -183,7 +184,9 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
                               style: TextStyle(
                                 color: cs.onSurface,
                                 fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: IosGlass.of(context)
+                                    ? IosType.name
+                                    : FontWeight.w600,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

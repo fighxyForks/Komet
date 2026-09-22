@@ -664,7 +664,7 @@ class ComposerInputBar extends StatelessWidget {
 
   bool get _translucent => _frost || _liquid;
 
-  double get _controlSize => _flat ? 48 : 54;
+  double get _controlSize => iosGlass ? 46 : (_flat ? 48 : 54);
 
   double get _barSideInset => _flat ? 0 : 12;
 

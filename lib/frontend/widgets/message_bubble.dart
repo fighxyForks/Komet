@@ -45,6 +45,7 @@ import 'attachment/bubbles/file_bubble.dart';
 import 'attachment/bubbles/forwarded_bubble.dart';
 import 'lottie_image.dart';
 import 'text_with_meta.dart';
+import 'glass/ios_glass.dart';
 
 final Expando<MessageType> _contentTypeCache = Expando<MessageType>();
 final Expando<List<MessageAttachment>> _contentAttachmentsCache =
@@ -1911,7 +1912,41 @@ class MessageBubble extends StatelessWidget {
     );
 
     final Widget? body;
-    if (preview.hasMedia) {
+    if (preview.hasMedia && IosGlass.of(context)) {
+      body = Padding(
+        padding: const EdgeInsets.only(top: 2, bottom: 1),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              key: const ValueKey('ios-reply-thumb'),
+              width: 32,
+              height: 32,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(5),
+                child: preview.thumbnail(
+                  size: const Size(32, 32),
+                  cs: cs,
+                  radius: 5,
+                ),
+              ),
+            ),
+            if (rawPreview.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Flexible(
+                child: _replyQuoteText(
+                  cs,
+                  textColor,
+                  null,
+                  rawPreview,
+                  quotedId,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    } else if (preview.hasMedia) {
       final maxSide = math.max(
         72.0,
         math.min(150.0, maxBubbleWidth * _replyWidthShare - 24),

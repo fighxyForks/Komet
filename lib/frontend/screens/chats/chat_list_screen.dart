@@ -1850,7 +1850,9 @@ class _ChatListScreenState extends State<ChatListScreen>
                                           style: TextStyle(
                                             color: cs.onSurface,
                                             fontSize: 20,
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: ios
+                                                ? IosType.largeTitle
+                                                : FontWeight.w600,
                                             fontFamily: displayFontOf(context),
                                           ),
                                         ),
@@ -2624,13 +2626,17 @@ class _ChatListScreenState extends State<ChatListScreen>
                             ),
                           Positioned(
                             right: 20,
-                            bottom: bottomInset + 90,
+                            bottom: IosGlass.of(context)
+                                ? bottomInset +
+                                      22 +
+                                      SlidingPillNav.heightFor(ios: true)
+                                : bottomInset + 90,
                             child: IosGlass.of(context)
                                 ? GlassIconButton(
                                     key: const ValueKey('ios-create-button'),
                                     icon: Symbols.add,
-                                    size: 56,
-                                    iconSize: 28,
+                                    size: 46,
+                                    iconSize: 24,
                                     tooltip: MaterialLocalizations.of(
                                       context,
                                     ).showMenuTooltip,
@@ -3162,7 +3168,11 @@ class _ChatListScreenState extends State<ChatListScreen>
           children: [
             TextSpan(
               text: 'Черновик: ',
-              style: TextStyle(color: cs.error),
+              style: TextStyle(
+                color: cs.error,
+                fontWeight: IosGlass.of(context) ? IosType.name : null,
+                fontStyle: IosGlass.of(context) ? FontStyle.normal : null,
+              ),
             ),
             TextSpan(
               text: draft,

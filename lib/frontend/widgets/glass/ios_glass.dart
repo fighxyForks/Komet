@@ -15,6 +15,13 @@ class IosGlass extends InheritedNotifier<ValueNotifier<bool>> {
       AppIosGlass.active.value;
 }
 
+class IosType {
+  static const FontWeight largeTitle = FontWeight.w700;
+  static const FontWeight title = FontWeight.w600;
+  static const FontWeight name = FontWeight.w500;
+  static const FontWeight body = FontWeight.w400;
+}
+
 class GlassSuppression {
   static final ValueNotifier<int> count = ValueNotifier<int>(0);
 

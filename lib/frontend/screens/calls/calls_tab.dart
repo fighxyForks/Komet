@@ -21,6 +21,7 @@ import '../../../l10n/app_localizations.dart';
 import 'call_link_sheet.dart';
 import 'call_screen.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_glass.dart';
 
 class CallsTab extends StatefulWidget {
   const CallsTab({super.key});
@@ -199,7 +200,9 @@ class _CallsTabState extends State<CallsTab>
                       style: TextStyle(
                         color: isMissed ? cs.error : cs.onSurface,
                         fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: IosGlass.of(context)
+                            ? IosType.title
+                            : FontWeight.w500,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

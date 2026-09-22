@@ -83,6 +83,9 @@ class SlidingPillNav extends StatelessWidget {
   });
 
   static const double height = 68;
+  static const double iosHeight = 58;
+
+  static double heightFor({required bool ios}) => ios ? iosHeight : height;
 
   double _interpWidth(int tab) {
     final maxIndex = items.length - 1;
@@ -231,9 +234,11 @@ class SlidingPillNav extends StatelessWidget {
   Widget _buildIosNav(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final visualSel = position.round().clamp(0, items.length - 1);
+    const inset = 6.0;
+    const innerRadius = 26 * iosHeight / height;
     return GlassCapsule(
       key: const ValueKey('ios-tab-bar'),
-      height: height,
+      height: iosHeight,
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Stack(
         clipBehavior: Clip.hardEdge,
@@ -242,23 +247,27 @@ class SlidingPillNav extends StatelessWidget {
             duration: animationDuration,
             curve: Curves.easeOutCubic,
             left: position * geometry.inactiveWidth + 4,
-            top: 7,
-            bottom: 7,
+            top: inset,
+            bottom: inset,
             width: geometry.activeWidth - 8,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: cs.primary.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(27),
+                borderRadius: BorderRadius.circular(innerRadius),
               ),
             ),
           ),
-          _buildCells(cs.copyWith(onPrimary: cs.primary), visualSel),
+          _buildCells(
+            cs.copyWith(onPrimary: cs.primary),
+            visualSel,
+            radius: innerRadius,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCells(ColorScheme cs, int visualSel) {
+  Widget _buildCells(ColorScheme cs, int visualSel, {double radius = 26}) {
     return SizedBox(
       width: geometry.navInnerW,
       child: Row(
@@ -268,7 +277,7 @@ class SlidingPillNav extends StatelessWidget {
             curve: Curves.easeOutCubic,
             width: _interpWidth(i),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(radius),
               child: _PillNavCell(
                 item: items[i],
                 selected: i == visualSel,
