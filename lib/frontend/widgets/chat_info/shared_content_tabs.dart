@@ -21,10 +21,14 @@ import '../../../core/utils/media_saver.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/attachment.dart';
 import '../../screens/chats/chat_screen.dart';
+import '../chat_menu_overlay.dart';
 import '../custom_notification.dart';
+import '../glass/glass_capsule.dart';
+import '../glass/ios_glass.dart';
 import '../komet_avatar.dart';
 import '../photo_viewer.dart';
 import '../reload_on_reconnect.dart';
+import '../settings_card.dart';
 import '../share_unopenable_file.dart';
 import '../small_spinner.dart';
 import '../swipe_route.dart';
@@ -152,6 +156,21 @@ class _MenuAction {
 
 Future<void> _showItemMenu(BuildContext context, List<_MenuAction> actions) {
   final cs = Theme.of(context).colorScheme;
+  if (IosGlass.of(context)) {
+    showChatMenu(
+      context: context,
+      anchorRect: globalRectOf(context),
+      items: [
+        for (final action in actions)
+          ChatMenuItem(
+            icon: action.icon,
+            label: action.label,
+            onTap: () => unawaited(action.onTap()),
+          ),
+      ],
+    );
+    return Future<void>.value();
+  }
   return showModalBottomSheet<void>(
     context: context,
     backgroundColor: cs.surfaceContainerHigh,
@@ -422,24 +441,32 @@ class _CommonChatsTabState extends State<CommonChatsTab>
       return _emptyState(cs, widget.emptyLabel, Symbols.group);
     }
 
+    final list = Column(
+      children: [
+        for (int i = 0; i < _chats.length; i++) ...[
+          if (i > 0)
+            Divider(
+              height: 1,
+              indent: 68,
+              color: cs.outlineVariant.withValues(alpha: 0.3),
+            ),
+          _tile(cs, _chats[i]),
+        ],
+      ],
+    );
+    if (IosGlass.of(context)) {
+      return IosGroupedSection(
+        key: const ValueKey('common-chats-section'),
+        radius: 18,
+        child: Material(type: MaterialType.transparency, child: list),
+      );
+    }
     return Container(
       decoration: BoxDecoration(
         color: cs.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
-        children: [
-          for (int i = 0; i < _chats.length; i++) ...[
-            if (i > 0)
-              Divider(
-                height: 1,
-                indent: 68,
-                color: cs.outlineVariant.withValues(alpha: 0.3),
-              ),
-            _tile(cs, _chats[i]),
-          ],
-        ],
-      ),
+      child: list,
     );
   }
 

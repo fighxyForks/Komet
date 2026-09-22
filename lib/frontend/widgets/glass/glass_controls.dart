@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../core/utils/haptics.dart';
 import 'glass_capsule.dart';
 import 'ios_palette.dart';
 import 'ios_glass.dart';
@@ -90,6 +91,87 @@ class IosFlatSearchBar extends StatelessWidget {
               Text(hint, style: TextStyle(color: color, fontSize: 17)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class GlassTabStrip extends StatelessWidget {
+  final List<String> tabs;
+  final String selected;
+  final ValueChanged<String> onSelected;
+  final ScrollController? controller;
+  final double height;
+
+  const GlassTabStrip({
+    super.key,
+    required this.tabs,
+    required this.selected,
+    required this.onSelected,
+    this.controller,
+    this.height = 42,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    const inset = 3.0;
+    return GlassCapsule(
+      height: height,
+      padding: const EdgeInsets.all(inset),
+      child: SingleChildScrollView(
+        controller: controller,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            for (final tab in tabs)
+              GestureDetector(
+                key: ValueKey('glass-tab-$tab'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (tab == selected) return;
+                  Haptics.selection();
+                  onSelected(tab);
+                },
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutCubic,
+                        opacity: tab == selected ? 1 : 0,
+                        child: GlassSegmentThumb(
+                          radius: (height - inset * 2) / 2,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SizedBox(
+                        height: height - inset * 2,
+                        child: Center(
+                          child: AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 180),
+                            style: TextStyle(
+                              color: tab == selected
+                                  ? IosPalette.label(cs)
+                                  : IosPalette.secondaryLabel(cs),
+                              fontSize: 15,
+                              fontWeight: tab == selected
+                                  ? IosType.title
+                                  : IosType.name,
+                            ),
+                            child: Text(tab),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );
