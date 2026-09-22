@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import '../../core/config/app_nav_pill_style.dart';
 import '../../core/config/app_pill_gradient.dart';
 import '../../core/config/app_visual_style.dart';
 import 'animated_lottie_icon.dart';
+import 'glass/glass_capsule.dart';
+import 'glass/ios_glass.dart';
 import 'glossy_pill.dart';
 import 'liquid_glass.dart';
 
@@ -42,6 +45,11 @@ class PillNavGeometry {
       PillNavGeometry(itemWidth * itemCount, itemWidth, itemWidth);
 
   static const double _activeWeight = 2.2;
+
+  static double iosInnerWidth(double available, int itemCount) => math.max(
+    math.min(available, itemCount * 56.0),
+    math.min(available * 0.82, itemCount * 80.0),
+  );
 }
 
 class SlidingPillNav extends StatelessWidget {
@@ -89,6 +97,7 @@ class SlidingPillNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (IosGlass.of(context)) return _buildIosNav(context);
     return ValueListenableBuilder<VisualStyle>(
       valueListenable: AppVisualStyle.current,
       builder: (context, style, _) {
@@ -213,36 +222,70 @@ class SlidingPillNav extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: geometry.navInnerW,
-            child: Row(
-              children: List.generate(items.length, (i) {
-                return AnimatedContainer(
-                  duration: animationDuration,
-                  curve: Curves.easeOutCubic,
-                  width: _interpWidth(i),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(26),
-                    child: _PillNavCell(
-                      item: items[i],
-                      selected: i == visualSel,
-                      cs: cs,
-                      animationDuration: animationDuration,
-                      iconSize: iconSize,
-                      labelGap: labelGap,
-                      iconsOnly: iconsOnly,
-                      onTap: () => onTap(i),
-                      onLongPress:
-                          (onItemLongPress == null || !items[i].longPressable)
-                          ? null
-                          : (pos) => onItemLongPress!(i, pos),
-                    ),
-                  ),
-                );
-              }),
+          _buildCells(cs, visualSel),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIosNav(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final visualSel = position.round().clamp(0, items.length - 1);
+    return GlassCapsule(
+      key: const ValueKey('ios-tab-bar'),
+      height: height,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          AnimatedPositioned(
+            duration: animationDuration,
+            curve: Curves.easeOutCubic,
+            left: position * geometry.inactiveWidth + 4,
+            top: 7,
+            bottom: 7,
+            width: geometry.activeWidth - 8,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(27),
+              ),
             ),
           ),
+          _buildCells(cs.copyWith(onPrimary: cs.primary), visualSel),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCells(ColorScheme cs, int visualSel) {
+    return SizedBox(
+      width: geometry.navInnerW,
+      child: Row(
+        children: List.generate(items.length, (i) {
+          return AnimatedContainer(
+            duration: animationDuration,
+            curve: Curves.easeOutCubic,
+            width: _interpWidth(i),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(26),
+              child: _PillNavCell(
+                item: items[i],
+                selected: i == visualSel,
+                cs: cs,
+                animationDuration: animationDuration,
+                iconSize: iconSize,
+                labelGap: labelGap,
+                iconsOnly: iconsOnly,
+                onTap: () => onTap(i),
+                onLongPress:
+                    (onItemLongPress == null || !items[i].longPressable)
+                    ? null
+                    : (pos) => onItemLongPress!(i, pos),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
