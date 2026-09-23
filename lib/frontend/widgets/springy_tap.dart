@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 
@@ -23,6 +24,7 @@ class _SpringyTapState extends State<SpringyTap>
     with SingleTickerProviderStateMixin {
   static const Duration _pressDelay = Duration(milliseconds: 60);
   static const Duration _pressDuration = Duration(milliseconds: 90);
+  static const Duration _settleDuration = Duration(milliseconds: 120);
 
   static final SpringDescription _spring = SpringDescription.withDampingRatio(
     ratio: 0.8,
@@ -36,6 +38,8 @@ class _SpringyTapState extends State<SpringyTap>
   );
 
   Timer? _pressTimer;
+  Offset? _downPosition;
+  bool _moved = false;
 
   @override
   void dispose() {
@@ -70,15 +74,39 @@ class _SpringyTapState extends State<SpringyTap>
     if (mounted) _release();
   }
 
-  void _onDown(PointerDownEvent _) {
+  void _settle() {
+    if (_controller.value == 1.0 && !_controller.isAnimating) return;
+    _controller.stop();
+    _controller.animateTo(
+      1.0,
+      duration: _settleDuration,
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _onDown(PointerDownEvent event) {
     _pressTimer?.cancel();
+    _downPosition = event.position;
+    _moved = false;
     _pressTimer = Timer(_pressDelay, () {
       _pressTimer = null;
       _press();
     });
   }
 
+  void _onMove(PointerMoveEvent event) {
+    final origin = _downPosition;
+    if (_moved || origin == null) return;
+    if ((event.position - origin).distance <= kTouchSlop) return;
+    _moved = true;
+    _pressTimer?.cancel();
+    _pressTimer = null;
+    _settle();
+  }
+
   void _onUp(PointerUpEvent _) {
+    _downPosition = null;
+    if (_moved) return;
     if (_pressTimer != null) {
       _pressTimer!.cancel();
       _pressTimer = null;
@@ -89,9 +117,10 @@ class _SpringyTapState extends State<SpringyTap>
   }
 
   void _onCancel(PointerCancelEvent _) {
+    _downPosition = null;
     _pressTimer?.cancel();
     _pressTimer = null;
-    _release();
+    _settle();
   }
 
   @override
@@ -100,6 +129,7 @@ class _SpringyTapState extends State<SpringyTap>
     return Listener(
       behavior: HitTestBehavior.deferToChild,
       onPointerDown: _onDown,
+      onPointerMove: _onMove,
       onPointerUp: _onUp,
       onPointerCancel: _onCancel,
       child: ScaleTransition(scale: _controller, child: widget.child),
