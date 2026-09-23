@@ -2136,7 +2136,8 @@ class _ChatListScreenState extends State<ChatListScreen>
           parent: const AlwaysScrollableScrollPhysics(),
         ),
         slivers: [
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          if (!IosGlass.of(context))
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
           if (_shouldShowArchiveEntry(pageIndex))
             SliverToBoxAdapter(child: _buildArchiveEntry(cs)),
           if (pageChats.isEmpty && !_isInitialLoading)
