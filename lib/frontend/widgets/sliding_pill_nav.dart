@@ -9,7 +9,7 @@ import '../../core/config/app_nav_pill_style.dart';
 import '../../core/config/app_pill_gradient.dart';
 import '../../core/config/app_visual_style.dart';
 import 'animated_lottie_icon.dart';
-import 'glass/glass_capsule.dart';
+import 'glass/glass_lens_track.dart';
 import 'glass/ios_glass.dart';
 import 'glass/ios_palette.dart';
 import 'glossy_pill.dart';
@@ -245,53 +245,31 @@ class SlidingPillNav extends StatelessWidget {
   Widget _buildIosNav(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final visualSel = position.round().clamp(0, items.length - 1);
-    const inset = iosThumbInset;
-    const thumbRadius = (iosHeight - inset * 2) / 2;
-    return GlassCapsule(
-      key: const ValueKey('ios-tab-bar'),
+    return GlassLensTrack(
+      capsuleKey: const ValueKey('ios-tab-bar'),
+      thumbKey: const ValueKey('ios-tab-thumb'),
+      widths: List.filled(items.length, geometry.inactiveWidth),
+      position: position,
+      duration: animationDuration,
       height: iosHeight,
-      child: Stack(
-        clipBehavior: Clip.hardEdge,
-        children: [
-          AnimatedPositioned(
-            key: const ValueKey('ios-tab-thumb'),
-            duration: animationDuration,
-            curve: Curves.easeOutCubic,
-            left: position * geometry.inactiveWidth + inset,
-            top: inset,
-            bottom: inset,
-            width: geometry.inactiveWidth + (iosPadding - inset) * 2,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: IosPalette.selectedTab(cs),
-                borderRadius: BorderRadius.circular(thumbRadius),
-              ),
-            ),
-          ),
-          Container(
-            width: geometry.navInnerW + iosPadding * 2,
-            padding: const EdgeInsets.symmetric(horizontal: iosPadding),
-            child: Row(
-              children: [
-                for (var i = 0; i < items.length; i++)
-                  SizedBox(
-                    width: geometry.inactiveWidth,
-                    child: _IosTabCell(
-                      key: ValueKey('ios-tab-$i'),
-                      item: items[i],
-                      selected: i == visualSel,
-                      badge: i < badges.length ? badges[i] : null,
-                      onTap: () => onTap(i),
-                      onLongPress:
-                          (onItemLongPress == null || !items[i].longPressable)
-                          ? null
-                          : (pos) => onItemLongPress!(i, pos),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
+      contentPadding: const EdgeInsets.symmetric(horizontal: iosPadding),
+      thumbInset: iosThumbInset,
+      thumbOutset: iosPadding - iosThumbInset,
+      thumbBuilder: (context, radius) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: IosPalette.selectedTab(cs),
+          borderRadius: BorderRadius.circular(radius),
+        ),
+      ),
+      itemBuilder: (context, i, lens) => _IosTabCell(
+        key: lens ? null : ValueKey('ios-tab-$i'),
+        item: items[i],
+        selected: lens || i == visualSel,
+        badge: lens || i >= badges.length ? null : badges[i],
+        onTap: () => onTap(i),
+        onLongPress: (onItemLongPress == null || !items[i].longPressable)
+            ? null
+            : (pos) => onItemLongPress!(i, pos),
       ),
     );
   }

@@ -25,6 +25,7 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/chat_menu_overlay.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/glass_lens_track.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glossy_pill.dart';
@@ -3055,40 +3056,66 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   Widget _buildIosFolderStrip() {
+    const height = 40.0;
+    const inset = 3.0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
-      child: GlassCapsule(
-        key: const ValueKey('ios-folder-strip'),
-        height: 40,
-        padding: const EdgeInsets.all(3),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final natural = [
-              for (final folder in _folders)
-                SegmentFit.labelWidth(
-                  context,
-                  _folderChipLabel(folder),
-                  _iosFolderLabelStyle,
-                  padding: _iosFolderChipPadding * 2,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final natural = [
+            for (final folder in _folders)
+              SegmentFit.labelWidth(
+                context,
+                _folderChipLabel(folder),
+                _iosFolderLabelStyle,
+                padding: _iosFolderChipPadding * 2,
+              ),
+          ];
+          final widths = SegmentFit.widths(
+            natural,
+            constraints.maxWidth - inset * 2,
+          );
+          if (widths != null) {
+            return GlassLensTrack(
+              capsuleKey: const ValueKey('ios-folder-strip'),
+              widths: widths,
+              position: _selectedFolderIndex.toDouble(),
+              duration: const Duration(milliseconds: 320),
+              height: height,
+              contentPadding: const EdgeInsets.all(inset),
+              thumbInset: inset,
+              thumbBuilder: (context, radius) =>
+                  GlassSegmentThumb(radius: radius),
+              itemBuilder: (context, i, lens) => KeyedSubtree(
+                key: lens ? null : ValueKey('ios-folder-${_folders[i].id}'),
+                child: _buildIosFolderChip(
+                  _folders[i],
+                  thumb: false,
+                  lens: lens,
                 ),
-            ];
-            final widths =
-                SegmentFit.widths(natural, constraints.maxWidth) ?? natural;
-            final chips = [
-              for (var i = 0; i < _folders.length; i++)
-                SizedBox(
-                  key: ValueKey('ios-folder-${_folders[i].id}'),
-                  width: widths[i],
-                  child: _buildIosFolderChip(_folders[i]),
-                ),
-            ];
-            return SingleChildScrollView(
+              ),
+            );
+          }
+          return GlassCapsule(
+            key: const ValueKey('ios-folder-strip'),
+            height: height,
+            padding: const EdgeInsets.all(inset),
+            child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              child: Row(children: chips),
-            );
-          },
-        ),
+              child: Row(
+                children: [
+                  for (var i = 0; i < _folders.length; i++)
+                    SizedBox(
+                      key: ValueKey('ios-folder-${_folders[i].id}'),
+                      width: natural[i],
+                      child: _buildIosFolderChip(_folders[i]),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -3099,9 +3126,13 @@ class _ChatListScreenState extends State<ChatListScreen>
     fontWeight: FontWeight.w600,
   );
 
-  Widget _buildIosFolderChip(ChatFolder folder) {
+  Widget _buildIosFolderChip(
+    ChatFolder folder, {
+    bool thumb = true,
+    bool lens = false,
+  }) {
     final cs = Theme.of(context).colorScheme;
-    final isSelected = _selectedFolderId == folder.id;
+    final isSelected = lens || _selectedFolderId == folder.id;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -3114,14 +3145,15 @@ class _ChatListScreenState extends State<ChatListScreen>
       },
       child: Stack(
         children: [
-          Positioned.fill(
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              opacity: isSelected ? 1 : 0,
-              child: const GlassSegmentThumb(radius: 17),
+          if (thumb)
+            Positioned.fill(
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                opacity: isSelected ? 1 : 0,
+                child: const GlassSegmentThumb(radius: 17),
+              ),
             ),
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: _iosFolderChipPadding,
