@@ -130,6 +130,47 @@ void main() {
     expect(taps, 1);
   });
 
+  group('Капсула папок', () {
+    test('помещающиеся подписи делят свободное место поровну', () {
+      final widths = SegmentFit.widths([40, 90, 50, 80, 60], 350)!;
+      expect(widths.fold<double>(0, (a, b) => a + b), closeTo(350, 1e-9));
+      final extras = [
+        for (final (i, w) in [40.0, 90.0, 50.0, 80.0, 60.0].indexed)
+          widths[i] - w,
+      ];
+      expect(extras.toSet().length, 1);
+      expect(extras.first, 6);
+    });
+
+    test('не помещающиеся подписи оставляют прокрутке', () {
+      expect(SegmentFit.widths([120, 120, 120], 300), isNull);
+    });
+
+    testWidgets('ширина подписи учитывает поля', (tester) async {
+      late double plain;
+      late double padded;
+      const style = TextStyle(fontSize: 14, fontWeight: FontWeight.w600);
+      await tester.pumpWidget(
+        _app(
+          Builder(
+            builder: (context) {
+              plain = SegmentFit.labelWidth(context, 'Каналы', style);
+              padded = SegmentFit.labelWidth(
+                context,
+                'Каналы',
+                style,
+                padding: 28,
+              );
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      expect(plain, greaterThan(0));
+      expect(padded, plain + 28);
+    });
+  });
+
   group('Панель вкладок', () {
     Future<void> pumpNav(
       WidgetTester tester, {

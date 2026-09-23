@@ -3063,34 +3063,41 @@ class _ChatListScreenState extends State<ChatListScreen>
         padding: const EdgeInsets.all(3),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            const minWidthPerFolder = 76.0;
-            final fits =
-                _folders.length * minWidthPerFolder <= constraints.maxWidth;
-            if (fits) {
-              return Row(
-                children: [
-                  for (final folder in _folders)
-                    Expanded(
-                      key: ValueKey('ios-folder-${folder.id}'),
-                      child: _buildIosFolderChip(folder),
-                    ),
-                ],
-              );
-            }
-            return ListView.builder(
+            final natural = [
+              for (final folder in _folders)
+                SegmentFit.labelWidth(
+                  context,
+                  _folderChipLabel(folder),
+                  _iosFolderLabelStyle,
+                  padding: _iosFolderChipPadding * 2,
+                ),
+            ];
+            final widths =
+                SegmentFit.widths(natural, constraints.maxWidth) ?? natural;
+            final chips = [
+              for (var i = 0; i < _folders.length; i++)
+                SizedBox(
+                  key: ValueKey('ios-folder-${_folders[i].id}'),
+                  width: widths[i],
+                  child: _buildIosFolderChip(_folders[i]),
+                ),
+            ];
+            return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              itemCount: _folders.length,
-              itemBuilder: (context, i) => KeyedSubtree(
-                key: ValueKey('ios-folder-${_folders[i].id}'),
-                child: _buildIosFolderChip(_folders[i]),
-              ),
+              child: Row(children: chips),
             );
           },
         ),
       ),
     );
   }
+
+  static const double _iosFolderChipPadding = 14;
+  static const TextStyle _iosFolderLabelStyle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+  );
 
   Widget _buildIosFolderChip(ChatFolder folder) {
     final cs = Theme.of(context).colorScheme;
@@ -3116,13 +3123,14 @@ class _ChatListScreenState extends State<ChatListScreen>
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(
+              horizontal: _iosFolderChipPadding,
+            ),
             child: Center(
               child: AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 180),
-                style: TextStyle(
+                style: _iosFolderLabelStyle.copyWith(
                   color: isSelected ? cs.onSurface : cs.onSurfaceVariant,
-                  fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
                 child: Text(

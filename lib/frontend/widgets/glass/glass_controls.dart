@@ -97,6 +97,33 @@ class IosFlatSearchBar extends StatelessWidget {
   }
 }
 
+class SegmentFit {
+  static List<double>? widths(List<double> natural, double available) {
+    if (natural.isEmpty) return const [];
+    final total = natural.fold<double>(0, (sum, w) => sum + w);
+    if (total > available) return null;
+    final extra = (available - total) / natural.length;
+    return [for (final w in natural) w + extra];
+  }
+
+  static double labelWidth(
+    BuildContext context,
+    String text,
+    TextStyle style, {
+    double padding = 0,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final width = painter.width.ceilToDouble() + padding;
+    painter.dispose();
+    return width;
+  }
+}
+
 class GlassTabStrip extends StatelessWidget {
   final List<String> tabs;
   final String selected;
