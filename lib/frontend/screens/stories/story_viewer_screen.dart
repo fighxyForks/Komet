@@ -10,7 +10,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../core/utils/haptics.dart';
-import '../../../main.dart' show storiesModule;
+import '../../../core/media/video_request_headers.dart';
+import '../../../main.dart' show api, storiesModule;
 import '../../../models/story.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/small_spinner.dart';
@@ -224,7 +225,14 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   }
 
   Future<void> _startVideo(String url) async {
-    final controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    final uri = Uri.parse(url);
+    final controller = VideoPlayerController.networkUrl(
+      uri,
+      httpHeaders: videoRequestHeaders(
+        uri,
+        sessionUserAgent: api.session?.userAgent(),
+      ),
+    );
     _video = controller;
     try {
       await controller.initialize();
