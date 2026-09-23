@@ -6,6 +6,7 @@ import 'package:komet/backend/modules/messages.dart' show CachedMessage;
 import 'package:komet/core/config/app_chat_chrome.dart';
 import 'package:komet/core/config/app_frost.dart';
 
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 
 import 'chat_header.dart';
@@ -199,34 +200,37 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                         opacity: (1 - t) * (1 - s),
                         child: Transform.translate(
                           offset: Offset(0, -height * 0.4 * t),
-                          child: ChatHeaderRow(
-                            glossy: glossyChrome,
-                            frosted:
-                                glossyChrome &&
-                                chrome == ChatChromeStyle.transparent,
-                            backdropVisible: t == 0 && s == 0,
-                            liquid: liquidChrome,
-                            backdropKey: pillBackdrop,
-                            cs: cs,
-                            embedded: embedded,
-                            chatId: chatId,
-                            heroTag: heroTag,
-                            name: name,
-                            imageUrl: imageUrl,
-                            chatType: chatType,
-                            isOfficial: isOfficial,
-                            encrypted: encrypted,
-                            verified: verified,
-                            myId: myId,
-                            headerStatus: headerStatus,
-                            scheduledCount: scheduledCount,
-                            otherUnread: otherUnread,
-                            showCall: showCall,
-                            onClose: onClose,
-                            onOpenInfo: onOpenInfo,
-                            onOpenScheduled: onOpenScheduled,
-                            onCall: onCall,
-                            onMenu: onMenu,
+                          child: NativeGlassScope(
+                            enabled: t == 0 && s == 0,
+                            child: ChatHeaderRow(
+                              glossy: glossyChrome,
+                              frosted:
+                                  glossyChrome &&
+                                  chrome == ChatChromeStyle.transparent,
+                              backdropVisible: t == 0 && s == 0,
+                              liquid: liquidChrome,
+                              backdropKey: pillBackdrop,
+                              cs: cs,
+                              embedded: embedded,
+                              chatId: chatId,
+                              heroTag: heroTag,
+                              name: name,
+                              imageUrl: imageUrl,
+                              chatType: chatType,
+                              isOfficial: isOfficial,
+                              encrypted: encrypted,
+                              verified: verified,
+                              myId: myId,
+                              headerStatus: headerStatus,
+                              scheduledCount: scheduledCount,
+                              otherUnread: otherUnread,
+                              showCall: showCall,
+                              onClose: onClose,
+                              onOpenInfo: onOpenInfo,
+                              onOpenScheduled: onOpenScheduled,
+                              onCall: onCall,
+                              onMenu: onMenu,
+                            ),
                           ),
                         ),
                       ),
@@ -238,16 +242,19 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                         opacity: t,
                         child: Transform.translate(
                           offset: Offset(0, height * 0.4 * (1 - t)),
-                          child: SelectionTopBar(
-                            cs: cs,
-                            selected: selected,
-                            glossy: glossyChrome,
-                            copyMsgs: copyableSelection(selected),
-                            editMsg: singleEditable(selected),
-                            onClear: onClearSelection,
-                            onCopy: onCopySelected,
-                            onEdit: onEditSelected,
-                            onDelete: onDeleteSelected,
+                          child: NativeGlassScope(
+                            enabled: t == 1,
+                            child: SelectionTopBar(
+                              cs: cs,
+                              selected: selected,
+                              glossy: glossyChrome,
+                              copyMsgs: copyableSelection(selected),
+                              editMsg: singleEditable(selected),
+                              onClear: onClearSelection,
+                              onCopy: onCopySelected,
+                              onEdit: onEditSelected,
+                              onDelete: onDeleteSelected,
+                            ),
                           ),
                         ),
                       ),
@@ -257,12 +264,15 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ignoring: s < 0.5,
                       child: Opacity(
                         opacity: s,
-                        child: SearchTopBar(
-                          cs: cs,
-                          glossy: glossyChrome,
-                          search: search,
-                          focusNode: searchFocusNode,
-                          onClose: onCloseSearch,
+                        child: NativeGlassScope(
+                          enabled: s == 1,
+                          child: SearchTopBar(
+                            cs: cs,
+                            glossy: glossyChrome,
+                            search: search,
+                            focusNode: searchFocusNode,
+                            onClose: onCloseSearch,
+                          ),
                         ),
                       ),
                     ),

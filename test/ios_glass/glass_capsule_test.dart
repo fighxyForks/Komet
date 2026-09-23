@@ -144,4 +144,33 @@ void main() {
       expect(h, 46);
     });
   });
+
+  testWidgets('NativeGlassScope выключает нативное стекло только внутри себя', (
+    tester,
+  ) async {
+    final seen = <String, bool>{};
+    await tester.pumpWidget(
+      Column(
+        textDirection: TextDirection.ltr,
+        children: [
+          Builder(
+            builder: (context) {
+              seen['outside'] = NativeGlassScope.of(context);
+              return const SizedBox();
+            },
+          ),
+          NativeGlassScope(
+            enabled: false,
+            child: Builder(
+              builder: (context) {
+                seen['inside'] = NativeGlassScope.of(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+    expect(seen, {'outside': true, 'inside': false});
+  });
 }
