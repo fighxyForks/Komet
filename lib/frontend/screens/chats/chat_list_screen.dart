@@ -314,6 +314,7 @@ class _ChatListScreenState extends State<ChatListScreen>
   Timer? _contactRebuildTimer;
   bool _deferReloads = false;
   bool _reloadQueued = false;
+  bool _reloadNeedsStorage = false;
   bool _reloadInFlight = false;
   Timer? _settleTimer;
   bool get _shareMode => widget.sharePayload != null;
@@ -980,8 +981,11 @@ class _ChatListScreenState extends State<ChatListScreen>
     _scheduleInformerPresentation();
   }
 
-  void _requestReload() {
+  void _requestReload() => _scheduleReload(fromStorage: true);
+
+  void _scheduleReload({required bool fromStorage}) {
     if (!mounted) return;
+    if (fromStorage) _reloadNeedsStorage = true;
     if (_deferReloads || _reloadInFlight) {
       _reloadQueued = true;
       return;
@@ -991,8 +995,11 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   Future<void> _runReload() async {
     _reloadInFlight = true;
+    final fromStorage =
+        _reloadNeedsStorage || !_didInitialChatLoad || _profile == null;
+    _reloadNeedsStorage = false;
     try {
-      await _reloadChatsAndFolders();
+      await _reloadChatsAndFolders(fromStorage: fromStorage);
     } finally {
       _reloadInFlight = false;
       if (_reloadQueued && mounted && !_deferReloads) {
@@ -1003,11 +1010,14 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   void _onChatsChanged() {
-    _requestReload();
+    _scheduleReload(fromStorage: !AppIosGlass.active.value);
   }
 
-  Future<void> _reloadChatsAndFolders() async {
-    final p = await AppDatabase.loadActiveProfile();
+  Future<void> _reloadChatsAndFolders({bool fromStorage = true}) async {
+    final knownProfile = _profile;
+    final p = !fromStorage && knownProfile != null
+        ? knownProfile
+        : await AppDatabase.loadActiveProfile();
     if (p == null) {
       _syncFolderChatScrollControllersForCount(1);
       if (mounted) {
@@ -1023,13 +1033,18 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
 
     try {
-      final ensureLoadedFuture = chats.ensureLoaded(p.id);
-      final foldersFuture = FoldersModule.loadFolders(p.id);
-      final foldersKnownFuture = FoldersModule.hasReceivedFoldersList(p.id);
-      final contactsFuture = ContactsModule.getContacts(
-        p.id,
-        includeDeleted: true,
-      );
+      final ensureLoadedFuture = fromStorage
+          ? chats.ensureLoaded(p.id)
+          : Future<void>.value();
+      final foldersFuture = fromStorage
+          ? FoldersModule.loadFolders(p.id)
+          : Future.value(_folders);
+      final foldersKnownFuture = fromStorage
+          ? FoldersModule.hasReceivedFoldersList(p.id)
+          : Future.value(_foldersListKnown ?? false);
+      final contactsFuture = fromStorage
+          ? ContactsModule.getContacts(p.id, includeDeleted: true)
+          : null;
       await ensureLoadedFuture;
       final loadedChats = chats.chatsSnapshot(
         includeHidden:
@@ -1046,7 +1061,9 @@ class _ChatListScreenState extends State<ChatListScreen>
       }
       var folders = await foldersFuture;
       final foldersKnown = await foldersKnownFuture;
-      final contactIds = (await contactsFuture).map((c) => c.id).toSet();
+      final contactIds = contactsFuture == null
+          ? _contactIds
+          : (await contactsFuture).map((c) => c.id).toSet();
 
       const allChatsFolder = ChatFolder(
         id: FoldersModule.allChatsFolderId,
@@ -1227,9 +1244,10 @@ class _ChatListScreenState extends State<ChatListScreen>
           onlyVisible: !KometSettings.viewDeleted.value,
         );
         if (rows.isEmpty) continue;
-        final decoded = rows.reversed
-            .map((r) => CachedMessage.fromDbRow(r))
-            .toList();
+        final decoded = AppIosGlass.active.value
+            ? await CachedMessage.fromDbRowsAsync(rows.reversed.toList())
+            : rows.reversed.map((r) => CachedMessage.fromDbRow(r)).toList();
+        if (!mounted) return;
         MessageSessionCache.save(myId, target.id, decoded, reachedStart: false);
       }
     } finally {
