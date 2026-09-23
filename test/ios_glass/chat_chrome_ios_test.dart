@@ -305,6 +305,36 @@ void main() {
     });
   });
 
+  testWidgets('«Выбрано» стоит по центру экрана', (tester) async {
+    await tester.pumpWidget(
+      _app(
+        Builder(
+          builder: (context) => Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              height: 56,
+              child: SelectionTopBar(
+                cs: Theme.of(context).colorScheme,
+                selected: const {'1'},
+                glossy: true,
+                copyMsgs: const [],
+                editMsg: null,
+                onClear: () {},
+                onCopy: (_) {},
+                onEdit: (_) {},
+                onDelete: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final screen = tester.getSize(find.byType(Scaffold).first).width;
+    final title = tester.getRect(find.byKey(const ValueKey('selection-title')));
+    expect(title.center.dx, closeTo(screen / 2, 0.5));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('«Ответить» и «Переслать» — стеклянные капсулы', (tester) async {
     final taps = <String>[];
     await tester.pumpWidget(
