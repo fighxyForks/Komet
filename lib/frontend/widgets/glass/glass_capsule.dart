@@ -150,6 +150,15 @@ class GlassCapsule extends StatelessWidget {
     this.onLongPress,
   });
 
+  static (double?, double?) nativeExtent(
+    BoxConstraints constraints,
+    double? width,
+    double? height,
+  ) => (
+    width ?? (constraints.hasTightWidth ? constraints.maxWidth : null),
+    height ?? (constraints.hasTightHeight ? constraints.maxHeight : null),
+  );
+
   void _handleTap() {
     Haptics.tap();
     onTap?.call();
@@ -161,22 +170,27 @@ class GlassCapsule extends StatelessWidget {
     return NativeGlassGate(
       builder: (context, useNative) {
         if (useNative && allowNative) {
-          final native = LiquidGlassContainer(
-            width: width,
-            height: height,
-            config: LiquidGlassConfig(
-              shape: borderRadius == null
-                  ? LiquidGlassEffectShape.capsule
-                  : LiquidGlassEffectShape.rect,
-              cornerRadius: borderRadius?.topLeft.x,
-              tint: tint,
-              interactive: onTap != null,
-            ),
-            onTap: onTap == null ? null : _handleTap,
-            child: content,
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final (w, h) = nativeExtent(constraints, width, height);
+              final native = LiquidGlassContainer(
+                width: w,
+                height: h,
+                config: LiquidGlassConfig(
+                  shape: borderRadius == null
+                      ? LiquidGlassEffectShape.capsule
+                      : LiquidGlassEffectShape.rect,
+                  cornerRadius: borderRadius?.topLeft.x,
+                  tint: tint,
+                  interactive: onTap != null,
+                ),
+                onTap: onTap == null ? null : _handleTap,
+                child: SizedBox(width: w, height: h, child: content),
+              );
+              if (onLongPress == null) return native;
+              return GestureDetector(onLongPress: onLongPress, child: native);
+            },
           );
-          if (onLongPress == null) return native;
-          return GestureDetector(onLongPress: onLongPress, child: native);
         }
         final surface = GlassBackground(
           borderRadius: borderRadius ?? GlassStyle.capsule,
