@@ -214,6 +214,11 @@ void main() {
     }
 
     final short = await widthFor('Аня');
+    final screen = tester.getSize(find.byType(Scaffold).first).width;
+    expect(
+      tester.getRect(find.byKey(const ValueKey('chat-header-title'))).center.dx,
+      closeTo(screen / 2, 0.5),
+    );
     final long = await widthFor(
       'Очень длинное синтетическое название группы для проверки',
     );

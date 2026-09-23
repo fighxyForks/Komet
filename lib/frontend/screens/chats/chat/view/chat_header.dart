@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -113,9 +114,6 @@ class ChatHeaderRow extends StatelessWidget {
   double? get _pillBlur =>
       frosted && !liquid && backdropVisible ? AppFrost.sigma : null;
 
-  Widget _alignTitle(bool ios, Widget pill) =>
-      ios ? Align(alignment: Alignment.centerLeft, child: pill) : pill;
-
   Widget _headerAction(
     bool ios, {
     Key? key,
@@ -152,188 +150,193 @@ class ChatHeaderRow extends StatelessWidget {
       fontWeight: FontWeight.w600,
       fontFamily: displayFontOf(context),
     );
-    return Padding(
-      padding: ios
-          ? const EdgeInsets.fromLTRB(12, 3, 12, 7)
-          : const EdgeInsets.fromLTRB(10, 4, 10, 8),
-      child: Row(
-        children: [
-          _backWithBadge(
-            cs,
-            SizedBox(
-              width: ios ? 46 : 56,
-              height: ios ? 46 : 56,
-              child: _chromePill(
-                context,
-                key: const ValueKey('chat-header-back'),
-                onTap: () {
-                  if (embedded) {
-                    onClose?.call();
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
-                child: Center(
-                  child: Icon(
-                    embedded
-                        ? Symbols.close
-                        : (ios
-                              ? Symbols.arrow_back_ios_new
-                              : Symbols.arrow_back),
-                    color: cs.onSurface,
-                    weight: 500,
-                    size: ios ? 21 : 24,
-                  ),
-                ),
-              ),
+    final back = _backWithBadge(
+      cs,
+      SizedBox(
+        width: ios ? 46 : 56,
+        height: ios ? 46 : 56,
+        child: _chromePill(
+          context,
+          key: const ValueKey('chat-header-back'),
+          onTap: () {
+            if (embedded) {
+              onClose?.call();
+            } else {
+              Navigator.pop(context);
+            }
+          },
+          child: Center(
+            child: Icon(
+              embedded
+                  ? Symbols.close
+                  : (ios ? Symbols.arrow_back_ios_new : Symbols.arrow_back),
+              color: cs.onSurface,
+              weight: 500,
+              size: ios ? 21 : 24,
             ),
           ),
-          SizedBox(width: ios ? 6 : 8),
-          Expanded(
-            child: _alignTitle(
-              ios,
-              _chromePill(
-                context,
-                key: const ValueKey('chat-header-title'),
-                onTap: onOpenInfo,
-                padding: ios
-                    ? const EdgeInsets.fromLTRB(5, 5, 14, 5)
-                    : const EdgeInsets.fromLTRB(6, 6, 16, 6),
-                child: Row(
-                  mainAxisSize: ios ? MainAxisSize.min : MainAxisSize.max,
+        ),
+      ),
+    );
+    final title = _chromePill(
+      context,
+      key: const ValueKey('chat-header-title'),
+      onTap: onOpenInfo,
+      padding: ios
+          ? const EdgeInsets.fromLTRB(5, 5, 14, 5)
+          : const EdgeInsets.fromLTRB(6, 6, 16, 6),
+      child: Row(
+        mainAxisSize: ios ? MainAxisSize.min : MainAxisSize.max,
+        children: [
+          _withOnlineDot(
+            cs,
+            _heroAvatar(
+              ios ? 36 : 44,
+              (d) => chatId == 0
+                  ? CircleAvatar(
+                      radius: d / 2,
+                      backgroundColor: cs.primary,
+                      child: Icon(
+                        Symbols.bookmark,
+                        fill: 1,
+                        color: cs.onPrimary,
+                        size: d * 0.5,
+                      ),
+                    )
+                  : imageUrl.isNotEmpty
+                  ? CircleAvatar(
+                      radius: d / 2,
+                      backgroundImage: CachedNetworkImageProvider(
+                        imageUrl,
+                        maxWidth: 144,
+                        maxHeight: 144,
+                      ),
+                    )
+                  : CircleAvatar(
+                      radius: d / 2,
+                      backgroundColor: cs.primaryContainer,
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          color: cs.onPrimaryContainer,
+                          fontSize: d * 0.36,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: displayFontOf(context),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          SizedBox(width: ios ? 10 : 12),
+          Flexible(
+            fit: ios ? FlexFit.loose : FlexFit.tight,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _withOnlineDot(
-                      cs,
-                      _heroAvatar(
-                        ios ? 36 : 44,
-                        (d) => chatId == 0
-                            ? CircleAvatar(
-                                radius: d / 2,
-                                backgroundColor: cs.primary,
-                                child: Icon(
-                                  Symbols.bookmark,
-                                  fill: 1,
-                                  color: cs.onPrimary,
-                                  size: d * 0.5,
-                                ),
-                              )
-                            : imageUrl.isNotEmpty
-                            ? CircleAvatar(
-                                radius: d / 2,
-                                backgroundImage: CachedNetworkImageProvider(
-                                  imageUrl,
-                                  maxWidth: 144,
-                                  maxHeight: 144,
-                                ),
-                              )
-                            : CircleAvatar(
-                                radius: d / 2,
-                                backgroundColor: cs.primaryContainer,
-                                child: Text(
-                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                  style: TextStyle(
-                                    color: cs.onPrimaryContainer,
-                                    fontSize: d * 0.36,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: displayFontOf(context),
-                                  ),
-                                ),
-                              ),
-                      ),
-                    ),
-                    SizedBox(width: ios ? 10 : 12),
                     Flexible(
-                      fit: ios ? FlexFit.loose : FlexFit.tight,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: ProfileHeroName(
-                                  tag: heroTag,
-                                  text: name,
-                                  style: nameStyle,
-                                  child: Text(
-                                    name,
-                                    style: nameStyle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                              if (isOfficial) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Symbols.verified,
-                                  color: cs.primary,
-                                  size: 16,
-                                  weight: 600,
-                                  fill: 1,
-                                ),
-                              ],
-                            ],
-                          ),
-                          ValueListenableBuilder<String>(
-                            valueListenable: headerStatus,
-                            builder: (context, status, _) => Text(
-                              status,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: cs.onSurfaceVariant,
-                                fontSize: ios ? 12.5 : 13,
-                                height: ios ? 1.15 : null,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: ProfileHeroName(
+                        tag: heroTag,
+                        text: name,
+                        style: nameStyle,
+                        child: Text(
+                          name,
+                          style: nameStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
+                    if (isOfficial) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        Symbols.verified,
+                        color: cs.primary,
+                        size: 16,
+                        weight: 600,
+                        fill: 1,
+                      ),
+                    ],
                   ],
                 ),
-              ),
-            ),
-          ),
-          SizedBox(width: ios ? 6 : 8),
-          _chromePill(
-            context,
-            key: const ValueKey('chat-header-actions'),
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: SizedBox(
-              height: ios ? 46 : 56,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ValueListenableBuilder<int>(
-                    valueListenable: scheduledCount,
-                    builder: (_, count, _) => count > 0
-                        ? _headerAction(
-                            ios,
-                            icon: Symbols.schedule,
-                            onPressed: onOpenScheduled,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                  if (showCall)
-                    _headerAction(ios, icon: Symbols.call, onPressed: onCall),
-                  Builder(
-                    builder: (btnContext) => _headerAction(
-                      ios,
-                      key: const ValueKey('chat-header-menu'),
-                      icon: ios ? Symbols.more_horiz : Symbols.more_vert,
-                      onPressed: () => onMenu(btnContext),
+                ValueListenableBuilder<String>(
+                  valueListenable: headerStatus,
+                  builder: (context, status, _) => Text(
+                    status,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: ios ? 12.5 : 13,
+                      height: ios ? 1.15 : null,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
       ),
+    );
+    final actions = _chromePill(
+      context,
+      key: const ValueKey('chat-header-actions'),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: SizedBox(
+        height: ios ? 46 : 56,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ValueListenableBuilder<int>(
+              valueListenable: scheduledCount,
+              builder: (_, count, _) => count > 0
+                  ? _headerAction(
+                      ios,
+                      icon: Symbols.schedule,
+                      onPressed: onOpenScheduled,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            if (showCall)
+              _headerAction(ios, icon: Symbols.call, onPressed: onCall),
+            Builder(
+              builder: (btnContext) => _headerAction(
+                ios,
+                key: const ValueKey('chat-header-menu'),
+                icon: ios ? Symbols.more_horiz : Symbols.more_vert,
+                onPressed: () => onMenu(btnContext),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return Padding(
+      padding: ios
+          ? const EdgeInsets.fromLTRB(12, 3, 12, 7)
+          : const EdgeInsets.fromLTRB(10, 4, 10, 8),
+      child: ios
+          ? CustomMultiChildLayout(
+              delegate: IosHeaderLayout(gap: 6),
+              children: [
+                LayoutId(id: IosHeaderSlot.back, child: back),
+                LayoutId(id: IosHeaderSlot.title, child: title),
+                LayoutId(id: IosHeaderSlot.actions, child: actions),
+              ],
+            )
+          : Row(
+              children: [
+                back,
+                const SizedBox(width: 8),
+                Expanded(child: title),
+                const SizedBox(width: 8),
+                actions,
+              ],
+            ),
     );
   }
 
@@ -683,4 +686,41 @@ class _RollingCountState extends State<_RollingCount> {
       ),
     );
   }
+}
+
+enum IosHeaderSlot { back, title, actions }
+
+class IosHeaderLayout extends MultiChildLayoutDelegate {
+  final double gap;
+
+  IosHeaderLayout({required this.gap});
+
+  @override
+  void performLayout(Size size) {
+    final loose = BoxConstraints.loose(size);
+    final back = layoutChild(IosHeaderSlot.back, loose);
+    final actions = layoutChild(IosHeaderSlot.actions, loose);
+    final minLeft = back.width + gap;
+    final maxRight = size.width - actions.width - gap;
+    final title = layoutChild(
+      IosHeaderSlot.title,
+      BoxConstraints(
+        maxWidth: math.max(0, maxRight - minLeft),
+        maxHeight: size.height,
+      ),
+    );
+    double top(Size child) => (size.height - child.height) / 2;
+    positionChild(IosHeaderSlot.back, Offset(0, top(back)));
+    positionChild(
+      IosHeaderSlot.actions,
+      Offset(size.width - actions.width, top(actions)),
+    );
+    final left = ((size.width - title.width) / 2)
+        .clamp(minLeft, math.max(minLeft, maxRight - title.width))
+        .toDouble();
+    positionChild(IosHeaderSlot.title, Offset(left, top(title)));
+  }
+
+  @override
+  bool shouldRelayout(IosHeaderLayout oldDelegate) => oldDelegate.gap != gap;
 }
