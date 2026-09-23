@@ -17,10 +17,12 @@ class MediaPlaybackPill extends StatelessWidget {
     super.key,
     this.borderRadius,
     this.margin = EdgeInsets.zero,
+    this.opensChat = false,
   });
 
   final BorderRadius? borderRadius;
   final EdgeInsets margin;
+  final bool opensChat;
 
   static const double height = 30;
   static const double iosHeight = 42;
@@ -43,6 +45,7 @@ class MediaPlaybackPill extends StatelessWidget {
                       track: track,
                       borderRadius: borderRadius,
                       margin: margin,
+                      opensChat: opensChat,
                     ),
             );
           case PlaybackKind.videoNote:
@@ -54,6 +57,7 @@ class MediaPlaybackPill extends StatelessWidget {
                       track: track,
                       borderRadius: borderRadius,
                       margin: margin,
+                      opensChat: opensChat,
                     ),
             );
           case PlaybackKind.audioFile:
@@ -65,6 +69,7 @@ class MediaPlaybackPill extends StatelessWidget {
                       track: track,
                       borderRadius: borderRadius,
                       margin: margin,
+                      opensChat: opensChat,
                     ),
             );
         }
@@ -78,11 +83,13 @@ class _AudioFilePill extends StatelessWidget {
     required this.track,
     required this.borderRadius,
     required this.margin,
+    required this.opensChat,
   });
 
   final AudioFileTrack track;
   final BorderRadius? borderRadius;
   final EdgeInsets margin;
+  final bool opensChat;
 
   @override
   Widget build(BuildContext context) {
@@ -107,18 +114,22 @@ class _AudioFilePill extends StatelessWidget {
       label: source.isEmpty ? track.name : '${track.name} · $source',
       onToggle: audio.toggle,
       onClose: MediaPlayback.instance.closeAudioFile,
-      onOpen: () {
-        final chatId = track.chatId;
-        final messageId = track.messageId;
-        final messageTime = track.messageTime;
-        if (chatId == null || messageId == null || messageTime == null) return;
-        openChatAtMessage(
-          context,
-          chatId,
-          messageId: messageId,
-          messageTime: messageTime,
-        );
-      },
+      onOpen: !opensChat
+          ? null
+          : () {
+              final chatId = track.chatId;
+              final messageId = track.messageId;
+              final messageTime = track.messageTime;
+              if (chatId == null || messageId == null || messageTime == null) {
+                return;
+              }
+              openChatAtMessage(
+                context,
+                chatId,
+                messageId: messageId,
+                messageTime: messageTime,
+              );
+            },
     );
   }
 }
@@ -128,11 +139,13 @@ class _VoicePill extends StatelessWidget {
     required this.track,
     required this.borderRadius,
     required this.margin,
+    required this.opensChat,
   });
 
   final VoiceTrack track;
   final BorderRadius? borderRadius;
   final EdgeInsets margin;
+  final bool opensChat;
 
   @override
   Widget build(BuildContext context) {
@@ -163,12 +176,14 @@ class _VoicePill extends StatelessWidget {
           onToggle: track.audio.toggle,
           onSpeed: playback.cycleVoiceSpeed,
           onClose: playback.closeVoice,
-          onOpen: () => openChatAtMessage(
-            context,
-            track.chatId,
-            messageId: track.messageId,
-            messageTime: track.time,
-          ),
+          onOpen: !opensChat
+              ? null
+              : () => openChatAtMessage(
+                  context,
+                  track.chatId,
+                  messageId: track.messageId,
+                  messageTime: track.time,
+                ),
         );
       },
     );
@@ -180,11 +195,13 @@ class _VideoNotePill extends StatelessWidget {
     required this.track,
     required this.borderRadius,
     required this.margin,
+    required this.opensChat,
   });
 
   final VideoNoteTrack track;
   final BorderRadius? borderRadius;
   final EdgeInsets margin;
+  final bool opensChat;
 
   @override
   Widget build(BuildContext context) {
@@ -214,12 +231,14 @@ class _VideoNotePill extends StatelessWidget {
               : track.controller.play(),
           onSpeed: playback.cycleVideoNoteSpeed,
           onClose: playback.closeVideoNote,
-          onOpen: () => openChatAtMessage(
-            context,
-            track.chatId,
-            messageId: track.messageId,
-            messageTime: track.time,
-          ),
+          onOpen: !opensChat
+              ? null
+              : () => openChatAtMessage(
+                  context,
+                  track.chatId,
+                  messageId: track.messageId,
+                  messageTime: track.time,
+                ),
         );
       },
     );
@@ -241,7 +260,7 @@ class _PillSurface extends StatelessWidget {
     required this.onToggle,
     this.onSpeed,
     required this.onClose,
-    required this.onOpen,
+    this.onOpen,
   });
 
   final BorderRadius? borderRadius;
@@ -257,7 +276,7 @@ class _PillSurface extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback? onSpeed;
   final VoidCallback onClose;
-  final VoidCallback onOpen;
+  final VoidCallback? onOpen;
 
   String _speedLabel() {
     final value = speed ?? 1;

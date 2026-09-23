@@ -3351,4 +3351,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get fileNoAppToOpen =>
       'Нет приложения, чтобы открыть этот файл. Выберите, куда его отправить.';
+
+  @override
+  String get iosMenuSwitchAccount => 'Сменить аккаунт';
+
+  @override
+  String iosMenuFolderActions(String name) {
+    return 'Папка «$name»';
+  }
 }

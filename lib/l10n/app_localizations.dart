@@ -6217,6 +6217,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No app on this device can open this file. Choose where to send it.'**
   String get fileNoAppToOpen;
+
+  /// No description provided for @iosMenuSwitchAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch account'**
+  String get iosMenuSwitchAccount;
+
+  /// No description provided for @iosMenuFolderActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder “{name}”'**
+  String iosMenuFolderActions(String name);
 }
 
 class _AppLocalizationsDelegate

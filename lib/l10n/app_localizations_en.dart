@@ -3334,4 +3334,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fileNoAppToOpen =>
       'No app on this device can open this file. Choose where to send it.';
+
+  @override
+  String get iosMenuSwitchAccount => 'Switch account';
+
+  @override
+  String iosMenuFolderActions(String name) {
+    return 'Folder “$name”';
+  }
 }

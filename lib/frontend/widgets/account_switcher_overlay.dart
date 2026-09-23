@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
@@ -8,6 +9,7 @@ import '../../core/storage/app_database.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/utils/haptics.dart';
 import 'animated_overlay_popup.dart';
+import 'glass/ios_glass.dart';
 import 'komet_avatar.dart';
 import '../../core/config/app_frost.dart';
 
@@ -28,7 +30,10 @@ class AccountSwitcherController extends ChangeNotifier {
 
   void _onPointerEvent(PointerEvent event) {
     if (committed) return;
-    if (event is PointerMoveEvent) {
+    if (event is PointerDownEvent) {
+      pointer = event.position;
+      notifyListeners();
+    } else if (event is PointerMoveEvent) {
       pointer = event.position;
       if (initialPointer != null &&
           !movedSignificantly &&
@@ -58,6 +63,26 @@ class AccountSwitcherController extends ChangeNotifier {
 }
 
 typedef AccountSwitcherCallback = void Function(int? accountId);
+
+double accountSwitcherMenuTop({
+  required Size screen,
+  required double bottomInset,
+  required Offset tapPoint,
+  required double height,
+}) {
+  const margin = 24.0;
+  const gap = 20.0;
+  if (tapPoint.dy < screen.height / 2) {
+    final maxTop = math.max(
+      margin,
+      screen.height - bottomInset - margin - height,
+    );
+    return (tapPoint.dy + gap).clamp(margin, maxTop).toDouble();
+  }
+  final maxBottom = screen.height - bottomInset - 88;
+  final bottom = math.min(tapPoint.dy - gap, maxBottom);
+  return math.max(margin, bottom - height);
+}
 
 void showAccountSwitcher({
   required BuildContext context,
@@ -162,14 +187,12 @@ class _AccountSwitcherLayerState extends State<_AccountSwitcherLayer>
     if (menuX > maxX) menuX = maxX;
     if (menuX < _hMargin) menuX = _hMargin;
 
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final maxBottom = screen.height - bottomInset - 88;
-    double menuBottom = maxBottom;
-    if (widget.tapPoint.dy - 20 < menuBottom) {
-      menuBottom = widget.tapPoint.dy - 20;
-    }
-    double menuY = menuBottom - height;
-    if (menuY < 24) menuY = 24;
+    final menuY = accountSwitcherMenuTop(
+      screen: screen,
+      bottomInset: MediaQuery.viewPaddingOf(context).bottom,
+      tapPoint: widget.tapPoint,
+      height: height,
+    );
 
     _menuRect = Rect.fromLTWH(menuX, menuY, menuWidth, height);
     _itemHitRects = [
@@ -241,21 +264,25 @@ class _AccountSwitcherLayerState extends State<_AccountSwitcherLayer>
       builder: (ctx, _) {
         final t = overlayAnimation.value.clamp(0.0, 1.0);
         final blurSigma = AppFrost.overlaySigma * t;
+        final ios = IosGlass.of(context);
+        final scrim = ColoredBox(
+          color: Colors.black.withValues(alpha: (ios ? 0.4 : 0.22) * t),
+        );
         return GestureDetector(
           onTap: closeOverlay,
           behavior: HitTestBehavior.opaque,
           child: Stack(
             children: [
               Positioned.fill(
-                child: BackdropFilter(
-                  filter: ui.ImageFilter.blur(
-                    sigmaX: blurSigma,
-                    sigmaY: blurSigma,
-                  ),
-                  child: ColoredBox(
-                    color: Colors.black.withValues(alpha: 0.22 * t),
-                  ),
-                ),
+                child: ios
+                    ? scrim
+                    : BackdropFilter(
+                        filter: ui.ImageFilter.blur(
+                          sigmaX: blurSigma,
+                          sigmaY: blurSigma,
+                        ),
+                        child: scrim,
+                      ),
               ),
               if (_loaded) _buildMenu(t),
             ],
