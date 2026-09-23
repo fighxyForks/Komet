@@ -433,6 +433,7 @@ class _ChatScreenState extends State<ChatScreen>
   late final ChatTextSendController _textSend;
 
   late final RouteSettle _routeSettle = RouteSettle(isMounted: () => mounted);
+  final bool _quietOpen = AppIosGlass.active.value;
 
   late final ChatSearchController _search;
   late final AnimationController _searchAnim;
@@ -614,7 +615,12 @@ class _ChatScreenState extends State<ChatScreen>
           .ensureLoaded()
           .then((_) {
             _prewarmQuickReactions();
-            if (mounted) _bumpMessages();
+            if (!mounted) return;
+            if (_quietOpen) {
+              _routeSettle.run(_bumpMessages);
+            } else {
+              _bumpMessages();
+            }
           })
           .catchError((_) {}),
     );
@@ -791,7 +797,11 @@ class _ChatScreenState extends State<ChatScreen>
     _scrollController.addListener(_scrollNav.updateScrollDownVisible);
 
     unawaited(_fastPreloadCache());
-    unawaited(_loadParticipantsCount());
+    if (_quietOpen) {
+      _routeSettle.run(() => unawaited(_loadParticipantsCount()));
+    } else {
+      unawaited(_loadParticipantsCount());
+    }
     WidgetsBinding.instance.addPostFrameCallback(_onFirstFrameRendered);
   }
 
@@ -858,7 +868,11 @@ class _ChatScreenState extends State<ChatScreen>
     unawaited(_loadPeerKind());
     unawaited(_loadWallpaper());
     unawaited(_loadEncryption());
-    unawaited(_refreshBadge());
+    if (_quietOpen) {
+      _routeSettle.run(() => unawaited(_refreshBadge()));
+    } else {
+      unawaited(_refreshBadge());
+    }
 
     try {
       final chatRows = await chats.getChat(_myId, widget.chatId);
@@ -893,6 +907,15 @@ class _ChatScreenState extends State<ChatScreen>
       _mediaSend.mergePendingMedia();
       _syncReactionNotifiersFromMessages();
       _requestCommentCounts();
+      _revealOrHoldInitial();
+      return;
+    }
+
+    if (_quietOpen) {
+      await _loadLocalHistoryFast();
+      if (!mounted || _messages.isEmpty) return;
+      _deferredIds.clear();
+      _mediaSend.mergePendingMedia();
       _revealOrHoldInitial();
       return;
     }
@@ -967,7 +990,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _onFirstFrameRendered(Duration _) {
     if (!mounted) return;
-    if (!_commentsMode) unawaited(_loadLocalHistoryFast());
+    if (!_commentsMode && !_quietOpen) unawaited(_loadLocalHistoryFast());
     if (widget.embedded) {
       _routeSettle.settleNow();
     } else {
@@ -977,13 +1000,18 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   List<CachedMessage>? _fastLocalDecoded;
+  Future<void>? _fastLocalLoad;
   bool _fastLocalStarted = false;
 
   // #***! читаем сообщения из локальной БД сразу, не дожидаясь конца
   // анимации перехода (её ждёт только сетевая часть в _loadHistory)
-  Future<void> _loadLocalHistoryFast() async {
-    if (_fastLocalStarted) return;
+  Future<void> _loadLocalHistoryFast() {
+    if (_fastLocalStarted) return _fastLocalLoad ?? Future.value();
     _fastLocalStarted = true;
+    return _fastLocalLoad = _readLocalHistoryFast();
+  }
+
+  Future<void> _readLocalHistoryFast() async {
     if (_myId == 0) {
       final activeProfile = await AppDatabase.loadActiveProfile();
       if (!mounted) return;
@@ -1651,6 +1679,9 @@ class _ChatScreenState extends State<ChatScreen>
       unawaited(_loadOtherPresence());
     }
     unawaited(_refreshScheduledCount());
+    final pendingFastLocal = _fastLocalLoad;
+    if (_quietOpen && pendingFastLocal != null) await pendingFastLocal;
+    if (!mounted) return;
     final localDecoded =
         _fastLocalDecoded ??
         await _chatController.loadLocalHistory(
