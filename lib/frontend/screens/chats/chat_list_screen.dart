@@ -369,6 +369,8 @@ class _ChatListScreenState extends State<ChatListScreen>
       storiesModule.storiesChanged.value,
       _sessionState,
       identityHashCode(_profile),
+      Theme.of(context),
+      IosGlass.of(context),
     ]);
     if (_cachedChatsBody == null || _chatsBodyCacheKey != key) {
       _chatsBodyCacheKey = key;
