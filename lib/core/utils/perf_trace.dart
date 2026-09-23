@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/scheduler.dart';
@@ -23,6 +24,7 @@ class PerfTrace with WidgetsBindingObserver {
   bool _truncated = false;
   int _frames = 0;
   int _janky = 0;
+  int _stalls = 0;
   double _worstMs = 0;
   DateTime _windowStart = DateTime.now();
   String _route = '-';
@@ -146,8 +148,11 @@ class PerfTrace with WidgetsBindingObserver {
     AnimationStatus target,
   ) {
     if (!_enabled) return;
-    beginSpan(span, detail: detail);
     final animation = route is TransitionRoute ? route.animation : null;
+    beginSpan(
+      span,
+      detail: '$detail (анимация: ${animation?.status.name ?? 'нет'})',
+    );
     if (animation == null || animation.status == target) {
       endSpan(span);
       return;
@@ -165,22 +170,34 @@ class PerfTrace with WidgetsBindingObserver {
     if (!_enabled) return;
     final budget = budgetMs ?? frameBudgetMs();
     for (final timing in timings) {
-      final total = timing.totalSpan.inMicroseconds / 1000;
-      final janky = total > budget;
+      final buildMs = timing.buildDuration.inMicroseconds / 1000;
+      final rasterMs = timing.rasterDuration.inMicroseconds / 1000;
+      final worst = math.max(buildMs, rasterMs);
+      final janky = worst > budget;
       final vsync = timing.timestampInMicroseconds(ui.FramePhase.vsyncStart);
+      final startDelayMs =
+          (timing.timestampInMicroseconds(ui.FramePhase.buildStart) - vsync) /
+          1000;
       if (vsync > _latestVsyncUs) _latestVsyncUs = vsync;
       _recentFrames.add(_FrameRecord(vsync, janky));
       while (_recentFrames.length > maxFrames) {
         _recentFrames.removeFirst();
       }
       _frames++;
-      if (total > _worstMs) _worstMs = total;
+      if (worst > _worstMs) _worstMs = worst;
+      if (startDelayMs > budget) {
+        _stalls++;
+        _write(
+          'stall',
+          'сборка началась через ${_ms(startDelayMs)} после кадра '
+              '(главный поток занят), экран $_route${_openSpanNames()}',
+        );
+      }
       if (!janky) continue;
       _janky++;
       _write(
         'jank',
-        '${_ms(total)} (сборка ${_ms(timing.buildDuration.inMicroseconds / 1000)}, '
-            'растр ${_ms(timing.rasterDuration.inMicroseconds / 1000)}) '
+        'сборка ${_ms(buildMs)}, растр ${_ms(rasterMs)} '
             'экран $_route${_openSpanNames()}',
       );
     }
@@ -293,7 +310,8 @@ class PerfTrace with WidgetsBindingObserver {
     final counters = _counters.entries.map((e) => '${e.key}=${e.value}');
     _write(
       'fps',
-      'кадров $_frames, с рывком $_janky, худший ${_ms(_worstMs)}'
+      'кадров $_frames, с рывком $_janky, худший ${_ms(_worstMs)}, '
+          'задержек старта $_stalls'
           '${counters.isEmpty ? '' : ' · ${counters.join(', ')}'}',
     );
     _resetWindow();
@@ -303,6 +321,7 @@ class PerfTrace with WidgetsBindingObserver {
     _windowStart = DateTime.now();
     _frames = 0;
     _janky = 0;
+    _stalls = 0;
     _worstMs = 0;
     _counters.clear();
   }
@@ -393,12 +412,18 @@ class _WindowSnapshot {
 
 class PerfScrollProbe extends StatefulWidget {
   final String tag;
+  final bool hidden;
   final Widget child;
 
   static const double jumpThreshold = 200;
   static const double extentJumpThreshold = 300;
 
-  const PerfScrollProbe({super.key, required this.tag, required this.child});
+  const PerfScrollProbe({
+    super.key,
+    required this.tag,
+    required this.child,
+    this.hidden = false,
+  });
 
   @override
   State<PerfScrollProbe> createState() => _PerfScrollProbeState();
@@ -417,7 +442,7 @@ class _PerfScrollProbeState extends State<PerfScrollProbe> {
         trace.event(
           'jump',
           '${widget.tag}: прыжок прокрутки ${delta.toStringAsFixed(0)} px '
-              'без жеста',
+              'без жеста${widget.hidden ? ' (лента скрыта)' : ''}',
         );
       }
     }
@@ -434,7 +459,8 @@ class _PerfScrollProbeState extends State<PerfScrollProbe> {
       trace.event(
         'jump',
         '${widget.tag}: высота содержимого ${previous.toStringAsFixed(0)} → '
-            '${extent.toStringAsFixed(0)} px',
+            '${extent.toStringAsFixed(0)} px'
+            '${widget.hidden ? ' (лента скрыта)' : ''}',
       );
     }
     return false;

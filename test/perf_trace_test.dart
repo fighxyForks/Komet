@@ -8,14 +8,18 @@ ui.FrameTiming _frame({
   required int buildUs,
   required int rasterUs,
   int vsyncUs = 0,
-}) => ui.FrameTiming(
-  vsyncStart: vsyncUs,
-  buildStart: vsyncUs,
-  buildFinish: vsyncUs + buildUs,
-  rasterStart: vsyncUs + buildUs,
-  rasterFinish: vsyncUs + buildUs + rasterUs,
-  rasterFinishWallTime: vsyncUs + buildUs + rasterUs,
-);
+  int startDelayUs = 0,
+}) {
+  final buildStart = vsyncUs + startDelayUs;
+  return ui.FrameTiming(
+    vsyncStart: vsyncUs,
+    buildStart: buildStart,
+    buildFinish: buildStart + buildUs,
+    rasterStart: buildStart + buildUs,
+    rasterFinish: buildStart + buildUs + rasterUs,
+    rasterFinishWallTime: buildStart + buildUs + rasterUs,
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -35,12 +39,27 @@ void main() {
     trace.setRoute('ChatScreen');
     trace.handleTimings([
       _frame(buildUs: 3000, rasterUs: 3000),
-      _frame(buildUs: 12000, rasterUs: 9000),
+      _frame(buildUs: 6000, rasterUs: 6000),
+      _frame(buildUs: 12000, rasterUs: 3000),
     ], budgetMs: 8.3);
     final jank = trace.lines.where((l) => l.contains('[jank]')).toList();
     expect(jank, hasLength(1));
-    expect(jank.single, contains('21.0 мс'));
+    expect(jank.single, contains('сборка 12.0 мс'));
     expect(jank.single, contains('ChatScreen'));
+  });
+
+  test('задержка старта сборки пишется отдельной строкой, не рывком', () {
+    trace.setEnabled(true);
+    trace.setRoute('ChatScreen');
+    trace.handleTimings([
+      _frame(buildUs: 300, rasterUs: 500, startDelayUs: 137000),
+    ], budgetMs: 8.3);
+    expect(trace.lines.where((l) => l.contains('[jank]')), isEmpty);
+    final stall = trace.lines.singleWhere((l) => l.contains('[stall]'));
+    expect(stall, contains('137.0 мс'));
+    trace.debugFlushSummary();
+    final summary = trace.lines.lastWhere((l) => l.contains('[fps]'));
+    expect(summary, contains('задержек старта 1'));
   });
 
   test('сводка считает кадры, рывки и счётчики', () {
@@ -184,6 +203,8 @@ void main() {
     trace.debugSettleSpans();
     final end = trace.lines.lastWhere((l) => l.contains('■ переход'));
     expect(end, isNot(contains(' 0.0 мс')));
+    final start = trace.lines.lastWhere((l) => l.contains('▶ переход'));
+    expect(start, contains('анимация: forward'));
   });
 
   testWidgets('изменения окна пишутся по полям, пустые — только счётчиком', (

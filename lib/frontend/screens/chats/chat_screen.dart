@@ -1093,15 +1093,31 @@ class _ChatScreenState extends State<ChatScreen>
         notifyIfMissing: false,
         onSettled: () {
           if (!mounted) return;
-          setState(_markPositioned);
+          _scrollNav.jumpCacheExtent.value = null;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            _scrollNav.jumpCacheExtent.value = null;
-            _reapplyPinIfNeeded();
+            _alignPinThenReveal(messageId);
           });
         },
       );
     });
+  }
+
+  void _alignPinThenReveal(String messageId) {
+    void reveal() {
+      if (mounted) setState(_markPositioned);
+    }
+
+    if (_pinnedMessageId != messageId || !_scrollController.hasClients) {
+      reveal();
+      return;
+    }
+    _scrollNav.alignLoadedMessage(
+      messageId,
+      _pinnedAlignment,
+      0,
+      onSettled: reveal,
+    );
   }
 
   void _reapplyPinIfNeeded() {
@@ -4537,7 +4553,10 @@ class _ChatScreenState extends State<ChatScreen>
       children: [
         Opacity(
           opacity: showShimmer ? 0.0 : 1.0,
-          child: NotificationListener<ScrollNotification>(
+          child: PerfScrollProbe(
+            tag: 'чат',
+            hidden: showShimmer,
+            child: NotificationListener<ScrollNotification>(
             onNotification: (notification) {
               if (notification is ScrollStartNotification &&
                   notification.dragDetails != null) {
@@ -4548,6 +4567,7 @@ class _ChatScreenState extends State<ChatScreen>
               return false;
             },
             child: _buildMessagesList(),
+          ),
           ),
         ),
         if (showShimmer)
@@ -4645,7 +4665,7 @@ class _ChatScreenState extends State<ChatScreen>
                       jumpExtent != null && jumpExtent < userCacheExtent
                       ? jumpExtent
                       : userCacheExtent;
-                  return PerfScrollProbe(tag: 'чат', child: ScrollConfiguration(
+                  return ScrollConfiguration(
                     behavior: ScrollConfiguration.of(
                       context,
                     ).copyWith(scrollbars: false),
@@ -4904,7 +4924,7 @@ class _ChatScreenState extends State<ChatScreen>
                       ),
                     ],
                     ),
-                  ),);
+                  );
                 },
               ),
         ),
