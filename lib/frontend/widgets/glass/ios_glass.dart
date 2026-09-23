@@ -95,10 +95,13 @@ class NativeGlassGate extends StatefulWidget {
 class _NativeGlassGateState extends State<NativeGlassGate> {
   bool? _lastNative;
 
+  static bool routeSettled(ModalRoute<dynamic>? route) =>
+      (route?.isCurrent ?? true) &&
+      (route?.animation == null || route!.animation!.isCompleted) &&
+      (route?.secondaryAnimation?.value ?? 0) == 0;
+
   String? _fallbackReason(BuildContext context, ModalRoute<dynamic>? route) {
-    if (!((route?.isCurrent ?? true) &&
-        (route?.animation == null || route!.animation!.isCompleted) &&
-        (route?.secondaryAnimation?.value ?? 0) == 0)) {
+    if (_lastNative != true && !routeSettled(route)) {
       return 'анимация перехода';
     }
     if (GlassSuppression.count.value > 0) return 'подавление';
