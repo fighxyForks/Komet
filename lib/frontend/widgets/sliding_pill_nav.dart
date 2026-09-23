@@ -47,9 +47,15 @@ class PillNavGeometry {
 
   static const double _activeWeight = 2.2;
 
-  static double iosInnerWidth(double available, int itemCount) => math.max(
-    math.min(available, itemCount * 56.0),
-    math.min(available * 0.78, itemCount * 80.0),
+  static const double iosMargin = 21;
+  static const double iosMaxItemWidth = 100;
+
+  static double iosInnerWidth(double pageWidth, int itemCount) => math.max(
+    0,
+    math.min(
+      pageWidth - (iosMargin + SlidingPillNav.iosPadding) * 2,
+      itemCount * iosMaxItemWidth,
+    ),
   );
 }
 
@@ -87,6 +93,8 @@ class SlidingPillNav extends StatelessWidget {
 
   static const double height = 68;
   static const double iosHeight = 62;
+  static const double iosPadding = 11;
+  static const double iosThumbInset = 4;
 
   static double heightFor({required bool ios}) => ios ? iosHeight : height;
 
@@ -237,22 +245,22 @@ class SlidingPillNav extends StatelessWidget {
   Widget _buildIosNav(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final visualSel = position.round().clamp(0, items.length - 1);
-    const inset = 4.0;
+    const inset = iosThumbInset;
     const thumbRadius = (iosHeight - inset * 2) / 2;
     return GlassCapsule(
       key: const ValueKey('ios-tab-bar'),
       height: iosHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
           AnimatedPositioned(
+            key: const ValueKey('ios-tab-thumb'),
             duration: animationDuration,
             curve: Curves.easeOutCubic,
             left: position * geometry.inactiveWidth + inset,
             top: inset,
             bottom: inset,
-            width: geometry.inactiveWidth - inset * 2,
+            width: geometry.inactiveWidth + (iosPadding - inset) * 2,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: IosPalette.selectedTab(cs),
@@ -260,8 +268,9 @@ class SlidingPillNav extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: geometry.navInnerW,
+          Container(
+            width: geometry.navInnerW + iosPadding * 2,
+            padding: const EdgeInsets.symmetric(horizontal: iosPadding),
             child: Row(
               children: [
                 for (var i = 0; i < items.length; i++)
@@ -425,6 +434,27 @@ class _IosTabCell extends StatelessWidget {
     required this.onLongPress,
   });
 
+  static const double iconSize = 26;
+
+  Widget _icon(Color color) {
+    final asset = item.animationAsset;
+    if (asset == null) {
+      return Icon(
+        item.icon,
+        size: iconSize,
+        fill: 1,
+        weight: 500,
+        color: color,
+      );
+    }
+    return AnimatedLottieIcon(
+      asset: asset,
+      color: color,
+      size: iconSize,
+      active: selected,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -451,7 +481,7 @@ class _IosTabCell extends StatelessWidget {
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
-                  Icon(item.icon, size: 26, fill: 1, weight: 500, color: color),
+                  _icon(color),
                   if (label != null && label.isNotEmpty)
                     Positioned(
                       left: 26,
@@ -484,7 +514,7 @@ class _IosTabCell extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 1),
             Text(
               item.label,
               maxLines: 1,
@@ -492,7 +522,7 @@ class _IosTabCell extends StatelessWidget {
               softWrap: false,
               style: TextStyle(
                 color: color,
-                fontSize: 11,
+                fontSize: 10.5,
                 fontWeight: FontWeight.w600,
                 height: 1.1,
               ),

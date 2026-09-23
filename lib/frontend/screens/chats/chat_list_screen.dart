@@ -22,7 +22,6 @@ import '../../widgets/decrypted_text.dart';
 import '../../widgets/encryption_lock_badge.dart';
 import '../../widgets/online_dot.dart';
 import '../../widgets/custom_notification.dart';
-import '../../../core/config/app_ios_glass.dart';
 import '../../widgets/chat_menu_overlay.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
@@ -250,13 +249,26 @@ class _ChatListScreenState extends State<ChatListScreen>
   ];
 
   static const List<PillNavItem> _iosNavItems = [
-    PillNavItem(icon: Symbols.forum, label: 'Чаты'),
-    PillNavItem(icon: Symbols.call, label: 'Звонки'),
-    PillNavItem(icon: Symbols.account_circle, label: 'Контакты'),
+    PillNavItem(
+      icon: Symbols.chat_bubble,
+      label: 'Чаты',
+      animationAsset: AppAnimations.chat,
+    ),
+    PillNavItem(
+      icon: Symbols.call,
+      label: 'Звонки',
+      animationAsset: AppAnimations.call,
+    ),
+    PillNavItem(
+      icon: Symbols.person_pin,
+      label: 'Контакты',
+      animationAsset: AppAnimations.contacts,
+    ),
     PillNavItem(
       icon: Symbols.settings,
       label: 'Настройки',
       longPressable: true,
+      animationAsset: AppAnimations.settings,
     ),
   ];
 
@@ -1622,12 +1634,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     _navPageAnimEnd = index.toDouble();
     setState(() => _currentNavIndex = index);
     activeNavTab.value = index;
-    final releaseGlass = AppIosGlass.nativeViews
-        ? GlassSuppression.hold()
-        : null;
-    _navPageAnimController
-        .forward(from: 0)
-        .whenCompleteOrCancel(() => releaseGlass?.call());
+    _navPageAnimController.forward(from: 0);
     if (index == 0) _scheduleInformerPresentation();
   }
 
@@ -2405,7 +2412,9 @@ class _ChatListScreenState extends State<ChatListScreen>
       return best;
     }
 
-    final side = IosGlass.of(context) ? (pageW - navInnerW - 4) / 2 : 8.0;
+    final side = IosGlass.of(context)
+        ? (pageW - navInnerW) / 2 - SlidingPillNav.iosPadding
+        : 8.0;
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
@@ -2514,7 +2523,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             final pageW = constraints.maxWidth;
             final pageH = constraints.maxHeight;
             final navInnerW = IosGlass.of(context)
-                ? PillNavGeometry.iosInnerWidth(pageW - 20, 4)
+                ? PillNavGeometry.iosInnerWidth(pageW, 4)
                 : pageW - 20;
             final totalWeight = 5.2;
             final unitWidth = navInnerW / totalWeight;

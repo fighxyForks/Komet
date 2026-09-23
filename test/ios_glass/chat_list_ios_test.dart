@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:komet/core/config/app_animations.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/frontend/screens/chats/chat/view/ios_chat_row.dart';
+import 'package:komet/frontend/widgets/animated_lottie_icon.dart';
 import 'package:komet/frontend/widgets/glass/glass_controls.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_palette.dart';
@@ -135,12 +137,12 @@ void main() {
       List<String?> badges = const [],
       void Function(int)? onTap,
     }) async {
-      final width = PillNavGeometry.iosInnerWidth(370, 4);
+      final width = PillNavGeometry.iosInnerWidth(390, 4);
       await tester.pumpWidget(
         _app(
           Center(
             child: SizedBox(
-              width: width + 4,
+              width: width + SlidingPillNav.iosPadding * 2,
               child: SlidingPillNav(
                 items: _items,
                 position: position,
@@ -185,6 +187,52 @@ void main() {
       expect(find.text('5'), findsOneWidget);
       await tester.tap(find.text('Настройки'));
       expect(taps, [3]);
+    });
+
+    testWidgets('подсветка шире ячейки и не выходит за края панели', (
+      tester,
+    ) async {
+      await pumpNav(tester, position: 3);
+      await tester.pumpAndSettle();
+      final bar = tester.getRect(find.byKey(const ValueKey('ios-tab-bar')));
+      final cell = tester.getRect(find.byKey(const ValueKey('ios-tab-3')));
+      final thumb = tester.getRect(find.byKey(const ValueKey('ios-tab-thumb')));
+      expect(thumb.width, greaterThan(cell.width));
+      expect(thumb.center.dx, closeTo(cell.center.dx, 0.01));
+      expect(
+        bar.right - thumb.right,
+        closeTo(SlidingPillNav.iosThumbInset, 0.01),
+      );
+    });
+
+    testWidgets('значки с анимацией рисуются через Lottie', (tester) async {
+      await tester.pumpWidget(
+        _app(
+          Center(
+            child: SizedBox(
+              width: 360,
+              child: SlidingPillNav(
+                items: const [
+                  PillNavItem(
+                    icon: Symbols.chat_bubble,
+                    label: 'Чаты',
+                    animationAsset: AppAnimations.chat,
+                  ),
+                  PillNavItem(icon: Symbols.call, label: 'Звонки'),
+                ],
+                position: 0,
+                geometry: PillNavGeometry.equal(
+                  (360 - SlidingPillNav.iosPadding * 2) / 2,
+                  2,
+                ),
+                onTap: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(AnimatedLottieIcon), findsOneWidget);
+      expect(find.byIcon(Symbols.call), findsOneWidget);
     });
   });
 }
