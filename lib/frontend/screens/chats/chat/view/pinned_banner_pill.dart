@@ -40,6 +40,7 @@ Widget buildPinnedAndPill({
   required VoidCallback onTap,
   required int myId,
   required VoidCallback onUnpinRequested,
+  PlaybackRevealCallback? onRevealPlaying,
 }) {
   return ValueListenableBuilder<PlaybackKind?>(
     valueListenable: MediaPlayback.instance.primary,
@@ -60,7 +61,7 @@ Widget buildPinnedAndPill({
           children: [
             ?banner,
             if (banner != null && kind != null) const SizedBox(height: 6),
-            const MediaPlaybackPill(),
+            MediaPlaybackPill(onReveal: onRevealPlaying),
           ],
         );
       }
@@ -83,6 +84,7 @@ Widget buildPinnedAndPill({
         children: [
           ?banner,
           MediaPlaybackPill(
+            onReveal: onRevealPlaying,
             borderRadius: banner == null
                 ? BorderRadius.circular(16)
                 : const BorderRadius.vertical(bottom: Radius.circular(16)),

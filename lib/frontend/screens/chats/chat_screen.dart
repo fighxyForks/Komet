@@ -1513,6 +1513,11 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
+  void _revealPlayingMessage(int chatId, String messageId, int messageTime) {
+    if (chatId != widget.chatId) return;
+    _scrollNav.revealMessage(messageId, messageTime);
+  }
+
   void _jumpToPinnedMessage() {
     _scrollNav.jumpToPinnedMessage(
       pinnedMsgId: chat?.pinnedMsgId,
@@ -4423,6 +4428,7 @@ class _ChatScreenState extends State<ChatScreen>
                     pillBackdrop: _pillBackdrop,
                     myId: _myId,
                     onJumpToPinnedMessage: _jumpToPinnedMessage,
+                    onRevealPlayingMessage: _revealPlayingMessage,
                     onUnpinCurrentMessage: _unpinCurrentMessage,
                     onJoinCall: _commentsMode ? null : _joinChatCall,
                     composerFrosted: _composerFrosted,
