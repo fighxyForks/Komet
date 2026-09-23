@@ -4,15 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/utils/perf_trace.dart';
 
-ui.FrameTiming _frame({required int buildUs, required int rasterUs}) =>
-    ui.FrameTiming(
-      vsyncStart: 0,
-      buildStart: 0,
-      buildFinish: buildUs,
-      rasterStart: buildUs,
-      rasterFinish: buildUs + rasterUs,
-      rasterFinishWallTime: buildUs + rasterUs,
-    );
+ui.FrameTiming _frame({
+  required int buildUs,
+  required int rasterUs,
+  int vsyncUs = 0,
+}) => ui.FrameTiming(
+  vsyncStart: vsyncUs,
+  buildStart: vsyncUs,
+  buildFinish: vsyncUs + buildUs,
+  rasterStart: vsyncUs + buildUs,
+  rasterFinish: vsyncUs + buildUs + rasterUs,
+  rasterFinishWallTime: vsyncUs + buildUs + rasterUs,
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -54,17 +57,57 @@ void main() {
     expect(summary, contains('стекло.нативное=3'));
   });
 
-  test('отрезок меряет длительность и рывки внутри себя', () {
+  test('отрезок считает кадры по их времени, даже если они пришли позже', () {
     trace.setEnabled(true);
+    var clock = 1000;
+    trace.frameClockUs = () => clock;
     trace.beginSpan('смена вкладки');
-    trace.handleTimings([
-      _frame(buildUs: 30000, rasterUs: 1000),
-    ], budgetMs: 16.7);
+    clock = 5000;
     trace.endSpan('смена вкладки');
+    expect(trace.lines.where((l) => l.contains('■')), isEmpty);
+    trace.handleTimings([
+      _frame(buildUs: 1000, rasterUs: 1000, vsyncUs: 500),
+      _frame(buildUs: 30000, rasterUs: 1000, vsyncUs: 2000),
+      _frame(buildUs: 1000, rasterUs: 1000, vsyncUs: 4000),
+      _frame(buildUs: 1000, rasterUs: 1000, vsyncUs: 6000),
+    ], budgetMs: 16.7);
     final end = trace.lines.lastWhere((l) => l.contains('■'));
     expect(end, contains('смена вкладки'));
-    expect(end, contains('кадров 1'));
+    expect(end, contains('кадров 2'));
     expect(end, contains('с рывком 1'));
+  });
+
+  test('сводка посреди отрезка не портит его счёт', () {
+    trace.setEnabled(true);
+    var clock = 0;
+    trace.frameClockUs = () => clock;
+    trace.beginSpan('переход');
+    trace.handleTimings([
+      _frame(buildUs: 1000, rasterUs: 1000, vsyncUs: 100),
+    ], budgetMs: 16.7);
+    trace.debugFlushSummary();
+    trace.handleTimings([
+      _frame(buildUs: 1000, rasterUs: 1000, vsyncUs: 200),
+    ], budgetMs: 16.7);
+    clock = 300;
+    trace.endSpan('переход');
+    trace.handleTimings([
+      _frame(buildUs: 1000, rasterUs: 1000, vsyncUs: 400),
+    ], budgetMs: 16.7);
+    final end = trace.lines.lastWhere((l) => l.contains('■'));
+    expect(end, contains('кадров 2'));
+  });
+
+  test('незакрытые кадрами отрезки выгружаются с пометкой', () {
+    trace.setEnabled(true);
+    trace.frameClockUs = () => 0;
+    trace.beginSpan('переход');
+    trace.endSpan('переход');
+    trace.debugSettleSpans();
+    expect(
+      trace.lines.lastWhere((l) => l.contains('■')),
+      contains('кадры ещё не пришли'),
+    );
   });
 
   test('журнал ограничен и помечает обрезку при выгрузке', () {
@@ -119,4 +162,55 @@ void main() {
     await tester.pump();
     expect(trace.lines.where((l) => l.contains('[jump]')), isEmpty);
   });
+
+  testWidgets('переход экрана длится до конца анимации, а не 0 мс', (
+    tester,
+  ) async {
+    trace.setEnabled(true);
+    final navigator = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigator,
+        navigatorObservers: [_TraceObserver()],
+        home: const SizedBox(),
+      ),
+    );
+    navigator.currentState!.push(
+      MaterialPageRoute<void>(builder: (_) => const SizedBox()),
+    );
+    await tester.pump();
+    expect(trace.lines.where((l) => l.contains('■ переход')), isEmpty);
+    await tester.pumpAndSettle();
+    trace.debugSettleSpans();
+    final end = trace.lines.lastWhere((l) => l.contains('■ переход'));
+    expect(end, isNot(contains(' 0.0 мс')));
+  });
+
+  testWidgets('изменения окна пишутся по полям, пустые — только счётчиком', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    trace.viewProvider = () => tester.view;
+    trace.setEnabled(true);
+    trace.handleMetricsChanged();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+    trace.handleMetricsChanged();
+    final window = trace.lines.where((l) => l.contains('[window]')).toList();
+    expect(window, hasLength(1));
+    expect(window.single, contains('клавиатура снизу 0 → 300'));
+    trace.debugFlushSummary();
+    expect(
+      trace.lines.lastWhere((l) => l.contains('[fps]')),
+      contains('окно.без изменений='),
+    );
+  });
+}
+
+class _TraceObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    PerfTrace.instance.routeShown('открыт', route, previousRoute);
+  }
 }

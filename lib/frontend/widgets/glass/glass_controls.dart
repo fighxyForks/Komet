@@ -145,6 +145,7 @@ class GlassTabStrip extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     const inset = 3.0;
     return GlassCapsule(
+      traceLabel: 'вкладки вложений',
       height: height,
       padding: const EdgeInsets.all(inset),
       child: SingleChildScrollView(

@@ -10,10 +10,15 @@ class PerfTrace with WidgetsBindingObserver {
   static final PerfTrace instance = PerfTrace._();
 
   static const int maxLines = 6000;
+  static const int maxFrames = 1200;
   static const Duration summaryPeriod = Duration(seconds: 5);
+  static const Duration spanTimeout = Duration(seconds: 3);
 
   final ListQueue<String> _lines = ListQueue<String>();
+  final ListQueue<_FrameRecord> _recentFrames = ListQueue<_FrameRecord>();
   final Map<String, int> _counters = {};
+  final Map<String, _Span> _openSpans = {};
+  final List<_Span> _closedSpans = [];
   bool _enabled = false;
   bool _truncated = false;
   int _frames = 0;
@@ -21,7 +26,16 @@ class PerfTrace with WidgetsBindingObserver {
   double _worstMs = 0;
   DateTime _windowStart = DateTime.now();
   String _route = '-';
-  final Map<String, _Span> _spans = {};
+  int _latestVsyncUs = 0;
+  _WindowSnapshot? _window;
+
+  @visibleForTesting
+  int Function() frameClockUs = () =>
+      SchedulerBinding.instance.currentSystemFrameTimeStamp.inMicroseconds;
+
+  @visibleForTesting
+  ui.FlutterView? Function() viewProvider = () =>
+      ui.PlatformDispatcher.instance.implicitView;
 
   bool get enabled => _enabled;
 
@@ -42,6 +56,7 @@ class PerfTrace with WidgetsBindingObserver {
     final binding = WidgetsBinding.instance;
     if (value) {
       _resetWindow();
+      _window = _WindowSnapshot.of(viewProvider());
       binding.addObserver(this);
       SchedulerBinding.instance.addTimingsCallback(_onTimings);
       event('trace', 'включена, бюджет кадра ${_ms(frameBudgetMs())}');
@@ -49,7 +64,9 @@ class PerfTrace with WidgetsBindingObserver {
       event('trace', 'выключена');
       binding.removeObserver(this);
       SchedulerBinding.instance.removeTimingsCallback(_onTimings);
-      _spans.clear();
+      _openSpans.clear();
+      _closedSpans.clear();
+      _recentFrames.clear();
     }
   }
 
@@ -69,20 +86,25 @@ class PerfTrace with WidgetsBindingObserver {
 
   void beginSpan(String name, {String detail = ''}) {
     if (!_enabled) return;
-    _spans[name] = _Span(DateTime.now(), _frames, _janky);
+    _openSpans[name] = _Span(name, DateTime.now(), frameClockUs());
     _write('span', '▶ $name${detail.isEmpty ? '' : ' $detail'}');
   }
 
   void endSpan(String name) {
     if (!_enabled) return;
-    final span = _spans.remove(name);
+    final span = _openSpans.remove(name);
     if (span == null) return;
-    final ms = DateTime.now().difference(span.start).inMicroseconds / 1000;
-    _write(
-      'span',
-      '■ $name ${_ms(ms)}, кадров ${_frames - span.frames}, '
-          'с рывком ${_janky - span.janky}',
-    );
+    span
+      ..endWall = DateTime.now()
+      ..endUs = frameClockUs();
+    _closedSpans.add(span);
+    _settleSpans(force: false);
+  }
+
+  void endSpansStartingWith(String prefix) {
+    for (final name in _openSpans.keys.toList()) {
+      if (name.startsWith(prefix)) endSpan(name);
+    }
   }
 
   static String describeRoute(Route<dynamic>? route) {
@@ -98,60 +120,76 @@ class PerfTrace with WidgetsBindingObserver {
       return;
     }
     setRoute(describeRoute(route));
-    if (!_enabled) return;
-    final span = 'переход ${describeRoute(route)}';
-    beginSpan(span, detail: '$verb от ${describeRoute(previous)}');
-    final animation = route is TransitionRoute ? route.animation : null;
-    if (animation == null || animation.isCompleted || animation.isDismissed) {
-      endSpan(span);
-      return;
-    }
-    void listener(AnimationStatus status) {
-      if (status == AnimationStatus.completed ||
-          status == AnimationStatus.dismissed) {
-        animation.removeStatusListener(listener);
-        endSpan(span);
-      }
-    }
-
-    animation.addStatusListener(listener);
+    _trackAnimation(
+      'переход ${describeRoute(route)}',
+      '$verb от ${describeRoute(previous)}',
+      route,
+      AnimationStatus.completed,
+    );
   }
 
   void routeClosed(Route<dynamic> route, Route<dynamic>? previous) {
     if (route is PopupRoute) return;
     setRoute(describeRoute(previous));
-    event(
-      'route',
-      'закрыт ${describeRoute(route)} → ${describeRoute(previous)}',
+    _trackAnimation(
+      'закрытие ${describeRoute(route)}',
+      '→ ${describeRoute(previous)}',
+      route,
+      AnimationStatus.dismissed,
     );
   }
 
-  void endSpansStartingWith(String prefix) {
-    for (final name in _spans.keys.toList()) {
-      if (name.startsWith(prefix)) endSpan(name);
+  void _trackAnimation(
+    String span,
+    String detail,
+    Route<dynamic> route,
+    AnimationStatus target,
+  ) {
+    if (!_enabled) return;
+    beginSpan(span, detail: detail);
+    final animation = route is TransitionRoute ? route.animation : null;
+    if (animation == null || animation.status == target) {
+      endSpan(span);
+      return;
     }
+    void listener(AnimationStatus status) {
+      if (status != target) return;
+      animation.removeStatusListener(listener);
+      endSpan(span);
+    }
+
+    animation.addStatusListener(listener);
   }
 
   void handleTimings(List<ui.FrameTiming> timings, {double? budgetMs}) {
     if (!_enabled) return;
     final budget = budgetMs ?? frameBudgetMs();
     for (final timing in timings) {
-      _frames++;
       final total = timing.totalSpan.inMicroseconds / 1000;
+      final janky = total > budget;
+      final vsync = timing.timestampInMicroseconds(ui.FramePhase.vsyncStart);
+      if (vsync > _latestVsyncUs) _latestVsyncUs = vsync;
+      _recentFrames.add(_FrameRecord(vsync, janky));
+      while (_recentFrames.length > maxFrames) {
+        _recentFrames.removeFirst();
+      }
+      _frames++;
       if (total > _worstMs) _worstMs = total;
-      if (total <= budget) continue;
+      if (!janky) continue;
       _janky++;
       _write(
         'jank',
         '${_ms(total)} (сборка ${_ms(timing.buildDuration.inMicroseconds / 1000)}, '
             'растр ${_ms(timing.rasterDuration.inMicroseconds / 1000)}) '
-            'экран $_route${_openSpans()}',
+            'экран $_route${_openSpanNames()}',
       );
     }
+    _settleSpans(force: false);
     _maybeSummarize();
   }
 
   String export() {
+    _settleSpans(force: true);
     final buffer = StringBuffer()
       ..writeln('Komet — трассировка производительности')
       ..writeln(
@@ -171,11 +209,19 @@ class PerfTrace with WidgetsBindingObserver {
     _counters.clear();
     _truncated = false;
     _route = '-';
+    _latestVsyncUs = 0;
+    _window = null;
+    frameClockUs = () =>
+        SchedulerBinding.instance.currentSystemFrameTimeStamp.inMicroseconds;
+    viewProvider = () => ui.PlatformDispatcher.instance.implicitView;
     _resetWindow();
   }
 
   @visibleForTesting
   void debugFlushSummary() => _summarize();
+
+  @visibleForTesting
+  void debugSettleSpans() => _settleSpans(force: true);
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -188,11 +234,51 @@ class PerfTrace with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeMetrics() {
-    event('app', 'изменились размеры окна');
+  void didChangeMetrics() => handleMetricsChanged();
+
+  @visibleForTesting
+  void handleMetricsChanged() {
+    if (!_enabled) return;
+    final next = _WindowSnapshot.of(viewProvider());
+    final previous = _window;
+    _window = next;
+    if (next == null || previous == null) return;
+    final changes = next.diff(previous);
+    if (changes.isEmpty) {
+      count('окно.без изменений');
+      return;
+    }
+    count('окно.изменения');
+    _write('window', changes.join(', '));
   }
 
   void _onTimings(List<ui.FrameTiming> timings) => handleTimings(timings);
+
+  void _settleSpans({required bool force}) {
+    if (_closedSpans.isEmpty) return;
+    final now = DateTime.now();
+    _closedSpans.removeWhere((span) {
+      final covered = _latestVsyncUs > span.endUs;
+      final timedOut = now.difference(span.endWall!) > spanTimeout;
+      if (!force && !covered && !timedOut) return false;
+      var frames = 0;
+      var janky = 0;
+      for (final frame in _recentFrames) {
+        if (frame.vsyncUs <= span.startUs || frame.vsyncUs > span.endUs) {
+          continue;
+        }
+        frames++;
+        if (frame.janky) janky++;
+      }
+      final ms = span.endWall!.difference(span.start).inMicroseconds / 1000;
+      _write(
+        'span',
+        '■ ${span.name} ${_ms(ms)}, кадров $frames, с рывком $janky'
+            '${covered ? '' : ' (кадры ещё не пришли)'}',
+      );
+      return true;
+    });
+  }
 
   void _maybeSummarize() {
     if (DateTime.now().difference(_windowStart) < summaryPeriod) return;
@@ -221,8 +307,8 @@ class PerfTrace with WidgetsBindingObserver {
     _counters.clear();
   }
 
-  String _openSpans() =>
-      _spans.isEmpty ? '' : ', идёт: ${_spans.keys.join(', ')}';
+  String _openSpanNames() =>
+      _openSpans.isEmpty ? '' : ', идёт: ${_openSpans.keys.join(', ')}';
 
   void _write(String category, String message) {
     _lines.add('${_clock(DateTime.now())} [$category] $message');
@@ -242,11 +328,67 @@ class PerfTrace with WidgetsBindingObserver {
 }
 
 class _Span {
+  final String name;
   final DateTime start;
-  final int frames;
-  final int janky;
+  final int startUs;
+  DateTime? endWall;
+  int endUs = 0;
 
-  const _Span(this.start, this.frames, this.janky);
+  _Span(this.name, this.start, this.startUs);
+}
+
+class _FrameRecord {
+  final int vsyncUs;
+  final bool janky;
+
+  const _FrameRecord(this.vsyncUs, this.janky);
+}
+
+class _WindowSnapshot {
+  final ui.Size size;
+  final double ratio;
+  final ui.ViewPadding padding;
+  final ui.ViewPadding insets;
+
+  const _WindowSnapshot(this.size, this.ratio, this.padding, this.insets);
+
+  static _WindowSnapshot? of(ui.FlutterView? view) => view == null
+      ? null
+      : _WindowSnapshot(
+          view.physicalSize,
+          view.devicePixelRatio,
+          view.padding,
+          view.viewInsets,
+        );
+
+  List<String> diff(_WindowSnapshot previous) {
+    String px(double v) => (v / ratio).toStringAsFixed(0);
+    final changes = <String>[];
+    if (size != previous.size) {
+      changes.add(
+        'размер ${px(previous.size.width)}×${px(previous.size.height)} → '
+        '${px(size.width)}×${px(size.height)}',
+      );
+    }
+    if (ratio != previous.ratio) {
+      changes.add('плотность ${previous.ratio} → $ratio');
+    }
+    void edges(String label, ui.ViewPadding before, ui.ViewPadding after) {
+      if (before.top != after.top) {
+        changes.add('$label сверху ${px(before.top)} → ${px(after.top)}');
+      }
+      if (before.bottom != after.bottom) {
+        changes.add('$label снизу ${px(before.bottom)} → ${px(after.bottom)}');
+      }
+      if (before.left != after.left || before.right != after.right) {
+        changes.add('$label по бокам изменились');
+      }
+    }
+
+    edges('отступы', previous.padding, padding);
+    edges('клавиатура', previous.insets, insets);
+    return changes;
+  }
 }
 
 class PerfScrollProbe extends StatefulWidget {
