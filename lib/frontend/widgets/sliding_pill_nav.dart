@@ -9,7 +9,7 @@ import '../../core/config/app_nav_pill_style.dart';
 import '../../core/config/app_pill_gradient.dart';
 import '../../core/config/app_visual_style.dart';
 import 'animated_lottie_icon.dart';
-import 'glass/glass_lens_track.dart';
+import 'glass/glass_segment_track.dart';
 import 'glass/ios_glass.dart';
 import 'glass/ios_palette.dart';
 import 'glossy_pill.dart';
@@ -20,12 +20,14 @@ class PillNavItem {
   final String label;
   final bool longPressable;
   final String? animationAsset;
+  final String? sfSymbol;
 
   const PillNavItem({
     required this.icon,
     required this.label,
     this.longPressable = false,
     this.animationAsset,
+    this.sfSymbol,
   });
 }
 
@@ -245,7 +247,7 @@ class SlidingPillNav extends StatelessWidget {
   Widget _buildIosNav(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final visualSel = position.round().clamp(0, items.length - 1);
-    return GlassLensTrack(
+    return GlassSegmentTrack(
       capsuleKey: const ValueKey('ios-tab-bar'),
       thumbKey: const ValueKey('ios-tab-thumb'),
       widths: List.filled(items.length, geometry.inactiveWidth),
@@ -261,11 +263,11 @@ class SlidingPillNav extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
         ),
       ),
-      itemBuilder: (context, i, lens) => _IosTabCell(
-        key: lens ? null : ValueKey('ios-tab-$i'),
+      itemBuilder: (context, i) => _IosTabCell(
+        key: ValueKey('ios-tab-$i'),
         item: items[i],
-        selected: lens || i == visualSel,
-        badge: lens || i >= badges.length ? null : badges[i],
+        selected: i == visualSel,
+        badge: i < badges.length ? badges[i] : null,
         onTap: () => onTap(i),
         onLongPress: (onItemLongPress == null || !items[i].longPressable)
             ? null

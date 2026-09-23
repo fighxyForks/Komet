@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:komet/backend/modules/messages.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:native_liquid_glass/native_liquid_glass.dart';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
@@ -23,9 +24,11 @@ import '../../widgets/encryption_lock_badge.dart';
 import '../../widgets/online_dot.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/chat_menu_overlay.dart';
+import '../../../core/config/app_ios_glass.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
-import '../../widgets/glass/glass_lens_track.dart';
+import '../../widgets/glass/glass_segment_track.dart';
+import '../../widgets/glass/ios_native_tab_bar.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glossy_pill.dart';
@@ -254,22 +257,26 @@ class _ChatListScreenState extends State<ChatListScreen>
       icon: Symbols.chat_bubble,
       label: 'Чаты',
       animationAsset: AppAnimations.chat,
+      sfSymbol: 'bubble.left.and.bubble.right.fill',
     ),
     PillNavItem(
       icon: Symbols.call,
       label: 'Звонки',
       animationAsset: AppAnimations.call,
+      sfSymbol: 'phone.fill',
     ),
     PillNavItem(
       icon: Symbols.person_pin,
       label: 'Контакты',
       animationAsset: AppAnimations.contacts,
+      sfSymbol: 'person.crop.circle.fill',
     ),
     PillNavItem(
       icon: Symbols.settings,
       label: 'Настройки',
       longPressable: true,
       animationAsset: AppAnimations.settings,
+      sfSymbol: 'gearshape.fill',
     ),
   ];
 
@@ -2390,6 +2397,24 @@ class _ChatListScreenState extends State<ChatListScreen>
   ) {
     final ios = IosGlass.of(context);
     final badges = ios ? [_iosChatsBadge()] : const <String?>[];
+    if (ios && AppIosGlass.nativeViews) {
+      return AnimatedPositioned(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        left: 0,
+        right: 0,
+        bottom: _isSelectionMode ? -140 : bottomInset,
+        child: IosNativeTabBar(
+          items: _iosNavItems,
+          currentIndex: _currentNavIndex,
+          badges: badges,
+          onTap: _onNavTabSelected,
+          onItemLongPress: (index, pos) {
+            if (index == 3) _openAccountSwitcher(pos);
+          },
+        ),
+      );
+    }
     final geometry = ios
         ? PillNavGeometry.equal(navInnerW / 4, 4)
         : PillNavGeometry.fromInnerWidth(navInnerW, 4);
@@ -3075,8 +3100,11 @@ class _ChatListScreenState extends State<ChatListScreen>
             natural,
             constraints.maxWidth - inset * 2,
           );
+          if (widths != null && AppIosGlass.nativeViews) {
+            return _buildNativeFolderStrip(height);
+          }
           if (widths != null) {
-            return GlassLensTrack(
+            return GlassSegmentTrack(
               capsuleKey: const ValueKey('ios-folder-strip'),
               widths: widths,
               position: _selectedFolderIndex.toDouble(),
@@ -3086,13 +3114,9 @@ class _ChatListScreenState extends State<ChatListScreen>
               thumbInset: inset,
               thumbBuilder: (context, radius) =>
                   GlassSegmentThumb(radius: radius),
-              itemBuilder: (context, i, lens) => KeyedSubtree(
-                key: lens ? null : ValueKey('ios-folder-${_folders[i].id}'),
-                child: _buildIosFolderChip(
-                  _folders[i],
-                  thumb: false,
-                  lens: lens,
-                ),
+              itemBuilder: (context, i) => KeyedSubtree(
+                key: ValueKey('ios-folder-${_folders[i].id}'),
+                child: _buildIosFolderChip(_folders[i], thumb: false),
               ),
             );
           }
@@ -3126,13 +3150,37 @@ class _ChatListScreenState extends State<ChatListScreen>
     fontWeight: FontWeight.w600,
   );
 
-  Widget _buildIosFolderChip(
-    ChatFolder folder, {
-    bool thumb = true,
-    bool lens = false,
-  }) {
+  Widget _buildNativeFolderStrip(double height) {
+    return LayoutBuilder(
+      builder: (context, constraints) => GestureDetector(
+        key: const ValueKey('ios-folder-strip'),
+        behavior: HitTestBehavior.translucent,
+        onLongPressStart: (details) {
+          final index = IosNativeTabBar.indexAt(
+            details.localPosition.dx,
+            constraints.maxWidth,
+            _folders.length,
+          );
+          Haptics.medium();
+          showFolderActionSheet(context, folder: _folders[index]);
+        },
+        child: LiquidGlassSegmentedControl(
+          labels: [for (final folder in _folders) _folderChipLabel(folder)],
+          selectedIndex: _selectedFolderIndex,
+          height: height,
+          onValueChanged: (index) {
+            if (index < 0 || index >= _folders.length) return;
+            Haptics.selection();
+            _selectFolder(_folders[index].id);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIosFolderChip(ChatFolder folder, {bool thumb = true}) {
     final cs = Theme.of(context).colorScheme;
-    final isSelected = lens || _selectedFolderId == folder.id;
+    final isSelected = _selectedFolderId == folder.id;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
