@@ -332,6 +332,17 @@ void main() {
     final screen = tester.getSize(find.byType(Scaffold).first).width;
     final title = tester.getRect(find.byKey(const ValueKey('selection-title')));
     expect(title.center.dx, closeTo(screen / 2, 0.5));
+    final capsule = tester.getRect(
+      find
+          .ancestor(
+            of: find.byKey(const ValueKey('selection-title')),
+            matching: find.byType(GlassCapsule),
+          )
+          .first,
+    );
+    final text = tester.getRect(find.text('Выбрано 1'));
+    expect(text.center.dx, closeTo(capsule.center.dx, 0.5));
+    expect(text.center.dy, closeTo(capsule.center.dy, 0.5));
     expect(tester.takeException(), isNull);
   });
 
