@@ -112,4 +112,65 @@ void main() {
       expect(GlassSuppression.count.value, 0);
     });
   });
+
+  group('Размер содержимого нативного стекла', () {
+    test('растянутая по ширине капсула отдаёт ширину содержимому', () {
+      final (w, h) = GlassCapsule.nativeExtent(
+        const BoxConstraints.tightFor(width: 170),
+        null,
+        46,
+      );
+      expect(w, 170);
+      expect(h, 46);
+    });
+
+    test('свободная капсула сохраняет размер по содержимому', () {
+      final (w, h) = GlassCapsule.nativeExtent(
+        const BoxConstraints(maxWidth: 390, maxHeight: 800),
+        null,
+        null,
+      );
+      expect(w, isNull);
+      expect(h, isNull);
+    });
+
+    test('явные размеры важнее ограничений', () {
+      final (w, h) = GlassCapsule.nativeExtent(
+        const BoxConstraints.tightFor(width: 300, height: 60),
+        46,
+        46,
+      );
+      expect(w, 46);
+      expect(h, 46);
+    });
+  });
+
+  testWidgets('NativeGlassScope выключает нативное стекло только внутри себя', (
+    tester,
+  ) async {
+    final seen = <String, bool>{};
+    await tester.pumpWidget(
+      Column(
+        textDirection: TextDirection.ltr,
+        children: [
+          Builder(
+            builder: (context) {
+              seen['outside'] = NativeGlassScope.of(context);
+              return const SizedBox();
+            },
+          ),
+          NativeGlassScope(
+            enabled: false,
+            child: Builder(
+              builder: (context) {
+                seen['inside'] = NativeGlassScope.of(context);
+                return const SizedBox();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+    expect(seen, {'outside': true, 'inside': false});
+  });
 }

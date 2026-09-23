@@ -25,6 +25,7 @@ import 'package:komet/frontend/widgets/attachment/video_edit.dart';
 import 'package:komet/frontend/widgets/attachment/video_preview_screen.dart';
 import 'package:komet/frontend/widgets/chat_menu_overlay.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/sheet_helpers.dart';
 import 'package:komet/frontend/widgets/sliding_pill_nav.dart';
 import 'package:komet/l10n/app_localizations.dart';
@@ -1086,10 +1087,16 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
     return LayoutBuilder(
       key: const ValueKey('nav'),
       builder: (context, constraints) {
-        final geometry = PillNavGeometry.fromInnerWidth(
-          constraints.maxWidth - 4,
-          navItems.length,
-        );
+        final geometry = IosGlass.of(context)
+            ? PillNavGeometry.equal(
+                (constraints.maxWidth - SlidingPillNav.iosPadding * 2) /
+                    navItems.length,
+                navItems.length,
+              )
+            : PillNavGeometry.fromInnerWidth(
+                constraints.maxWidth - 4,
+                navItems.length,
+              );
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onHorizontalDragStart: (_) => _onPillDragStart(),

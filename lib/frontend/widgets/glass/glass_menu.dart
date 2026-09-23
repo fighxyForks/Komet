@@ -7,18 +7,19 @@ import '../../../core/utils/haptics.dart';
 import '../animated_overlay_popup.dart';
 import '../chat_menu_item.dart';
 import 'glass_capsule.dart';
-import 'ios_glass.dart';
 
 class GlassMenuStyle {
-  static const double width = 250;
+  static const double width = 240;
   static const double margin = 12;
   static const double gap = 8;
-  static const double radius = 26;
-  static const double rowHeight = 46;
+  static const double radius = 22;
+  static const double rowHeight = 40;
+  static const double fontSize = 15;
+  static const double iconSize = 19;
 
   static Color tint(ColorScheme cs) => cs.brightness == Brightness.dark
-      ? cs.surfaceContainerHigh.withValues(alpha: 0.82)
-      : cs.surfaceContainerLowest.withValues(alpha: 0.86);
+      ? cs.surfaceContainerHigh.withValues(alpha: 0.62)
+      : cs.surfaceContainerLowest.withValues(alpha: 0.66);
 
   static Color separator(ColorScheme cs) =>
       cs.onSurface.withValues(alpha: 0.08);
@@ -161,8 +162,6 @@ class GlassMenuLayer extends StatefulWidget {
 
 class _GlassMenuLayerState extends State<GlassMenuLayer>
     with SingleTickerProviderStateMixin, AnimatedOverlayPopup<GlassMenuLayer> {
-  late final VoidCallback _releaseGlass;
-
   @override
   Duration get overlayForwardDuration => const Duration(milliseconds: 320);
 
@@ -171,18 +170,6 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
 
   @override
   VoidCallback get onOverlayDismiss => widget.onDismiss;
-
-  @override
-  void initState() {
-    super.initState();
-    _releaseGlass = GlassSuppression.hold();
-  }
-
-  @override
-  void dispose() {
-    _releaseGlass();
-    super.dispose();
-  }
 
   void _onItemTap(ChatMenuItem item) {
     Haptics.tap();
@@ -266,15 +253,17 @@ class _GlassMenuPanel extends StatelessWidget {
       thickness: 0.5,
       color: GlassMenuStyle.separator(cs),
     );
-    return GlassBackground(
+    return GlassCapsule(
       key: const ValueKey('glass-menu'),
       borderRadius: BorderRadius.circular(GlassMenuStyle.radius),
-      tint: GlassMenuStyle.tint(cs),
-      sigma: 30,
+      fallbackTint: GlassMenuStyle.tint(cs),
+      fallbackSigma: 36,
       child: Material(
         type: MaterialType.transparency,
+        borderRadius: BorderRadius.circular(GlassMenuStyle.radius),
+        clipBehavior: Clip.antiAlias,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 5),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -284,8 +273,8 @@ class _GlassMenuPanel extends StatelessWidget {
                 GlassMenuRow(item: items[i], onTap: () => onItemTap(items[i])),
                 if (items[i].dividerAfter && i != items.length - 1)
                   Container(
-                    height: 8,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    height: 6,
+                    margin: const EdgeInsets.symmetric(vertical: 3),
                     color: GlassMenuStyle.separator(cs),
                   ),
               ],
@@ -313,11 +302,16 @@ class GlassMenuRow extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: GlassMenuStyle.rowHeight),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              Icon(item.icon, size: 21, weight: 450, color: fg),
-              const SizedBox(width: 14),
+              Icon(
+                item.icon,
+                size: GlassMenuStyle.iconSize,
+                weight: 450,
+                color: fg,
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   item.label,
@@ -325,7 +319,7 @@ class GlassMenuRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: fg,
-                    fontSize: 16,
+                    fontSize: GlassMenuStyle.fontSize,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -333,7 +327,7 @@ class GlassMenuRow extends StatelessWidget {
               if (item.showChevron)
                 Icon(
                   Symbols.chevron_right,
-                  size: 20,
+                  size: 18,
                   weight: 450,
                   color: cs.onSurface.withValues(alpha: 0.5),
                 ),

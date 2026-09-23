@@ -23,6 +23,7 @@ class MediaPlaybackPill extends StatelessWidget {
   final EdgeInsets margin;
 
   static const double height = 30;
+  static const double iosHeight = 42;
 
   @override
   Widget build(BuildContext context) {
@@ -269,8 +270,11 @@ class _PillSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    final radius =
-        borderRadius ?? BorderRadius.circular(MediaPlaybackPill.height / 2);
+    final ios = IosGlass.of(context);
+    final pillHeight = ios
+        ? MediaPlaybackPill.iosHeight
+        : MediaPlaybackPill.height;
+    final radius = borderRadius ?? BorderRadius.circular(pillHeight / 2);
     final author = isMe == true
         ? l10n.playbackPillYou
         : (ContactCache.get(senderId ?? 0) ?? '${senderId ?? ''}');
@@ -278,7 +282,6 @@ class _PillSurface extends StatelessWidget {
         ? ''
         : formatClock(DateTime.fromMillisecondsSinceEpoch(time!));
 
-    final ios = IosGlass.of(context);
     final surface = ClipRRect(
       borderRadius: radius,
       child: Material(
@@ -286,7 +289,7 @@ class _PillSurface extends StatelessWidget {
         child: InkWell(
           onTap: onOpen,
           child: SizedBox(
-            height: MediaPlaybackPill.height,
+            height: pillHeight,
             child: Stack(
               children: [
                 Positioned.fill(
@@ -348,10 +351,14 @@ class _PillSurface extends StatelessWidget {
     return Padding(
       padding: margin,
       child: ios
-          ? GlassBackground(
+          ? GlassCapsule(
               key: const ValueKey('ios-playback-pill'),
               borderRadius: radius,
-              child: surface,
+              height: pillHeight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: surface,
+              ),
             )
           : surface,
     );

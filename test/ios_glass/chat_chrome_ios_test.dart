@@ -13,6 +13,7 @@ import 'package:komet/core/utils/bubble_radius.dart';
 import 'package:komet/frontend/screens/chats/chat/upload_status.dart';
 import 'package:komet/frontend/screens/chats/chat/video_note_controller.dart';
 import 'package:komet/frontend/screens/chats/chat/view/composer_input.dart';
+import 'package:komet/frontend/screens/chats/chat/view/selection_bar.dart';
 import 'package:komet/frontend/screens/chats/chat/voice_record_controller.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/glass_controls.dart';
@@ -302,5 +303,78 @@ void main() {
       await tester.pumpAndSettle();
       expect(selected, 1);
     });
+  });
+
+  testWidgets('«Выбрано» стоит по центру экрана', (tester) async {
+    await tester.pumpWidget(
+      _app(
+        Builder(
+          builder: (context) => Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              height: 56,
+              child: SelectionTopBar(
+                cs: Theme.of(context).colorScheme,
+                selected: const {'1'},
+                glossy: true,
+                copyMsgs: const [],
+                editMsg: null,
+                onClear: () {},
+                onCopy: (_) {},
+                onEdit: (_) {},
+                onDelete: () {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final screen = tester.getSize(find.byType(Scaffold).first).width;
+    final title = tester.getRect(find.byKey(const ValueKey('selection-title')));
+    expect(title.center.dx, closeTo(screen / 2, 0.5));
+    final capsule = tester.getRect(
+      find
+          .ancestor(
+            of: find.byKey(const ValueKey('selection-title')),
+            matching: find.byType(GlassCapsule),
+          )
+          .first,
+    );
+    final text = tester.getRect(find.text('Выбрано 1'));
+    expect(text.center.dx, closeTo(capsule.center.dx, 0.5));
+    expect(text.center.dy, closeTo(capsule.center.dy, 0.5));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('«Ответить» и «Переслать» — стеклянные капсулы', (tester) async {
+    final taps = <String>[];
+    await tester.pumpWidget(
+      _app(
+        Builder(
+          builder: (context) => Align(
+            alignment: Alignment.bottomCenter,
+            child: SelectionBottomBar(
+              cs: Theme.of(context).colorScheme,
+              selected: const {'1'},
+              onReply: () => taps.add('reply'),
+              onForward: () => taps.add('forward'),
+            ),
+          ),
+        ),
+      ),
+    );
+    final capsules = find.descendant(
+      of: find.byType(SelectionBottomBar),
+      matching: find.byType(GlassCapsule),
+    );
+    expect(capsules, findsNWidgets(2));
+    for (final capsule in capsules.evaluate()) {
+      expect((capsule.widget as GlassCapsule).allowNative, isTrue);
+      expect(tester.getSize(find.byWidget(capsule.widget)).height, 46);
+    }
+    await tester.tap(capsules.first);
+    await tester.tap(capsules.last);
+    await tester.pumpAndSettle();
+    expect(taps, ['reply', 'forward']);
   });
 }

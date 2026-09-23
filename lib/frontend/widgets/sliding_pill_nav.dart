@@ -9,8 +9,9 @@ import '../../core/config/app_nav_pill_style.dart';
 import '../../core/config/app_pill_gradient.dart';
 import '../../core/config/app_visual_style.dart';
 import 'animated_lottie_icon.dart';
-import 'glass/glass_capsule.dart';
+import 'glass/glass_segment_track.dart';
 import 'glass/ios_glass.dart';
+import 'glass/ios_palette.dart';
 import 'glossy_pill.dart';
 import 'liquid_glass.dart';
 
@@ -19,12 +20,14 @@ class PillNavItem {
   final String label;
   final bool longPressable;
   final String? animationAsset;
+  final String? sfSymbol;
 
   const PillNavItem({
     required this.icon,
     required this.label,
     this.longPressable = false,
     this.animationAsset,
+    this.sfSymbol,
   });
 }
 
@@ -46,9 +49,15 @@ class PillNavGeometry {
 
   static const double _activeWeight = 2.2;
 
-  static double iosInnerWidth(double available, int itemCount) => math.max(
-    math.min(available, itemCount * 56.0),
-    math.min(available * 0.82, itemCount * 80.0),
+  static const double iosMargin = 21;
+  static const double iosMaxItemWidth = 100;
+
+  static double iosInnerWidth(double pageWidth, int itemCount) => math.max(
+    0,
+    math.min(
+      pageWidth - (iosMargin + SlidingPillNav.iosPadding) * 2,
+      itemCount * iosMaxItemWidth,
+    ),
   );
 }
 
@@ -65,6 +74,7 @@ class SlidingPillNav extends StatelessWidget {
   final Color? borderColor;
   final bool iconsOnly;
   final BackdropKey? backdropKey;
+  final List<String?> badges;
 
   const SlidingPillNav({
     super.key,
@@ -80,10 +90,13 @@ class SlidingPillNav extends StatelessWidget {
     this.borderColor,
     this.iconsOnly = false,
     this.backdropKey,
+    this.badges = const [],
   });
 
   static const double height = 68;
-  static const double iosHeight = 58;
+  static const double iosHeight = 62;
+  static const double iosPadding = 11;
+  static const double iosThumbInset = 4;
 
   static double heightFor({required bool ios}) => ios ? iosHeight : height;
 
@@ -234,40 +247,36 @@ class SlidingPillNav extends StatelessWidget {
   Widget _buildIosNav(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final visualSel = position.round().clamp(0, items.length - 1);
-    const inset = 6.0;
-    const innerRadius = 26 * iosHeight / height;
-    return GlassCapsule(
-      key: const ValueKey('ios-tab-bar'),
+    return GlassSegmentTrack(
+      capsuleKey: const ValueKey('ios-tab-bar'),
+      thumbKey: const ValueKey('ios-tab-thumb'),
+      widths: List.filled(items.length, geometry.inactiveWidth),
+      position: position,
+      duration: animationDuration,
       height: iosHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Stack(
-        clipBehavior: Clip.hardEdge,
-        children: [
-          AnimatedPositioned(
-            duration: animationDuration,
-            curve: Curves.easeOutCubic,
-            left: position * geometry.inactiveWidth + 4,
-            top: inset,
-            bottom: inset,
-            width: geometry.activeWidth - 8,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(innerRadius),
-              ),
-            ),
-          ),
-          _buildCells(
-            cs.copyWith(onPrimary: cs.primary),
-            visualSel,
-            radius: innerRadius,
-          ),
-        ],
+      contentPadding: const EdgeInsets.symmetric(horizontal: iosPadding),
+      thumbInset: iosThumbInset,
+      thumbOutset: iosPadding - iosThumbInset,
+      thumbBuilder: (context, radius) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: IosPalette.selectedTab(cs),
+          borderRadius: BorderRadius.circular(radius),
+        ),
+      ),
+      itemBuilder: (context, i) => _IosTabCell(
+        key: ValueKey('ios-tab-$i'),
+        item: items[i],
+        selected: i == visualSel,
+        badge: i < badges.length ? badges[i] : null,
+        onTap: () => onTap(i),
+        onLongPress: (onItemLongPress == null || !items[i].longPressable)
+            ? null
+            : (pos) => onItemLongPress!(i, pos),
       ),
     );
   }
 
-  Widget _buildCells(ColorScheme cs, int visualSel, {double radius = 26}) {
+  Widget _buildCells(ColorScheme cs, int visualSel) {
     return SizedBox(
       width: geometry.navInnerW,
       child: Row(
@@ -277,7 +286,7 @@ class SlidingPillNav extends StatelessWidget {
             curve: Curves.easeOutCubic,
             width: _interpWidth(i),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
+              borderRadius: BorderRadius.circular(26),
               child: _PillNavCell(
                 item: items[i],
                 selected: i == visualSel,
@@ -384,6 +393,122 @@ class _PillNavCell extends StatelessWidget {
                   ],
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _IosTabCell extends StatelessWidget {
+  final PillNavItem item;
+  final bool selected;
+  final String? badge;
+  final VoidCallback onTap;
+  final void Function(Offset globalPosition)? onLongPress;
+
+  const _IosTabCell({
+    super.key,
+    required this.item,
+    required this.selected,
+    required this.badge,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  static const double iconSize = 26;
+
+  Widget _icon(Color color) {
+    final asset = item.animationAsset;
+    if (asset == null) {
+      return Icon(
+        item.icon,
+        size: iconSize,
+        fill: 1,
+        weight: 500,
+        color: color,
+      );
+    }
+    return AnimatedLottieIcon(
+      asset: asset,
+      color: color,
+      size: iconSize,
+      active: selected,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final color = selected ? cs.primary : IosPalette.label(cs);
+    final label = badge;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      onLongPressStart: onLongPress == null
+          ? null
+          : (d) => onLongPress!(d.globalPosition),
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: item.label,
+        excludeSemantics: true,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 44,
+              height: 28,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  _icon(color),
+                  if (label != null && label.isNotEmpty)
+                    Positioned(
+                      left: 26,
+                      top: -4,
+                      child: Container(
+                        key: const ValueKey('ios-tab-badge'),
+                        height: 18,
+                        constraints: const BoxConstraints(minWidth: 18),
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: IosPalette.badgeRed,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                            color: IosPalette.background(cs),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              item.label,
+              maxLines: 1,
+              overflow: TextOverflow.visible,
+              softWrap: false,
+              style: TextStyle(
+                color: color,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                height: 1.1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

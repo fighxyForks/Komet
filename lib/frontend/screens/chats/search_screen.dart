@@ -11,6 +11,9 @@ import '../../../core/storage/app_database.dart';
 import '../../../core/contacts/contact_labels.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../widgets/glass/glass_capsule.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/swipe_route.dart';
@@ -230,6 +233,7 @@ class _SearchScreenState extends State<SearchScreen> {
         _messages.isNotEmpty ||
         _public.isNotEmpty;
 
+    if (IosGlass.of(context)) return _buildIos(cs, query, hasResults);
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
@@ -258,15 +262,100 @@ class _SearchScreenState extends State<SearchScreen> {
           if (query.isNotEmpty)
             IconButton(
               icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
-              onPressed: () {
-                _controller.clear();
-                _onChanged('');
-                _focusNode.requestFocus();
-              },
+              onPressed: _clear,
             ),
         ],
       ),
       body: _buildBody(cs, query, hasResults),
+    );
+  }
+
+  void _clear() {
+    _controller.clear();
+    _onChanged('');
+    _focusNode.requestFocus();
+  }
+
+  Widget _buildIos(ColorScheme cs, String query, bool hasResults) {
+    final secondary = IosPalette.secondaryLabel(cs);
+    return Scaffold(
+      backgroundColor: IosPalette.background(cs),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(child: _buildBody(cs, query, hasResults)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GlassCapsule(
+                      key: const ValueKey('ios-search-capsule'),
+                      height: 48,
+                      padding: const EdgeInsets.only(left: 14, right: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Symbols.search,
+                            size: 20,
+                            weight: 500,
+                            color: secondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _controller,
+                              focusNode: _focusNode,
+                              onChanged: _onChanged,
+                              textInputAction: TextInputAction.search,
+                              style: TextStyle(
+                                color: IosPalette.label(cs),
+                                fontSize: 17,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Поиск',
+                                hintStyle: TextStyle(
+                                  color: secondary,
+                                  fontSize: 17,
+                                ),
+                                border: InputBorder.none,
+                                isDense: true,
+                              ),
+                            ),
+                          ),
+                          if (query.isNotEmpty)
+                            IconButton(
+                              tooltip: MaterialLocalizations.of(
+                                context,
+                              ).deleteButtonTooltip,
+                              icon: Icon(
+                                Symbols.cancel,
+                                fill: 1,
+                                size: 20,
+                                color: secondary,
+                              ),
+                              onPressed: _clear,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GlassIconButton(
+                    key: const ValueKey('ios-search-close'),
+                    icon: Symbols.close,
+                    size: 48,
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).closeButtonTooltip,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

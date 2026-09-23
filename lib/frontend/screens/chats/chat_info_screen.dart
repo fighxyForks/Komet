@@ -37,7 +37,11 @@ import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/formatted_message_text.dart';
 import '../../widgets/reload_on_reconnect.dart';
+import '../../widgets/chat_menu_overlay.dart';
+import '../../widgets/glass/glass_capsule.dart';
+import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/komet_avatar.dart';
@@ -419,12 +423,15 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: _pageColor(cs),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: const ConnectionSpinner(),
       body: _buildScrollBody(cs),
     );
   }
+
+  Color _pageColor(ColorScheme cs) =>
+      IosGlass.of(context) ? IosPalette.grouped(cs) : cs.surface;
 
   static const double _headerAvatarSize = 96;
   static const double _headerCollapsedBody = 232;
@@ -631,9 +638,9 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              cs.surface.withValues(alpha: 0),
-                              cs.surface.withValues(alpha: 0.55),
-                              cs.surface,
+                              _pageColor(cs).withValues(alpha: 0),
+                              _pageColor(cs).withValues(alpha: 0.55),
+                              _pageColor(cs),
                             ],
                             stops: const [0.0, 0.55, 1.0],
                           ),
@@ -672,10 +679,24 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                 top: topPad + 4,
                 child: Row(
                   children: [
-                    IconButton(
-                      icon: Icon(Symbols.arrow_back, color: iconColor),
-                      onPressed: () => Navigator.pop(context),
-                    ),
+                    if (IosGlass.of(context))
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: GlassIconButton(
+                          key: const ValueKey('info-back'),
+                          icon: Symbols.arrow_back_ios_new,
+                          iconSize: 20,
+                          tooltip: MaterialLocalizations.of(
+                            context,
+                          ).backButtonTooltip,
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      )
+                    else
+                      IconButton(
+                        icon: Icon(Symbols.arrow_back, color: iconColor),
+                        onPressed: () => Navigator.pop(context),
+                      ),
                     Expanded(
                       child: chipOpacity > 0 && unread.isNotEmpty
                           ? Align(
@@ -1012,6 +1033,31 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   Widget _buildMoreButton(ColorScheme cs, [Color? iconColor]) {
     final entries = _moreMenuEntries();
     final color = iconColor ?? cs.onSurface;
+    if (IosGlass.of(context)) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: GlassIconButton(
+          key: const ValueKey('info-more'),
+          icon: Symbols.more_horiz,
+          tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+          onPressedAt: entries.isEmpty
+              ? null
+              : (anchor) => showChatMenu(
+                  context: context,
+                  anchorRect: anchor,
+                  items: [
+                    for (final entry in entries)
+                      ChatMenuItem(
+                        icon: entry.icon,
+                        label: entry.label,
+                        destructive: entry.destructive,
+                        onTap: entry.onTap,
+                      ),
+                  ],
+                ),
+        ),
+      );
+    }
     if (entries.isEmpty) {
       return IconButton(
         icon: Icon(Symbols.more_vert, color: color),
@@ -1681,6 +1727,19 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     );
   }
 
+  Widget _listSection(ColorScheme cs, Widget child) {
+    if (IosGlass.of(context)) {
+      return IosGroupedSection(radius: 18, child: child);
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: child,
+    );
+  }
+
   Widget _actionBtn(
     ColorScheme cs,
     IconData icon,
@@ -1689,6 +1748,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     IconData? slashedIcon,
     bool slashed = false,
   }) {
+    final ios = IosGlass.of(context);
     return Expanded(
       child: _card(
         cs,
@@ -1703,14 +1763,18 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                 slashedIcon: slashedIcon,
                 slashed: slashed,
                 color: cs.primary,
-                size: 22,
+                size: ios ? 24 : 22,
               )
             else
-              Icon(icon, color: cs.primary, size: 22),
-            const SizedBox(height: 4),
+              Icon(icon, color: cs.primary, size: ios ? 24 : 22),
+            SizedBox(height: ios ? 5 : 4),
             Text(
               label,
-              style: TextStyle(color: cs.onSurface, fontSize: 11),
+              style: TextStyle(
+                color: ios ? cs.primary : cs.onSurface,
+                fontSize: ios ? 12 : 11,
+                fontWeight: ios ? IosType.name : null,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1954,6 +2018,15 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   }
 
   Widget _buildTabBar(ColorScheme cs) {
+    if (IosGlass.of(context)) {
+      return GlassTabStrip(
+        key: const ValueKey('info-tabs'),
+        tabs: _tabs,
+        selected: _selectedTab,
+        controller: _tabScrollController,
+        onSelected: (tab) => setState(() => _selectedTab = tab),
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) => ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(
@@ -2175,12 +2248,9 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   Widget _buildMembersTabContent(ColorScheme cs) {
     final hasHidden = _membersController.members.length > _membersController.memberRenderLimit;
     final shown = hasHidden ? _membersController.members.take(_membersController.memberRenderLimit) : _membersController.members;
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
+    return _listSection(
+      cs,
+      Column(
         children: [
           _memberAction(
             cs,

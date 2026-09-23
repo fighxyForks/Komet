@@ -190,12 +190,12 @@ class PinnedMessageBanner extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: ios ? 5 : 8),
           child: Row(
             children: [
               Container(
                 width: 3,
-                height: 34,
+                height: ios ? 28 : 34,
                 decoration: BoxDecoration(
                   color: cs.primary,
                   borderRadius: BorderRadius.circular(2),
@@ -212,10 +212,11 @@ class PinnedMessageBanner extends StatelessWidget {
                       style: TextStyle(
                         color: cs.primary,
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontSize: ios ? 13 : 14,
+                        height: ios ? 1.15 : null,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: ios ? 1 : 2),
                     PinnedMessageText(
                       text: text,
                       isPreview: isPreview,
@@ -242,13 +243,18 @@ class PinnedMessageBanner extends StatelessWidget {
     final bottomBorder = Border(bottom: AppFrost.hairline(cs));
 
     if (ios) {
-      return GlassBackground(
+      return GlassCapsule(
         key: const ValueKey('ios-pinned-banner'),
         borderRadius: floating
-            ? (borderRadius ?? BorderRadius.circular(22))
+            ? (borderRadius ?? BorderRadius.circular(20))
             : BorderRadius.zero,
         shadow: floating,
-        child: content,
+        child: ClipRRect(
+          borderRadius: floating
+              ? (borderRadius ?? BorderRadius.circular(20))
+              : BorderRadius.zero,
+          child: content,
+        ),
       );
     }
 

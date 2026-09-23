@@ -4,6 +4,7 @@ import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
+import 'chat_header.dart';
 import '../../../../../core/config/app_fonts.dart';
 
 class SelectionTopBar extends StatelessWidget {
@@ -103,69 +104,81 @@ class SelectionTopBar extends StatelessWidget {
         ? GlassCapsule(onTap: onTap, padding: padding, child: child)
         : GlossyPill(onTap: onTap, padding: padding, child: child);
 
+    final close = SizedBox(
+      width: size,
+      height: size,
+      child: pill(
+        onTap: onClear,
+        child: Center(
+          child: Icon(
+            Symbols.close,
+            color: cs.onSurface,
+            weight: 500,
+            size: ios ? 21 : 24,
+          ),
+        ),
+      ),
+    );
+    final title = pill(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SizedBox(
+        key: const ValueKey('selection-title'),
+        height: size,
+        child: Align(
+          alignment: ios ? Alignment.center : Alignment.centerLeft,
+          widthFactor: ios ? 1 : null,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: cs.onSurface,
+              fontSize: ios ? 16 : 18,
+              fontWeight: FontWeight.w600,
+              fontFamily: displayFontOf(context),
+            ),
+          ),
+        ),
+      ),
+    );
+    final actions = pill(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: SizedBox(
+        height: size,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (copyMsgs.isNotEmpty)
+              actionBtn(Symbols.content_copy, () => onCopy(copyMsgs)),
+            if (editMsg != null)
+              actionBtn(Symbols.edit, () => onEdit(editMsg!)),
+            actionBtn(Symbols.delete, onDelete),
+          ],
+        ),
+      ),
+    );
     return Padding(
       padding: ios
           ? const EdgeInsets.fromLTRB(12, 3, 12, 7)
           : const EdgeInsets.fromLTRB(10, 4, 10, 8),
-      child: Row(
-        children: [
-          SizedBox(
-            width: size,
-            height: size,
-            child: pill(
-              onTap: onClear,
-              child: Center(
-                child: Icon(
-                  Symbols.close,
-                  color: cs.onSurface,
-                  weight: 500,
-                  size: ios ? 21 : 24,
-                ),
-              ),
+      child: ios
+          ? CustomMultiChildLayout(
+              delegate: IosHeaderLayout(gap: 6),
+              children: [
+                LayoutId(id: IosHeaderSlot.back, child: close),
+                LayoutId(id: IosHeaderSlot.title, child: title),
+                LayoutId(id: IosHeaderSlot.actions, child: actions),
+              ],
+            )
+          : Row(
+              children: [
+                close,
+                const SizedBox(width: 8),
+                Expanded(child: title),
+                const SizedBox(width: 8),
+                actions,
+              ],
             ),
-          ),
-          SizedBox(width: ios ? 6 : 8),
-          Expanded(
-            child: pill(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: SizedBox(
-                height: size,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: cs.onSurface,
-                      fontSize: ios ? 16 : 18,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: displayFontOf(context),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: ios ? 6 : 8),
-          pill(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: SizedBox(
-              height: size,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (copyMsgs.isNotEmpty)
-                    actionBtn(Symbols.content_copy, () => onCopy(copyMsgs)),
-                  if (editMsg != null)
-                    actionBtn(Symbols.edit, () => onEdit(editMsg!)),
-                  actionBtn(Symbols.delete, onDelete),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -247,6 +260,20 @@ class SelectionBottomBar extends StatelessWidget {
       ),
     );
     final iconWidget = Icon(icon, color: cs.onSurface, size: 22, weight: 500);
+    if (IosGlass.of(context)) {
+      return GlassCapsule(
+        key: ValueKey('ios-selection-$label'),
+        height: 46,
+        onTap: onTap,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: iconLeading
+              ? [iconWidget, const SizedBox(width: 8), textWidget]
+              : [textWidget, const SizedBox(width: 8), iconWidget],
+        ),
+      );
+    }
     return GlossyPill(
       onTap: onTap,
       color: Color.alphaBlend(

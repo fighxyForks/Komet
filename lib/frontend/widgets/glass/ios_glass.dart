@@ -61,6 +61,24 @@ class GlassSuppression {
   }
 }
 
+class NativeGlassScope extends InheritedWidget {
+  final bool enabled;
+
+  const NativeGlassScope({
+    super.key,
+    required this.enabled,
+    required super.child,
+  });
+
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<NativeGlassScope>()?.enabled ??
+      true;
+
+  @override
+  bool updateShouldNotify(NativeGlassScope oldWidget) =>
+      oldWidget.enabled != enabled;
+}
+
 class NativeGlassGate extends StatelessWidget {
   final Widget Function(BuildContext context, bool useNative) builder;
 
@@ -68,7 +86,9 @@ class NativeGlassGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!IosGlass.of(context) || !AppIosGlass.nativeViews) {
+    if (!IosGlass.of(context) ||
+        !AppIosGlass.nativeViews ||
+        !NativeGlassScope.of(context)) {
       return builder(context, false);
     }
     final route = ModalRoute.of(context);

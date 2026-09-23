@@ -46,6 +46,7 @@ import 'attachment/bubbles/forwarded_bubble.dart';
 import 'lottie_image.dart';
 import 'text_with_meta.dart';
 import 'glass/ios_glass.dart';
+import 'glass/ios_palette.dart';
 
 final Expando<MessageType> _contentTypeCache = Expando<MessageType>();
 final Expando<List<MessageAttachment>> _contentAttachmentsCache =
@@ -810,6 +811,28 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
+  BorderRadius _bubbleRadius(
+    BubbleStyle bubbleStyle,
+    BubbleBehavior bubbleBehavior,
+    BubbleShape shape,
+    bool hasPhotoWithCaption,
+    bool hasMultiplePhotosNoCaption, {
+    required bool roundBottom,
+  }) {
+    final radius = _borderRadiusFor(
+      bubbleStyle,
+      bubbleBehavior,
+      shape,
+      hasPhotoWithCaption,
+      hasMultiplePhotosNoCaption,
+    );
+    if (!roundBottom) return radius;
+    return radius.copyWith(
+      bottomLeft: radius.topLeft,
+      bottomRight: radius.topRight,
+    );
+  }
+
   static const double _replyWidthShare = 0.75;
 
   static const List<Color> _senderPalette = [
@@ -992,6 +1015,8 @@ class MessageBubble extends StatelessWidget {
     final bubbleColor = noBubbleBackground
         ? Colors.transparent
         : (isMe ? cs.primaryContainer : cs.surfaceContainerHighest);
+    final ios = IosGlass.of(context);
+    final glassBubble = ios && !noBubbleBackground;
 
     BubbleContext makeCtx({bool metaInFooter = false}) => BubbleContext(
       context: context,
@@ -1131,15 +1156,22 @@ class MessageBubble extends StatelessWidget {
               : 0,
         ),
         decoration: BoxDecoration(
-          color: bubbleColor,
+          color: glassBubble ? null : bubbleColor,
+          gradient: glassBubble
+              ? IosPalette.bubbleGradient(cs, isMe: isMe)
+              : null,
+          border: glassBubble
+              ? Border.all(color: IosPalette.bubbleRim(cs), width: 0.5)
+              : null,
           borderRadius: noBubbleBackground
               ? null
-              : _borderRadiusFor(
+              : _bubbleRadius(
                   AppBubbleShape.current.value,
                   AppBubbleBehavior.current.value,
                   shape,
                   hasPhotoCap,
                   hasMultiPhotos,
+                  roundBottom: ios && hasCommentsFooter,
                 ),
         ),
         padding: containerPadding,

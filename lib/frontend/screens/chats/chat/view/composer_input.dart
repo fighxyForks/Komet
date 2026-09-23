@@ -1206,7 +1206,7 @@ class ComposerInputBar extends StatelessWidget {
             Expanded(
               child: GlassCapsule(
                 key: key,
-                height: 50,
+                height: 46,
                 onTap: onTap,
                 child: Center(child: child),
               ),
@@ -1216,7 +1216,7 @@ class ComposerInputBar extends StatelessWidget {
               GlassIconButton(
                 key: const ValueKey('ios-channel-search'),
                 icon: Symbols.search,
-                size: 50,
+                size: 46,
                 tooltip: AppLocalizations.of(context)!.iosChatSearch,
                 onPressed: onOpenSearch,
               ),

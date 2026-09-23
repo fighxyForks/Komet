@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:komet/backend/modules/chats.dart' show CachedChat;
 import 'package:komet/core/media/media_playback.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/media_playback_pill.dart';
 
 import 'message_row_widgets.dart';
@@ -43,6 +44,26 @@ Widget buildPinnedAndPill({
   return ValueListenableBuilder<PlaybackKind?>(
     valueListenable: MediaPlayback.instance.primary,
     builder: (context, kind, _) {
+      if (IosGlass.of(context)) {
+        final banner = buildPinnedMessageBanner(
+          chat: chat,
+          floating: true,
+          frosted: frosted,
+          liquidChrome: liquidChrome,
+          backdropKey: backdropKey,
+          onTap: onTap,
+          myId: myId,
+          onUnpinRequested: onUnpinRequested,
+        );
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ?banner,
+            if (banner != null && kind != null) const SizedBox(height: 6),
+            const MediaPlaybackPill(),
+          ],
+        );
+      }
       final merged = kind != null;
       final banner = buildPinnedMessageBanner(
         chat: chat,

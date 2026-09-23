@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../../core/utils/haptics.dart';
 import 'glass_capsule.dart';
+import 'ios_palette.dart';
 import 'ios_glass.dart';
 
 class GlassSwitch extends StatelessWidget {
@@ -21,52 +23,6 @@ class GlassSwitch extends StatelessWidget {
       value: value,
       onChanged: onChanged,
       activeTrackColor: cs.primary,
-    );
-  }
-}
-
-class GlassSearchCapsule extends StatelessWidget {
-  final String hint;
-  final VoidCallback? onTap;
-  final double height;
-
-  const GlassSearchCapsule({
-    super.key,
-    required this.hint,
-    this.onTap,
-    this.height = 44,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Semantics(
-      button: onTap != null,
-      label: hint,
-      child: GlassCapsule(
-        height: height,
-        onTap: onTap,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        child: Row(
-          children: [
-            Icon(
-              Symbols.search,
-              size: 20,
-              weight: 500,
-              color: cs.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                hint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 16),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -94,6 +50,156 @@ class GlassSegmentThumb extends StatelessWidget {
             offset: const Offset(0, 2),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class IosFlatSearchBar extends StatelessWidget {
+  final String hint;
+  final VoidCallback? onTap;
+  final double height;
+
+  const IosFlatSearchBar({
+    super.key,
+    required this.hint,
+    this.onTap,
+    this.height = 42,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final color = IosPalette.secondaryLabel(cs);
+    return Semantics(
+      button: onTap != null,
+      label: hint,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(
+            color: IosPalette.searchFill(cs),
+            borderRadius: BorderRadius.circular(height / 2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Symbols.search, size: 20, weight: 500, color: color),
+              const SizedBox(width: 6),
+              Text(hint, style: TextStyle(color: color, fontSize: 17)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SegmentFit {
+  static List<double>? widths(List<double> natural, double available) {
+    if (natural.isEmpty) return const [];
+    final total = natural.fold<double>(0, (sum, w) => sum + w);
+    if (total > available) return null;
+    final extra = (available - total) / natural.length;
+    return [for (final w in natural) w + extra];
+  }
+
+  static double labelWidth(
+    BuildContext context,
+    String text,
+    TextStyle style, {
+    double padding = 0,
+  }) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+    final width = painter.width.ceilToDouble() + padding;
+    painter.dispose();
+    return width;
+  }
+}
+
+class GlassTabStrip extends StatelessWidget {
+  final List<String> tabs;
+  final String selected;
+  final ValueChanged<String> onSelected;
+  final ScrollController? controller;
+  final double height;
+
+  const GlassTabStrip({
+    super.key,
+    required this.tabs,
+    required this.selected,
+    required this.onSelected,
+    this.controller,
+    this.height = 42,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    const inset = 3.0;
+    return GlassCapsule(
+      height: height,
+      padding: const EdgeInsets.all(inset),
+      child: SingleChildScrollView(
+        controller: controller,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            for (final tab in tabs)
+              GestureDetector(
+                key: ValueKey('glass-tab-$tab'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (tab == selected) return;
+                  Haptics.selection();
+                  onSelected(tab);
+                },
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutCubic,
+                        opacity: tab == selected ? 1 : 0,
+                        child: GlassSegmentThumb(
+                          radius: (height - inset * 2) / 2,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SizedBox(
+                        height: height - inset * 2,
+                        child: Center(
+                          child: AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 180),
+                            style: TextStyle(
+                              color: tab == selected
+                                  ? IosPalette.label(cs)
+                                  : IosPalette.secondaryLabel(cs),
+                              fontSize: 15,
+                              fontWeight: tab == selected
+                                  ? IosType.title
+                                  : IosType.name,
+                            ),
+                            child: Text(tab),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
