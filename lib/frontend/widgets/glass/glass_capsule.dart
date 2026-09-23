@@ -164,10 +164,16 @@ class GlassCapsule extends StatelessWidget {
     onTap?.call();
   }
 
+  String? _traceLabel() {
+    final k = key;
+    return k is ValueKey<String> ? k.value : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final content = Padding(padding: padding, child: child);
     return NativeGlassGate(
+      label: _traceLabel(),
       builder: (context, useNative) {
         if (useNative && allowNative) {
           return LayoutBuilder(

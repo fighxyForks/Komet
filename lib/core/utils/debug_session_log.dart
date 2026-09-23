@@ -8,6 +8,7 @@ import '../protocol/opcode_map.dart';
 import 'app_foreground.dart';
 import 'format.dart';
 import 'log_redact.dart';
+import 'perf_trace.dart';
 
 // #***! файл в архиве экспорта
 class DebugExportFile {
@@ -480,7 +481,8 @@ class DebugSessionLog {
       0,
       (sum, s) => sum + s.logLines.length,
     );
-    if (totalEntries == 0 && totalLogs == 0) return null;
+    final perf = PerfTrace.instance.lines;
+    if (totalEntries == 0 && totalLogs == 0 && perf.isEmpty) return null;
 
     final info = StringBuffer();
     info.writeln('Komet — отладочный лог');
@@ -499,6 +501,9 @@ class DebugSessionLog {
           'session_${(s + 1).toString().padLeft(2, '0')}_'
           '${formatFileStamp(session.startedAt)}.txt';
       files.add(DebugExportFile(name, _buildSessionText(s + 1, session)));
+    }
+    if (perf.isNotEmpty) {
+      files.add(DebugExportFile('perf.txt', PerfTrace.instance.export()));
     }
     return files;
   }

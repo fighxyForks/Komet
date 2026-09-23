@@ -56,6 +56,7 @@ import '../../../core/links/message_link_token.dart';
 import '../../../core/cache/message_session_cache.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../core/utils/emoji_keyword_index.dart';
+import '../../../core/utils/perf_trace.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/utils/route_settle.dart';
 import '../../../core/config/app_cache_extent.dart';
@@ -4638,7 +4639,7 @@ class _ChatScreenState extends State<ChatScreen>
                       jumpExtent != null && jumpExtent < userCacheExtent
                       ? jumpExtent
                       : userCacheExtent;
-                  return ScrollConfiguration(
+                  return PerfScrollProbe(tag: 'чат', child: ScrollConfiguration(
                     behavior: ScrollConfiguration.of(
                       context,
                     ).copyWith(scrollbars: false),
@@ -4897,7 +4898,7 @@ class _ChatScreenState extends State<ChatScreen>
                       ),
                     ],
                     ),
-                  );
+                  ),);
                 },
               ),
         ),
