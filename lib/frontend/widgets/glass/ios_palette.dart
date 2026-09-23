@@ -30,6 +30,37 @@ class IosPalette {
 
   static const Color badgeRed = Color(0xFFFF3B30);
 
+  static const List<Color> _incomingLight = [
+    Color(0xFFFFFFFF),
+    Color(0xFFE8E8ED),
+  ];
+  static const List<Color> _incomingDark = [
+    Color(0xFF2C2C2E),
+    Color(0xFF3A3A3C),
+  ];
+
+  static LinearGradient bubbleGradient(ColorScheme cs, {required bool isMe}) {
+    final colors = isMe
+        ? [
+            Color.lerp(
+              cs.primaryContainer,
+              Colors.white,
+              _dark(cs) ? 0.1 : 0.4,
+            )!,
+            cs.primaryContainer,
+          ]
+        : (_dark(cs) ? _incomingDark : _incomingLight);
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: colors,
+    );
+  }
+
+  static Color bubbleRim(ColorScheme cs) => _dark(cs)
+      ? Colors.white.withValues(alpha: 0.1)
+      : Colors.black.withValues(alpha: 0.06);
+
   static SystemUiOverlayStyle overlayFor(Color background) {
     final style =
         ThemeData.estimateBrightnessForColor(background) == Brightness.dark
