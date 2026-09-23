@@ -10,11 +10,13 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../core/media/preview_image.dart';
 import '../../../../core/utils/format.dart';
 import '../../../../models/attachment.dart';
+import '../../glass/ios_glass.dart';
 import '../../photo_viewer.dart';
 import '../photo_hero.dart';
 import '../../text_with_meta.dart';
 import 'album_layout.dart';
 import 'bubble_context.dart';
+import 'progressive_media_image.dart';
 import 'video_bubble.dart';
 
 class PhotoBubble extends StatelessWidget {
@@ -90,41 +92,12 @@ class PhotoBubble extends StatelessWidget {
     return _displaySize(media.single, hasCaption: hasCaption).width;
   }
 
-  static Size _displaySize(MessageAttachment item, {bool hasCaption = false}) {
-    final minWidth = hasCaption
-        ? BubbleContext.captionedMediaMinWidth
-        : BubbleContext.photoMinSize;
-    final width = _intrinsicWidth(item)?.toDouble() ?? 200;
-    final height = _intrinsicHeight(item)?.toDouble() ?? 200;
-
-    final downScale = math.min(
-      1.0,
-      math.min(
-        BubbleContext.photoMaxSize / width,
-        BubbleContext.photoMaxSize / height,
-      ),
-    );
-    var displayWidth = width * downScale;
-    var displayHeight = height * downScale;
-
-    final upScale = math.max(
-      1.0,
-      math.max(
-        minWidth / displayWidth,
-        BubbleContext.photoMinSize / displayHeight,
-      ),
-    );
-    displayWidth *= upScale;
-    displayHeight *= upScale;
-
-    return Size(
-      displayWidth.clamp(minWidth, BubbleContext.photoMaxSize),
-      displayHeight.clamp(
-        BubbleContext.photoMinSize,
-        BubbleContext.photoMaxSize,
-      ),
-    );
-  }
+  static Size _displaySize(MessageAttachment item, {bool hasCaption = false}) =>
+      BubbleContext.mediaDisplaySize(
+        _intrinsicWidth(item),
+        _intrinsicHeight(item),
+        hasCaption: hasCaption,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -306,6 +279,19 @@ class PhotoBubble extends StatelessWidget {
       );
     }
     final imageUrl = _previewUrlOf(photo);
+    if (imageUrl.isNotEmpty &&
+        !imageUrl.startsWith('data:') &&
+        IosGlass.of(ctx.context)) {
+      return ProgressiveMediaImage(
+        url: imageUrl,
+        preview: embedded,
+        width: width,
+        height: height,
+        memCacheWidth: memWidth,
+        memCacheHeight: memHeight,
+        fallback: (_) => _buildPhotoPlaceholder(ctx.cs, width, height),
+      );
+    }
     if (imageUrl.isNotEmpty && !imageUrl.startsWith('data:')) {
       return CachedNetworkImage(
         imageUrl: imageUrl,

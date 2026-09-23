@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -69,6 +71,35 @@ class BubbleContext {
   static const double captionPaddingRight = 6.0;
   static const double captionPaddingTop = 6.0;
   static const double compactTimePadding = 8.0;
+
+  static Size mediaDisplaySize(
+    int? intrinsicWidth,
+    int? intrinsicHeight, {
+    bool hasCaption = false,
+  }) {
+    final minWidth = hasCaption ? captionedMediaMinWidth : photoMinSize;
+    final width = intrinsicWidth?.toDouble() ?? 200;
+    final height = intrinsicHeight?.toDouble() ?? 200;
+
+    final downScale = math.min(
+      1.0,
+      math.min(photoMaxSize / width, photoMaxSize / height),
+    );
+    var displayWidth = width * downScale;
+    var displayHeight = height * downScale;
+
+    final upScale = math.max(
+      1.0,
+      math.max(minWidth / displayWidth, photoMinSize / displayHeight),
+    );
+    displayWidth *= upScale;
+    displayHeight *= upScale;
+
+    return Size(
+      displayWidth.clamp(minWidth, photoMaxSize),
+      displayHeight.clamp(photoMinSize, photoMaxSize),
+    );
+  }
 
   final BuildContext context;
   final ColorScheme cs;
