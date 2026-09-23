@@ -2639,6 +2639,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                       bubbleLeftForIndex: bubbleLeftForPageT,
                     );
                     final showChatsFab =
+                        !ios &&
                         !_isSelectionMode &&
                         (_navDragging || _navPageAnimController.isAnimating
                             ? pageDisplayT < 1.0
