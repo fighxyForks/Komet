@@ -124,6 +124,7 @@ import '../lock/lock_glyph.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 const String _savedWelcomeKey = 'welcome.saved.dialog.message';
 
@@ -742,7 +743,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                     onTap: () => setSheetState(() => forAll = !forAll),
                     child: Row(
                       children: [
-                        Checkbox(
+                        IosCheckbox(
                           value: forAll,
                           onChanged: (v) =>
                               setSheetState(() => forAll = v ?? false),
@@ -4435,7 +4436,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         if (!widget.forwardMode && !widget.archiveMode && !_shareMode)
           GlassGroupItem(
             key: const ValueKey('downloads-button'),
-            icon: Symbols.download_for_offline,
+            icon: IosSymbols.downloadOffline(context),
             tooltip: AppLocalizations.of(context)!.downloadsTooltip,
             onPressed: () => unawaited(_openDownloads()),
           ),
@@ -4457,7 +4458,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       anchorRect: anchor,
       items: [
         ChatMenuItem(
-          icon: Symbols.download_for_offline,
+          icon: IosSymbols.downloadOffline(context),
           label: l10n.downloadsTooltip,
           onTap: () => unawaited(_openDownloads()),
         ),
@@ -4473,12 +4474,12 @@ class _ChatListScreenState extends State<ChatListScreen>
         ),
         if (folder != null)
           ChatMenuItem(
-            icon: Symbols.folder,
+            icon: IosSymbols.folder(context),
             label: l10n.iosMenuFolderActions(_folderChipLabel(folder)),
             onTap: () => showFolderActionSheet(context, folder: folder),
           ),
         ChatMenuItem(
-          icon: Symbols.switch_account,
+          icon: IosSymbols.switchAccount(context),
           label: l10n.iosMenuSwitchAccount,
           onTap: () => _openAccountSwitcher(anchor.center),
         ),

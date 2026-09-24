@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -449,7 +450,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                          icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -537,8 +538,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () => Navigator.pop(context),
-                                  child: Icon(
-                                    Symbols.check,
+                                  child: Icon(IosSymbols.check(context),
                                     color: cs.onPrimaryContainer,
                                     size: 24,
                                   ),
@@ -1217,30 +1217,67 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
-                                child: FloatingActionButton(
-                                  onPressed: !_isPhoneValid
-                                      ? null
-                                      : (_isOnline
-                                            ? _validateAndSubmit
-                                            : _notifyConnecting),
-                                  backgroundColor: _isPhoneValid
-                                      ? cs.primaryContainer
-                                      : cs.surfaceContainerHighest,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(50),
-                                  ),
-                                  child: _isPhoneValid && !_isOnline
-                                      ? SmallSpinner(
-                                          size: 24,
-                                          color: cs.onPrimaryContainer,
-                                        )
-                                      : Icon(
-                                          IosSymbols.chevronRight(context),
-                                          color: _isPhoneValid
-                                              ? cs.onPrimaryContainer
-                                              : cs.onSurfaceVariant,
+                                child: ios
+                                    ? CupertinoButton(
+                                        padding: EdgeInsets.zero,
+                                        onPressed: !_isPhoneValid
+                                            ? null
+                                            : (_isOnline
+                                                  ? _validateAndSubmit
+                                                  : _notifyConnecting),
+                                        child: Container(
+                                          width: kIosAuthPrimaryHeight,
+                                          height: kIosAuthPrimaryHeight,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: _isPhoneValid
+                                                ? cs.primary
+                                                : cs.surfaceContainerHighest,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: _isPhoneValid && !_isOnline
+                                              ? SmallSpinner(
+                                                  size: 22,
+                                                  color: Colors.white,
+                                                )
+                                              : Icon(
+                                                  IosSymbols.chevronRight(
+                                                    context,
+                                                  ),
+                                                  color: _isPhoneValid
+                                                      ? Colors.white
+                                                      : cs.onSurfaceVariant,
+                                                ),
                                         ),
-                                ),
+                                      )
+                                    : FloatingActionButton(
+                                        onPressed: !_isPhoneValid
+                                            ? null
+                                            : (_isOnline
+                                                  ? _validateAndSubmit
+                                                  : _notifyConnecting),
+                                        backgroundColor: _isPhoneValid
+                                            ? cs.primaryContainer
+                                            : cs.surfaceContainerHighest,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            50,
+                                          ),
+                                        ),
+                                        child: _isPhoneValid && !_isOnline
+                                            ? SmallSpinner(
+                                                size: 24,
+                                                color: cs.onPrimaryContainer,
+                                              )
+                                            : Icon(
+                                                IosSymbols.chevronRight(
+                                                  context,
+                                                ),
+                                                color: _isPhoneValid
+                                                    ? cs.onPrimaryContainer
+                                                    : cs.onSurfaceVariant,
+                                              ),
+                                      ),
                               ),
                             ],
                           ),

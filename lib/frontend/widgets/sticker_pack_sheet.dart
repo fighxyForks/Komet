@@ -12,6 +12,9 @@ import 'lottie_image.dart';
 import 'sticker_peek.dart';
 import '../../core/config/app_shape.dart';
 import './glass/ios_sheet.dart';
+import 'chat_menu_overlay.dart';
+import 'glass/ios_glass.dart';
+import 'glass/ios_symbols.dart';
 
 enum _PackAction { forward, copyLink }
 
@@ -221,6 +224,36 @@ class _StickerPackSheetState extends State<_StickerPackSheet> {
   }
 
   Widget _buildMenu(ColorScheme cs, StickerSet set) {
+    if (IosGlass.of(context)) {
+      return Builder(
+        builder: (btnContext) => IconButton(
+          icon: Icon(
+            IosSymbols.ellipsisHoriz(btnContext),
+            color: cs.onSurfaceVariant,
+          ),
+          onPressed: () {
+            final box = btnContext.findRenderObject() as RenderBox?;
+            if (box == null || !box.hasSize) return;
+            showChatMenu(
+              context: btnContext,
+              anchorRect: box.localToGlobal(Offset.zero) & box.size,
+              items: [
+                ChatMenuItem(
+                  icon: IosSymbols.forward(btnContext),
+                  label: 'Переслать',
+                  onTap: () => _forward(set),
+                ),
+                ChatMenuItem(
+                  icon: IosSymbols.link(btnContext),
+                  label: 'Скопировать ссылку',
+                  onTap: () => _copyLink(set),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    }
     return PopupMenuButton<_PackAction>(
       icon: Icon(Symbols.more_horiz, color: cs.onSurfaceVariant),
       color: cs.surfaceContainerHighest,

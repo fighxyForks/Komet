@@ -29,6 +29,7 @@ import '../../share_unopenable_file.dart';
 import '../../upload_progress_ring.dart';
 import 'bubble_context.dart';
 import '../../glass/ios_route.dart';
+import '../../glass/glass_controls.dart';
 
 class FileBubble extends StatelessWidget {
   static const double _previewWidth = 240;
@@ -681,7 +682,7 @@ class _AudioFileScrubberState extends State<_AudioFileScrubber> {
                       overlayRadius: 12,
                     ),
                   ),
-                  child: Slider(
+                  child: IosSlider(
                     min: 0,
                     max: total > 0 ? total.toDouble() : 1,
                     value: total > 0 ? elapsed.toDouble() : 0,

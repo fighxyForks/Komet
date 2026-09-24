@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../contacts/contact_sheet_common.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ConfirmChoice {
   final bool confirmed;
@@ -144,7 +147,7 @@ class _ConfirmCardState extends State<_ConfirmCard> {
             widget.message,
             style: TextStyle(
               color: cs.onSurfaceVariant,
-              fontSize: 14,
+              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
               height: 1.35,
             ),
           ),
@@ -157,10 +160,8 @@ class _ConfirmCardState extends State<_ConfirmCard> {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
-                    Checkbox(
+                    IosCheckbox(
                       value: _checked,
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       onChanged: (v) => setState(() => _checked = v ?? false),
                     ),
                     const SizedBox(width: 8),
@@ -298,7 +299,7 @@ class _ComplaintCardState extends State<_ComplaintCard> {
                 child: SizedBox(
                   width: 22,
                   height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: IosActivityIndicator(strokeWidth: 2),
                 ),
               ),
             )
@@ -385,7 +386,7 @@ class _ComplaintCardState extends State<_ComplaintCard> {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: IosActivityIndicator(strokeWidth: 2),
                       )
                     : Text(widget.sendLabel),
               ),

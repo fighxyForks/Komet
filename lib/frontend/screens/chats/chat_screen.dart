@@ -125,6 +125,7 @@ import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class _DateSeparatorItem {
   final DateTime date;
@@ -2993,7 +2994,7 @@ class _ChatScreenState extends State<ChatScreen>
                       borderRadius: BorderRadius.circular(8),
                       child: Row(
                         children: [
-                          Checkbox(
+                          IosCheckbox(
                             value: alsoForEveryone,
                             onChanged: (v) => setLocalState(
                               () => alsoForEveryone = v ?? false,
