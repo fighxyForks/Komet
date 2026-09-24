@@ -2184,7 +2184,10 @@ class _ChatListScreenState extends State<ChatListScreen>
             ),
           ),
           if (_folders.length > 1 && ios && !_showFoldersShimmer)
-            _buildIosFolderStrip()
+            ListenableBuilder(
+              listenable: AppIosGlass.chromeListenable,
+              builder: (context, _) => _buildIosFolderStrip(),
+            )
           else if (_folders.length > 1)
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -2830,7 +2833,15 @@ class _ChatListScreenState extends State<ChatListScreen>
                     ),
                   ),
                 ),
-                _buildDockedBottomNav(cs, pageW, navInnerW, bottomInset),
+                ListenableBuilder(
+                  listenable: AppIosGlass.chromeListenable,
+                  builder: (context, _) => _buildDockedBottomNav(
+                    cs,
+                    pageW,
+                    navInnerW,
+                    bottomInset,
+                  ),
+                ),
                 AnimatedBuilder(
                   animation: Listenable.merge([
                     _fabController,
