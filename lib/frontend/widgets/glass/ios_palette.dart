@@ -10,6 +10,9 @@ class IosPalette {
   static Color grouped(ColorScheme cs) =>
       _dark(cs) ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7);
 
+  static Color pinnedRow(ColorScheme cs) =>
+      _dark(cs) ? const Color(0xFF111113) : const Color(0xFFF7F7F9);
+
   static Color label(ColorScheme cs) => _dark(cs) ? Colors.white : Colors.black;
 
   static Color secondaryLabel(ColorScheme cs) =>
