@@ -494,6 +494,7 @@ class _CallsTabState extends State<CallsTab>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final filteredCalls = _selectedTabIndex == 1
         ? _calls.where((c) => c.status == CallStatus.missed).toList()
@@ -541,7 +542,7 @@ class _CallsTabState extends State<CallsTab>
                     child: _buildLinkAction(
                       cs,
                       icon: IosSymbols.link(context),
-                      label: 'Создать звонок',
+                      label: l10n.callsActionCreate,
                       onTap: _createGroupCall,
                     ),
                   ),
@@ -549,7 +550,7 @@ class _CallsTabState extends State<CallsTab>
                     child: _buildLinkAction(
                       cs,
                       icon: IosSymbols.personAddGroup(context),
-                      label: 'Присоединиться',
+                      label: l10n.callsActionJoin,
                       onTap: _joinGroupCall,
                       alignEnd: true,
                     ),

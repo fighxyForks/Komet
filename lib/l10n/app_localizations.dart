@@ -2060,6 +2060,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t create the call'**
   String get callLinkCreateFailed;
 
+  /// No description provided for @callsActionCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'New call'**
+  String get callsActionCreate;
+
+  /// No description provided for @callsActionJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get callsActionJoin;
+
   /// No description provided for @callParticipantYou.
   ///
   /// In en, this message translates to:

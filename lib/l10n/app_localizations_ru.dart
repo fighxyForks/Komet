@@ -1047,6 +1047,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callLinkCreateFailed => 'Не удалось создать звонок';
 
   @override
+  String get callsActionCreate => 'Создать';
+
+  @override
+  String get callsActionJoin => 'Войти';
+
+  @override
   String get callParticipantYou => 'Вы';
 
   @override

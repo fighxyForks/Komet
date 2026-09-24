@@ -383,6 +383,8 @@
   "callLinkSent": "Link sent",
   "callLinkSendFailed": "Couldn't send the link",
   "callLinkCreateFailed": "Couldn't create the call",
+  "callsActionCreate": "New call",
+  "callsActionJoin": "Join",
   "callParticipantYou": "You",
   "callParticipantFallback": "Participant",
   "callTooltipMinimize": "Minimize",
