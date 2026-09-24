@@ -147,7 +147,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           title: l10n.securityModeSheetCalls,
         ),
         InfoActionSheetItem(
-          icon: Symbols.group_add,
+          icon: IosSymbols.personAddGroup(context),
           title: l10n.securityModeSheetInvites,
         ),
         InfoActionSheetItem(
@@ -340,7 +340,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           if (_showFamilyProtection)
             _settingsRow(
               cs,
-              icon: Symbols.shield,
+              icon: IosSymbols.shield(context),
               label: l10n.securityFamilyProtection,
               subtitle: _privacyConfig?.familyProtection == 'ON'
                   ? l10n.securityEnabledFem
@@ -541,7 +541,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           ),
           _settingsRow(
             cs,
-            icon: Symbols.contact_phone,
+            icon: IosSymbols.contactPhone(context),
             label: l10n.securityFindByPhone,
             trailingText: _getPrivacyLabel(
               _privacyConfig?.searchByPhone ?? 'ALL',
@@ -562,7 +562,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           if (isSafeMode)
             _settingsRow(
               cs,
-              icon: Symbols.filter_alt,
+              icon: IosSymbols.filterAlt(context),
               label: l10n.securityShowContact,
               trailingText: contentLevelAccess
                   ? l10n.securityContentSafe
@@ -572,7 +572,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           else
             _settingsRow(
               cs,
-              icon: Symbols.filter_alt,
+              icon: IosSymbols.filterAlt(context),
               label: l10n.securityShowContact,
               trailingWidget: GlassSwitch(
                 value: contentLevelAccess,
@@ -838,7 +838,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           ),
           _settingsRow(
             cs,
-            icon: Symbols.keyboard_alt,
+            icon: IosSymbols.keyboardAlt(context),
             label: l10n.securityAltKeyboard,
             trailingWidget: GlassSwitch(
               value: altKeyboard,
@@ -970,7 +970,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           if (pending)
             _settingsRow(
               cs,
-              icon: Symbols.undo,
+              icon: IosSymbols.undo(context),
               label: l10n.securityDeleteProfileKeep,
               showChevron: false,
               isLast: true,
@@ -1140,7 +1140,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                   if (showChevron) ...[
                     const SizedBox(width: 4),
                     Icon(
-                      lockedBySafeMode ? Symbols.lock : Symbols.chevron_right,
+                      lockedBySafeMode ? IosSymbols.lock(context) : IosSymbols.chevronRight(context),
                       color: cs.outline,
                       size: chevronSize,
                       weight: 400,

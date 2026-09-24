@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../widgets/color_wheel_picker.dart';
 
@@ -582,7 +583,7 @@ class _SpectrumToggleCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
       child: Row(
         children: [
-          Icon(Symbols.graphic_eq, color: cs.onSurface, size: 24, weight: 500),
+          Icon(IosSymbols.graphicEq(context), color: cs.onSurface, size: 24, weight: 500),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -809,13 +810,14 @@ class _ColorPickerCard extends StatelessWidget {
       builder: (context, sys, _) {
         return ValueListenableBuilder<Color>(
           valueListenable: color,
-          builder: (context, col, _) => _buildBody(cs, l10n, col, sys),
+          builder: (context, col, _) => _buildBody(context, cs, l10n, col, sys),
         );
       },
     );
   }
 
   Widget _buildBody(
+    BuildContext context,
     ColorScheme cs,
     AppLocalizations l10n,
     Color col,
@@ -872,8 +874,7 @@ class _ColorPickerCard extends StatelessWidget {
                   AnimatedRotation(
                     duration: const Duration(milliseconds: 200),
                     turns: expanded ? 0.5 : 0,
-                    child: Icon(
-                      Symbols.expand_more,
+                    child: Icon(IosSymbols.expandMore(context),
                       color: cs.onSurfaceVariant,
                       size: 24,
                     ),
@@ -902,7 +903,7 @@ class _ColorPickerCard extends StatelessWidget {
                           child: IosSettingsButton(
                             filled: false,
                             onPressed: sys ? null : onReset,
-                            icon: Symbols.auto_awesome,
+                            icon: IosSymbols.autoAwesome(context),
                             label: sys
                                 ? l10n.appearanceAccentColorSystemActive
                                 : l10n.appearanceAccentColorReset,

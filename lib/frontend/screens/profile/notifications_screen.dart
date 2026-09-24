@@ -192,7 +192,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                           valueListenable: FkmController.instance.enabled,
                           builder: (context, fkmEnabled, _) =>
                               SettingsToggleTile(
-                                icon: Symbols.notifications_active,
+                                icon: IosSymbols.notificationsActive(context),
                                 label: l10n.notificationsFkmEnableLabel,
                                 subtitle: l10n.notificationsFkmEnableSubtitle,
                                 value: fkmEnabled,
@@ -244,7 +244,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SettingsCard(
                     children: [
                       SettingsToggleTile(
-                        icon: Symbols.chat,
+                        icon: IosSymbols.chat(context),
                         label: l10n.notificationsPreviewLabel,
                         value: _messagePreview,
                         enabled: _allNotifications,

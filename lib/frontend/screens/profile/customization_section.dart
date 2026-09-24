@@ -131,8 +131,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
               AnimatedRotation(
                 duration: const Duration(milliseconds: 200),
                 turns: _expanded ? 0.5 : 0,
-                child: Icon(
-                  Symbols.expand_more,
+                child: Icon(IosSymbols.expandMore(context),
                   color: cs.outline,
                   size: 22,
                   weight: 400,

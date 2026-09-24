@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import 'package:komet/core/config/chat_wallpaper_themes.dart';
 import 'package:komet/core/config/app_colors.dart';
@@ -159,7 +159,7 @@ class _ChatWallpaperGalleryScreenState
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Symbols.arrow_back),
+          icon: Icon(IosSymbols.back(context)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -426,8 +426,7 @@ class _TileFrame extends StatelessWidget {
                               color: cs.primary,
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
-                              Symbols.check,
+                            child: Icon(IosSymbols.check(context),
                               size: 16,
                               color: cs.onPrimary,
                             ),
@@ -472,8 +471,8 @@ class _NoneTile extends StatelessWidget {
       label: 'Без обоев',
       child: ColoredBox(
         color: cs.surfaceContainerHighest,
-        child: const Center(
-          child: Icon(Symbols.block, color: kDangerRed, size: 34),
+        child: Center(
+          child: Icon(IosSymbols.block(context), color: kDangerRed, size: 34),
         ),
       ),
     );
@@ -529,7 +528,7 @@ class _CustomGradientTile extends StatelessWidget {
           : ColoredBox(
               color: cs.surfaceContainerHighest,
               child: Center(
-                child: Icon(Symbols.palette, color: cs.onSurface, size: 30),
+                child: Icon(IosSymbols.palette(context), color: cs.onSurface, size: 30),
               ),
             ),
     );
@@ -577,7 +576,7 @@ class _GalleryButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Symbols.image, color: cs.onSurface, size: 22),
+            Icon(IosSymbols.photo(context), color: cs.onSurface, size: 22),
             const SizedBox(width: 8),
             Text(
               'Из галереи',

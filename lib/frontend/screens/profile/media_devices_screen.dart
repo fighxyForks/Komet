@@ -107,7 +107,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
               builder: (context, selected, _) => SettingsCard(
                 children: [
                   _ChoiceTile(
-                    icon: Symbols.settings_voice,
+                    icon: IosSymbols.settingsVoice(context),
                     label: l10n.mediaDevicesSystemMicrophone,
                     selected: selected.isEmpty,
                     onTap: () => _pickMicrophone(''),
@@ -178,7 +178,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
                       ValueListenableBuilder<bool>(
                         valueListenable: AppVideoNoteRearCamera.current,
                         builder: (context, rear, _) => SettingsToggleTile(
-                          icon: Symbols.flip_camera_android,
+                          icon: IosSymbols.flipCamera(context),
                           label: l10n.mediaDevicesVideoNoteRear,
                           subtitle: l10n.mediaDevicesVideoNoteRearHint,
                           value: rear,

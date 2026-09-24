@@ -610,7 +610,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
         child: Opacity(
           opacity: t,
           child: _CornerAction(
-            icon: Symbols.upload_file,
+            icon: IosSymbols.uploadFile(context),
             label: l10n.cloudStorageFromFile,
             onTap: _pickAndUploadFile,
           ),
@@ -622,7 +622,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
         child: Opacity(
           opacity: t,
           child: _CornerAction(
-            icon: Symbols.tag,
+            icon: IosSymbols.tag(context),
             label: l10n.cloudStorageById,
             onTap: _showSendByIdSheet,
           ),
@@ -1071,7 +1071,7 @@ class _FileDetailsSheetState extends State<_FileDetailsSheet> {
                   ? SmallSpinner(size: 20, color: cs.primary)
                   : IconButton(
                       icon: Icon(
-                        isExpired ? Symbols.add_link : Symbols.content_copy,
+                        isExpired ? IosSymbols.link(context) : IosSymbols.copy(context),
                         color: isExpired ? cs.error : cs.onSurfaceVariant,
                         size: 20,
                       ),

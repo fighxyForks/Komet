@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../screens/profile/lottie_polygon_screen.dart';
 import '../widgets/glass/ios_route.dart';
@@ -55,8 +56,7 @@ class DebugLottiePolygonSection extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Symbols.chevron_right,
+                Icon(IosSymbols.chevronRight(context),
                   color: cs.onSurfaceVariant,
                   size: 22,
                   weight: 400,

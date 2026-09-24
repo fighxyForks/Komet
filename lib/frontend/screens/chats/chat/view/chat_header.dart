@@ -174,7 +174,7 @@ class ChatHeaderRow extends StatelessWidget {
                   ? IosSymbols.close(context)
                   : (ios
                       ? IosSymbols.chevronBack(context)
-                      : Symbols.arrow_back),
+                      : IosSymbols.back(context)),
               color: cs.onSurface,
               size: ios ? 21 : 24,
             ),
@@ -360,7 +360,7 @@ class ChatHeaderRow extends StatelessWidget {
           cs,
           IconButton(
             icon: Icon(
-              embedded ? Symbols.close : Symbols.arrow_back,
+              embedded ? IosSymbols.close(context) : IosSymbols.back(context),
               weight: 400,
               color: cs.onSurface,
             ),
@@ -386,8 +386,7 @@ class ChatHeaderRow extends StatelessWidget {
                         ? CircleAvatar(
                             radius: d / 2,
                             backgroundColor: cs.primary,
-                            child: Icon(
-                              Symbols.bookmark,
+                            child: Icon(IosSymbols.bookmark(context),
                               fill: 1,
                               color: cs.onPrimary,
                               size: d * 0.5,
@@ -440,8 +439,7 @@ class ChatHeaderRow extends StatelessWidget {
                           ),
                           if (isOfficial) ...[
                             const SizedBox(width: 4),
-                            Icon(
-                              Symbols.verified,
+                            Icon(IosSymbols.verified(context),
                               color: cs.primary,
                               size: 16,
                               weight: 600,
@@ -474,8 +472,7 @@ class ChatHeaderRow extends StatelessWidget {
           valueListenable: scheduledCount,
           builder: (_, count, _) => count > 0
               ? IconButton(
-                  icon: Icon(
-                    Symbols.schedule,
+                  icon: Icon(IosSymbols.schedule(context),
                     weight: 400,
                     color: cs.onSurface,
                   ),
@@ -485,12 +482,12 @@ class ChatHeaderRow extends StatelessWidget {
         ),
         if (showCall)
           IconButton(
-            icon: Icon(Symbols.call, weight: 400, color: cs.onSurface),
+            icon: Icon(IosSymbols.phone(context), weight: 400, color: cs.onSurface),
             onPressed: onCall,
           ),
         Builder(
           builder: (btnContext) => IconButton(
-            icon: Icon(Symbols.more_vert, weight: 400, color: cs.onSurface),
+            icon: Icon(IosSymbols.ellipsis(context), weight: 400, color: cs.onSurface),
             onPressed: () => onMenu(btnContext),
           ),
         ),

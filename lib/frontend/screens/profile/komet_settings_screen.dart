@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 
 import '../../../core/config/build_profile.dart';
@@ -66,7 +67,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.fullTimestamp,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.schedule,
+                    icon: IosSymbols.schedule(context),
                     label: 'View full timestamp',
                     subtitle: 'Показывать время в секундах у сообщений',
                     value: value,
@@ -111,7 +112,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.archiveOnPull,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.archive,
+                    icon: IosSymbols.archive(context),
                     label: 'Pull-down archive',
                     subtitle:
                         'Прятать архив и показывать его, если потянуть '
@@ -133,7 +134,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.ghostMode,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.visibility_off,
+                    icon: IosSymbols.visibilityOff(context),
                     label: 'Ghost Mode',
                     subtitle: 'Вас не видно в сети',
                     value: value,

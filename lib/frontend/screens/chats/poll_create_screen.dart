@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../widgets/custom_notification.dart';
 import '../../widgets/sheet_helpers.dart';
@@ -160,7 +161,7 @@ class _PollCreateSheetState extends State<_PollCreateSheet> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+            icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
             onPressed: () => Navigator.of(context).pop(),
           ),
           Expanded(
@@ -246,7 +247,7 @@ class _PollCreateSheetState extends State<_PollCreateSheet> {
       alignment: Alignment.centerLeft,
       child: TextButton.icon(
         onPressed: _addAnswer,
-        icon: const Icon(Symbols.add, size: 20),
+        icon: Icon(IosSymbols.add(context), size: 20),
         label: const Text('Добавить вариант'),
       ),
     );

@@ -1022,8 +1022,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                     IconButton(
                       onPressed: _openKometHub,
                       tooltip: l10n.callTooltipKometHub,
-                      icon: Icon(
-                        Symbols.auto_awesome,
+                      icon: Icon(IosSymbols.autoAwesome(context),
                         color: cs.primary,
                         weight: 500,
                         size: 26,
@@ -1032,8 +1031,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   IconButton(
                     onPressed: _showMicrophones,
                     tooltip: l10n.callTooltipMicrophone,
-                    icon: Icon(
-                      Symbols.settings_voice,
+                    icon: Icon(IosSymbols.settingsVoice(context),
                       color: cs.onSurface,
                       weight: 500,
                       size: 26,

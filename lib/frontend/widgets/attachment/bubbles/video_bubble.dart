@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:komet/main.dart';
 
 import '../../../../core/media/preview_image.dart';
@@ -88,7 +88,7 @@ class VideoBubble extends StatelessWidget {
       width: width,
       height: height,
       color: ctx.cs.surfaceContainerHighest,
-      child: Icon(Symbols.videocam, size: 48, color: ctx.cs.onSurfaceVariant),
+      child: Icon(IosSymbols.videocam(context), size: 48, color: ctx.cs.onSurfaceVariant),
     );
 
     final localThumb = dataUriImage(video, video.previewData);
@@ -167,8 +167,7 @@ class VideoBubble extends StatelessWidget {
                     color: Colors.black54,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Symbols.play_arrow,
+                  child: Icon(IosSymbols.play(context),
                     color: Colors.white,
                     size: 30,
                   ),

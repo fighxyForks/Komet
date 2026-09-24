@@ -6,7 +6,6 @@ import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../core/utils/haptics.dart';
@@ -831,9 +830,8 @@ class _StoryMediaView extends StatelessWidget {
             ? Center(
                 child: Image(image: preview, fit: BoxFit.contain),
               )
-            : const Center(
-                child: Icon(
-                  Symbols.broken_image,
+            : Center(
+                child: Icon(IosSymbols.brokenImage(context),
                   color: Colors.white54,
                   size: 48,
                 ),

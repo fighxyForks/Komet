@@ -246,7 +246,7 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Symbols.badge, size: 72, color: cs.primary),
+                      Icon(IosSymbols.badge(context), size: 72, color: cs.primary),
                       const SizedBox(height: 20),
                       Text(
                         l10n.digitalIdNotConfiguredTitle,
@@ -300,7 +300,7 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
                           onPressed: _busy ? null : _linkGosuslugi,
                           icon: _busy
                               ? const SmallSpinner(size: 18)
-                              : const Icon(Symbols.link, size: 18),
+                              : Icon(IosSymbols.link(context), size: 18),
                           label: Text(
                             l10n.digitalIdLinkGosuslugiButton,
                             textAlign: TextAlign.center,
@@ -329,7 +329,7 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
         ),
         child: Row(
           children: [
-            Icon(Symbols.verified_user, size: 36, color: cs.onPrimaryContainer),
+            Icon(IosSymbols.verifiedUser(context), size: 36, color: cs.onPrimaryContainer),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -460,7 +460,7 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
       ),
       child: Row(
         children: [
-          Icon(Symbols.description, color: cs.primary),
+          Icon(IosSymbols.doc(context), color: cs.primary),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -510,7 +510,7 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
           ),
           child: Row(
             children: [
-              Icon(Symbols.badge, color: cs.primary),
+              Icon(IosSymbols.badge(context), color: cs.primary),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -544,7 +544,7 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
     return Row(
       children: [
         Icon(
-          biometry.hasBiometryToken ? Symbols.check_circle : Symbols.info,
+          biometry.hasBiometryToken ? IosSymbols.checkCircle(context) : IosSymbols.info(context),
           size: 18,
           color: cs.onSurfaceVariant,
         ),

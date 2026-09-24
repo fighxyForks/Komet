@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/glass/ios_metrics.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/api.dart';
 import '../../../core/utils/format.dart';
@@ -278,7 +278,7 @@ class _WebPushScreenState extends State<WebPushScreen> {
       SettingsCard(
         children: [
           SettingsNavTile(
-            icon: Symbols.logout,
+            icon: IosSymbols.logout(context),
             label: l10n.webPushSignOut,
             tintColor: cs.error,
             onTap: _busy ? null : _signOut,

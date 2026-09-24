@@ -498,7 +498,7 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (p.screenSharing)
-            Icon(Symbols.screen_share, size: 18, color: cs.primary),
+            Icon(IosSymbols.screenShare(context), size: 18, color: cs.primary),
           if (p.videoEnabled)
             Icon(IosSymbols.videocam(context), size: 18, color: cs.onSurfaceVariant),
           AnimatedSlashIcon(

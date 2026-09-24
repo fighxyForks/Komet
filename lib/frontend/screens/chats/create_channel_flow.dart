@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/chats.dart';
 import '../../../core/utils/image_utils.dart';
@@ -149,7 +150,7 @@ class _CreateChannelFlowState extends State<_CreateChannelFlow> {
                   ),
                   IconButton(
                     onPressed: _creating ? null : () => Navigator.pop(context),
-                    icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                    icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
                   ),
                 ],
               ),

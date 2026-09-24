@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/config/app_colors.dart';
 
@@ -51,8 +51,7 @@ class SelectionCheckCircle extends StatelessWidget {
         ),
       ),
       child: selected
-          ? Icon(
-              Symbols.check,
+          ? Icon(IosSymbols.check(context),
               size: diameter * 0.66,
               weight: 700,
               color: cs.onPrimary,

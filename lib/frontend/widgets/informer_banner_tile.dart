@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../models/animoji.dart';
 import '../../models/informer_banner.dart';
@@ -163,7 +163,7 @@ class _InformerBannerTileState extends State<InformerBannerTile>
                     visualDensity: VisualDensity.compact,
                     iconSize: 19,
                     color: cs.onSurfaceVariant.withValues(alpha: 0.72),
-                    icon: const Icon(Symbols.cancel, fill: 0, weight: 450),
+                    icon: Icon(IosSymbols.clearFill(context), fill: 0, weight: 450),
                   ),
               ],
             ),
@@ -232,8 +232,7 @@ class _InformerBannerFallbackIcon extends StatelessWidget {
       height: 44,
       decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
       alignment: Alignment.center,
-      child: Icon(
-        Symbols.chat_bubble,
+      child: Icon(IosSymbols.chatBubble(context),
         color: cs.onPrimary,
         size: 23,
         fill: 0,

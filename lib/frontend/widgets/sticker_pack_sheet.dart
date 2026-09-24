@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/utils/format.dart';
 import '../../main.dart' show stickersModule, messagesModule;
@@ -255,7 +254,7 @@ class _StickerPackSheetState extends State<_StickerPackSheet> {
       );
     }
     return PopupMenuButton<_PackAction>(
-      icon: Icon(Symbols.more_horiz, color: cs.onSurfaceVariant),
+      icon: Icon(IosSymbols.ellipsisHoriz(context), color: cs.onSurfaceVariant),
       color: cs.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       onSelected: (action) {
@@ -271,7 +270,7 @@ class _StickerPackSheetState extends State<_StickerPackSheet> {
           value: _PackAction.forward,
           child: Row(
             children: [
-              Icon(Symbols.forward, size: 20, color: cs.onSurface),
+              Icon(IosSymbols.forward(context), size: 20, color: cs.onSurface),
               const SizedBox(width: 12),
               const Text('Переслать'),
             ],
@@ -281,7 +280,7 @@ class _StickerPackSheetState extends State<_StickerPackSheet> {
           value: _PackAction.copyLink,
           child: Row(
             children: [
-              Icon(Symbols.link, size: 20, color: cs.onSurface),
+              Icon(IosSymbols.link(context), size: 20, color: cs.onSurface),
               const SizedBox(width: 12),
               const Text('Скопировать ссылку'),
             ],

@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/main.dart';
 
@@ -87,7 +88,7 @@ class FileBubble extends StatelessWidget {
                 ),
                 child: ctx.uploadProgress == null
                     ? Icon(
-                        audioFile ? Symbols.audio_file : Symbols.description,
+                        audioFile ? IosSymbols.audioFile(context) : IosSymbols.doc(context),
                         color: isMe
                             ? ctx.cs.onPrimaryContainer
                             : ctx.cs.primary,
@@ -189,7 +190,7 @@ class FileBubble extends StatelessWidget {
                       if (!audioFile) {
                         return circle(
                           Icon(
-                            cached ? Symbols.check : Symbols.download,
+                            cached ? IosSymbols.check(context) : IosSymbols.download(context),
                             color: iconColor,
                             size: 18,
                           ),
@@ -206,13 +207,13 @@ class FileBubble extends StatelessWidget {
                           if (!cached) return button(Symbols.download);
                           if (track?.cacheName != cacheName ||
                               !AudioPlaybackController.isInitialized) {
-                            return button(Symbols.play_arrow);
+                            return button(IosSymbols.play(ctx.context));
                           }
                           return ValueListenableBuilder<bool>(
                             valueListenable:
                                 AudioPlaybackController.instance.playing,
                             builder: (context, playing, _) => button(
-                              playing ? Symbols.pause : Symbols.play_arrow,
+                              playing ? IosSymbols.pause(ctx.context) : IosSymbols.play(ctx.context),
                             ),
                           );
                         },
@@ -306,7 +307,7 @@ class FileBubble extends StatelessWidget {
             fit: BoxFit.cover,
             cacheWidth: 480,
             errorBuilder: (_, _, _) => _placeholder(
-              icon: Symbols.broken_image,
+              icon: IosSymbols.brokenImage(ctx.context),
               label: 'Файл повреждён',
             ),
           ),
@@ -316,10 +317,10 @@ class FileBubble extends StatelessWidget {
             ? const SizedBox.shrink()
             : _networkPreview(previewUrl);
       case EncryptedPhotoStatus.wrongKey:
-        return _placeholder(icon: Symbols.lock, label: 'Неверный ключ');
+        return _placeholder(icon: IosSymbols.lock(ctx.context), label: 'Неверный ключ');
       case EncryptedPhotoStatus.locked:
         return _placeholder(
-          icon: Symbols.lock,
+          icon: IosSymbols.lock(ctx.context),
           label: 'Нажмите, чтобы открыть',
         );
       case null:

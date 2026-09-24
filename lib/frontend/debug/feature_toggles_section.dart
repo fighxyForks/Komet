@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../backend/modules/contacts.dart';
 import '../../core/config/app_commands.dart';
@@ -83,7 +84,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
                     style: TextStyle(color: cs.onSurface, fontSize: 16),
                   ),
                   trailing: value == preset
-                      ? Icon(Symbols.check, color: cs.primary)
+                      ? Icon(IosSymbols.check(context), color: cs.primary)
                       : null,
                   onTap: () => AppVideoNoteResolution.save(preset),
                 ),
@@ -107,7 +108,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
                     style: TextStyle(color: cs.onSurface, fontSize: 16),
                   ),
                   trailing: value == preset
-                      ? Icon(Symbols.check, color: cs.primary)
+                      ? Icon(IosSymbols.check(context), color: cs.primary)
                       : null,
                   onTap: () => AppVideoNoteFps.save(preset),
                 ),
@@ -140,7 +141,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.auto_awesome,
+            icon: IosSymbols.autoAwesome(context),
             title: 'Приколь4ики',
             valueListenable: AppPranks.current,
             onChanged: AppPranks.save,
@@ -149,7 +150,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.badge,
+            icon: IosSymbols.badge(context),
             title: 'Нативный Цифровой ID',
             subtitle: (native) => native
                 ? 'Нативный экран (REST ext-api.max.ru)'
@@ -180,8 +181,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Symbols.restart_alt,
+                    Icon(IosSymbols.refresh(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -219,7 +219,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.amp_stories,
+            icon: IosSymbols.ampStories(context),
             title: 'Истории',
             subtitle: (_) => 'Отображение ленты историй в списке чатов',
             valueListenable: AppStories.current,
@@ -241,8 +241,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Symbols.video_camera_front,
+                    Icon(IosSymbols.videocam(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -287,7 +286,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.flip_camera_android,
+            icon: IosSymbols.flipCamera(context),
             title: 'Кружки с задней камеры',
             subtitle: (v) => v
                 ? 'Запись кружка начинается с задней камеры'
@@ -299,7 +298,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.contacts,
+            icon: IosSymbols.contacts(context),
             title: 'Имена из телефонной книги',
             subtitle: (v) => v
                 ? 'Имена собеседников показываются так, как записаны в '
@@ -322,7 +321,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.link,
+            icon: IosSymbols.link(context),
             title: 'Предпросмотр ссылок',
             subtitle: (_) => 'Карточки с превью для ссылок в сообщениях',
             valueListenable: AppLinkPreview.current,
@@ -332,7 +331,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.info,
+            icon: IosSymbols.info(context),
             title: 'Доп. информация',
             subtitle: (_) =>
                 'Раздел «Info» в настройках и вкладка с '
@@ -344,7 +343,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.speed,
+            icon: IosSymbols.speed(context),
             title: 'Трассировка производительности',
             subtitle: (_) =>
                 'Кадры с рывками, переходы экранов и вкладок, подмена '

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import 'package:komet/backend/modules/contacts.dart';
 import 'package:komet/core/config/debug_test.dart';
@@ -111,8 +111,7 @@ class _ContactPickerPageState extends State<ContactPickerPage> {
               decoration: InputDecoration(
                 hintText: l10n.attachSheetContactSearchHint,
                 hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
-                prefixIcon: Icon(
-                  Symbols.search,
+                prefixIcon: Icon(IosSymbols.search(context),
                   color: cs.onSurfaceVariant,
                   size: 20,
                 ),
@@ -144,7 +143,7 @@ class _ContactPickerPageState extends State<ContactPickerPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Symbols.person_off, size: 48, color: cs.onSurfaceVariant),
+              Icon(IosSymbols.personOff(context), size: 48, color: cs.onSurfaceVariant),
               const SizedBox(height: 12),
               Text(
                 _contacts.isEmpty

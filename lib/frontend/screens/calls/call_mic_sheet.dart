@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/calls/audio_devices.dart';
 import '../../../core/calls/call_session.dart';
@@ -156,7 +155,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
                       cs,
                       id: null,
                       label: l10n.callMicrophoneSystem,
-                      icon: Symbols.settings_voice,
+                      icon: IosSymbols.settingsVoice(context),
                       viaDevice: true,
                     ),
                     if (options.isEmpty)
@@ -187,7 +186,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
                           id: option.id,
                           label: option.label,
                           detail: option.detail,
-                          icon: Symbols.graphic_eq,
+                          icon: IosSymbols.graphicEq(context),
                           viaDevice: option.isDevice,
                         ),
                     ],
@@ -232,7 +231,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
     padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
     child: Row(
       children: [
-        Icon(Symbols.graphic_eq, size: 18, color: cs.primary),
+        Icon(IosSymbols.graphicEq(context), size: 18, color: cs.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../../core/utils/haptics.dart';
 import '../../../../core/utils/link_opener.dart';
@@ -59,8 +59,7 @@ class LocationBubble extends StatelessWidget {
                         color: isMe ? ctx.systemTint : ctx.cs.primaryContainer,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        Symbols.location_on,
+                      child: Icon(IosSymbols.location(context),
                         color: isMe
                             ? ctx.cs.onPrimaryContainer
                             : ctx.cs.primary,

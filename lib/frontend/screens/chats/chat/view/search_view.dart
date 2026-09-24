@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:komet/core/config/app_animations.dart';
 import 'package:komet/core/config/app_chat_chrome.dart';
@@ -68,8 +67,7 @@ class SearchTopBar extends StatelessWidget {
     );
 
     final backBtn = IconButton(
-      icon: Icon(
-        Symbols.arrow_back,
+      icon: Icon(IosSymbols.back(context),
         weight: glossy ? 500 : 400,
         color: cs.onSurface,
       ),

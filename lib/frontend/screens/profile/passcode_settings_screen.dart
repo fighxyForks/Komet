@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_fonts.dart';
 import '../../../core/security/app_lock.dart';
@@ -170,7 +169,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                 SettingsCard(
                   children: [
                     SettingsNavTile(
-                      icon: Symbols.password,
+                      icon: IosSymbols.password(context),
                       label: l10n.passcodeChange,
                       onTap: () => _setUp(changing: true),
                     ),
@@ -188,7 +187,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                     ValueListenableBuilder<int>(
                       valueListenable: _lock.idleMinutes,
                       builder: (context, minutes, _) => _ValueTile(
-                        icon: Symbols.timer,
+                        icon: IosSymbols.timer(context),
                         label: l10n.passcodeAutoLock,
                         value: _idleLabel(l10n, minutes),
                         onTap: _pickIdle,

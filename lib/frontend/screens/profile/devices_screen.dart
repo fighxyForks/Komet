@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/config/build_profile.dart';
@@ -259,7 +260,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                     width: 1,
                   ),
                 ),
-                child: Icon(Symbols.devices, color: cs.onSurface, size: 28),
+                child: Icon(IosSymbols.devices(context), color: cs.onSurface, size: 28),
               ),
               const SizedBox(height: 16),
               Text(
@@ -532,8 +533,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                                   alpha: 0.5,
                                 ),
                               )
-                            : Icon(
-                                Symbols.add_circle,
+                            : Icon(IosSymbols.addCircle(context),
                                 size: 20,
                                 color: cs.onSurfaceVariant.withValues(
                                   alpha: 0.4,

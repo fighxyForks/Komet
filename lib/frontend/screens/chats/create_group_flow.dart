@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/chats.dart';
 import '../../../backend/modules/contacts.dart';
@@ -257,7 +258,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
               ),
             ],
           ),
@@ -288,8 +289,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
             decoration: InputDecoration(
               hintText: 'Найти по имени',
               hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-              prefixIcon: Icon(
-                Symbols.search,
+              prefixIcon: Icon(IosSymbols.search(context),
                 color: cs.onSurfaceVariant,
                 size: 20,
               ),
@@ -365,8 +365,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
                                   color: cs.primary,
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(
-                                  Symbols.check,
+                                child: Icon(IosSymbols.check(context),
                                   color: cs.onPrimary,
                                   size: 16,
                                 ),
@@ -418,7 +417,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
                 onPressed: _creating
                     ? null
                     : () => setState(() => _step = _Step.pickParticipants),
-                icon: Icon(Symbols.arrow_back, color: cs.onSurfaceVariant),
+                icon: Icon(IosSymbols.back(context), color: cs.onSurfaceVariant),
               ),
               Expanded(
                 child: Text(
@@ -432,7 +431,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
               ),
               IconButton(
                 onPressed: _creating ? null : () => Navigator.pop(context),
-                icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
               ),
             ],
           ),

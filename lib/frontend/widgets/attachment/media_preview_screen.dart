@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import 'package:komet/core/media/gallery_source.dart';
 import 'package:komet/frontend/widgets/attachment/photo_editor.dart';
@@ -231,7 +231,7 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Symbols.arrow_back),
+          icon: Icon(IosSymbols.back(context)),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
@@ -353,10 +353,10 @@ class _MediaPreviewScreenState extends State<MediaPreviewScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                PreviewToolIcon(icon: Symbols.crop_rotate, onTap: _openCrop),
-                PreviewToolIcon(icon: Symbols.brush, onTap: _openDraw),
+                PreviewToolIcon(icon: IosSymbols.cropRotate(context), onTap: _openCrop),
+                PreviewToolIcon(icon: IosSymbols.brush(context), onTap: _openDraw),
                 const PreviewFileToggle(),
-                PreviewToolIcon(icon: Symbols.tune, onTap: _openAdjust),
+                PreviewToolIcon(icon: IosSymbols.tune(context), onTap: _openAdjust),
               ],
             ),
           ),

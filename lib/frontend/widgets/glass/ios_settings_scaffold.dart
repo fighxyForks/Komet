@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../connection_status.dart';
 import 'ios_glass.dart';
@@ -134,8 +134,7 @@ class IosSettingsScaffold extends StatelessWidget {
                         IosMetrics.minHitTarget,
                       ),
                       onPressed: () => Navigator.of(context).maybePop(),
-                      child: Icon(
-                        Symbols.chevron_left,
+                      child: Icon(IosSymbols.chevronLeft(context),
                         size: 28,
                         weight: 400,
                         color: cs.primary,
@@ -272,7 +271,7 @@ class IosSettingsInlineBar extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              ios ? Symbols.chevron_left : Symbols.arrow_back,
+              ios ? IosSymbols.chevronLeft(context) : IosSymbols.back(context),
               color: ios ? cs.primary : cs.onSurface,
               size: ios ? 28 : 24,
               weight: 400,

@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import 'package:komet/core/storage/chat_wallpaper_store.dart';
 import 'package:komet/frontend/widgets/chat_wallpaper_view.dart';
@@ -101,7 +101,7 @@ class _ChatWallpaperPreviewScreenState
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Symbols.arrow_back, color: Colors.white),
+            icon: Icon(IosSymbols.back(context), color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
           Text(
@@ -326,7 +326,7 @@ class _ToggleChip extends StatelessWidget {
                   border: Border.all(color: Colors.white, width: 2),
                 ),
                 child: value
-                    ? const Icon(Symbols.check, size: 16, color: Colors.black)
+                    ? Icon(IosSymbols.check(context), size: 16, color: Colors.black)
                     : null,
               ),
               const SizedBox(width: 10),

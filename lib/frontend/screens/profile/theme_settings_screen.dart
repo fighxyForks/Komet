@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 
 import '../../../core/config/app_amoled.dart';
@@ -192,7 +193,7 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
                       },
                     ),
                   _ModeTile(
-                    icon: Symbols.palette,
+                    icon: IosSymbols.palette(context),
                     label: l10n.themeSettingsCustomTitle,
                     selected: customSelected,
                     onTap: (_) {
@@ -219,8 +220,7 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
                                   )
                                 : ColoredBox(
                                     color: cs.surfaceContainerHighest,
-                                    child: Icon(
-                                      Symbols.palette,
+                                    child: Icon(IosSymbols.palette(context),
                                       color: cs.onSurface,
                                       size: 18,
                                     ),

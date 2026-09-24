@@ -3,6 +3,7 @@ import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/models/chat_folder.dart';
 import '../../../backend/modules/chats.dart';
@@ -314,7 +315,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
         ),
         IconButton(
           onPressed: _busy ? null : () => Navigator.pop(context),
-          icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+          icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
         ),
       ],
     ),
@@ -391,8 +392,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
               decoration: InputDecoration(
                 hintText: 'Найти по имени',
                 hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-                prefixIcon: Icon(
-                  Symbols.search,
+                prefixIcon: Icon(IosSymbols.search(context),
                   color: cs.onSurfaceVariant,
                   size: 20,
                 ),
@@ -544,7 +544,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
                 color: cs.primary,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Symbols.check, color: cs.onPrimary, size: 16),
+              child: Icon(IosSymbols.check(context), color: cs.onPrimary, size: 16),
             ),
           ),
         ],
@@ -562,14 +562,14 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
           children: [
             _buildToggle(
               cs,
-              icon: Symbols.notifications,
+              icon: IosSymbols.notifications(context),
               title: 'Чаты с уведомлениями',
               value: _onlyNotMuted,
               onChanged: (v) => setState(() => _onlyNotMuted = v),
             ),
             _buildToggle(
               cs,
-              icon: Symbols.mark_chat_unread,
+              icon: IosSymbols.markUnread(context),
               title: 'Непрочитанные чаты',
               value: _onlyUnread,
               onChanged: (v) => setState(() => _onlyUnread = v),

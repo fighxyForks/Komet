@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/config/app_shape.dart';
 import 'glass/glass_controls.dart';
@@ -291,8 +291,7 @@ class SettingsNavTile extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(
-              Symbols.chevron_right,
+            Icon(IosSymbols.chevronRight(context),
               color: cs.outline,
               size: 20,
               weight: 400,

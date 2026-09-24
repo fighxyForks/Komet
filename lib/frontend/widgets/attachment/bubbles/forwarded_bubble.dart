@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../../backend/modules/chats.dart';
 import '../../../../backend/modules/messages.dart';
@@ -72,7 +72,7 @@ class ForwardedHeader extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Symbols.forward, size: 14, color: headerColor),
+          Icon(IosSymbols.forward(context), size: 14, color: headerColor),
           const SizedBox(width: 4),
           if (forwarded.isFromPrivateChat)
             ValueListenableBuilder<int>(

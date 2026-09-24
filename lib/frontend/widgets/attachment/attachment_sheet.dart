@@ -942,7 +942,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         color: cs.surfaceContainerHighest,
         child: Row(
           children: [
-            Icon(Symbols.info, size: 18, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.info(context), size: 18, color: cs.onSurfaceVariant),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -971,7 +971,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.construction, size: 48, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.construction(context), size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(
               AppLocalizations.of(context)!.attachSheetSectionInProgress,
@@ -997,7 +997,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.no_photography, size: 48, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.cameraOff(context), size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(
               l10n.attachSheetNoGalleryAccessTitle,
@@ -1046,7 +1046,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.broken_image, size: 48, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.brokenImage(context), size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(
               l10n.attachSheetGalleryFailedTitle,
@@ -1159,7 +1159,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         onTap: () => _sendSelection(),
         child: Padding(
           padding: const EdgeInsets.all(14),
-          child: Icon(Symbols.send, color: cs.onPrimary, size: 24, weight: 500),
+          child: Icon(IosSymbols.send(context), color: cs.onPrimary, size: 24, weight: 500),
         ),
       ),
     );
@@ -1344,8 +1344,7 @@ class _GalleryMenuButton extends StatelessWidget {
           onTap: () => onTap(context),
           child: Padding(
             padding: const EdgeInsets.all(5),
-            child: Icon(
-              Symbols.more_horiz,
+            child: Icon(IosSymbols.ellipsisHoriz(context),
               size: 20,
               color: cs.onSurfaceVariant,
             ),
@@ -1515,8 +1514,7 @@ class _CameraTileState extends State<_CameraTile> with WidgetsBindingObserver {
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: hasPreview
-                  ? const Icon(
-                      Symbols.photo_camera,
+                  ? Icon(IosSymbols.camera(context),
                       size: 22,
                       color: Colors.white,
                       weight: 500,
@@ -1526,8 +1524,8 @@ class _CameraTileState extends State<_CameraTile> with WidgetsBindingObserver {
                       children: [
                         Icon(
                           denied
-                              ? Symbols.no_photography
-                              : Symbols.photo_camera,
+                              ? IosSymbols.cameraOff(context)
+                              : IosSymbols.camera(context),
                           size: 34,
                           color: cs.onSurface,
                           weight: 400,
@@ -1640,8 +1638,7 @@ class _GalleryTileState extends State<_GalleryTile> {
               bottom: 6,
               child: Row(
                 children: [
-                  Icon(
-                    Symbols.play_arrow,
+                  Icon(IosSymbols.play(context),
                     size: 16,
                     color: Colors.white,
                     fill: 1,
@@ -1793,8 +1790,7 @@ class _ThumbnailState extends State<_Thumbnail> {
     color: widget.cs.surfaceContainerHighest,
     child: widget.item.isVideo
         ? Center(
-            child: Icon(
-              Symbols.movie,
+            child: Icon(IosSymbols.movie(context),
               size: 28,
               color: widget.cs.onSurfaceVariant,
             ),

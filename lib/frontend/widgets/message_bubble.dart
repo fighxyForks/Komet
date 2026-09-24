@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:komet/main.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../backend/modules/messages.dart';
 import '../screens/webapp/web_app_bridge.dart';
 import '../screens/webapp/web_app_screen.dart';
@@ -1390,7 +1391,7 @@ class MessageBubble extends StatelessWidget {
           ? _StackMatchTopWidth(
               growForBottom: true,
               top: Padding(padding: padding, child: innerContent),
-              bottom: _buildCommentsFooter(cs),
+              bottom: _buildCommentsFooter(context, cs),
             )
           : innerContent,
     );
@@ -1434,7 +1435,7 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildCommentsFooter(ColorScheme cs) {
+  Widget _buildCommentsFooter(BuildContext context, ColorScheme cs) {
     final label = commentsLabel ?? 'Комментарии';
     final accent = isMe ? cs.onPrimaryContainer : cs.primary;
     return Material(
@@ -1465,8 +1466,7 @@ class MessageBubble extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Icon(
-                    Symbols.chevron_right,
+                  Icon(IosSymbols.chevronRight(context),
                     size: 20,
                     color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
@@ -1566,8 +1566,7 @@ class MessageBubble extends StatelessWidget {
               Positioned(
                 top: 6,
                 right: 8,
-                child: Icon(
-                  Symbols.content_copy,
+                child: Icon(IosSymbols.copy(context),
                   size: 15,
                   weight: 500,
                   color: cs.primary.withValues(alpha: 0.85),
@@ -1818,7 +1817,7 @@ class MessageBubble extends StatelessWidget {
 
   Widget _buildJumboAnimojiMeta(BubbleContext ctx) {
     final status = ctx.overrideStatus ?? ctx.message.status;
-    final statusVisual = messageStatusVisual(status, dimColor: Colors.white);
+    final statusVisual = messageStatusVisual(status, context: ctx.context, dimColor: Colors.white);
     final ios = IosGlass.of(ctx.context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -1847,7 +1846,7 @@ class MessageBubble extends StatelessWidget {
           ],
           if (ctx.message.deleted) ...[
             const SizedBox(width: 3),
-            const Icon(Symbols.delete, size: 12, color: Colors.white),
+            Icon(IosSymbols.delete(ctx.context), size: 12, color: Colors.white),
           ],
         ],
       ),
@@ -2068,7 +2067,7 @@ class MessageBubble extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (decryption?.isDecrypted ?? false) ...[
-          Icon(Symbols.lock, size: 11, weight: 700, fill: 1, color: ctx.dim),
+          Icon(IosSymbols.lock(ctx.context), size: 11, weight: 700, fill: 1, color: ctx.dim),
           const SizedBox(width: 3),
         ],
         Text(
@@ -2185,6 +2184,7 @@ class MessageBubble extends StatelessWidget {
     final ios = IosGlass.of(context);
     if (ios) {
       return _iosReplyQuote(
+        context,
         cs,
         textColor,
         reply,
@@ -2211,7 +2211,7 @@ class MessageBubble extends StatelessWidget {
           child: SizedBox(
             width: size.width,
             height: size.height,
-            child: preview.thumbnail(size: size, cs: cs),
+            child: preview.thumbnail(context: context, size: size, cs: cs),
           ),
         ),
       );
@@ -2260,6 +2260,7 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _iosReplyQuote(
+    BuildContext context,
     ColorScheme cs,
     Color textColor,
     ReplyInfo reply,
@@ -2302,6 +2303,7 @@ class MessageBubble extends StatelessWidget {
                   IosBubbleMetrics.replyThumbRadius,
                 ),
                 child: preview.thumbnail(
+                  context: context,
                   size: Size.square(thumbSide),
                   cs: cs,
                   radius: IosBubbleMetrics.replyThumbRadius,

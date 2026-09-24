@@ -188,8 +188,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
                   ),
                   IconButton(
                     tooltip: 'Очистить',
-                    icon: Icon(
-                      Symbols.delete_sweep,
+                    icon: Icon(IosSymbols.deleteSweep(context),
                       color: activeColor,
                       size: 24,
                       weight: 400,
@@ -357,7 +356,7 @@ class _TrafficRow extends StatelessWidget {
                     ],
                     if (hasPayload)
                       Icon(
-                        expanded ? Symbols.expand_less : Symbols.expand_more,
+                        expanded ? IosSymbols.expandLess(context) : IosSymbols.expandMore(context),
                         color: cs.onSurfaceVariant,
                         size: 18,
                       ),

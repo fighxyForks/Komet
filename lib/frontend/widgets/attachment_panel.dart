@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 class AttachmentPanel extends StatefulWidget {
   final VoidCallback onClose;
@@ -65,7 +65,7 @@ class _AttachmentPanelState extends State<AttachmentPanel> {
                     Expanded(
                       child: _buildButton(
                         label: 'Выбрать из файла',
-                        icon: Symbols.folder_open,
+                        icon: IosSymbols.folderOpen(context),
                         filled: true,
                         onTap: _sendingById ? null : widget.onPickFile,
                         cs: cs,
@@ -112,8 +112,7 @@ class _AttachmentPanelState extends State<AttachmentPanel> {
                 width: 32,
                 height: 32,
                 alignment: Alignment.center,
-                child: Icon(
-                  Symbols.close,
+                child: Icon(IosSymbols.close(context),
                   color: cs.onSurfaceVariant,
                   size: 22,
                 ),

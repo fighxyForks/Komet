@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/config/app_shape.dart';
 import '../../core/utils/media_cache.dart';
@@ -117,13 +117,13 @@ void showAvatarMenu({
     anchorRect: anchorRect,
     items: [
       ChatMenuItem(
-        icon: Symbols.download,
+        icon: IosSymbols.download(context),
         label: avatarSaveLabel(context),
         onTap: onSave,
       ),
       if (onDelete != null)
         ChatMenuItem(
-          icon: Symbols.delete,
+          icon: IosSymbols.delete(context),
           label: 'Удалить',
           destructive: true,
           onTap: onDelete,

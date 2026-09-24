@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../../widgets/glass/ios_typography.dart';
 import '../../../../widgets/glass/ios_tracking.dart';
@@ -193,12 +193,11 @@ class IosChatRow extends StatelessWidget {
               ),
               if (isVerified) ...[
                 const SizedBox(width: 4),
-                Icon(Symbols.verified, color: cs.primary, size: 16, fill: 1),
+                Icon(IosSymbols.verified(context), color: cs.primary, size: 16, fill: 1),
               ],
               if (isMuted) ...[
                 const SizedBox(width: 4),
-                Icon(
-                  Symbols.volume_off,
+                Icon(IosSymbols.volumeUp(context),
                   key: const ValueKey('ios-chat-muted'),
                   color: secondary,
                   size: 16,
@@ -246,8 +245,7 @@ class IosChatRow extends StatelessWidget {
       );
     }
     if (!isPinned) return null;
-    return Icon(
-      Symbols.keep,
+    return Icon(IosSymbols.keep(context),
       key: const ValueKey('ios-chat-pin'),
       size: 20,
       fill: 1,

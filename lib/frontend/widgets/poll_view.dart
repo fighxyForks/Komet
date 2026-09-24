@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../main.dart';
 import '../../core/utils/format.dart';
@@ -212,7 +213,7 @@ class _PollViewState extends State<PollView>
                     ? (selected
                           ? Symbols.check_box
                           : Symbols.check_box_outline_blank)
-                    : Symbols.radio_button_unchecked,
+                    : IosSymbols.radioUnchecked(context),
                 size: 20,
                 color: selected ? widget.accentColor : widget.dimColor,
               ),
@@ -310,8 +311,7 @@ class _PollViewState extends State<PollView>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (answer.mine) ...[
-                          Icon(
-                            Symbols.check_circle,
+                          Icon(IosSymbols.checkCircle(context),
                             size: 14,
                             color: widget.accentColor,
                           ),

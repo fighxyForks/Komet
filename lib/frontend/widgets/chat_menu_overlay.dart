@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/config/app_ios_glass.dart';
 import '../../core/utils/haptics.dart';
@@ -271,8 +271,7 @@ class _ChatMenuRow extends StatelessWidget {
               ),
             ),
             if (item.showChevron)
-              Icon(
-                Symbols.chevron_right,
+              Icon(IosSymbols.chevronRight(context),
                 size: 22,
                 weight: 400,
                 color: cs.onSurface.withValues(alpha: 0.7),

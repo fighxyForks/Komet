@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import 'package:komet/core/utils/text_format.dart';
 import 'package:komet/frontend/widgets/formatted_message_text.dart';
@@ -206,8 +207,7 @@ class _PreviewThumb extends StatelessWidget {
               ),
             if (thumb.video)
               Center(
-                child: Icon(
-                  Symbols.play_arrow,
+                child: Icon(IosSymbols.play(context),
                   size: size * 0.7,
                   fill: 1,
                   color: Colors.white,

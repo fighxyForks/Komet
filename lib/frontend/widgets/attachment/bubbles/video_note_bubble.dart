@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:komet/main.dart';
@@ -723,7 +724,7 @@ class _VideoNoteBubbleState extends State<VideoNoteBubble>
         color: Colors.black45,
         shape: BoxShape.circle,
       ),
-      child: const Icon(Symbols.volume_off, size: 17, color: Colors.white),
+      child: Icon(IosSymbols.volumeUp(context), size: 17, color: Colors.white),
     );
   }
 
@@ -800,7 +801,7 @@ class _VideoNoteBubbleState extends State<VideoNoteBubble>
                           child: SmallSpinner(size: 36, color: Colors.white),
                         )
                       : Icon(
-                          _error ? Symbols.error : Symbols.play_arrow,
+                          _error ? IosSymbols.error(context) : IosSymbols.play(context),
                           color: Colors.white,
                           size: 30,
                         ),

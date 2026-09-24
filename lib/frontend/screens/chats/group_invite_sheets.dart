@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import 'package:komet/main.dart';
 import 'package:komet/backend/modules/chats.dart';
@@ -199,8 +199,7 @@ class _AddMembersCardState extends State<_AddMembersCard> {
                           decoration: InputDecoration(
                             isDense: true,
                             constraints: const BoxConstraints(maxWidth: 150),
-                            prefixIcon: Icon(
-                              Symbols.search,
+                            prefixIcon: Icon(IosSymbols.search(context),
                               size: 18,
                               color: cs.onSurfaceVariant,
                             ),
@@ -300,8 +299,8 @@ class _AddMembersCardState extends State<_AddMembersCard> {
             ),
             Icon(
               selected
-                  ? Symbols.check_circle
-                  : Symbols.radio_button_unchecked,
+                  ? IosSymbols.checkCircle(context)
+                  : IosSymbols.radioUnchecked(context),
               fill: selected ? 1 : 0,
               color: selected ? cs.primary : cs.outline,
               size: 24,
@@ -465,7 +464,7 @@ class _InviteLinkCard extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Symbols.content_copy, color: cs.primary),
+                          icon: Icon(IosSymbols.copy(context), color: cs.primary),
                           onPressed: () => _copy(context),
                         ),
                       ],
@@ -481,7 +480,7 @@ class _InviteLinkCard extends StatelessWidget {
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: () => _copy(context),
-                      icon: const Icon(Symbols.content_copy, size: 20),
+                      icon: Icon(IosSymbols.copy(context), size: 20),
                       label: Text(l10n.sharedCopyLink),
                     ),
                   ),

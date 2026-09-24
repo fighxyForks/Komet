@@ -481,7 +481,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
     return SettingsCard(
       children: [
         SettingsToggleTile(
-          icon: Symbols.security,
+          icon: IosSymbols.security(context),
           label: l10n.spoofEnableTitle,
           subtitle: _spoofingEnabled
               ? l10n.spoofEnableSubtitleOn

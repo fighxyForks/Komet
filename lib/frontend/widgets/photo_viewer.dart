@@ -7,7 +7,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../backend/modules/messages.dart';
@@ -819,8 +818,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                                     )
                                   else
                                     IconButton(
-                                      icon: const Icon(
-                                        Symbols.close,
+                                      icon: Icon(IosSymbols.close(context),
                                         color: Colors.white,
                                       ),
                                       onPressed: () =>
@@ -848,8 +846,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                                                   _openMenu(btnContext),
                                             )
                                           : IconButton(
-                                              icon: const Icon(
-                                                Symbols.more_vert,
+                                              icon: Icon(IosSymbols.ellipsis(context),
                                                 color: Colors.white,
                                               ),
                                               onPressed: () =>
@@ -1148,7 +1145,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
   }
 
   Widget _broken() =>
-      const Icon(Symbols.broken_image, color: Colors.white54, size: 64);
+      Icon(IosSymbols.brokenImage(context), color: Colors.white54, size: 64);
 }
 
 class _VideoPlaybackSession extends ChangeNotifier {
@@ -1421,7 +1418,7 @@ class _VideoSurface extends StatelessWidget {
                         aspectRatio: session.value!.aspectRatio,
                         child: VideoPlayer(session._controller!),
                       )
-                    : _buildVideoPreview(session.attachment),
+                    : _buildVideoPreview(context, session.attachment),
               ),
             ),
             if (session.loading || session.buffering)
@@ -1432,20 +1429,20 @@ class _VideoSurface extends StatelessWidget {
     );
   }
 
-  Widget _buildVideoPreview(VideoAttachment attachment) {
+  Widget _buildVideoPreview(BuildContext context, VideoAttachment attachment) {
     final url =
         attachment.thumbnail ??
         attachment.baseUrl ??
         attachment.previewData ??
         '';
     if (url.isEmpty) {
-      return const Icon(Symbols.videocam, color: Colors.white38, size: 64);
+      return Icon(IosSymbols.videocam(context), color: Colors.white38, size: 64);
     }
     return CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.contain,
       errorWidget: (_, _, _) =>
-          const Icon(Symbols.videocam, color: Colors.white38, size: 64),
+          Icon(IosSymbols.videocam(context), color: Colors.white38, size: 64),
     );
   }
 }
@@ -1464,7 +1461,7 @@ class _VideoErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Symbols.error, color: Colors.white54, size: 64),
+          Icon(IosSymbols.error(context), color: Colors.white54, size: 64),
           const SizedBox(height: 12),
           Text(
             l10n.videoViewerFailed,
@@ -1787,7 +1784,7 @@ class _VideoSettingsButton extends StatelessWidget {
       key: const ValueKey('video-settings'),
       color: MediaAccent.schemeOf(context).surfaceContainerHigh,
       tooltip: l10n.videoViewerSettings,
-      icon: const Icon(Symbols.settings, color: Colors.white),
+      icon: Icon(IosSymbols.settingsGear(context), color: Colors.white),
       onSelected: (value) {
         if (value.startsWith('speed:')) {
           onSpeedChanged(double.parse(value.substring(6)));
@@ -1851,7 +1848,7 @@ class _SettingChoice extends StatelessWidget {
           child: Text(label, style: const TextStyle(color: Colors.white)),
         ),
         if (selected)
-          Icon(Symbols.check, color: MediaAccent.of(context), size: 18),
+          Icon(IosSymbols.check(context), color: MediaAccent.of(context), size: 18),
       ],
     );
   }

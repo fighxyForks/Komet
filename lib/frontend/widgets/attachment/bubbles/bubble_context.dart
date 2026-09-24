@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../../backend/modules/messages.dart';
 import '../../../../core/config/app_bubble_behavior.dart';
@@ -45,6 +45,7 @@ class BubblePresentation {
 
 ({IconData icon, Color color}) messageStatusVisual(
   String? status, {
+  required BuildContext context,
   required Color dimColor,
   Color readColor = kReadReceiptBlue,
   Color errorColor = Colors.redAccent,
@@ -52,18 +53,18 @@ class BubblePresentation {
   switch (status) {
     case 'sending':
     case 'pending':
-      return (icon: Symbols.schedule, color: dimColor);
+      return (icon: IosSymbols.schedule(context), color: dimColor);
     case null:
     case 'sent':
-      return (icon: Symbols.check, color: dimColor);
+      return (icon: IosSymbols.check(context), color: dimColor);
     case 'delivered':
-      return (icon: Symbols.done_all, color: dimColor);
+      return (icon: IosSymbols.doneAll(context), color: dimColor);
     case 'read':
-      return (icon: Symbols.done_all, color: readColor);
+      return (icon: IosSymbols.doneAll(context), color: readColor);
     case 'error':
-      return (icon: Symbols.error, color: errorColor);
+      return (icon: IosSymbols.error(context), color: errorColor);
     default:
-      return (icon: Symbols.check, color: dimColor);
+      return (icon: IosSymbols.check(context), color: dimColor);
   }
 }
 
@@ -305,7 +306,7 @@ class BubbleContext {
           ),
           if (message.deleted) ...[
             const SizedBox(width: 3),
-            const Icon(Symbols.delete, size: 11, color: Colors.white),
+            Icon(IosSymbols.delete(context), size: 11, color: Colors.white),
           ],
           if (isMe) ...[
             const SizedBox(width: 3),
@@ -316,7 +317,7 @@ class BubbleContext {
     );
   }
 
-  Widget deletedIcon() => Icon(Symbols.delete, size: 13, color: dim);
+  Widget deletedIcon() => Icon(IosSymbols.delete(context), size: 13, color: dim);
 
   Widget statusIcon({Color? color, double size = 14}) {
     final base = overrideStatus ?? message.status;
@@ -342,7 +343,7 @@ class BubbleContext {
   }
 
   Widget _statusIconFor(String? status, {Color? color, double size = 14}) {
-    final v = messageStatusVisual(status, dimColor: color ?? dim);
+    final v = messageStatusVisual(status, context: context, dimColor: color ?? dim);
     if (isSendingStatus(status)) {
       return SendingClockIcon(color: v.color, size: size);
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/chats.dart';
 import '../../../core/config/app_fonts.dart';
@@ -111,8 +112,7 @@ class _JoinRequestsScreenState extends State<JoinRequestsScreen>
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
-              Symbols.arrow_back,
+            icon: Icon(IosSymbols.back(context),
               color: cs.onSurface,
               size: 24,
               weight: 400,
@@ -192,12 +192,12 @@ class _JoinRequestsScreenState extends State<JoinRequestsScreen>
               SmallSpinner(size: 20, color: cs.primary)
             else ...[
               IconButton(
-                icon: Icon(Symbols.check_circle, color: cs.primary, size: 26),
+                icon: Icon(IosSymbols.checkCircle(context), color: cs.primary, size: 26),
                 tooltip: l10n.joinRequestsApprove,
                 onPressed: () => _resolve(m, approve: true),
               ),
               IconButton(
-                icon: Icon(Symbols.cancel, color: cs.error, size: 26),
+                icon: Icon(IosSymbols.clearFill(context), color: cs.error, size: 26),
                 tooltip: l10n.joinRequestsDecline,
                 onPressed: () => _resolve(m, approve: false),
               ),

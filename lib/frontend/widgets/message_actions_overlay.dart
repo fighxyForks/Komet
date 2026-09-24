@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/config/app_message_actions_style.dart';
 import '../../core/utils/emoji_keyword_index.dart';
@@ -1223,8 +1222,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: _toggleReactionsExpanded,
-          child: Icon(
-            Symbols.keyboard_arrow_down,
+          child: Icon(IosSymbols.keyboardDown(context),
             color: cs.onSurfaceVariant,
             size: 24,
           ),
@@ -1363,7 +1361,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       },
       child: Padding(
         padding: const EdgeInsets.all(10),
-        child: Icon(Symbols.arrow_back, color: cs.onSurface, size: 20),
+        child: Icon(IosSymbols.back(context), color: cs.onSurface, size: 20),
       ),
     ),
   );
@@ -1919,7 +1917,7 @@ class _ReactionEmojiPickerState extends State<_ReactionEmojiPicker> {
         child: Row(
           children: [
             const SizedBox(width: 12),
-            Icon(Symbols.search, size: 22, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.search(context), size: 22, color: cs.onSurfaceVariant),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
@@ -1948,8 +1946,7 @@ class _ReactionEmojiPickerState extends State<_ReactionEmojiPicker> {
                 onTap: _clearSearch,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Icon(
-                    Symbols.close,
+                  child: Icon(IosSymbols.close(context),
                     size: 20,
                     color: cs.onSurfaceVariant,
                   ),

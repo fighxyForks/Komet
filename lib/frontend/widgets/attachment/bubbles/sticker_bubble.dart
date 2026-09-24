@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../../models/attachment.dart';
 import '../../lottie_image.dart';
@@ -78,7 +78,7 @@ class StickerBubble extends StatelessWidget {
           ],
           if (ctx.message.deleted) ...[
             const SizedBox(width: 3),
-            const Icon(Symbols.delete, size: 12, color: Colors.white),
+            Icon(IosSymbols.delete(ctx.context), size: 12, color: Colors.white),
           ],
         ],
       ),
@@ -87,7 +87,7 @@ class StickerBubble extends StatelessWidget {
 
   Widget _buildStickerStatusIcon() {
     final status = ctx.overrideStatus ?? ctx.message.status;
-    final v = messageStatusVisual(status, dimColor: Colors.white);
+    final v = messageStatusVisual(status, context: ctx.context, dimColor: Colors.white);
     if (isSendingStatus(status)) {
       return SendingClockIcon(color: v.color, size: 13);
     }

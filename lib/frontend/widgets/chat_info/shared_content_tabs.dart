@@ -809,7 +809,7 @@ class _MediaTile extends StatelessWidget {
                 memCacheWidth: 300,
                 fadeInDuration: const Duration(milliseconds: 120),
                 errorWidget: (_, _, _) => Icon(
-                  video != null ? Symbols.movie : Symbols.image,
+                  video != null ? IosSymbols.movie(context) : IosSymbols.photo(context),
                   color: cs.onSurfaceVariant.withValues(alpha: 0.4),
                 ),
               ),
@@ -823,8 +823,8 @@ class _MediaTile extends StatelessWidget {
                   ),
                 ),
               ),
-              const Center(
-                child: Icon(Symbols.play_arrow, color: Colors.white, size: 34),
+              Center(
+                child: Icon(IosSymbols.play(context), color: Colors.white, size: 34),
               ),
               if (duration > 0)
                 Positioned(

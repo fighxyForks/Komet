@@ -800,7 +800,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 if (BuildProfile.spoofUi)
                   ListTile(
-                    leading: Icon(Symbols.security, color: cs.onSurface),
+                    leading: Icon(IosSymbols.security(context), color: cs.onSurface),
                     title: Text(
                       l10n.loginSpoofRedacted,
                       style: TextStyle(
@@ -820,7 +820,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                 ListTile(
-                  leading: Icon(Symbols.vpn_lock, color: cs.onSurface),
+                  leading: Icon(IosSymbols.vpnLock(context), color: cs.onSurface),
                   title: Text(
                     l10n.loginProxy,
                     style: TextStyle(
@@ -876,7 +876,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 if (BuildProfile.qrLogin)
                   ListTile(
-                    leading: Icon(Symbols.qr_code_2, color: cs.onSurface),
+                    leading: Icon(IosSymbols.qrCode(context), color: cs.onSurface),
                     title: Text(
                       l10n.loginSignInWithQr,
                       style: TextStyle(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/prompt_dialog.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../../main.dart' show accountModule;
 import '../../../core/storage/app_database.dart';
 import '../../../l10n/app_localizations.dart';
@@ -369,7 +368,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
             children: [
               _buildActionRow(
                 cs,
-                icon: Symbols.password,
+                icon: IosSymbols.password(context),
                 label: l10n.passwordEntryChangePasswordAction,
                 isLast: false,
                 onTap: () => _openWithPassword(
@@ -382,7 +381,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
               ),
               _buildActionRow(
                 cs,
-                icon: Symbols.mail,
+                icon: IosSymbols.mail(context),
                 label: l10n.passwordEntryChangeEmailAction,
                 isLast: false,
                 onTap: () => _openWithPassword(

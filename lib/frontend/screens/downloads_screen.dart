@@ -196,8 +196,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: ListTile(
-            leading: Icon(
-              Symbols.delete_sweep,
+            leading: Icon(IosSymbols.deleteSweep(context),
               color: Theme.of(sheetContext).colorScheme.error,
             ),
             title: Text(l10n.downloadsClearHistory),
@@ -217,7 +216,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       anchorRect: anchor,
       items: [
         ChatMenuItem(
-          icon: Symbols.delete_sweep,
+          icon: IosSymbols.deleteSweep(context),
           label: l10n.downloadsClearHistory,
           destructive: true,
           onTap: () => unawaited(_confirmClear()),
@@ -453,7 +452,7 @@ class _DownloadTile extends StatelessWidget {
                 icon: Icon(
                   IosGlass.of(context)
                       ? IosSymbols.ellipsisHoriz(context)
-                      : Symbols.more_vert,
+                      : IosSymbols.ellipsis(context),
                   color: cs.onSurfaceVariant,
                 ),
                 onPressed: () => _openMenu(buttonContext),

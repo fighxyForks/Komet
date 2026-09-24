@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/prompt_dialog.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -334,7 +335,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
         backgroundColor: cs.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface, weight: 400),
+          icon: Icon(IosSymbols.back(context), color: cs.onSurface, weight: 400),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -386,7 +387,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
                     SettingsCard(
                       children: [
                         SettingsToggleTile(
-                          icon: Symbols.verified_user,
+                          icon: IosSymbols.verifiedUser(context),
                           label: l10n.e2eeVerified,
                           value: info?.verified ?? false,
                           onChanged: (value) => _service.setVerified(

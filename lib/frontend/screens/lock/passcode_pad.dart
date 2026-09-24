@@ -183,7 +183,7 @@ class PasscodeKeypad extends StatelessWidget {
                       enabled: true,
                       onTap: onBiometric!,
                       child: Icon(
-                        biometricIcon == Symbols.fingerprint
+                        biometricIcon == IosSymbols.fingerprint(context)
                             ? IosSymbols.fingerprint(context)
                             : biometricIcon,
                         size: 32 * scale,

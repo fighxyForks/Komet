@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../backend/modules/contacts.dart';
@@ -41,14 +41,14 @@ void showPhoneEntityMenu(
     header: _PhoneOwnerHeader(phone: phone),
     items: [
       ChatMenuItem(
-        icon: Symbols.content_copy,
+        icon: IosSymbols.copy(context),
         label: 'Скопировать номер телефона',
         onTap: () => copyTextEntity(context, phone, 'Номер скопирован'),
       ),
       if (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS)
         ChatMenuItem(
-          icon: Symbols.call,
+          icon: IosSymbols.phone(context),
           label: 'Позвонить',
           onTap: () => _dial(context, phone),
         ),
@@ -67,7 +67,7 @@ void showCardEntityMenu(
     compact: true,
     items: [
       ChatMenuItem(
-        icon: Symbols.content_copy,
+        icon: IosSymbols.copy(context),
         label: 'Скопировать номер карты',
         onTap: () => copyTextEntity(context, digits, 'Номер карты скопирован'),
       ),

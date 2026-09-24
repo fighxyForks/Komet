@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/config/app_colors.dart';
 import '../../../l10n/app_localizations.dart';
@@ -323,7 +323,7 @@ class _VideoAdjustEditorState extends State<VideoAdjustEditor> {
                         ),
                       ),
                       const Spacer(),
-                      Icon(Symbols.tune, color: MediaAccent.of(context)),
+                      Icon(IosSymbols.tune(context), color: MediaAccent.of(context)),
                       const Spacer(),
                       TextButton(
                         onPressed: _busy ? null : _done,
@@ -411,7 +411,7 @@ class _VideoQualityEditorState extends State<VideoQualityEditor> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Symbols.arrow_back),
+          icon: Icon(IosSymbols.back(context)),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: VideoHeaderTitle(

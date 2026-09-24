@@ -208,7 +208,7 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
             _PreviewCard(fontId: currentId),
             const SizedBox(height: 28),
             _SectionLabel(
-              icon: Symbols.text_fields,
+              icon: IosSymbols.textFields(context),
               text: l10n.fontSettingsSectionFont,
             ),
             const SizedBox(height: 14),
@@ -236,7 +236,7 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
                 onPressed: _adding ? null : _showAddFontDialog,
                 style: ButtonM3EStyle.outlined,
                 size: ButtonM3ESize.md,
-                icon: Icon(_adding ? Symbols.hourglass_top : Symbols.add),
+                icon: Icon(_adding ? IosSymbols.hourglass(context) : IosSymbols.add(context)),
                 label: Text(
                   _adding
                       ? l10n.fontSettingsLoading
@@ -385,8 +385,8 @@ class _FontOption extends StatelessWidget {
       selected: selected,
       icon: Icon(
         selected
-            ? Symbols.check_circle
-            : (font.isSystem ? Symbols.smartphone : Symbols.font_download),
+            ? IosSymbols.checkCircle(context)
+            : (font.isSystem ? IosSymbols.smartphone(context) : IosSymbols.textFields(context)),
         fill: selected ? 1 : 0,
       ),
       label: Text(font.label, style: AppFonts.sample(font.id, fontSize: 16)),
@@ -561,7 +561,7 @@ class _AddFontDialogState extends State<_AddFontDialog> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => Navigator.pop(context, const _AddFontFromFile()),
-              icon: const Icon(Symbols.upload_file, size: 20),
+              icon: Icon(IosSymbols.uploadFile(context), size: 20),
               label: Text(l10n.fontSettingsPickFile),
             ),
           ),

@@ -1962,7 +1962,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
             ),
           ),
           IconButton(
-            icon: Icon(Symbols.qr_code_2, color: cs.primary, size: 22),
+            icon: Icon(IosSymbols.qrCode(context), color: cs.primary, size: 22),
             onPressed: () => showLinkQrSheet(
               context,
               name: widget.name,
@@ -2330,7 +2330,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(Symbols.expand_more, color: cs.primary, size: 26),
+            Icon(IosSymbols.expandMore(context), color: cs.primary, size: 26),
             const SizedBox(width: 14),
             Text(
               l10n.chatInfoShowMore,
@@ -2792,7 +2792,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       icon: AnimatedRotation(
         turns: _extraContactExpanded ? 0.125 : 0,
         duration: const Duration(milliseconds: 220),
-        child: Icon(Symbols.add_circle, color: cs.primary, size: 22),
+        child: Icon(IosSymbols.addCircle(context), color: cs.primary, size: 22),
       ),
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

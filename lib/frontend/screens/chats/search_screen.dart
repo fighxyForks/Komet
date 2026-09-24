@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../main.dart';
 import '../../../backend/modules/chats.dart';
@@ -247,7 +246,7 @@ class _SearchScreenState extends State<SearchScreen> {
         scrolledUnderElevation: 0,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+          icon: Icon(IosSymbols.back(context), color: cs.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: TextField(
@@ -266,7 +265,7 @@ class _SearchScreenState extends State<SearchScreen> {
         actions: [
           if (query.isNotEmpty)
             IconButton(
-              icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+              icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
               onPressed: _clear,
             ),
         ],

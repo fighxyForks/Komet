@@ -10,6 +10,7 @@ import '../../widgets/prompt_dialog.dart';
 import '../../widgets/glass/ios_alert.dart';
 import '../../widgets/glass/ios_glass.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/plugins/plugin_installer.dart';
 import '../../../core/plugins/plugin_models.dart';
@@ -110,7 +111,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
               children: [
                 Icon(
                   preview.signatureStatus == PluginSignatureStatus.verified
-                      ? Symbols.verified_user
+                      ? IosSymbols.verifiedUser(context)
                       : Symbols.gpp_maybe,
                   size: 20,
                 ),
@@ -139,7 +140,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Symbols.check, size: 18),
+                      Icon(IosSymbols.check(context), size: 18),
                       const SizedBox(width: 8),
                       Expanded(child: Text(permission.label)),
                     ],
@@ -256,19 +257,19 @@ class _PluginsScreenState extends State<PluginsScreen> {
               anchorRect: origin & box.size,
               items: [
                 ChatMenuItem(
-                  icon: Symbols.upload_file,
+                  icon: IosSymbols.uploadFile(context),
                   label: 'Установить .kinet',
                   onTap: _installFile,
                 ),
                 ChatMenuItem(
-                  icon: Symbols.link,
+                  icon: IosSymbols.link(context),
                   label: 'Установить по URL',
                   onTap: _installUrl,
                 ),
               ],
             );
           },
-          child: Icon(Symbols.more_horiz, color: cs.primary),
+          child: Icon(IosSymbols.ellipsisHoriz(context), color: cs.primary),
         ),
       ),
       body: ValueListenableBuilder<List<PluginDescriptor>>(
@@ -316,7 +317,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     ),
                   if (plugin.origin == PluginOrigin.installed)
                     ListTile(
-                      leading: Icon(Symbols.delete, color: cs.error),
+                      leading: Icon(IosSymbols.delete(context), color: cs.error),
                       title: Text('Удалить', style: TextStyle(color: cs.error)),
                       onTap: () => _uninstall(plugin),
                     ),

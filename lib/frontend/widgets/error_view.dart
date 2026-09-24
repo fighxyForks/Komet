@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 class ErrorView extends StatelessWidget {
   final String message;
@@ -22,7 +22,7 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.cloud_off, size: 48, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.cloudOff(context), size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 16),
             Text(
               message,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/calls/call_session.dart';
 import '../../../core/games/checkers.dart';
@@ -106,7 +107,7 @@ class _KometHubState extends State<_KometHub> {
           IconButton(
             onPressed: _back,
             icon: Icon(
-              _page == _HubPage.menu ? Symbols.close : Symbols.arrow_back,
+              _page == _HubPage.menu ? IosSymbols.close(context) : IosSymbols.back(context),
               color: cs.onSurface,
             ),
           ),
@@ -219,7 +220,7 @@ class _KometHubState extends State<_KometHub> {
         style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
       ),
       trailing: enabled
-          ? Icon(Symbols.chevron_right, color: cs.onSurfaceVariant)
+          ? Icon(IosSymbols.chevronRight(context), color: cs.onSurfaceVariant)
           : null,
     );
   }
@@ -287,7 +288,7 @@ class _KometChatViewState extends State<_KometChatView> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
           child: Row(
             children: [
-              Icon(Symbols.lock, size: 16, color: cs.primary, fill: 1),
+              Icon(IosSymbols.lock(context), size: 16, color: cs.primary, fill: 1),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -383,7 +384,7 @@ class _KometChatViewState extends State<_KometChatView> {
           const SizedBox(width: 8),
           IconButton.filled(
             onPressed: _send,
-            icon: const Icon(Symbols.send, fill: 1),
+            icon: Icon(IosSymbols.send(context), fill: 1),
           ),
         ],
       ),
@@ -529,7 +530,7 @@ class _CheckersViewState extends State<_CheckersView> {
               ),
               TextButton.icon(
                 onPressed: _reset,
-                icon: const Icon(Symbols.refresh, size: 20),
+                icon: Icon(IosSymbols.refresh(context), size: 20),
                 label: Text(l10n.hubCheckersRestart),
               ),
             ],

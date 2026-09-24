@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/storage/app_database.dart';
 import '../screens/calls/call_screen.dart';
@@ -53,8 +54,7 @@ class DebugPreviewsSection extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Symbols.celebration,
+                    Icon(IosSymbols.autoAwesome(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -83,8 +83,7 @@ class DebugPreviewsSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Icon(
-                      Symbols.chevron_right,
+                    Icon(IosSymbols.chevronRight(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -121,7 +120,7 @@ class DebugPreviewsSection extends StatelessWidget {
                 const SizedBox(height: 12),
                 _DebugCallButton(
                   label: 'Экран звонка (превью)',
-                  icon: Symbols.phone,
+                  icon: IosSymbols.phone(context),
                   onTap: () => Navigator.push(
                     context,
                     iosPageRoute(context,
@@ -201,7 +200,7 @@ class DebugPreviewsSection extends StatelessWidget {
                     Expanded(
                       child: _DebugCallButton(
                         label: 'После регистрации',
-                        icon: Symbols.hourglass_top,
+                        icon: IosSymbols.hourglass(context),
                         onTap: () => showAuthLimitsSheet(
                           context,
                           AuthEntry.registration,

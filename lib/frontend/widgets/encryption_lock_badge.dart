@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 // #***! замок с галочкой когда код безопасности сверен лично
 class EncryptionLockBadge extends StatelessWidget {
@@ -27,7 +27,7 @@ class EncryptionLockBadge extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Icon(
-        verified ? Symbols.verified_user : Symbols.lock,
+        verified ? IosSymbols.verifiedUser(context) : IosSymbols.lock(context),
         size: size * 0.62,
         weight: 700,
         fill: 1,
