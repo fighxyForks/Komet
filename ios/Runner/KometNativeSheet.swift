@@ -137,7 +137,7 @@ final class KometNativeSheet: NSObject, UISheetPresentationControllerDelegate {
   }
 
   private func cleanup() {
-    sheetController?.engine?.destroyContext()
+    sheetEngine?.destroyContext()
     sheetController = nil
     sheetEngine = nil
     hostingController = nil
