@@ -65,6 +65,7 @@ import '../../widgets/account_switcher_overlay.dart';
 import 'chat/view/chat_list_shimmer.dart';
 import 'chat/view/chat_list_tile.dart';
 import 'chat/view/ios_chat_row.dart';
+import 'chat/view/stories_scroll_hysteresis.dart';
 import 'chat/view/chat_preview_line.dart';
 import '../../widgets/connection_status.dart';
 import '../../../backend/api.dart';
@@ -324,6 +325,8 @@ class _ChatListScreenState extends State<ChatListScreen>
   final GlobalKey _archiveEntryKey = GlobalKey();
 
   final _StoriesUi _storiesUi = _StoriesUi();
+  final ValueNotifier<bool> _listScrollActive = ValueNotifier<bool>(false);
+  Timer? _listScrollOpaqueHold;
   double get _pullRatio => _storiesUi.pullRatio;
   set _pullRatio(double v) => _storiesUi.pullRatio = v;
   bool get _storiesDockedOpen => _storiesUi.dockedOpen;
@@ -333,6 +336,8 @@ class _ChatListScreenState extends State<ChatListScreen>
       _storiesUi.overscrollRevealArmed = v;
   bool get _shouldCollapseSearch => _storiesUi.shouldCollapseSearch;
   set _shouldCollapseSearch(bool v) => _storiesUi.shouldCollapseSearch = v;
+  bool get _storiesCloseArmed => _storiesUi.storiesCloseArmed;
+  set _storiesCloseArmed(bool v) => _storiesUi.storiesCloseArmed = v;
 
   bool _navDragging = false;
   bool _isFabOpen = false;
@@ -1500,18 +1505,32 @@ class _ChatListScreenState extends State<ChatListScreen>
         }
       }
     } else {
-      if (offset > 3) _archivePullArmed = false;
+      if (offset > StoriesScrollHysteresis.disarmOverscrollAbove) {
+        _archivePullArmed = false;
+      }
       _collapseArchiveIfScrolledPast(c);
-      if (_storiesDockedOpen &&
-          offset > 12 &&
+      _storiesCloseArmed = StoriesScrollHysteresis.nextCloseArmed(
+        dockedOpen: _storiesDockedOpen,
+        offset: offset,
+        closeArmed: _storiesCloseArmed,
+      );
+      if (StoriesScrollHysteresis.shouldCloseStories(
+            dockedOpen: _storiesDockedOpen,
+            offset: offset,
+            closeArmed: _storiesCloseArmed,
+          ) &&
           DateTime.now().isAfter(_storiesRevealLayoutSettleUntil)) {
         _startStoriesAutoClose();
       }
       if (_storiesDockedOpen || _storiesRevealController.isAnimating) {
         return;
       }
-      final disarm = offset > 3 && _storiesOverscrollRevealArmed;
-      final clearPull = _pullRatio > 0;
+      final disarm = offset > StoriesScrollHysteresis.disarmOverscrollAbove &&
+          _storiesOverscrollRevealArmed;
+      final clearPull = StoriesScrollHysteresis.shouldClearPullRatio(
+        offset: offset,
+        pullRatio: _pullRatio,
+      );
       if (disarm || clearPull) {
         if (disarm) _storiesOverscrollRevealArmed = false;
         if (clearPull) _pullRatio = 0.0;
@@ -1566,6 +1585,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         _storiesDockedOpen = false;
         _storiesAnimClosing = false;
         _storiesOverscrollRevealArmed = true;
+        _storiesCloseArmed = false;
       } else {
         _pullRatio = 1.0;
         _storiesDockedOpen = true;
@@ -1631,6 +1651,22 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   bool _handleStoriesScrollNotification(ScrollNotification n) {
     if (_currentNavIndex != 0) return false;
+
+    final ending = n is ScrollEndNotification;
+    final dragging = n is ScrollUpdateNotification ||
+        n is ScrollStartNotification ||
+        n is OverscrollNotification;
+    if (dragging) {
+      _listScrollOpaqueHold?.cancel();
+      if (!_listScrollActive.value) {
+        _listScrollActive.value = true;
+      }
+    } else if (ending) {
+      _listScrollOpaqueHold?.cancel();
+      _listScrollOpaqueHold = Timer(const Duration(milliseconds: 120), () {
+        if (mounted) _listScrollActive.value = false;
+      });
+    }
 
     if (n is ScrollEndNotification) {
       if (n.metrics.pixels <= 0.5) {
@@ -1710,6 +1746,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
     _contactRebuildTimer?.cancel();
     _storiesUi.dispose();
+    _listScrollOpaqueHold?.cancel();
+    _listScrollActive.dispose();
     _navDragDx.dispose();
     super.dispose();
   }
@@ -1945,8 +1983,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                                     ),
                                                     visualDensity:
                                                         VisualDensity.compact,
-                                                    icon: Icon(
-                                                      Symbols.arrow_back,
+                                                    icon: Icon(IosSymbols.back(context),
                                                       color: cs.onSurface,
                                                       weight: 500,
                                                     ),
@@ -2039,8 +2076,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                             tooltip: AppLocalizations.of(
                                               context,
                                             )!.downloadsTooltip,
-                                            icon: Icon(
-                                              Symbols.download_for_offline,
+                                            icon: Icon(IosSymbols.downloadOffline(context),
                                               color: cs.outline,
                                               weight: 400,
                                             ),
@@ -2052,8 +2088,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                             !_shareMode)
                                           const _LockNowButton(),
                                         PopupMenuButton<int>(
-                                          icon: Icon(
-                                            Symbols.more_vert,
+                                          icon: Icon(IosSymbols.ellipsis(context),
                                             color: cs.outline,
                                             weight: 400,
                                           ),
@@ -2122,8 +2157,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                         height: 44,
                                         child: Row(
                                           children: [
-                                            Icon(
-                                              Symbols.search,
+                                            Icon(IosSymbols.search(context),
                                               color: cs.outline,
                                               size: 20,
                                               weight: 400,
@@ -2639,21 +2673,25 @@ class _ChatListScreenState extends State<ChatListScreen>
                             4) /
                         inactiveWidth
                   : _currentNavIndex.toDouble();
-              return SlidingPillNav(
-                items: ios ? _iosNavItems : _chatsNavItems,
-                badges: badges,
-                position: position,
-                animationDuration: _navDragging
-                    ? Duration.zero
-                    : const Duration(milliseconds: 350),
-                geometry: geometry,
-                iconSize: 20,
-                labelGap: 4,
-                backdropKey: _frostBackdrop,
-                onTap: _onNavTabSelected,
-                onItemLongPress: (index, pos) {
-                  if (index == 3) _openAccountSwitcher(pos);
-                },
+              return ValueListenableBuilder<bool>(
+                valueListenable: _listScrollActive,
+                builder: (context, scrollActive, _) => SlidingPillNav(
+                  items: ios ? _iosNavItems : _chatsNavItems,
+                  badges: badges,
+                  position: position,
+                  animationDuration: _navDragging
+                      ? Duration.zero
+                      : const Duration(milliseconds: 350),
+                  geometry: geometry,
+                  iconSize: 20,
+                  labelGap: 4,
+                  backdropKey: _frostBackdrop,
+                  forceOpaque: scrollActive,
+                  onTap: _onNavTabSelected,
+                  onItemLongPress: (index, pos) {
+                    if (index == 3) _openAccountSwitcher(pos);
+                  },
+                ),
               );
             },
           ),
@@ -2859,20 +2897,27 @@ class _ChatListScreenState extends State<ChatListScreen>
                                       final frost =
                                           style.glossyChrome &&
                                           NavPillMaterial.isFrost(navStyle);
-                                      return GlossyPill(
-                                        onTap: _toggleFab,
-                                        color: frost || liquid
-                                            ? AppFrost.glassTint(cs)
-                                            : cs.primaryContainer,
-                                        blurSigma: frost
-                                            ? AppFrost.sigma
-                                            : null,
-                                        liquid: liquid,
-                                        backdropKey: _frostBackdrop,
-                                        borderRadius: BorderRadius.circular(28),
-                                        elevated: true,
-                                        depth: 12,
-                                        child: child!,
+                                      return ValueListenableBuilder<bool>(
+                                        valueListenable: _listScrollActive,
+                                        builder: (context, scrollActive, pillChild) =>
+                                            GlossyPill(
+                                          onTap: _toggleFab,
+                                          color: frost || liquid
+                                              ? AppFrost.glassTint(cs)
+                                              : cs.primaryContainer,
+                                          blurSigma: frost
+                                              ? AppFrost.sigma
+                                              : null,
+                                          liquid: liquid,
+                                          forceOpaque: scrollActive,
+                                          backdropKey: _frostBackdrop,
+                                          borderRadius:
+                                              BorderRadius.circular(28),
+                                          elevated: true,
+                                          depth: 12,
+                                          child: pillChild!,
+                                        ),
+                                        child: child,
                                       );
                                     },
                                     child: child,
@@ -2883,8 +2928,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                 child: Center(
                                   child: Transform.rotate(
                                     angle: val * (pi / 4),
-                                    child: Icon(
-                                      Symbols.add,
+                                    child: Icon(IosSymbols.add(context),
                                       color: cs.onPrimaryContainer,
                                       size: 28,
                                       weight: 400,
@@ -2961,7 +3005,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         child: Row(
           children: [
             IconButton(
-              icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+              icon: Icon(IosSymbols.back(context), color: cs.onSurface),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
             const SizedBox(width: 4),
@@ -3053,8 +3097,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             CircleAvatar(
               radius: 24,
               backgroundColor: cs.surfaceContainerHighest,
-              child: Icon(
-                Symbols.archive,
+              child: Icon(IosSymbols.archive(context),
                 color: cs.onSurfaceVariant,
                 weight: 500,
               ),
@@ -3098,7 +3141,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                 );
               },
             ),
-            Icon(Symbols.chevron_right, color: cs.outline),
+            Icon(IosSymbols.chevronRight(context), color: cs.outline),
           ],
         ),
       ),
@@ -3134,7 +3177,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             return Row(
               children: [
                 IconButton(
-                  icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+                  icon: Icon(IosSymbols.back(context), color: cs.onSurface),
                   onPressed: _clearSelection,
                 ),
                 const SizedBox(width: 8),
@@ -3149,26 +3192,26 @@ class _ChatListScreenState extends State<ChatListScreen>
                 const Spacer(),
                 if (deleteCategory != null)
                   IconButton(
-                    icon: Icon(Symbols.delete, color: cs.onSurface),
+                    icon: Icon(IosSymbols.delete(context), color: cs.onSurface),
                     onPressed: _onDeleteTap,
                   ),
                 IconButton(
                   icon: Icon(
-                    widget.archiveMode ? Symbols.unarchive : Symbols.archive,
+                    widget.archiveMode ? IosSymbols.archive(context) : IosSymbols.archive(context),
                     color: cs.onSurface,
                   ),
                   onPressed: selected.isEmpty ? null : _onArchiveTap,
                 ),
                 IconButton(
                   icon: Icon(
-                    anyPinned ? Symbols.keep_off : Symbols.keep,
+                    anyPinned ? IosSymbols.pinOff(context) : IosSymbols.keep(context),
                     color: cs.onSurface,
                   ),
                   onPressed: selected.isEmpty ? null : _onPinTap,
                 ),
                 IconButton(
                   icon: Icon(
-                    anyMuted ? Symbols.volume_up : Symbols.volume_off,
+                    anyMuted ? IosSymbols.speaker(context) : IosSymbols.volumeOff(context),
                     color: cs.onSurface,
                   ),
                   onPressed: selected.isEmpty ? null : _onMuteTap,
@@ -3503,7 +3546,7 @@ class _ChatListScreenState extends State<ChatListScreen>
   Widget _ownStatusIcon(ColorScheme cs, String status, bool read) {
     final sending = isSendingStatus(status);
     final effective = (read && !sending && status != 'error') ? 'read' : status;
-    final visual = messageStatusVisual(effective, dimColor: cs.outline);
+    final visual = messageStatusVisual(effective, context: context, dimColor: cs.outline);
     return Padding(
       padding: const EdgeInsets.only(left: 6),
       child: sending
@@ -3708,7 +3751,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     return [
       if (hasUnread)
         ChatMenuItem(
-          icon: Symbols.done_all,
+          icon: IosSymbols.doneAll(context),
           label: l10n.chatPreviewMarkRead,
           onTap: () => unawaited(_markChatRead(chat.id)),
         ),
@@ -3730,14 +3773,14 @@ class _ChatListScreenState extends State<ChatListScreen>
         onTap: () => unawaited(_archiveChats([chat])),
       ),
       ChatMenuItem(
-        icon: Symbols.check_circle,
+        icon: IosSymbols.checkCircle(context),
         label: l10n.chatActionSelect,
         dividerAfter: canDelete,
         onTap: () => _toggleSelection(id),
       ),
       if (canDelete)
         ChatMenuItem(
-          icon: Symbols.delete,
+          icon: IosSymbols.delete(context),
           label: l10n.chatActionDelete,
           destructive: true,
           onTap: () => unawaited(_deleteChats({chat.id})),
@@ -3896,8 +3939,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             )
           : null,
       child: isSavedMessages
-          ? Icon(
-              Symbols.bookmark,
+          ? Icon(IosSymbols.bookmark(context),
               fill: 1,
               color: cs.onPrimary,
               size: ios ? 30 : (story == null ? 26 : 22),
@@ -3959,7 +4001,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                   shape: BoxShape.circle,
                   border: Border.all(color: cs.surface, width: 2),
                 ),
-                child: Icon(Symbols.check, color: cs.onPrimary, size: 14),
+                child: Icon(IosSymbols.check(context), color: cs.onPrimary, size: 14),
               ),
             )
           else if (hasCall)
@@ -4096,8 +4138,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                           ),
                                           if (isVerified) ...[
                                             const SizedBox(width: 4),
-                                            Icon(
-                                              Symbols.verified,
+                                            Icon(IosSymbols.verified(context),
                                               color: cs.primary,
                                               size: 16,
                                               weight: 600,
@@ -4109,8 +4150,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                     ),
                                     if (isMuted) ...[
                                       const SizedBox(width: 4),
-                                      Icon(
-                                        Symbols.notifications_off,
+                                      Icon(IosSymbols.notifications(context),
                                         color: cs.outlineVariant,
                                         size: 14,
                                         weight: 400,
@@ -4118,8 +4158,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                     ],
                                     if (isPinned) ...[
                                       const SizedBox(width: 4),
-                                      Icon(
-                                        Symbols.keep,
+                                      Icon(IosSymbols.keep(context),
                                         color: cs.outlineVariant,
                                         size: 14,
                                         weight: 400,
@@ -4161,8 +4200,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                         muted: isMuted,
                                       )
                                     else if (isRead)
-                                      Icon(
-                                        Symbols.done_all,
+                                      Icon(IosSymbols.doneAll(context),
                                         color: cs.primary,
                                         size: 16,
                                         weight: 400,
@@ -4284,22 +4322,22 @@ class _ChatListScreenState extends State<ChatListScreen>
       anchorRect: anchor,
       items: [
         ChatMenuItem(
-          icon: Symbols.group_add,
+          icon: IosSymbols.personAddGroup(context),
           label: 'Создать группу',
           onTap: () => showCreateGroupFlow(context),
         ),
         ChatMenuItem(
-          icon: Symbols.campaign,
+          icon: IosSymbols.campaign(context),
           label: 'Создать канал',
           onTap: () => showCreateChannelFlow(context),
         ),
         ChatMenuItem(
-          icon: Symbols.person_add,
+          icon: IosSymbols.personAdd(context),
           label: 'Создать контакт',
           onTap: () => showAddContactSheet(context),
         ),
         ChatMenuItem(
-          icon: Symbols.create_new_folder,
+          icon: IosSymbols.createNewFolder(context),
           label: 'Создать папку',
           onTap: () => showFolderEditSheet(context),
         ),
@@ -4389,7 +4427,7 @@ class _ChatListScreenState extends State<ChatListScreen>
           children: [
             GlassIconButton(
               key: const ValueKey('overflow-button'),
-              icon: Symbols.more_horiz,
+              icon: IosSymbols.ellipsisHoriz(context),
               tooltip: MaterialLocalizations.of(context).showMenuTooltip,
               onPressedAt: _showIosOverflowMenu,
             ),
@@ -4442,7 +4480,7 @@ class _ChatListScreenState extends State<ChatListScreen>
           ),
         GlassGroupItem(
           key: const ValueKey('overflow-button'),
-          icon: Symbols.more_horiz,
+          icon: IosSymbols.ellipsisHoriz(context),
           tooltip: MaterialLocalizations.of(context).showMenuTooltip,
           onPressedAt: _showIosOverflowMenu,
         ),
@@ -4463,12 +4501,12 @@ class _ChatListScreenState extends State<ChatListScreen>
           onTap: () => unawaited(_openDownloads()),
         ),
         ChatMenuItem(
-          icon: Symbols.bookmark,
+          icon: IosSymbols.bookmark(context),
           label: 'Избранное',
           onTap: () => _onOverflowMenuSelected(1),
         ),
         ChatMenuItem(
-          icon: Symbols.done_all,
+          icon: IosSymbols.doneAll(context),
           label: 'Прочитать всё',
           onTap: () => _onOverflowMenuSelected(2),
         ),
@@ -4488,7 +4526,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             !widget.archiveMode &&
             !_shareMode)
           ChatMenuItem(
-            icon: Symbols.lock,
+            icon: IosSymbols.lock(context),
             label: l10n.lockNow,
             onTap: () {
               Haptics.medium();
@@ -4648,6 +4686,7 @@ class _StoriesUi extends ChangeNotifier {
   bool dockedOpen = false;
   bool overscrollRevealArmed = true;
   bool shouldCollapseSearch = false;
+  bool storiesCloseArmed = false;
 
   void notify() => notifyListeners();
 }

@@ -126,6 +126,7 @@ import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class _DateSeparatorItem {
   final DateTime date;
@@ -217,6 +218,9 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver, ReloadOnReconnect {
+  final ValueNotifier<bool> _chatScrollActive = ValueNotifier<bool>(false);
+  Timer? _chatScrollOpaqueHold;
+
   final RichMessageController _messageController = RichMessageController();
   final FocusNode _messageFocusNode = FocusNode();
   double _keyboardReserve = 0;
@@ -2159,6 +2163,8 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _chatScrollOpaqueHold?.cancel();
+    _chatScrollActive.dispose();
     ChatScreen._open.remove(this);
     if (!_commentsMode && !widget.preview) {
       unawaited(NotificationBridge.instance.popActiveChat(widget.chatId));
@@ -2730,6 +2736,7 @@ class _ChatScreenState extends State<ChatScreen>
       forwardDisabled: chat?.forwardDisabled ?? false,
       replyDisabled: !_canReply,
       composerFrosted: _composerFrosted,
+      scrollOpaque: _chatScrollActive,
     );
   }
 
@@ -3181,7 +3188,7 @@ class _ChatScreenState extends State<ChatScreen>
       items: [
         if (_hasMiniApp)
           ChatMenuItem(
-            icon: Symbols.apps,
+            icon: IosSymbols.apps(context),
             label: AppLocalizations.of(context)!.miniAppOpen,
             dividerAfter: true,
             onTap: () => unawaited(_openMiniApp()),
@@ -3198,12 +3205,12 @@ class _ChatScreenState extends State<ChatScreen>
         ),
         if (!_searchInBottomBar)
           ChatMenuItem(
-            icon: Symbols.search,
+            icon: IosSymbols.search(context),
             label: 'Поиск',
             onTap: _openSearch,
           ),
         ChatMenuItem(
-          icon: Symbols.wallpaper,
+          icon: IosSymbols.wallpaper(context),
           label: 'Изменить обои',
           onTap: _openWallpaperSheet,
         ),
@@ -3218,7 +3225,7 @@ class _ChatScreenState extends State<ChatScreen>
           onTap: _openEncryptionSettings,
         ),
         ChatMenuItem(
-          icon: Symbols.delete,
+          icon: IosSymbols.delete(context),
           label: 'Удалить чат',
           onTap: _deleteChat,
         ),
@@ -4887,8 +4894,25 @@ class _ChatScreenState extends State<ChatScreen>
               if (notification is ScrollStartNotification &&
                   notification.dragDetails != null) {
                 _scrollNav.bumpGestureEpoch();
+                _chatScrollOpaqueHold?.cancel();
+                if (!_chatScrollActive.value) {
+                  _chatScrollActive.value = true;
+                }
+              } else if (notification is ScrollUpdateNotification ||
+                  notification is OverscrollNotification) {
+                _chatScrollOpaqueHold?.cancel();
+                if (!_chatScrollActive.value) {
+                  _chatScrollActive.value = true;
+                }
               } else if (notification is ScrollEndNotification) {
                 _readMarker.flush();
+                _chatScrollOpaqueHold?.cancel();
+                _chatScrollOpaqueHold = Timer(
+                  const Duration(milliseconds: 120),
+                  () {
+                    if (mounted) _chatScrollActive.value = false;
+                  },
+                );
               }
               return false;
             },

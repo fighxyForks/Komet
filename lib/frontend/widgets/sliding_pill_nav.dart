@@ -75,6 +75,7 @@ class SlidingPillNav extends StatelessWidget {
   final bool iconsOnly;
   final BackdropKey? backdropKey;
   final List<String?> badges;
+  final bool forceOpaque;
 
   const SlidingPillNav({
     super.key,
@@ -91,6 +92,7 @@ class SlidingPillNav extends StatelessWidget {
     this.iconsOnly = false,
     this.backdropKey,
     this.badges = const [],
+    this.forceOpaque = false,
   });
 
   static const double height = 68;
@@ -154,18 +156,24 @@ class SlidingPillNav extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final visualSel = position.round().clamp(0, items.length - 1);
     final translucent = backgroundColor != null && backgroundColor!.a < 1;
-    final base = liquid
+    final useLiquid = liquid && !forceOpaque;
+    final useFrost = frost && !forceOpaque;
+    final base = useLiquid
         ? (translucent ? backgroundColor! : AppLiquidGlass.navTint(cs))
         : (backgroundColor ??
-              (frost ? AppFrost.glassTint(cs) : cs.surfaceContainerHigh));
-    final useGradient = glossy && gradient && !liquid;
-    final frosted = frost && !liquid && base.a < 1;
+              (useFrost
+                  ? AppFrost.glassTint(cs)
+                  : (forceOpaque
+                      ? cs.surfaceContainerHigh.withValues(alpha: 1)
+                      : cs.surfaceContainerHigh)));
+    final useGradient = glossy && gradient && !useLiquid;
+    final frosted = useFrost && !useLiquid && base.a < 1;
 
     return Container(
       height: height,
       padding: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
-        color: useGradient || liquid ? null : base,
+        color: useGradient || useLiquid ? null : base,
         gradient: useGradient ? GlossyDecor.fillGradient(base) : null,
         borderRadius: BorderRadius.circular(34),
         border: glossy
@@ -177,8 +185,8 @@ class SlidingPillNav extends StatelessWidget {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: liquid ? 0.28 : 0.5),
-                  blurRadius: liquid ? 26 : 20,
+                  color: Colors.black.withValues(alpha: useLiquid ? 0.28 : 0.5),
+                  blurRadius: useLiquid ? 26 : 20,
                   offset: const Offset(0, 10),
                 ),
               ],
@@ -186,7 +194,7 @@ class SlidingPillNav extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.hardEdge,
         children: [
-          if (liquid)
+          if (useLiquid)
             Positioned.fill(
               child: IgnorePointer(
                 child: LiquidGlassSurface(
