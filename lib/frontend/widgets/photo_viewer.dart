@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -162,7 +163,7 @@ class PhotoViewerScreen extends StatefulWidget {
 }
 
 class _PhotoViewerScreenState extends State<PhotoViewerScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   static const int _prefetchThreshold = 3;
   static const int _maxCachedVideoPlayers = 5;
 
@@ -204,6 +205,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _dismiss = GalleryDismissController(vsync: this);
     _zoomAnim = AnimationController.unbounded(vsync: this);
     _dismiss.addListener(_onDismissChanged);
@@ -272,6 +274,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _singleTapTimer?.cancel();
     _dismiss.removeListener(_onDismissChanged);
     _dismiss.dispose();
@@ -566,8 +569,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     }
   }
 
+  int get _videoPlayerCap =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+      ? 2
+      : _maxCachedVideoPlayers;
+
   void _trimVideoSessions() {
-    while (_videoSessions.length > _maxCachedVideoPlayers) {
+    while (_videoSessions.length > _videoPlayerCap) {
       final candidate = _videoSessions.entries.firstWhere(
         (entry) => !entry.value.active,
         orElse: () => _videoSessions.entries.first,
@@ -922,7 +930,8 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
       targetScale = soft;
     }
     final viewport = MediaQuery.sizeOf(context);
-    final focal = _pinchFocal ?? Offset(viewport.width / 2, viewport.height / 2);
+    final focal =
+        _pinchFocal ?? Offset(viewport.width / 2, viewport.height / 2);
     Matrix4 target;
     if (targetScale <= 1.01) {
       target = Matrix4.identity();
@@ -1332,14 +1341,26 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
   }
 
   Widget _buildCaption(String caption) {
-    return _ViewerGlassSurface(child: _buildCaptionContent(caption));
+    final body = _buildCaptionContent(caption);
+    if (!IosGlass.of(context)) return _ViewerGlassSurface(child: body);
+    return _iosStillCaption(body);
+  }
+
+  Widget _iosStillCaption(Widget body) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xCC000000),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: body,
+    );
   }
 
   Widget _buildVideoAttachment(_VideoPlaybackSession session, String? caption) {
     return AnimatedBuilder(
       animation: session,
-      builder: (context, _) => _ViewerGlassSurface(
-        child: Column(
+      builder: (context, _) {
+        final panel = Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _VideoControlPanel(
@@ -1368,9 +1389,24 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
               _buildCaptionContent(caption),
             ],
           ],
-        ),
-      ),
+        );
+        if (IosGlass.of(context)) return _iosStillCaption(panel);
+        return _ViewerGlassSurface(child: panel);
+      },
     );
+  }
+
+  @override
+  void didHaveMemoryPressure() {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+    final activeId = _current.id;
+    final stale = [
+      for (final id in _videoSessions.keys)
+        if (id != activeId) id,
+    ];
+    for (final id in stale) {
+      _videoSessions.remove(id)?.dispose();
+    }
   }
 
   Widget _buildCaptionContent(String caption) {

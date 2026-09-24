@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:native_liquid_glass/native_liquid_glass.dart';
 
+import 'ios_low_power_mode.dart';
 import 'ios_reduce_transparency.dart';
 import 'persisted_setting.dart';
 
@@ -75,20 +76,20 @@ class AppIosGlass {
   /// Native platform views may be created only when style is on, the OS
   /// supports Liquid Glass, and Reduce Transparency is off.
   static bool get nativeViews =>
-      active.value &&
-      nativeGlassSupported &&
-      !IosReduceTransparency.value;
+      active.value && nativeGlassSupported && !IosReduceTransparency.value;
 
   static ValueNotifier<bool> get enabled => _setting.current;
 
   static Listenable get chromeListenable => Listenable.merge([
-        active,
-        IosReduceTransparency.enabled,
-      ]);
+    active,
+    IosReduceTransparency.enabled,
+    IosLowPowerMode.enabled,
+  ]);
 
   static Future<bool> load() async {
     _listen();
     await IosReduceTransparency.start();
+    await IosLowPowerMode.start();
     await _setting.load();
     _sync();
     return active.value;
@@ -114,6 +115,8 @@ class AppIosGlass {
     debugIosMajorVersion = null;
     IosReduceTransparency.debugOverride = null;
     IosReduceTransparency.enabled.value = false;
+    IosLowPowerMode.debugOverride = null;
+    IosLowPowerMode.enabled.value = false;
     _setting.current.value = defaultValue;
     _sync();
   }

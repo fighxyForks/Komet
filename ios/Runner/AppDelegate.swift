@@ -53,6 +53,11 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
+  override func applicationDidReceiveMemoryWarning(_ application: UIApplication) {
+    KometNativeSheet.shared.noteMemoryWarning()
+    super.applicationDidReceiveMemoryWarning(application)
+  }
+
   private func method(_ name: String, _ messenger: FlutterBinaryMessenger,
                       _ handler: @escaping FlutterMethodCallHandler) {
     let channel = FlutterMethodChannel(name: name, binaryMessenger: messenger)
@@ -220,6 +225,12 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
     }
     events("ru.komet.app/accessibility_events", messenger) { sink in
       KometAccessibility.shared.attach(sink)
+    }
+    method("ru.komet.app/power", messenger) { call, result in
+      KometPowerState.shared.handle(call, result: result)
+    }
+    events("ru.komet.app/power_events", messenger) { sink in
+      KometPowerState.shared.attach(sink)
     }
   }
 

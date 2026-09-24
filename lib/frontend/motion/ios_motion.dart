@@ -1,6 +1,10 @@
 import 'package:flutter/physics.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../core/config/ios_low_power_mode.dart';
+import '../../core/config/ios_reduce_transparency.dart';
+import '../widgets/glass/ios_glass.dart';
+
 /// Shared spring presets and gesture thresholds for interactive motion.
 ///
 /// Values are behavioral targets for an iOS-like feel; they are not copied
@@ -127,6 +131,14 @@ abstract final class IosMotion {
   static bool reduceMotionOf(BuildContext context) =>
       MediaQuery.disableAnimationsOf(context);
 
+  /// iOS should paint still fills instead of live blur, motion, or tickers.
+  static bool freezeLiveEffects(BuildContext context) {
+    if (!IosGlass.of(context)) return false;
+    return IosReduceTransparency.value ||
+        IosLowPowerMode.value ||
+        MediaQuery.disableAnimationsOf(context);
+  }
+
   /// Rubber-band after [bandingStart]; asymptotic range and strength.
   static double rubberBand({
     required double offset,
@@ -223,7 +235,13 @@ final class SettlingSpringSimulation extends Simulation {
     this._end,
     double velocity, {
     Tolerance tolerance = Tolerance.defaultTolerance,
-  }) : _inner = SpringSimulation(spring, start, _end, velocity, tolerance: tolerance);
+  }) : _inner = SpringSimulation(
+         spring,
+         start,
+         _end,
+         velocity,
+         tolerance: tolerance,
+       );
 
   final double _end;
   final SpringSimulation _inner;

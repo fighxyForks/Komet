@@ -7,6 +7,9 @@ import 'emoji_category.dart';
 import 'emoji_entry.dart';
 import 'emoji_platform.dart';
 
+Map<String, dynamic> _decodeEmojiCatalog(String raw) =>
+    json.decode(raw) as Map<String, dynamic>;
+
 class EmojiSearchHit {
   final EmojiEntry entry;
   final int score;
@@ -48,7 +51,7 @@ class EmojiCatalog {
 
   Future<void> _load() async {
     final raw = await rootBundle.loadString(assetPath);
-    final map = json.decode(raw) as Map<String, dynamic>;
+    final map = await compute(_decodeEmojiCatalog, raw);
     unicodeEmojiVersion = map['unicodeEmojiVersion'] as String?;
     final items = map['items'] as List<dynamic>;
     for (final row in items) {

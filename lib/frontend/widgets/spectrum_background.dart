@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../motion/ios_motion.dart';
 import 'spectrum_tint.dart';
 
 class SpectrumTuning {
@@ -141,8 +142,18 @@ class _SpectrumBackgroundState extends State<SpectrumBackground>
     _palette = _SpectrumPalette(base);
   }
 
+  void _syncTicker() {
+    final freeze = IosMotion.freezeLiveEffects(context);
+    if (freeze) {
+      if (_ticker.isActive) _ticker.stop();
+    } else if (!_ticker.isActive) {
+      _ticker.start();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    _syncTicker();
     final base = SpectrumTuning.baseColor(Theme.of(context).colorScheme);
 
     return LayoutBuilder(

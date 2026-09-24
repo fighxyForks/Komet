@@ -11,6 +11,7 @@ import 'package:komet/frontend/screens/stories/story_owner_info.dart';
 import 'package:komet/frontend/screens/stories/story_ring.dart';
 import 'package:komet/frontend/screens/stories/story_viewer_screen.dart';
 import 'package:komet/frontend/widgets/encryption_lock_badge.dart';
+import 'package:komet/frontend/motion/ios_haptics.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
@@ -90,8 +91,24 @@ class ChatHeaderRow extends StatelessWidget {
     Key? key,
     VoidCallback? onTap,
     EdgeInsetsGeometry padding = EdgeInsets.zero,
+    bool glass = true,
   }) {
     if (IosGlass.of(context)) {
+      if (!glass) {
+        final padded = Padding(padding: padding, child: child);
+        if (onTap == null) {
+          return key == null ? padded : KeyedSubtree(key: key, child: padded);
+        }
+        return GestureDetector(
+          key: key,
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            IosHaptics.itemActivate();
+            onTap();
+          },
+          child: padded,
+        );
+      }
       return GlassCapsule(
         key: key,
         onTap: onTap,
@@ -168,6 +185,7 @@ class ChatHeaderRow extends StatelessWidget {
           height: ios ? IosMetrics.minHitTarget : 56,
           child: _chromePill(
             context,
+            glass: !ios,
             key: const ValueKey('chat-header-back'),
             onTap: () {
               if (embedded) {
@@ -181,8 +199,8 @@ class ChatHeaderRow extends StatelessWidget {
                 embedded
                     ? IosSymbols.close(context)
                     : (ios
-                        ? IosSymbols.chevronBack(context)
-                        : IosSymbols.back(context)),
+                          ? IosSymbols.chevronBack(context)
+                          : IosSymbols.back(context)),
                 color: cs.onSurface,
                 size: ios ? 21 : 24,
               ),
@@ -193,6 +211,7 @@ class ChatHeaderRow extends StatelessWidget {
     );
     final title = _chromePill(
       context,
+      glass: !ios,
       key: const ValueKey('chat-header-title'),
       onTap: onOpenInfo,
       padding: ios
@@ -294,6 +313,7 @@ class ChatHeaderRow extends StatelessWidget {
     );
     final actions = _chromePill(
       context,
+      glass: !ios,
       key: const ValueKey('chat-header-actions'),
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: SizedBox(
@@ -339,13 +359,17 @@ class ChatHeaderRow extends StatelessWidget {
           ? const EdgeInsets.fromLTRB(12, 3, 12, 7)
           : const EdgeInsets.fromLTRB(10, 4, 10, 8),
       child: ios
-          ? CustomMultiChildLayout(
-              delegate: IosHeaderLayout(gap: 6),
-              children: [
-                LayoutId(id: IosHeaderSlot.back, child: back),
-                LayoutId(id: IosHeaderSlot.title, child: title),
-                LayoutId(id: IosHeaderSlot.actions, child: actions),
-              ],
+          ? GlassCapsule(
+              key: const ValueKey('chat-header'),
+              borderRadius: BorderRadius.circular(22),
+              child: CustomMultiChildLayout(
+                delegate: IosHeaderLayout(gap: 6),
+                children: [
+                  LayoutId(id: IosHeaderSlot.back, child: back),
+                  LayoutId(id: IosHeaderSlot.title, child: title),
+                  LayoutId(id: IosHeaderSlot.actions, child: actions),
+                ],
+              ),
             )
           : Row(
               children: [
@@ -399,7 +423,8 @@ class ChatHeaderRow extends StatelessWidget {
                         ? CircleAvatar(
                             radius: d / 2,
                             backgroundColor: cs.primary,
-                            child: Icon(IosSymbols.bookmark(context),
+                            child: Icon(
+                              IosSymbols.bookmark(context),
                               fill: 1,
                               color: cs.onPrimary,
                               size: d * 0.5,
@@ -452,7 +477,8 @@ class ChatHeaderRow extends StatelessWidget {
                           ),
                           if (isOfficial) ...[
                             const SizedBox(width: 4),
-                            Icon(IosSymbols.verified(context),
+                            Icon(
+                              IosSymbols.verified(context),
                               color: cs.primary,
                               size: 16,
                               weight: 600,
@@ -486,7 +512,8 @@ class ChatHeaderRow extends StatelessWidget {
           builder: (_, count, _) => count > 0
               ? IconButton(
                   tooltip: 'Отложенные',
-                  icon: Icon(IosSymbols.schedule(context),
+                  icon: Icon(
+                    IosSymbols.schedule(context),
                     weight: 400,
                     color: cs.onSurface,
                   ),
@@ -497,13 +524,21 @@ class ChatHeaderRow extends StatelessWidget {
         if (showCall)
           IconButton(
             tooltip: 'Звонок',
-            icon: Icon(IosSymbols.phone(context), weight: 400, color: cs.onSurface),
+            icon: Icon(
+              IosSymbols.phone(context),
+              weight: 400,
+              color: cs.onSurface,
+            ),
             onPressed: onCall,
           ),
         Builder(
           builder: (btnContext) => IconButton(
             tooltip: 'Ещё',
-            icon: Icon(IosSymbols.ellipsis(context), weight: 400, color: cs.onSurface),
+            icon: Icon(
+              IosSymbols.ellipsis(context),
+              weight: 400,
+              color: cs.onSurface,
+            ),
             onPressed: () => onMenu(btnContext),
           ),
         ),
@@ -640,9 +675,7 @@ class ChatHeaderRow extends StatelessWidget {
               count: count > 99 ? 99 : count,
               style: TextStyle(
                 color: cs.onPrimary,
-                fontSize: IosGlass.of(context)
-                    ? IosTypography.chatBadge
-                    : 11,
+                fontSize: IosGlass.of(context) ? IosTypography.chatBadge : 11,
                 fontWeight: IosGlass.of(context)
                     ? IosTypography.semibold
                     : FontWeight.w700,

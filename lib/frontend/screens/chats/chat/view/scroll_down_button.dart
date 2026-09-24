@@ -71,6 +71,7 @@ class ScrollDownButton extends StatelessWidget {
                       child: IosGlass.of(context)
                           ? GlassCapsule(
                               key: const ValueKey('ios-scroll-down'),
+                              allowNative: false,
                               onTap: onTap,
                               child: child!,
                             )
@@ -144,9 +145,7 @@ class _UnreadBadge extends StatelessWidget {
         count > 99 ? '99+' : '$count',
         style: TextStyle(
           color: cs.onPrimary,
-          fontSize: IosGlass.of(context)
-              ? IosTypography.chatBadge
-              : 12,
+          fontSize: IosGlass.of(context) ? IosTypography.chatBadge : 12,
           height: 1,
           fontWeight: IosGlass.of(context)
               ? IosTypography.semibold

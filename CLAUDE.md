@@ -19,8 +19,10 @@ flutter build apk --release --flavor komet --obfuscate --split-debug-info=build/
 flutter build apk --release --split-per-abi --flavor komet --obfuscate --split-debug-info=build/symbols
 flutter build appbundle --release --flavor komet --obfuscate --split-debug-info=build/symbols
 
+# iOS release. Keep build/ios-symbols to de-obfuscate crashes.
+flutter build ios --release --no-codesign --obfuscate --split-debug-info=build/ios-symbols
+
 # Other platforms
-flutter build ios --release --no-codesign
 flutter build macos --release
 flutter build web --release
 flutter build linux --release

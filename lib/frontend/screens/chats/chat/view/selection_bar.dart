@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:komet/backend/modules/messages.dart';
+import 'package:komet/frontend/motion/ios_haptics.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
@@ -101,19 +102,34 @@ class SelectionTopBar extends StatelessWidget {
       required Widget child,
       VoidCallback? onTap,
       EdgeInsetsGeometry padding = EdgeInsets.zero,
-    }) => ios
-        ? GlassCapsule(
-            traceLabel: 'панель выбора',
-            onTap: onTap,
-            padding: padding,
-            child: child,
-          )
-        : GlossyPill(onTap: onTap, padding: padding, child: child);
+      bool glass = true,
+    }) {
+      if (!ios) return GlossyPill(onTap: onTap, padding: padding, child: child);
+      if (!glass) {
+        final padded = Padding(padding: padding, child: child);
+        if (onTap == null) return padded;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            IosHaptics.itemActivate();
+            onTap();
+          },
+          child: padded,
+        );
+      }
+      return GlassCapsule(
+        traceLabel: 'панель выбора',
+        onTap: onTap,
+        padding: padding,
+        child: child,
+      );
+    }
 
     final close = SizedBox(
       width: size,
       height: size,
       child: pill(
+        glass: false,
         onTap: onClear,
         child: Center(
           child: Icon(
@@ -126,6 +142,7 @@ class SelectionTopBar extends StatelessWidget {
       ),
     );
     final title = pill(
+      glass: false,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: SizedBox(
         key: const ValueKey('selection-title'),
@@ -148,6 +165,7 @@ class SelectionTopBar extends StatelessWidget {
       ),
     );
     final actions = pill(
+      glass: false,
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: SizedBox(
         height: size,
@@ -168,13 +186,17 @@ class SelectionTopBar extends StatelessWidget {
           ? const EdgeInsets.fromLTRB(12, 3, 12, 7)
           : const EdgeInsets.fromLTRB(10, 4, 10, 8),
       child: ios
-          ? CustomMultiChildLayout(
-              delegate: IosHeaderLayout(gap: 6),
-              children: [
-                LayoutId(id: IosHeaderSlot.back, child: close),
-                LayoutId(id: IosHeaderSlot.title, child: title),
-                LayoutId(id: IosHeaderSlot.actions, child: actions),
-              ],
+          ? GlassCapsule(
+              key: const ValueKey('ios-selection-header'),
+              borderRadius: BorderRadius.circular(22),
+              child: CustomMultiChildLayout(
+                delegate: IosHeaderLayout(gap: 6),
+                children: [
+                  LayoutId(id: IosHeaderSlot.back, child: close),
+                  LayoutId(id: IosHeaderSlot.title, child: title),
+                  LayoutId(id: IosHeaderSlot.actions, child: actions),
+                ],
+              ),
             )
           : Row(
               children: [
@@ -270,6 +292,7 @@ class SelectionBottomBar extends StatelessWidget {
       return GlassCapsule(
         key: ValueKey('ios-selection-$label'),
         height: 46,
+        allowNative: false,
         onTap: onTap,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -172,9 +172,12 @@ class _StickerPanelState extends State<StickerPanel>
       await stickersModule.ensureLoaded();
       if (!mounted) return;
       _buildSections();
+      if (!mounted) return;
+      _shimmer.stop();
       setState(() => _loading = false);
     } catch (e) {
       if (!mounted) return;
+      _shimmer.stop();
       setState(() {
         _loading = false;
         _error = e;
@@ -433,7 +436,8 @@ class _StickerPanelState extends State<StickerPanel>
                       fit: BoxFit.contain,
                       memCacheWidth: 84,
                       memCacheHeight: 84,
-                      errorWidget: (_, _, _) => Icon(IosSymbols.photo(context),
+                      errorWidget: (_, _, _) => Icon(
+                        IosSymbols.photo(context),
                         size: 20,
                         color: cs.onSurfaceVariant,
                       ),
@@ -522,7 +526,11 @@ class _StickerPanelState extends State<StickerPanel>
         child: Row(
           children: [
             const SizedBox(width: 12),
-            Icon(IosSymbols.search(context), size: 22, color: cs.onSurfaceVariant),
+            Icon(
+              IosSymbols.search(context),
+              size: 22,
+              color: cs.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
@@ -551,7 +559,8 @@ class _StickerPanelState extends State<StickerPanel>
                 onTap: _clearSearch,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Icon(IosSymbols.close(context),
+                  child: Icon(
+                    IosSymbols.close(context),
                     size: 20,
                     color: cs.onSurfaceVariant,
                   ),

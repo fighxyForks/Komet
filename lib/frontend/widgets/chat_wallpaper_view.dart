@@ -5,8 +5,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/core/config/chat_wallpaper_themes.dart';
 import 'package:komet/core/storage/chat_wallpaper_store.dart';
+import 'package:komet/frontend/motion/ios_motion.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/mesh_gradient_background.dart';
 
@@ -17,14 +19,22 @@ class ChatWallpaperView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: AppIosGlass.chromeListenable,
+      builder: (context, _) => _buildWallpaper(context),
+    );
+  }
+
+  Widget _buildWallpaper(BuildContext context) {
+    final still = IosMotion.freezeLiveEffects(context);
     if (wallpaper.isImage) {
       final path = wallpaper.imagePath;
       if (path == null) return const SizedBox.shrink();
       return WallpaperImageLayer(
         image: FileImage(File(path)),
         dim: wallpaper.dim,
-        blur: wallpaper.blur,
-        motion: wallpaper.motion,
+        blur: wallpaper.blur && !still,
+        motion: wallpaper.motion && !still,
         offsetX: wallpaper.offsetX,
       );
     }
@@ -33,9 +43,9 @@ class ChatWallpaperView extends StatelessWidget {
       if (colors == null || colors.isEmpty) return const SizedBox.shrink();
       return MeshGradientBackground(
         colors: colors,
-        animate: wallpaper.gradientAnimated,
+        animate: wallpaper.gradientAnimated && !still,
         rotation: wallpaper.gradientRotation,
-        stepOnPulse: IosGlass.of(context),
+        stepOnPulse: IosGlass.of(context) && !still,
       );
     }
     final theme = chatWallpaperThemeById(wallpaper.themeId);

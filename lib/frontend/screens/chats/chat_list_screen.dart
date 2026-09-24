@@ -2744,6 +2744,18 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
+  Widget _iosRootPage(double pageW, double pageH) {
+    final Widget page = switch (_currentNavIndex) {
+      1 => const CallsTab(key: PageStorageKey<String>('ios-root-calls')),
+      2 => const ContactsTab(key: PageStorageKey<String>('ios-root-contacts')),
+      3 => const SettingsTab(key: PageStorageKey<String>('ios-root-settings')),
+      _ => _getChatsBody(),
+    };
+    return RepaintBoundary(
+      child: SizedBox(width: pageW, height: pageH, child: page),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -2815,7 +2827,9 @@ class _ChatListScreenState extends State<ChatListScreen>
                   child: SizedBox(
                     width: pageW,
                     height: pageH,
-                    child: OverflowBox(
+                    child: ios
+                        ? _iosRootPage(pageW, pageH)
+                        : OverflowBox(
                       alignment: Alignment.topLeft,
                       maxWidth: pageW * 4,
                       maxHeight: pageH,

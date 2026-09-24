@@ -136,6 +136,11 @@ final class KometNativeSheet: NSObject, UISheetPresentationControllerDelegate {
     eventSink?(["type": "dismissed", "result": NSNull()])
   }
 
+  func noteMemoryWarning() {
+    guard hostingController == nil else { return }
+    engineGroup = nil
+  }
+
   private func cleanup() {
     sheetEngine?.destroyContext()
     sheetController = nil

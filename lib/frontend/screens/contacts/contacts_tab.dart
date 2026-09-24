@@ -307,6 +307,7 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
                       message: 'Нет контактов',
                     )
                   : ListView.builder(
+                      key: const PageStorageKey<String>('contacts-list'),
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.only(bottom: 120),
                       itemCount: _contacts.length,

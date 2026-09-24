@@ -1,6 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
+Map<String, dynamic> _decodeJsonObject(String raw) =>
+    json.decode(raw) as Map<String, dynamic>;
 
 // #***! эмодзи и слова по которым его находят
 class _Entry {
@@ -28,15 +32,14 @@ class EmojiKeywordIndex {
 
   Future<void> _load() async {
     final raw = await rootBundle.loadString('assets/emoji_keywords.json');
-    final map = json.decode(raw) as Map<String, dynamic>;
+    final map = await compute(_decodeJsonObject, raw);
     map.forEach((emoji, words) {
       _entries.add(_Entry(emoji, (words as String).split(' ')));
       _emojiKeys.add(emoji);
     });
   }
 
-  List<String> get all =>
-      List.unmodifiable(_entries.map((e) => e.emoji));
+  List<String> get all => List.unmodifiable(_entries.map((e) => e.emoji));
 
   // #***! поиск по строке запроса
   List<String> search(String query) {

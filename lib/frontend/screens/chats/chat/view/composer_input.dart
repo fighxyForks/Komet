@@ -1239,6 +1239,7 @@ class ComposerInputBar extends StatelessWidget {
               GlassIconButton(
                 key: const ValueKey('ios-channel-search'),
                 icon: IosSymbols.search(context),
+                allowNative: false,
                 size: 46,
                 tooltip: AppLocalizations.of(context)!.iosChatSearch,
                 onPressed: onOpenSearch,
