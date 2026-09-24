@@ -10,11 +10,11 @@ import 'small_spinner.dart';
 final ValueNotifier<bool> debugForceOffline = ValueNotifier<bool>(false);
 
 String? connectionStatusLabel(SessionState state) {
-  if (debugForceOffline.value) return 'Ожидание сети...';
+  if (debugForceOffline.value) return 'Ожидание сети…';
   return switch (state) {
     SessionState.online => null,
-    SessionState.connecting || SessionState.connected => 'Соединение...',
-    SessionState.disconnected => 'Ожидание сети...',
+    SessionState.connecting || SessionState.connected => 'Соединение…',
+    SessionState.disconnected => 'Ожидание сети…',
   };
 }
 

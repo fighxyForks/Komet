@@ -368,7 +368,6 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
                       style: TextStyle(
                         color: cs.onSurfaceVariant,
                         fontSize: 15,
-                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   const SizedBox(height: 6),

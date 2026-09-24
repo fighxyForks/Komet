@@ -144,7 +144,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get codeConfirmation2faWarning =>
-      'По умолчанию код приходит в МАХ. Если код не приходит по SMS - не заходите в Komet/MAX 30 минут, и попробуйте заново.';
+      'По умолчанию код приходит в МАХ. Если код не приходит по SMS — не заходите в Komet/MAX 30 минут, и попробуйте заново.';
 
   @override
   String get proxySettingsTitle => 'Прокси';
@@ -198,7 +198,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get spoofInfoHint =>
-      'Нажмите \"Сгенерировать\":\n• Короткое нажатие: случайный пресет.\n• Длинное нажатие: реальные данные.';
+      'Нажмите «Сгенерировать»:\n• Короткое нажатие: случайный пресет.\n• Длинное нажатие: реальные данные.';
 
   @override
   String get spoofMethodTitle => 'Метод подмены';
@@ -1010,7 +1010,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appearancePreviewHowIsIt => 'Как тебе?';
 
   @override
-  String get appearancePreviewHmm => 'хм...';
+  String get appearancePreviewHmm => 'хм…';
 
   @override
   String get appearancePreviewNotBad => 'Вполне неплохо!';
@@ -1020,10 +1020,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Этот человек использует Komet! :3';
 
   @override
-  String get callStatusConnecting => 'Соединение...';
+  String get callStatusConnecting => 'Соединение…';
 
   @override
-  String get callGroupConnecting => 'Соединение...';
+  String get callGroupConnecting => 'Соединение…';
 
   @override
   String get callGroupWaitingParticipants => 'Ожидание участников…';
@@ -2187,7 +2187,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Начните загрузку для прогресс-бара';
 
   @override
-  String get cloudStorageEmptyTitle => 'Облачных файлов пока нет...';
+  String get cloudStorageEmptyTitle => 'Облачных файлов пока нет…';
 
   @override
   String get cloudStorageEmptySubtitle => 'Добавите?';
@@ -2432,7 +2432,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get attachSheetSettings => 'Настройки';
 
   @override
-  String get attachSheetAddCaptionHint => 'Добавить подпись...';
+  String get attachSheetAddCaptionHint => 'Добавить подпись…';
 
   @override
   String get attachSheetCamera => 'Камера';
@@ -2852,7 +2852,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get videoEditorQualityHigh => 'Высокое качество';
 
   @override
-  String get videoEditorCaptionHint => 'Добавить подпись...';
+  String get videoEditorCaptionHint => 'Добавить подпись…';
 
   @override
   String get videoEditorMuteTooltip => 'Отправить без звука';

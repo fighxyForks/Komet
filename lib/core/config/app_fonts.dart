@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_ios_glass.dart';
 import 'custom_font_service.dart';
+import '../../frontend/widgets/glass/ios_tracking.dart';
 
 // #***! шрифт заголовков, отдельный от основного
 const String kDisplayFontFamily = 'Outfit';
@@ -107,8 +108,20 @@ class AppFonts {
 
   static TextTheme textTheme(String id, TextTheme base) {
     final family = resolve(id).fontFamily;
-    if (family == null) return base;
-    return base.apply(fontFamily: family);
+    // ThemeData(brightness: …).textTheme is inherit:true with null sizes;
+    // merge onto M3 2021 geometry so letterSpacing can be size-correct.
+    final geometry = Typography.material2021().englishLike.merge(base);
+    final themed = family == null
+        ? geometry
+        : geometry.apply(fontFamily: family);
+    if (!AppIosGlass.active.value) {
+      // Preserve historical behavior when glass is off: only apply family
+      // onto the caller-provided base (no forced M3 geometry).
+      return family == null ? base : base.apply(fontFamily: family);
+    }
+    // Material 3 positive letterSpacing leaks via DefaultTextStyle into bare
+    // TextStyles; replace with SF / Inter tracking while iOS glass is on.
+    return applyIosLetterSpacingToTheme(themed, fontFamily: family);
   }
 
   static TextStyle sample(String id, {required double fontSize}) {

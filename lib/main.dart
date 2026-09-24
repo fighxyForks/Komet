@@ -949,6 +949,7 @@ class KometAppState extends State<KometApp>
   String? _themeCacheFontId;
   ColorScheme? _themeCacheLight;
   ColorScheme? _themeCacheDark;
+  bool? _themeCacheIosGlass;
   ThemeData? _lightTheme;
   ThemeData? _darkTheme;
 
@@ -975,14 +976,17 @@ class KometAppState extends State<KometApp>
   }
 
   void _rebuildThemesIfNeeded(ColorScheme light, ColorScheme dark) {
+    final iosGlass = AppIosGlass.active.value;
     if (_themeCacheFontId == _fontId &&
         _themeCacheLight == light &&
-        _themeCacheDark == dark) {
+        _themeCacheDark == dark &&
+        _themeCacheIosGlass == iosGlass) {
       return;
     }
     _themeCacheFontId = _fontId;
     _themeCacheLight = light;
     _themeCacheDark = dark;
+    _themeCacheIosGlass = iosGlass;
     final displayFont = AppDisplayFont(
       AppFonts.displayFamily(_fontId),
       systemBody: AppFonts.resolve(_fontId).isSystem,
@@ -1080,6 +1084,7 @@ class KometAppState extends State<KometApp>
             accentSeed,
             wallpaperSeed,
             AppWallpaperTint.current,
+            AppIosGlass.active,
           ]),
           builder: (context, _) {
             final seed =

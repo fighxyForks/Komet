@@ -1,5 +1,7 @@
 import 'package:flutter/painting.dart';
 
+import 'ios_tracking.dart';
+
 abstract final class IosTypography {
   static const FontWeight regular = FontWeight.w400;
   static const FontWeight medium = FontWeight.w500;
@@ -33,4 +35,15 @@ abstract final class IosTypography {
   static const double listSubtitle = 15;
   static const double sectionHeader = 13;
   static const double footer = 13;
+
+  /// Letter spacing for iOS mode; see [iosLetterSpacing].
+  static double letterSpacing(double fontSize, {String? fontFamily}) =>
+      iosLetterSpacing(fontSize: fontSize, fontFamily: fontFamily);
+
+  /// Sentence-case an ALL-CAPS section label for iOS settings chrome.
+  static String sentenceCase(String label) {
+    final trimmed = label.trim();
+    if (trimmed.isEmpty) return trimmed;
+    return '${trimmed[0].toUpperCase()}${trimmed.substring(1).toLowerCase()}';
+  }
 }

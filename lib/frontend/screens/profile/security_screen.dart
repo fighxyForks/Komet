@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../main.dart' show accountModule;
 import '../../../backend/modules/account.dart'
@@ -804,16 +806,24 @@ class _SecurityScreenState extends State<SecurityScreen>
   }
 
   Widget _buildInfoLabel(ColorScheme cs) {
+    final ios = IosGlass.of(context);
+    final label = AppLocalizations.of(context)!.securityConfidentialityHeader;
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 0),
       child: Text(
-        AppLocalizations.of(context)!.securityConfidentialityHeader,
-        style: TextStyle(
-          color: cs.mutedText,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.8,
-        ),
+        ios ? IosTypography.sentenceCase(label) : label,
+        style: ios
+            ? TextStyle(
+                color: cs.mutedText,
+                fontSize: IosTypography.sectionHeader,
+                fontWeight: IosTypography.regular,
+              )
+            : TextStyle(
+                color: cs.mutedText,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+              ),
       ),
     );
   }

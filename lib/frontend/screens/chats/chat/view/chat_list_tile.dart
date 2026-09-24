@@ -6,6 +6,7 @@ import 'package:komet/frontend/screens/chats/chat/typing_label.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
+import 'package:komet/frontend/widgets/glass/ios_tracking.dart';
 
 class AnimatedChatTile extends StatefulWidget {
   final Widget child;
@@ -166,6 +167,11 @@ class _ActivitySubtitleState extends State<ActivitySubtitle> {
                     fontSize: IosTypography.chatPreview,
                     fontWeight: IosTypography.regular,
                     height: 1.25,
+                    letterSpacing: iosLetterSpacing(
+                      fontSize: IosTypography.chatPreview,
+                      fontFamily:
+                          Theme.of(context).textTheme.bodyLarge?.fontFamily,
+                    ),
                   )
                 : TextStyle(
                     color: cs.primary,

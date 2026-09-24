@@ -91,7 +91,6 @@ class DateSeparatorLabel extends StatelessWidget {
                 : TextStyle(
                     color: cs.onSurfaceVariant,
                     fontSize: 12,
-                    fontStyle: floating ? FontStyle.normal : FontStyle.italic,
                   ),
           ),
         ),
@@ -108,6 +107,7 @@ class UnreadSeparatorBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final accent = cs.primary;
+    final ios = IosGlass.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
       child: Row(
@@ -125,12 +125,18 @@ class UnreadSeparatorBar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
               'Непрочитанные сообщения',
-              style: TextStyle(
-                color: accent,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.2,
-              ),
+              style: ios
+                  ? TextStyle(
+                      color: accent,
+                      fontSize: IosTypography.dateHeader,
+                      fontWeight: IosTypography.medium,
+                    )
+                  : TextStyle(
+                      color: accent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
             ),
           ),
           Expanded(

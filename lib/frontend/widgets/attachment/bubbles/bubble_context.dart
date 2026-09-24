@@ -237,13 +237,21 @@ class BubbleContext {
   Widget footerMeta() => _metaRow();
 
   Widget _metaRow() {
+    final ios = IosGlass.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(clockText, style: TextStyle(color: dim, fontSize: 11)),
+          Text(
+            clockText,
+            style: TextStyle(
+              color: dim,
+              fontSize: ios ? IosBubbleMetrics.timeSize : 11,
+              fontFeatures: ios ? IosTypography.tabularDigits : null,
+            ),
+          ),
           if (isMe) ...[const SizedBox(width: 4), statusIcon()],
           if (message.deleted) ...[const SizedBox(width: 4), deletedIcon()],
         ],
@@ -290,8 +298,9 @@ class BubbleContext {
             clockText,
             style: TextStyle(
               color: Colors.white,
-              fontSize: ios ? 11 : 10,
+              fontSize: ios ? IosBubbleMetrics.timeSize : 10,
               fontWeight: FontWeight.w500,
+              fontFeatures: ios ? IosTypography.tabularDigits : null,
             ),
           ),
           if (message.deleted) ...[

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -463,18 +465,28 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
     );
   }
 
-  Widget _buildSectionLabel(ColorScheme cs, String text) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
-    child: Text(
-      text,
-      style: TextStyle(
-        color: cs.onSurfaceVariant,
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.6,
+  Widget _buildSectionLabel(ColorScheme cs, String text) {
+    final ios = IosGlass.of(context);
+    final label = ios ? IosTypography.sentenceCase(text) : text;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+      child: Text(
+        label,
+        style: ios
+            ? TextStyle(
+                color: cs.onSurfaceVariant,
+                fontSize: IosTypography.sectionHeader,
+                fontWeight: IosTypography.regular,
+              )
+            : TextStyle(
+                color: cs.onSurfaceVariant,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.6,
+              ),
       ),
-    ),
-  );
+    );
+  }
 
   Widget _buildRow(
     ColorScheme cs, {

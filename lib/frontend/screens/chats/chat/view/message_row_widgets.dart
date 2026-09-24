@@ -351,7 +351,6 @@ class _PinnedMessageTextState extends State<PinnedMessageText> {
       style: TextStyle(
         color: widget.color,
         fontSize: 14,
-        fontStyle: isPreview ? FontStyle.italic : null,
       ),
     );
   }

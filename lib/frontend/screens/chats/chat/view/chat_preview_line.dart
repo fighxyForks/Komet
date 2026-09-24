@@ -105,8 +105,9 @@ class ChatPreviewLine extends StatelessWidget {
     final labelled = label != null || detail != null;
     final forwarded = label != null && label.startsWith(_forwardMark);
 
+    // Emphasis via secondary color only — never synthesized italic.
     final bodyStyle = style.copyWith(
-      fontStyle: italic || labelled ? FontStyle.italic : style.fontStyle,
+      fontStyle: FontStyle.normal,
     );
 
     final spans = <InlineSpan>[];

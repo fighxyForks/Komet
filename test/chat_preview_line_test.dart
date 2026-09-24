@@ -55,7 +55,7 @@ void main() {
     expect(find.byType(Image), findsOneWidget);
     expect(find.byIcon(Symbols.play_arrow), findsNothing);
     expect(_plainText(tester), 'Изображение');
-    expect(_spans(tester).single.style?.fontStyle, FontStyle.italic);
+    expect(_spans(tester).single.style?.fontStyle, isNot(FontStyle.italic));
   });
 
   testWidgets('фото с подписью: миниатюра и обычный текст', (tester) async {
@@ -139,7 +139,7 @@ void main() {
 
     expect(find.byIcon(Symbols.call_missed), findsOneWidget);
     expect(_plainText(tester), 'Пропущенный звонок');
-    expect(_spans(tester).single.style?.fontStyle, FontStyle.italic);
+    expect(_spans(tester).single.style?.fontStyle, isNot(FontStyle.italic));
   });
 
   testWidgets('метка пересылки остаётся перед иконкой', (tester) async {

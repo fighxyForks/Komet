@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../widgets/glass/ios_typography.dart';
+import '../../../../widgets/glass/ios_tracking.dart';
 import '../../../../widgets/glass/ios_palette.dart';
 
 class IosChatRow extends StatelessWidget {
@@ -57,6 +58,7 @@ class IosChatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final fontFamily = Theme.of(context).textTheme.bodyLarge?.fontFamily;
     final secondary = IosPalette.secondaryLabel(cs);
     final background = isSelected
         ? Color.alphaBlend(
@@ -66,7 +68,7 @@ class IosChatRow extends StatelessWidget {
         : isPinned
         ? IosPalette.grouped(cs)
         : IosPalette.background(cs);
-    final trailing = _trailing(cs, secondary);
+    final trailing = _trailing(context, cs, secondary);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       color: background,
@@ -89,7 +91,7 @@ class IosChatRow extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _titleRow(cs, secondary),
+                        _titleRow(context, cs, secondary),
                         const SizedBox(height: 2),
                         Expanded(
                           child: Row(
@@ -110,6 +112,10 @@ class IosChatRow extends StatelessWidget {
                                           fontSize: IosTypography.chatPreview,
                                           fontWeight: IosTypography.regular,
                                           height: 1.25,
+                                          letterSpacing: iosLetterSpacing(
+                                            fontSize: IosTypography.chatPreview,
+                                            fontFamily: fontFamily,
+                                          ),
                                         ),
                                       ),
                                     body,
@@ -151,7 +157,8 @@ class IosChatRow extends StatelessWidget {
     );
   }
 
-  Widget _titleRow(ColorScheme cs, Color secondary) {
+  Widget _titleRow(BuildContext context, ColorScheme cs, Color secondary) {
+    final fontFamily = Theme.of(context).textTheme.bodyLarge?.fontFamily;
     return Row(
       children: [
         Expanded(
@@ -177,6 +184,10 @@ class IosChatRow extends StatelessWidget {
                     fontSize: IosTypography.chatTitle,
                     fontWeight: IosTypography.semibold,
                     height: 1.2,
+                    letterSpacing: iosLetterSpacing(
+                      fontSize: IosTypography.chatTitle,
+                      fontFamily: fontFamily,
+                    ),
                   ),
                 ),
               ),
@@ -212,20 +223,25 @@ class IosChatRow extends StatelessWidget {
             fontWeight: IosTypography.regular,
             height: 1.2,
             fontFeatures: IosTypography.tabularDigits,
+            letterSpacing: iosLetterSpacing(
+              fontSize: IosTypography.chatTime,
+              fontFamily: fontFamily,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget? _trailing(ColorScheme cs, Color secondary) {
+  Widget? _trailing(BuildContext context, ColorScheme cs, Color secondary) {
+    final fontFamily = Theme.of(context).textTheme.bodyLarge?.fontFamily;
     if (unreadCount > 0 || hasMention) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (hasMention) _badge(cs, '@'),
+          if (hasMention) _badge(cs, '@', fontFamily),
           if (hasMention && unreadCount > 0) const SizedBox(width: 4),
-          if (unreadCount > 0) _badge(cs, compactCount(unreadCount)),
+          if (unreadCount > 0) _badge(cs, compactCount(unreadCount), fontFamily),
         ],
       );
     }
@@ -239,7 +255,7 @@ class IosChatRow extends StatelessWidget {
     );
   }
 
-  Widget _badge(ColorScheme cs, String label) {
+  Widget _badge(ColorScheme cs, String label, String? fontFamily) {
     return Container(
       key: ValueKey('ios-chat-badge-$label'),
       height: IosTypography.chatBadgeDiameter,
@@ -262,6 +278,10 @@ class IosChatRow extends StatelessWidget {
           fontWeight: IosTypography.semibold,
           height: 1,
           fontFeatures: IosTypography.tabularDigits,
+          letterSpacing: iosLetterSpacing(
+            fontSize: IosTypography.chatBadge,
+            fontFamily: fontFamily,
+          ),
         ),
       ),
     );

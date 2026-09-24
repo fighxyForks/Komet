@@ -621,9 +621,16 @@ class ChatHeaderRow extends StatelessWidget {
               count: count > 99 ? 99 : count,
               style: TextStyle(
                 color: cs.onPrimary,
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
+                fontSize: IosGlass.of(context)
+                    ? IosTypography.chatBadge
+                    : 11,
+                fontWeight: IosGlass.of(context)
+                    ? IosTypography.semibold
+                    : FontWeight.w700,
                 height: 1.0,
+                fontFeatures: IosGlass.of(context)
+                    ? IosTypography.tabularDigits
+                    : null,
               ),
             ),
           ),

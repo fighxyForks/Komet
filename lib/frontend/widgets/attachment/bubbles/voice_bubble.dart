@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../glass/ios_glass.dart';
+import '../../glass/ios_typography.dart';
+import 'ios_bubble_metrics.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/main.dart';
 
@@ -313,7 +316,12 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
           formatSecondsMmSs(seconds),
           style: TextStyle(
             color: widget.textColor.withValues(alpha: 0.7),
-            fontSize: 11,
+            fontSize: IosGlass.of(context)
+                ? IosBubbleMetrics.timeSize
+                : 11,
+            fontFeatures: IosGlass.of(context)
+                ? IosTypography.tabularDigits
+                : null,
           ),
         );
       },
@@ -412,7 +420,12 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                   ),
                   style: TextStyle(
                     color: widget.textColor.withValues(alpha: 0.6),
-                    fontSize: 10,
+                    fontSize: IosGlass.of(context)
+                        ? IosBubbleMetrics.timeSize
+                        : 10,
+                    fontFeatures: IosGlass.of(context)
+                        ? IosTypography.tabularDigits
+                        : null,
                   ),
                 ),
                 if (widget.isMe) ...[
@@ -441,7 +454,12 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                   ),
                   style: TextStyle(
                     color: widget.textColor.withValues(alpha: 0.6),
-                    fontSize: 10,
+                    fontSize: IosGlass.of(context)
+                        ? IosBubbleMetrics.timeSize
+                        : 10,
+                    fontFeatures: IosGlass.of(context)
+                        ? IosTypography.tabularDigits
+                        : null,
                   ),
                 ),
                 if (widget.isMe) ...[
@@ -506,7 +524,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                 : result.text!,
           );
         } else if (result.status == 0) {
-          _showTranscription('транскрибация...');
+          _showTranscription('транскрибация…');
         }
       });
     } catch (e) {

@@ -2096,7 +2096,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                 ? IosFlatSearchBar(
                                     key: const ValueKey('chat-list-search'),
                                     hint: widget.forwardMode
-                                        ? 'Пересылка...'
+                                        ? 'Пересылка…'
                                         : 'Поиск',
                                     onTap: (widget.forwardMode || _shareMode)
                                         ? null
@@ -2127,7 +2127,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                             const SizedBox(width: 10),
                                             Text(
                                               widget.forwardMode
-                                                  ? 'Пересылка...'
+                                                  ? 'Пересылка…'
                                                   : 'Поиск',
                                               style: TextStyle(
                                                 color: cs.outline,
@@ -2281,7 +2281,7 @@ class _ChatListScreenState extends State<ChatListScreen>
               SliverFillRemaining(
                 child: Center(
                   child: Text(
-                    'Кажется, тут пусто...',
+                    'Кажется, тут пусто…',
                     style: TextStyle(
                       color: cs.onSurface.withValues(alpha: 0.6),
                       fontSize: 16,
@@ -3551,9 +3551,8 @@ class _ChatListScreenState extends State<ChatListScreen>
             ),
           ],
           style: TextStyle(
-            fontSize: ios ? 15 : 14,
+            fontSize: ios ? IosTypography.chatPreview : 14,
             fontWeight: FontWeight.w400,
-            fontStyle: ios ? FontStyle.normal : FontStyle.italic,
             height: ios ? 1.25 : 1.2,
           ),
         ),
@@ -3570,7 +3569,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       maxLines: maxLines,
       style: TextStyle(
         color: ios ? IosPalette.secondaryLabel(cs) : cs.outline,
-        fontSize: ios ? 15 : 14,
+        fontSize: ios ? IosTypography.chatPreview : 14,
         fontWeight: FontWeight.w400,
         height: ios ? 1.25 : 1.2,
       ),

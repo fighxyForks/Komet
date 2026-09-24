@@ -46,7 +46,7 @@ class SearchTopBar extends StatelessWidget {
         fontFamily: displayFontOf(context),
       ),
       decoration: InputDecoration(
-        hintText: 'Поиск...',
+        hintText: 'Поиск…',
         hintStyle: TextStyle(
           color: cs.onSurfaceVariant,
           fontSize: 16,
@@ -243,7 +243,7 @@ class SearchOverlay extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        'Поиск ничего не вернул...',
+                        'Поиск ничего не вернул…',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: cs.onSurfaceVariant,

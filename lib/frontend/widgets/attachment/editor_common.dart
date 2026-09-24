@@ -791,7 +791,7 @@ class _RulerPainter extends CustomPainter {
         style: const TextStyle(
           color: Colors.white,
           fontSize: 13,
-          fontStyle: FontStyle.italic,
+          fontFeatures: [FontFeature.tabularFigures()],
         ),
       ),
       textDirection: TextDirection.ltr,

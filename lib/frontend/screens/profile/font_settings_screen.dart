@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 import 'package:m3e_collection/m3e_collection.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -250,13 +252,23 @@ class _PreviewCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppLocalizations.of(context)!.fontSettingsPreviewLabel,
-              style: TextStyle(
-                color: cs.primary,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.2,
-              ),
+              IosGlass.of(context)
+                  ? IosTypography.sentenceCase(
+                      AppLocalizations.of(context)!.fontSettingsPreviewLabel,
+                    )
+                  : AppLocalizations.of(context)!.fontSettingsPreviewLabel,
+              style: IosGlass.of(context)
+                  ? TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: IosTypography.sectionHeader,
+                      fontWeight: IosTypography.regular,
+                    )
+                  : TextStyle(
+                      color: cs.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
             ),
             const SizedBox(height: 16),
             Text(

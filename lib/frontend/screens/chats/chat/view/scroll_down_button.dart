@@ -5,6 +5,7 @@ import 'package:komet/core/config/app_frost.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 
 class ScrollDownButton extends StatelessWidget {
@@ -143,9 +144,16 @@ class _UnreadBadge extends StatelessWidget {
         count > 99 ? '99+' : '$count',
         style: TextStyle(
           color: cs.onPrimary,
-          fontSize: 12,
+          fontSize: IosGlass.of(context)
+              ? IosTypography.chatBadge
+              : 12,
           height: 1,
-          fontWeight: FontWeight.w700,
+          fontWeight: IosGlass.of(context)
+              ? IosTypography.semibold
+              : FontWeight.w700,
+          fontFeatures: IosGlass.of(context)
+              ? IosTypography.tabularDigits
+              : null,
         ),
       ),
     );

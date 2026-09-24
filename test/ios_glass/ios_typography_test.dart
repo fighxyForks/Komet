@@ -102,6 +102,42 @@ void main() {
     expect(style.letterSpacing, isNull);
   });
 
+  testWidgets(
+    'заголовок секции: effective letterSpacing не Material-положительный',
+    (tester) async {
+      AppIosGlass.debugSetSupported(true);
+      final textTheme = AppFonts.textTheme(
+        'system',
+        ThemeData(useMaterial3: true).textTheme,
+      );
+      await tester.pumpWidget(
+        IosGlass(
+          child: MaterialApp(
+            theme: ThemeData(
+              useMaterial3: true,
+              textTheme: textTheme,
+              extensions: const [
+                AppDisplayFont(kDisplayFontFamily, systemBody: true),
+              ],
+            ),
+            home: const Scaffold(body: SectionHeader('Секция')),
+          ),
+        ),
+      );
+      final local = _style(tester, 'Секция');
+      expect(local.letterSpacing, isNull);
+      final rich = tester.widget<RichText>(
+        find.descendant(
+          of: find.text('Секция'),
+          matching: find.byType(RichText),
+        ),
+      );
+      final effective = rich.text.style?.letterSpacing;
+      expect(effective, isNotNull);
+      expect(effective!, lessThanOrEqualTo(0));
+    },
+  );
+
   testWidgets('заголовок секции вне iOS-режима прежний', (tester) async {
     AppIosGlass.debugSetSupported(false);
     await _pump(tester, const SectionHeader('Секция'));
@@ -118,10 +154,10 @@ void main() {
     expect(style.fontStyle, isNot(FontStyle.italic));
   });
 
-  testWidgets('дата в ленте вне iOS-режима курсивом', (tester) async {
+  testWidgets('дата в ленте вне iOS-режима без курсива', (tester) async {
     AppIosGlass.debugSetSupported(false);
     await _pump(tester, DateSeparatorLabel(date: DateTime(2020, 5, 17)));
     final style = tester.widget<Text>(find.byType(Text)).style!;
-    expect(style.fontStyle, FontStyle.italic);
+    expect(style.fontStyle, isNot(FontStyle.italic));
   });
 }

@@ -49,6 +49,7 @@ import 'lottie_image.dart';
 import 'text_with_meta.dart';
 import 'glass/ios_glass.dart';
 import 'glass/ios_typography.dart';
+import 'glass/ios_tracking.dart';
 import 'glass/ios_palette.dart';
 
 final Expando<MessageType> _contentTypeCache = Expando<MessageType>();
@@ -1816,6 +1817,7 @@ class MessageBubble extends StatelessWidget {
   Widget _buildJumboAnimojiMeta(BubbleContext ctx) {
     final status = ctx.overrideStatus ?? ctx.message.status;
     final statusVisual = messageStatusVisual(status, dimColor: Colors.white);
+    final ios = IosGlass.of(ctx.context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
@@ -1827,10 +1829,11 @@ class MessageBubble extends StatelessWidget {
         children: [
           Text(
             ctx.clockText,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 11,
+              fontSize: ios ? IosBubbleMetrics.timeSize : 11,
               fontWeight: FontWeight.w500,
+              fontFeatures: ios ? IosTypography.tabularDigits : null,
             ),
           ),
           if (ctx.isMe) ...[
@@ -2023,11 +2026,18 @@ class MessageBubble extends StatelessWidget {
       ctx.context,
     ).textTheme.bodyLarge?.fontFamily;
     final ios = IosGlass.of(ctx.context);
+    final bubbleSize = ios ? IosBubbleMetrics.textSize : 16.0;
     final textStyle = TextStyle(
       color: ctx.text,
-      fontSize: ios ? IosBubbleMetrics.textSize : 16,
+      fontSize: bubbleSize,
       height: ios ? IosBubbleMetrics.textHeight : 1.3,
       fontFamily: activeFontFamily,
+      letterSpacing: ios
+          ? iosLetterSpacing(
+              fontSize: bubbleSize,
+              fontFamily: activeFontFamily,
+            )
+          : null,
       fontVariations: activeFontFamily == 'Inter' && !ios
           ? const [FontVariation('wght', 300)]
           : null,
@@ -2048,6 +2058,7 @@ class MessageBubble extends StatelessWidget {
           style: TextStyle(
             color: ctx.dim,
             fontSize: ios ? IosBubbleMetrics.timeSize : 10,
+            fontFeatures: ios ? IosTypography.tabularDigits : null,
           ),
         ),
         if (isMe) ...[
@@ -2068,7 +2079,6 @@ class MessageBubble extends StatelessWidget {
               : 'недоступно на этом устройстве',
           style: textStyle.copyWith(
             color: ctx.cs.error,
-            fontStyle: FontStyle.italic,
           ),
         ),
       );
@@ -2140,7 +2150,6 @@ class MessageBubble extends StatelessWidget {
           style: TextStyle(
             color: textColor.withValues(alpha: 0.7),
             fontSize: 13,
-            fontStyle: FontStyle.italic,
           ),
         ),
       );
@@ -2207,7 +2216,7 @@ class MessageBubble extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: accent,
-              fontSize: 12.5,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2350,7 +2359,6 @@ class MessageBubble extends StatelessWidget {
                 style: TextStyle(
                   color: color,
                   fontSize: fontSize,
-                  fontStyle: wrongKey ? FontStyle.italic : null,
                 ),
               ),
             ),

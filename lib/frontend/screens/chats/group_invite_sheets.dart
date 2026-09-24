@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -407,13 +409,21 @@ class _InviteLinkCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.chatInfoInviteLink.toUpperCase(),
-                    style: TextStyle(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.6,
-                    ),
+                    IosGlass.of(context)
+                        ? IosTypography.sentenceCase(l10n.chatInfoInviteLink)
+                        : l10n.chatInfoInviteLink.toUpperCase(),
+                    style: IosGlass.of(context)
+                        ? TextStyle(
+                            color: cs.onSurfaceVariant,
+                            fontSize: IosTypography.sectionHeader,
+                            fontWeight: IosTypography.regular,
+                          )
+                        : TextStyle(
+                            color: cs.onSurfaceVariant,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.6,
+                          ),
                   ),
                   const SizedBox(height: 10),
                   Container(

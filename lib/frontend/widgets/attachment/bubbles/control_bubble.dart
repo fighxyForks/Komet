@@ -144,7 +144,9 @@ class _ControlBubbleState extends State<ControlBubble> {
                 text: segment.text,
                 style: interactive && segment.userId != null
                     ? TextStyle(
-                        fontWeight: ios ? FontWeight.w700 : FontWeight.w600,
+                        fontWeight: ios
+                            ? IosTypography.semibold
+                            : FontWeight.w600,
                       )
                     : null,
                 recognizer: interactive && segment.userId != null
@@ -156,7 +158,6 @@ class _ControlBubbleState extends State<ControlBubble> {
         style: TextStyle(
           color: cs.onSurfaceVariant,
           fontSize: ios ? IosTypography.service : 12,
-          fontStyle: ios ? FontStyle.normal : FontStyle.italic,
         ),
         textAlign: TextAlign.center,
       ),

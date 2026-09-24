@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'glass/ios_glass.dart';
+import 'glass/ios_typography.dart';
 
 import '../../core/utils/update_checker.dart';
 import '../../core/utils/update_installer.dart';
@@ -42,13 +44,21 @@ Future<void> showUpdateDialog(BuildContext context, AppUpdateInfo info) async {
             if (notes.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text(
-                l10n.updateWhatsNew,
-                style: TextStyle(
-                  color: cs.onSurface,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.4,
-                ),
+                IosGlass.of(dialogContext)
+                    ? IosTypography.sentenceCase(l10n.updateWhatsNew)
+                    : l10n.updateWhatsNew,
+                style: IosGlass.of(dialogContext)
+                    ? TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontSize: IosTypography.sectionHeader,
+                        fontWeight: IosTypography.regular,
+                      )
+                    : TextStyle(
+                        color: cs.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.4,
+                      ),
               ),
               const SizedBox(height: 6),
               ConstrainedBox(

@@ -20,9 +20,9 @@ String chatActivityLabel(
     ChatActivity.typing => many ? 'печатают' : 'печатает',
     ChatActivity.sticker => many ? 'выбирают стикеры' : 'выбирает стикер',
   };
-  if (!many) return '${names.first} $verb...';
-  if (names.length == 2) return '${names[0]} и ${names[1]} $verb...';
-  return '${names[0]} и ещё ${names.length - 1} $verb...';
+  if (!many) return '${names.first} $verb…';
+  if (names.length == 2) return '${names[0]} и ${names[1]} $verb…';
+  return '${names[0]} и ещё ${names.length - 1} $verb…';
 }
 
 String _shortName(String name) {

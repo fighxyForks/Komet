@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/config/app_fonts.dart';
+import '../../../../widgets/glass/ios_glass.dart';
+import '../../../../widgets/glass/ios_typography.dart';
 import '../../../../../core/storage/app_database.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../main.dart' show stickersModule;
@@ -138,7 +140,9 @@ class _GreetingCardBody extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: cs.onSurfaceVariant,
-                fontSize: 13.5,
+                fontSize: IosGlass.of(context)
+                    ? IosTypography.footer
+                    : 13.5,
                 height: 1.3,
               ),
             ),

@@ -25,6 +25,7 @@ import '../chat_menu_overlay.dart';
 import '../custom_notification.dart';
 import '../glass/glass_capsule.dart';
 import '../glass/ios_glass.dart';
+import '../glass/ios_typography.dart';
 import '../komet_avatar.dart';
 import '../photo_viewer.dart';
 import '../reload_on_reconnect.dart';
@@ -81,12 +82,12 @@ const List<String> _enMonthsFull = [
   'December',
 ];
 
-String _monthHeader(String locale, DateTime date) {
+String _monthHeader(String locale, DateTime date, {bool uppercase = true}) {
   final months = locale.startsWith('ru') ? _ruMonthsFull : _enMonthsFull;
   final now = DateTime.now();
   final name = months[date.month - 1];
   final label = date.year == now.year ? name : '$name ${date.year}';
-  return label.toUpperCase();
+  return uppercase ? label.toUpperCase() : label;
 }
 
 Widget _emptyState(ColorScheme cs, String label, IconData icon) {
@@ -114,17 +115,24 @@ Widget _loadingState(ColorScheme cs) {
   );
 }
 
-Widget _sectionHeader(ColorScheme cs, String label) {
+Widget _sectionHeader(BuildContext context, ColorScheme cs, String label) {
+  final ios = IosGlass.of(context);
   return Padding(
     padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
     child: Text(
       label,
-      style: TextStyle(
-        color: cs.onSurfaceVariant,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.6,
-      ),
+      style: ios
+          ? TextStyle(
+              color: cs.onSurfaceVariant,
+              fontSize: IosTypography.sectionHeader,
+              fontWeight: IosTypography.regular,
+            )
+          : TextStyle(
+              color: cs.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.6,
+            ),
     ),
   );
 }
@@ -656,7 +664,14 @@ class _SharedMediaTabState extends State<SharedMediaTab>
     final children = <Widget>[];
 
     for (final group in groups) {
-      children.add(_sectionHeader(cs, _monthHeader(locale, group.month)));
+      final ios = IosGlass.of(context);
+      children.add(
+        _sectionHeader(
+          context,
+          cs,
+          _monthHeader(locale, group.month, uppercase: !ios),
+        ),
+      );
       switch (widget.kind) {
         case SharedContentKind.media:
           children.add(_mediaGrid(cs, group.items));
