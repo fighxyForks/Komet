@@ -7,8 +7,8 @@ enum ChatActivity { typing, sticker }
 
 extension ChatActivityLabel on ChatActivity {
   String get label => switch (this) {
-    ChatActivity.typing => 'Печатает...',
-    ChatActivity.sticker => 'Выбирает стикер...',
+    ChatActivity.typing => 'Печатает…',
+    ChatActivity.sticker => 'Выбирает стикер…',
   };
 }
 

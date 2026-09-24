@@ -64,14 +64,14 @@ void main() {
 
     test('в диалоге остаётся безымянная подпись', () {
       ContactCache.put(_alice, 'Алиса Тестова');
-      expect(chatActivityLabel(snapshot([_alice])), 'Печатает...');
+      expect(chatActivityLabel(snapshot([_alice])), 'Печатает…');
     });
 
     test('в группе показывает имя печатающего', () {
       ContactCache.put(_alice, 'Алиса Тестова');
       expect(
         chatActivityLabel(snapshot([_alice]), withNames: true),
-        'Алиса печатает...',
+        'Алиса печатает…',
       );
     });
 
@@ -80,7 +80,7 @@ void main() {
       ContactCache.put(_bob, 'Борис');
       expect(
         chatActivityLabel(snapshot([_alice, _bob]), withNames: true),
-        'Алиса и Борис печатают...',
+        'Алиса и Борис печатают…',
       );
     });
 
@@ -90,14 +90,14 @@ void main() {
       ContactCache.put(_carol, 'Вера');
       expect(
         chatActivityLabel(snapshot([_alice, _bob, _carol]), withNames: true),
-        'Алиса и ещё 2 печатают...',
+        'Алиса и ещё 2 печатают…',
       );
     });
 
     test('без известного имени откатывается к общей подписи', () {
       expect(
         chatActivityLabel(snapshot([_alice]), withNames: true),
-        'Печатает...',
+        'Печатает…',
       );
     });
 
@@ -107,7 +107,7 @@ void main() {
       final snap = ChatActivityStore.instance.snapshot(_chatId)!;
       expect(
         chatActivityLabel(snap, withNames: true),
-        'Алиса выбирает стикер...',
+        'Алиса выбирает стикер…',
       );
     });
 
