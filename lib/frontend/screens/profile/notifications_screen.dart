@@ -18,6 +18,9 @@ import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import 'web_push_screen.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -181,7 +184,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     SectionHeader(
                       l10n.notificationsFkmSectionTitle,
                       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                      fontSize: 14,
+                      fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                     ),
                     SettingsCard(
                       children: [
@@ -216,12 +219,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsMainSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   ),
                   SettingsCard(
                     children: [
                       SettingsToggleTile(
-                        icon: Symbols.notifications,
+                        icon: IosSymbols.notifications(context),
                         label: l10n.notificationsAllLabel,
                         value: _allNotifications,
                         onChanged: (v) => _apply(
@@ -236,7 +239,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsNewSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   ),
                   SettingsCard(
                     children: [
@@ -268,12 +271,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsAdditionalSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   ),
                   SettingsCard(
                     children: [
                       SettingsToggleTile(
-                        icon: Symbols.call,
+                        icon: IosSymbols.call(context),
                         label: l10n.notificationsCallsLabel,
                         value: _callNotifications,
                         onChanged: (v) => _apply(
@@ -283,7 +286,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         ),
                       ),
                       SettingsToggleTile(
-                        icon: Symbols.person_add,
+                        icon: IosSymbols.personAdd(context),
                         label: l10n.notificationsNewContactsLabel,
                         value: _newContacts,
                         onChanged: (v) => _apply(
@@ -298,7 +301,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsHapticsSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   ),
                   SettingsCard(
                     children: [

@@ -18,6 +18,8 @@ import '../../widgets/primary_loading_button.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class E2eeScreen extends StatefulWidget {
   final int accountId;
@@ -252,7 +254,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
             l10n.e2eeFingerprint,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -366,7 +368,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
                             _statusText(l10n),
                             style: TextStyle(
                               color: cs.onSurface,
-                              fontSize: 16,
+                              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                               fontWeight: FontWeight.w600,
                               height: 1.3,
                             ),
@@ -401,7 +403,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
                     l10n.e2eeTransferTitle,
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

@@ -11,6 +11,9 @@ import 'font_settings_screen.dart';
 import 'message_actions_screen.dart';
 import 'theme_settings_screen.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class _CustomizationCategory {
   final IconData icon;
@@ -109,8 +112,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
           child: Row(
             children: [
-              Icon(
-                Symbols.palette,
+              Icon(IosSymbols.palette(context),
                 color: cs.onSurfaceVariant,
                 size: 22,
                 weight: 400,
@@ -121,7 +123,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
                   'Кастомизация',
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

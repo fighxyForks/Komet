@@ -17,6 +17,9 @@ import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class TrafficMonitorScreen extends StatefulWidget {
   const TrafficMonitorScreen({super.key});
@@ -142,8 +145,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
-              Symbols.arrow_back,
+            icon: Icon(IosSymbols.chevronBack(context),
               color: cs.onSurface,
               size: 24,
               weight: 400,
@@ -237,7 +239,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: cs.onSurface,
-                        fontSize: 14,
+                        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'monospace',
                       ),
@@ -336,7 +338,7 @@ class _TrafficRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: cs.onSurface,
-                          fontSize: 14,
+                          fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'monospace',
                         ),
@@ -422,8 +424,7 @@ class _TrafficRow extends StatelessWidget {
           IconButton(
             tooltip: 'Скопировать',
             visualDensity: VisualDensity.compact,
-            icon: Icon(
-              Symbols.content_copy,
+            icon: Icon(IosSymbols.contentCopy(context),
               size: 16,
               color: cs.onSurfaceVariant,
             ),

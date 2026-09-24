@@ -8,6 +8,8 @@ import 'package:komet/core/storage/chat_wallpaper_store.dart';
 import 'package:komet/frontend/widgets/chat_wallpaper_view.dart';
 import '../../../core/config/app_frost.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ChatWallpaperPreviewScreen extends StatefulWidget {
   final Uint8List imageBytes;
@@ -261,7 +263,7 @@ class _DimLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = TextStyle(
       color: color,
-      fontSize: 16,
+      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
       fontWeight: FontWeight.w600,
       fontFamily: displayFontOf(context),
     );
@@ -332,7 +334,7 @@ class _ToggleChip extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   fontWeight: FontWeight.w600,
                   fontFamily: displayFontOf(context),
                 ),

@@ -12,6 +12,8 @@ import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ChatBackgroundScreen extends StatefulWidget {
   const ChatBackgroundScreen({super.key});
@@ -165,7 +167,7 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
             'Эти обои применяются ко всем чатам, где не выбран свой фон.',
             style: TextStyle(
               color: cs.onSurfaceVariant,
-              fontSize: 14,
+              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
               height: 1.35,
             ),
           ),
@@ -220,7 +222,7 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
                   'Выбрать обои',
                   style: TextStyle(
                     color: cs.onPrimary,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w700,
                     fontFamily: displayFontOf(context),
                   ),

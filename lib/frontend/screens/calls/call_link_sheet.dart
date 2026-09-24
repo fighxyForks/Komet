@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:komet/backend/modules/calls.dart';
 import 'package:komet/frontend/screens/chats/chat_list_screen.dart';
@@ -10,6 +9,9 @@ import 'package:komet/frontend/widgets/small_spinner.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart' show messagesModule;
 import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 Future<bool> showCreatedCallSheet(
   BuildContext context, {
@@ -88,7 +90,7 @@ class _CreatedCallCardState extends State<_CreatedCallCard> {
                 label,
                 style: TextStyle(
                   color: cs.primary,
-                  fontSize: 16,
+                  fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   fontWeight: FontWeight.w600,
                 ),
                 maxLines: 1,
@@ -142,8 +144,7 @@ class _CreatedCallCardState extends State<_CreatedCallCard> {
                         ],
                       ),
                     ),
-                    child: Icon(
-                      Symbols.call,
+                    child: Icon(IosSymbols.call(context),
                       fill: 1,
                       color: cs.onPrimary,
                       size: 40,
@@ -176,13 +177,13 @@ class _CreatedCallCardState extends State<_CreatedCallCard> {
                       children: [
                         _action(
                           cs,
-                          icon: Symbols.content_copy,
+                          icon: IosSymbols.contentCopy(context),
                           label: l10n.sharedCopyLink,
                           onTap: _copy,
                         ),
                         _action(
                           cs,
-                          icon: Symbols.reply,
+                          icon: IosSymbols.reply(context),
                           label: l10n.callLinkSendInMax,
                           onTap: _sendInMax,
                           busy: _sending,
@@ -201,8 +202,8 @@ class _CreatedCallCardState extends State<_CreatedCallCard> {
                       ),
                       child: Text(
                         l10n.callLinkStart,
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: TextStyle(
+                          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

@@ -13,6 +13,8 @@ import '../../widgets/emoji_panel.dart';
 import '../../widgets/rich_message_controller.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/springy_tap.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ShareComposerBar extends StatefulWidget {
   const ShareComposerBar({
@@ -200,7 +202,7 @@ class _ShareComposerBarState extends State<ShareComposerBar> {
                       : 'Добавить подпись...',
                   hintStyle: TextStyle(
                     color: cs.onSurfaceVariant,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   ),
                 ),
               ),

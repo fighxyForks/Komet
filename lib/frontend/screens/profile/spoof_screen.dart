@@ -28,6 +28,9 @@ import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../auth/login_screen.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 enum SpoofingMethod { partial, full }
 
@@ -470,7 +473,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
   Widget _sectionHeader(String title) => SectionHeader(
     title,
     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-    fontSize: 14,
+    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
   );
 
   Widget _buildEnableCard() {
@@ -533,13 +536,13 @@ class _SpoofScreenState extends State<SpoofScreen> {
 
     if (_selectedMethod == SpoofingMethod.partial) {
       descriptionWidget = _buildDescriptionTile(
-        icon: Symbols.check_circle,
+        icon: IosSymbols.checkCircle(context),
         color: kSuccessGreen,
         text: l10n.spoofMethodPartialDescription,
       );
     } else {
       descriptionWidget = _buildDescriptionTile(
-        icon: Symbols.warning,
+        icon: IosSymbols.warning(context),
         color: theme.colorScheme.error,
         text: l10n.spoofMethodFullDescription,
       );
@@ -682,7 +685,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildDescriptionTile(
-            icon: Symbols.info,
+            icon: IosSymbols.info(context),
             color: Theme.of(context).colorScheme.tertiary,
             text: l10n.spoofIdentifiersDescription,
           ),
@@ -791,7 +794,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
           return ChoiceChip(
             label: Text(opt.label),
             avatar: isSelected
-                ? Icon(Symbols.check, size: 18, color: cs.onSecondaryContainer)
+                ? Icon(IosSymbols.check(context), size: 18, color: cs.onSecondaryContainer)
                 : (opt.icon != null
                       ? Icon(opt.icon, size: 18, color: cs.onSurfaceVariant)
                       : null),

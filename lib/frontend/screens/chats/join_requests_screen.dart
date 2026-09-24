@@ -12,6 +12,8 @@ import '../../widgets/glossy_pill.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 // #***! входящие заявки на вступление, видно админам группы/канала
 class JoinRequestsScreen extends StatefulWidget {
@@ -180,7 +182,7 @@ class _JoinRequestsScreenState extends State<JoinRequestsScreen>
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: cs.onSurface,
-                  fontSize: 16,
+                  fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   fontWeight: FontWeight.w500,
                 ),
               ),

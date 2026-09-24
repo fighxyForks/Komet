@@ -358,7 +358,7 @@ class _PinnedMessageTextState extends State<PinnedMessageText> {
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
         color: widget.color,
-        fontSize: 14,
+        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
       ),
     );
   }

@@ -8,6 +8,8 @@ import '../../../core/utils/haptics.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class AppIconScreen extends StatefulWidget {
   const AppIconScreen({super.key});
@@ -64,7 +66,7 @@ class _AppIconScreenState extends State<AppIconScreen> {
                     'Внешний вид иконки',
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -100,7 +102,7 @@ class _AppIconScreenState extends State<AppIconScreen> {
                               label: icon.title,
                               labelStyle: TextStyle(
                                 color: cs.onSurface,
-                                fontSize: 16,
+                                fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                                 fontWeight: FontWeight.w600,
                               ),
                               selected: current == icon,

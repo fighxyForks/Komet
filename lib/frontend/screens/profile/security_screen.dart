@@ -27,6 +27,7 @@ import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 const bool _showFamilyProtection = false;
 
@@ -138,11 +139,11 @@ class _SecurityScreenState extends State<SecurityScreen>
       subtitle: l10n.securityModeSheetSubtitle,
       items: [
         InfoActionSheetItem(
-          icon: Symbols.search,
+          icon: IosSymbols.search(context),
           title: l10n.securityModeSheetSearch,
         ),
         InfoActionSheetItem(
-          icon: Symbols.call,
+          icon: IosSymbols.call(context),
           title: l10n.securityModeSheetCalls,
         ),
         InfoActionSheetItem(
@@ -150,7 +151,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           title: l10n.securityModeSheetInvites,
         ),
         InfoActionSheetItem(
-          icon: Symbols.visibility_off,
+          icon: IosSymbols.visibilityOff(context),
           title: l10n.securityModeSheetContent,
         ),
       ],
@@ -364,8 +365,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
           child: Row(
             children: [
-              Icon(
-                Symbols.lock,
+              Icon(IosSymbols.lock(context),
                 color: cs.onSurfaceVariant,
                 size: 22,
                 weight: 400,
@@ -379,7 +379,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                       l10n.passcodeTitle,
                       style: TextStyle(
                         color: cs.onSurface,
-                        fontSize: 16,
+                        fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -399,8 +399,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                   ],
                 ),
               ),
-              Icon(
-                Symbols.chevron_right,
+              Icon(IosSymbols.chevronRight(context),
                 color: cs.outline,
                 size: 20,
                 weight: 400,
@@ -447,7 +446,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                           l10n.securityPasswordTitle,
                           style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: 16,
+                            fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -466,8 +465,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                   ),
                   _buildWarningBadge(cs),
                   const SizedBox(width: 4),
-                  Icon(
-                    Symbols.chevron_right,
+                  Icon(IosSymbols.chevronRight(context),
                     color: cs.outline,
                     size: 20,
                     weight: 400,
@@ -503,7 +501,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           _buildSafeModeRow(cs, isSafeMode),
           _settingsRow(
             cs,
-            icon: Symbols.phone,
+            icon: IosSymbols.phone(context),
             label: l10n.securityWhoCanCall,
             trailingText: _getPrivacyLabel(
               _privacyConfig?.incomingCall ?? 'CONTACTS',
@@ -523,7 +521,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           ),
           _settingsRow(
             cs,
-            icon: Symbols.group,
+            icon: IosSymbols.group(context),
             label: l10n.securityWhoCanInvite,
             trailingText: _getPrivacyLabel(
               _privacyConfig?.chatsInvite ?? 'CONTACTS',
@@ -587,7 +585,7 @@ class _SecurityScreenState extends State<SecurityScreen>
             ),
           _settingsRow(
             cs,
-            icon: Symbols.visibility_off,
+            icon: IosSymbols.visibilityOff(context),
             label: l10n.securityShowOnlineStatus,
             trailingText: _privacyConfig?.hidden == true
                 ? l10n.securityPrivacyNobody
@@ -635,8 +633,7 @@ class _SecurityScreenState extends State<SecurityScreen>
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Symbols.lock,
+                  Icon(IosSymbols.lock(context),
                     color: cs.onSurfaceVariant,
                     size: 22,
                     weight: 400,
@@ -650,7 +647,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                           l10n.securityModeTitle,
                           style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: 16,
+                            fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -736,12 +733,12 @@ class _SecurityScreenState extends State<SecurityScreen>
                               option.$2,
                               style: TextStyle(
                                 color: cs.onSurface,
-                                fontSize: 16,
+                                fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                               ),
                             ),
                           ),
                           if (isSelected)
-                            Icon(Symbols.check, color: cs.primary, size: 20),
+                            Icon(IosSymbols.check(context), color: cs.primary, size: 20),
                         ],
                       ),
                     ),
@@ -822,7 +819,7 @@ class _SecurityScreenState extends State<SecurityScreen>
         children: [
           _settingsRow(
             cs,
-            icon: Symbols.description,
+            icon: IosSymbols.description(context),
             label: l10n.securityReadReceipts,
             trailingWidget: GlassSwitch(
               value: showReadMark,
@@ -857,7 +854,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           ),
           _settingsRow(
             cs,
-            icon: Symbols.warning,
+            icon: IosSymbols.warning(context),
             label: l10n.securityUnsafeFiles,
             trailingWidget: GlassSwitch(
               value: unsafeFiles,
@@ -873,7 +870,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           ),
           _settingsRow(
             cs,
-            icon: Symbols.mic,
+            icon: IosSymbols.mic(context),
             label: l10n.securityAudioTranscription,
             trailingWidget: GlassSwitch(
               value: audioTranscription,
@@ -1000,8 +997,7 @@ class _SecurityScreenState extends State<SecurityScreen>
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
             child: Row(
               children: [
-                Icon(
-                  Symbols.block,
+                Icon(IosSymbols.block(context),
                   color: cs.onSurfaceVariant,
                   size: 22,
                   weight: 400,
@@ -1015,7 +1011,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                         l10n.securityBlacklistTitle,
                         style: TextStyle(
                           color: cs.onSurface,
-                          fontSize: 16,
+                          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1031,8 +1027,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(
-                  Symbols.chevron_right,
+                Icon(IosSymbols.chevronRight(context),
                   color: cs.outline,
                   size: 20,
                   weight: 400,
@@ -1138,7 +1133,7 @@ class _SecurityScreenState extends State<SecurityScreen>
                       trailingText,
                       style: TextStyle(
                         color: cs.onSurfaceVariant,
-                        fontSize: 14,
+                        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                       ),
                     ),
                   ?trailingWidget,

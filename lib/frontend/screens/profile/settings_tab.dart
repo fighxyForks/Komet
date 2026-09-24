@@ -63,6 +63,7 @@ import '../../widgets/media_playback_pill.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
@@ -580,7 +581,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 },
                               ),
                             _SettingsItem(
-                              icon: Symbols.language,
+                              icon: IosSymbols.language(context),
                               label: 'Войти в Сферум',
                               onTap: () {
                                 Navigator.push(
@@ -597,7 +598,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                             ),
                             if (showExtraInfo)
                               _SettingsItem(
-                                icon: Symbols.info,
+                                icon: IosSymbols.info(context),
                                 label: AppLocalizations.of(context)!.infoTitle,
                                 onTap: () {
                                   Navigator.push(
@@ -640,7 +641,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           },
                         ),
                         _SettingsItem(
-                          icon: Symbols.videocam,
+                          icon: IosSymbols.videocam(context),
                           label: 'Камера и микрофон',
                           onTap: () {
                             Navigator.push(
@@ -690,7 +691,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                             },
                           ),
                         _SettingsItem(
-                          icon: Symbols.lock,
+                          icon: IosSymbols.lock(context),
                           label: 'Безопасность',
                           onTap: () {
                             Navigator.push(
@@ -1007,8 +1008,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       children: [
                         IconButton(
                           key: _avatarMenuKey,
-                          icon: Icon(
-                            Symbols.more_vert,
+                          icon: Icon(IosSymbols.moreVert(context),
                             color: iconColor,
                             size: 22,
                             weight: 400,
@@ -1018,8 +1018,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                               : _openAvatarMenu,
                         ),
                         IconButton(
-                          icon: Icon(
-                            Symbols.edit,
+                          icon: Icon(IosSymbols.edit(context),
                             color: iconColor,
                             size: 22,
                             weight: 400,
@@ -1120,8 +1119,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 ),
                                 const SizedBox(width: 4),
                                 AnimatedSlashIcon(
-                                  icon: Symbols.visibility,
-                                  slashedIcon: Symbols.visibility_off,
+                                  icon: IosSymbols.visibility(context),
+                                  slashedIcon: IosSymbols.visibilityOff(context),
                                   slashed: !_isPhoneVisible,
                                   size: 14,
                                   color: Color.lerp(
@@ -1313,7 +1312,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   bio,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1393,8 +1392,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Symbols.check_circle,
+                    Icon(IosSymbols.checkCircle(context),
                       fill: 1,
                       size: 15,
                       color: online ? kSuccessGreen : cs.mutedText,
@@ -1404,7 +1402,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       label,
                       style: TextStyle(
                         color: textColor ?? cs.onSurfaceVariant,
-                        fontSize: 14,
+                        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                         fontWeight: FontWeight.w400,
                       ),
                     ),

@@ -13,6 +13,8 @@ import '../../widgets/swipe_route.dart';
 import 'chat_screen.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 Future<void> showCreateChannelFlow(BuildContext context) async {
   final cs = Theme.of(context).colorScheme;
@@ -187,7 +189,7 @@ class _CreateChannelFlowState extends State<_CreateChannelFlow> {
                         hintText: 'Название канала',
                         hintStyle: TextStyle(
                           color: cs.onSurfaceVariant,
-                          fontSize: 16,
+                          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                         ),
                         border: InputBorder.none,
                         isDense: true,
@@ -269,7 +271,7 @@ class _PillButton extends StatelessWidget {
                 : (disabled
                       ? cs.onSurface.withValues(alpha: 0.4)
                       : cs.onSurface),
-            fontSize: 14,
+            fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
             fontWeight: FontWeight.w600,
           ),
         ),

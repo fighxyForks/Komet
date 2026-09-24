@@ -20,6 +20,7 @@ import '../../../main.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_card.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class FontSettingsScreen extends StatefulWidget {
   const FontSettingsScreen({super.key});
@@ -402,7 +403,7 @@ class _FontOption extends StatelessWidget {
         IconButton(
           onPressed: onDelete,
           tooltip: AppLocalizations.of(context)!.msgActionsDelete,
-          icon: Icon(Symbols.delete, color: cs.onSurfaceVariant, weight: 500),
+          icon: Icon(IosSymbols.delete(context), color: cs.onSurfaceVariant, weight: 500),
         ),
       ],
     );

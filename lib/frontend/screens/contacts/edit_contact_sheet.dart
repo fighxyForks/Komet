@@ -7,10 +7,10 @@ import 'package:komet/frontend/widgets/custom_notification.dart';
 import 'package:komet/frontend/widgets/komet_avatar.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/glass/ios_metrics.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 enum EditContactAction { updated, removed }
 
@@ -260,8 +260,7 @@ class _EditContactCardState extends State<_EditContactCard> {
               borderRadius: BorderRadius.circular(20),
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: Icon(
-                  Symbols.close,
+                child: Icon(IosSymbols.close(context),
                   size: 18,
                   color: cs.onSurfaceVariant,
                 ),

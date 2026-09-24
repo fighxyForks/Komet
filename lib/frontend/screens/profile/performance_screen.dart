@@ -6,6 +6,8 @@ import '../../../core/config/app_cache_extent.dart';
 import '../../../core/utils/haptics.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class PerformanceScreen extends StatefulWidget {
   const PerformanceScreen({super.key});
@@ -108,7 +110,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                     'Кеш сообщений',
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

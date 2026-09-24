@@ -18,6 +18,8 @@ import '../../widgets/swipe_route.dart';
 import 'chat_screen.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 Future<void> showCreateGroupFlow(BuildContext context) async {
   final cs = Theme.of(context).colorScheme;
@@ -469,7 +471,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
                     hintText: 'Название группы',
                     hintStyle: TextStyle(
                       color: cs.onSurfaceVariant,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     ),
                     border: InputBorder.none,
                     isDense: true,

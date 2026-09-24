@@ -7,6 +7,8 @@ import '../../../core/config/app_message_actions_style.dart';
 import '../../../core/utils/haptics.dart';
 import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class MessageActionsScreen extends StatelessWidget {
   const MessageActionsScreen({super.key});
@@ -57,7 +59,7 @@ class _StyleCard extends StatelessWidget {
             'Стиль',
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
               fontWeight: FontWeight.w700,
             ),
           ),

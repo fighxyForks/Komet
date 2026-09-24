@@ -819,8 +819,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                 if (muted)
                   Padding(
                     padding: const EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Symbols.mic_off,
+                    child: Icon(IosSymbols.micOff(context),
                       size: 16,
                       color: Colors.white,
                       fill: 1,
@@ -1043,8 +1042,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   IconButton(
                     onPressed: _showInfoSheet,
                     tooltip: l10n.callInfoTitle,
-                    icon: Icon(
-                      Symbols.info,
+                    icon: Icon(IosSymbols.info(context),
                       color: cs.onSurface,
                       weight: 500,
                       size: 26,
@@ -1062,7 +1060,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   session: _session!,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w600,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
@@ -1216,7 +1214,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         session: session,
         style: TextStyle(
           color: cs.onSurfaceVariant,
-          fontSize: 16,
+          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
           fontWeight: FontWeight.w500,
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
@@ -1698,7 +1696,7 @@ class _CallInfoSheet extends StatelessWidget {
                           r[1],
                           style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: 14,
+                            fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),

@@ -223,7 +223,7 @@ class ComposerInputBar extends StatelessWidget {
                         isChannel ? 'Подписаться' : 'Вступить',
                         style: TextStyle(
                           color: cs.onPrimary,
-                          fontSize: 16,
+                          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -260,7 +260,7 @@ class ComposerInputBar extends StatelessWidget {
                   isMuted ? 'Включить уведомления' : 'Отключить уведомления',
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1119,7 +1119,7 @@ class ComposerInputBar extends StatelessWidget {
               formatElapsed(ms),
               style: TextStyle(
                 color: cs.onSurface,
-                fontSize: 16,
+                fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                 fontFeatures: const [ui.FontFeature.tabularFigures()],
               ),
             ),
@@ -1137,7 +1137,7 @@ class ComposerInputBar extends StatelessWidget {
                         '‹ Влево — отмена',
                         style: TextStyle(
                           color: cs.onSurfaceVariant,
-                          fontSize: 14,
+                          fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                         ),
                       ),
                     ),
@@ -1159,7 +1159,7 @@ class ComposerInputBar extends StatelessWidget {
                           'Отмена',
                           style: TextStyle(
                             color: cs.onSurfaceVariant,
-                            fontSize: 14,
+                            fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                           ),
                         ),
                       ],

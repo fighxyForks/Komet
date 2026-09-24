@@ -9,6 +9,8 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class InfoScreen extends StatefulWidget {
   const InfoScreen({super.key});
@@ -298,7 +300,7 @@ class _InfoScreenState extends State<InfoScreen> {
                 label,
                 style: TextStyle(
                   color: cs.onSurfaceVariant,
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -310,7 +312,7 @@ class _InfoScreenState extends State<InfoScreen> {
                 value,
                 style: TextStyle(
                   color: cs.onSurface,
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.end,
@@ -349,7 +351,7 @@ class _InfoScreenState extends State<InfoScreen> {
                 label,
                 style: TextStyle(
                   color: cs.onSurfaceVariant,
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   fontWeight: FontWeight.w400,
                 ),
               ),

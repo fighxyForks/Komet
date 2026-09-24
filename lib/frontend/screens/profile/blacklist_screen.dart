@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/account.dart' show BlockedContact;
 import '../../../backend/modules/contacts.dart';
@@ -14,6 +13,9 @@ import '../../widgets/komet_avatar.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/small_spinner.dart';
 import '../contacts/open_contact_profile.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class BlacklistScreen extends StatefulWidget {
   const BlacklistScreen({super.key, this.initialContacts});
@@ -109,7 +111,7 @@ class _BlacklistScreenState extends State<BlacklistScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.block, size: 48, color: cs.outline, weight: 400),
+            Icon(IosSymbols.block(context), size: 48, color: cs.outline, weight: 400),
             const SizedBox(height: 12),
             Text(
               AppLocalizations.of(context)!.blacklistEmpty,
@@ -158,7 +160,7 @@ class _BlacklistScreenState extends State<BlacklistScreen>
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

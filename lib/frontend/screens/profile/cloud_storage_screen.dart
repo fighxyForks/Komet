@@ -25,6 +25,9 @@ import '../../widgets/small_spinner.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 enum _EnvState { loading, notConfigured, ready }
 
@@ -376,7 +379,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
       leading: CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: _onBack,
-        child: Icon(Symbols.chevron_left, size: 28, color: cs.primary),
+        child: Icon(IosSymbols.chevronLeft(context), size: 28, color: cs.primary),
       ),
       body: switch (_envState) {
         _EnvState.loading => const Center(child: SmallSpinner(size: 36)),
@@ -702,7 +705,7 @@ class _CornerAction extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: cs.onSurface,
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1192,7 +1195,7 @@ class _SendByIdSheetState extends State<_SendByIdSheet> {
             l10n.cloudStorageSendByIdTitle,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
               fontWeight: FontWeight.w700,
             ),
           ),

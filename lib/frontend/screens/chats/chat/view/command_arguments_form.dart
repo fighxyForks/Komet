@@ -3,6 +3,8 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../../core/plugins/plugin_manifest.dart';
 import '../../../../commands/commands.dart';
+import '../../../../widgets/glass/ios_glass.dart';
+import '../../../../widgets/glass/ios_typography.dart';
 
 class CommandArgumentsForm extends StatelessWidget {
   const CommandArgumentsForm({
@@ -53,7 +55,7 @@ class CommandArgumentsForm extends StatelessWidget {
                         style: TextStyle(
                           color: cs.onPrimaryContainer,
                           fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                         ),
                       ),
                     ),

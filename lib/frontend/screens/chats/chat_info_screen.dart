@@ -65,6 +65,7 @@ import 'profile_action_sheets.dart';
 import '../../../core/config/app_fonts.dart';
 import 'chat_info/chat_members_controller.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 enum ChatInfoTab { media }
 
@@ -687,7 +688,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                         padding: const EdgeInsets.only(left: 8),
                         child: GlassIconButton(
                           key: const ValueKey('info-back'),
-                          icon: Symbols.arrow_back_ios_new,
+                          icon: IosSymbols.chevronBack(context),
                           iconSize: 20,
                           tooltip: MaterialLocalizations.of(
                             context,
@@ -697,7 +698,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                       )
                     else
                       IconButton(
-                        icon: Icon(Symbols.arrow_back, color: iconColor),
+                        icon: Icon(IosSymbols.chevronBack(context), color: iconColor),
                         onPressed: () => Navigator.pop(context),
                       ),
                     Expanded(
@@ -718,9 +719,9 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                           padding: const EdgeInsets.only(right: 4),
                           child: Text(
                             '${_avatarIndex + 1}/$totalPhotos',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 14,
+                              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -849,13 +850,13 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           if (interactive && _avatarHover) ...[
             _avatarArrow(
               alignment: Alignment.centerLeft,
-              icon: Symbols.chevron_left,
+              icon: IosSymbols.chevronLeft(context),
               enabled: _avatarIndex > 0,
               onTap: () => _stepAvatar(-1),
             ),
             _avatarArrow(
               alignment: Alignment.centerRight,
-              icon: Symbols.chevron_right,
+              icon: IosSymbols.chevronRight(context),
               enabled: _avatarIndex < pages.length - 1,
               onTap: () => _stepAvatar(1),
             ),
@@ -1041,7 +1042,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         padding: const EdgeInsets.only(right: 8),
         child: GlassIconButton(
           key: const ValueKey('info-more'),
-          icon: Symbols.more_horiz,
+          icon: IosSymbols.ellipsisHoriz(context),
           tooltip: MaterialLocalizations.of(context).showMenuTooltip,
           onPressedAt: entries.isEmpty
               ? null
@@ -1063,12 +1064,12 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     }
     if (entries.isEmpty) {
       return IconButton(
-        icon: Icon(Symbols.more_vert, color: color),
+        icon: Icon(IosSymbols.moreVert(context), color: color),
         onPressed: null,
       );
     }
     return PopupMenuButton<VoidCallback>(
-      icon: Icon(Symbols.more_vert, color: color),
+      icon: Icon(IosSymbols.moreVert(context), color: color),
       onSelected: (action) => action(),
       itemBuilder: (_) => [
         for (final entry in entries)
@@ -1117,7 +1118,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     if (widget.chatType == 'DIALOG') {
       if (_isContact) {
         entries.add((
-          icon: Symbols.edit,
+          icon: IosSymbols.edit(context),
           label: l10n.editContactMenu,
           destructive: false,
           onTap: _openEdit,
@@ -1132,7 +1133,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         ));
       }
       entries.add((
-        icon: Symbols.delete,
+        icon: IosSymbols.delete(context),
         label: l10n.chatInfoMenuDeleteChat,
         destructive: true,
         onTap: _deleteChat,
@@ -1268,8 +1269,8 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                       ? Color.lerp(cs.primary, Colors.white, t)
                       : textColor.withValues(alpha: 0.7),
                   icon: AnimatedSlashIcon(
-                    icon: Symbols.visibility,
-                    slashedIcon: Symbols.visibility_off,
+                    icon: IosSymbols.visibility(context),
+                    slashedIcon: IosSymbols.visibilityOff(context),
                     slashed: !_showRealName,
                   ),
                   tooltip: real,
@@ -1323,7 +1324,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
 
   Widget _buildActions(ColorScheme cs) {
     final muteBtn = (
-      icon: Symbols.notifications,
+      icon: IosSymbols.notifications(context),
       slashedIcon: Symbols.notifications_off,
       slashed: _isMuted,
       label: _isMuted
@@ -1332,7 +1333,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       onTap: _muteBusy ? null : _toggleMute,
     );
     final chatBtn = (
-      icon: Symbols.chat_bubble,
+      icon: IosSymbols.chatBubble(context),
       slashedIcon: null,
       slashed: false,
       label: l10n.contactProfileActionChat,
@@ -1372,7 +1373,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         muteBtn,
         if (!_isBot)
           (
-            icon: Symbols.call,
+            icon: IosSymbols.call(context),
             slashedIcon: null,
             slashed: false,
             label: l10n.contactProfileActionCall,
@@ -2118,7 +2119,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           style: TextStyle(
             color: selected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 14,
+            fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
           ),
         ),
       ),
@@ -2313,7 +2314,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           child: SizedBox(
             width: 22,
             height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: IosActivityIndicator(strokeWidth: 2),
           ),
         ),
       );

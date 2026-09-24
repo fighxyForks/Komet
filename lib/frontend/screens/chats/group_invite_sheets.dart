@@ -14,6 +14,7 @@ import 'package:komet/frontend/screens/contacts/contact_sheet_common.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
 import 'package:komet/frontend/widgets/komet_avatar.dart';
 import 'package:komet/l10n/app_localizations.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class _Candidate {
   final int id;
@@ -210,7 +211,7 @@ class _AddMembersCardState extends State<_AddMembersCard> {
                             hintText: l10n.chatInfoMembersSearchHint,
                             hintStyle: TextStyle(
                               color: cs.outline,
-                              fontSize: 14,
+                              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
                               vertical: 10,
@@ -244,7 +245,7 @@ class _AddMembersCardState extends State<_AddMembersCard> {
           child: SizedBox(
             width: 26,
             height: 26,
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: IosActivityIndicator(strokeWidth: 2),
           ),
         ),
       );
@@ -324,7 +325,7 @@ class _AddMembersCardState extends State<_AddMembersCard> {
               const SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: IosActivityIndicator(strokeWidth: 2),
               )
             else
               Text(
@@ -333,7 +334,7 @@ class _AddMembersCardState extends State<_AddMembersCard> {
                     : '${l10n.chatInfoAddMembersAction} · ${_selected.length}',
                 style: TextStyle(
                   color: enabled ? cs.primary : cs.onSurfaceVariant,
-                  fontSize: 16,
+                  fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),

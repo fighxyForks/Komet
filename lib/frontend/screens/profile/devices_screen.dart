@@ -21,6 +21,8 @@ import '../../widgets/web_qr_login.dart';
 import 'web_qr_scan_screen.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});
@@ -274,7 +276,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                 l10n.devicesPromoSubtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                   height: 1.3,
                 ),
@@ -450,7 +452,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                       title,
                       style: TextStyle(
                         fontFamily: displayFontOf(context),
-                        fontSize: 16,
+                        fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
                       ),
@@ -498,7 +500,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                               color: isOnline
                                   ? Colors.greenAccent
                                   : cs.onSurfaceVariant,
-                              fontSize: 14,
+                              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                               fontWeight: FontWeight.w500,
                             ),
                           ),

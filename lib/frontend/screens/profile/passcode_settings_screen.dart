@@ -16,6 +16,9 @@ import '../lock/lock_glyph.dart';
 import '../lock/passcode_setup_screen.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class PasscodeSettingsScreen extends StatefulWidget {
   const PasscodeSettingsScreen({super.key});
@@ -103,7 +106,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                     ),
                     title: Text(_idleLabel(l10n, minutes)),
                     trailing: minutes == _lock.idleMinutes.value
-                        ? Icon(Symbols.check, color: cs.primary)
+                        ? Icon(IosSymbols.check(context), color: cs.primary)
                         : null,
                     onTap: () => Navigator.pop(sheetContext, minutes),
                   ),
@@ -159,7 +162,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                   height: 52,
                   child: IosSettingsButton(
                     onPressed: () => _setUp(changing: false),
-                    icon: Symbols.lock,
+                    icon: IosSymbols.lock(context),
                     label: l10n.passcodeEnable,
                   ),
                 )
@@ -175,7 +178,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                       ValueListenableBuilder<bool>(
                         valueListenable: _lock.biometric,
                         builder: (context, value, _) => SettingsToggleTile(
-                          icon: Symbols.fingerprint,
+                          icon: IosSymbols.fingerprint(context),
                           label: l10n.passcodeBiometric,
                           subtitle: l10n.passcodeBiometricHint,
                           value: value,
@@ -197,7 +200,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                 SettingsCard(
                   children: [
                     SettingsNavTile(
-                      icon: Symbols.lock_open,
+                      icon: IosSymbols.lockOpen(context),
                       label: l10n.passcodeDisable,
                       tintColor: cs.error,
                       onTap: _disable,
@@ -284,7 +287,7 @@ class _Hero extends StatelessWidget {
             enabled ? l10n.passcodeOnDescription : l10n.passcodeOffDescription,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
               height: 1.4,
               color: cs.onSurfaceVariant,
             ),
@@ -326,15 +329,14 @@ class _ValueTile extends StatelessWidget {
                   label,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
               Text(value, style: TextStyle(color: cs.primary, fontSize: 14.5)),
               const SizedBox(width: 4),
-              Icon(
-                Symbols.chevron_right,
+              Icon(IosSymbols.chevronRight(context),
                 color: cs.outline,
                 size: 20,
                 weight: 400,

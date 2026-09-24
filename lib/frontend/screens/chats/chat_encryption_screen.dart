@@ -9,6 +9,8 @@ import '../../widgets/primary_loading_button.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ChatEncryptionScreen extends StatefulWidget {
   final int accountId;
@@ -139,7 +141,7 @@ class _ChatEncryptionScreenState extends State<ChatEncryptionScreen> {
                           'Ключ',
                           style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: 16,
+                            fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

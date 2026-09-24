@@ -17,6 +17,8 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 const String kWebPushSiteUrl = 'https://push.komet.pw';
 
@@ -260,7 +262,7 @@ class _WebPushScreenState extends State<WebPushScreen> {
       SectionHeader(
         _linked ? l10n.webPushLinkedTitle : l10n.webPushInstallTitle,
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-        fontSize: 14,
+        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
       ),
       _explainer(cs, _linked ? l10n.webPushLinkedBody : l10n.webPushInstallBody),
       if (_link != null) ...[
@@ -337,7 +339,7 @@ class _WebPushScreenState extends State<WebPushScreen> {
   Widget _explainer(ColorScheme cs, String text) => SettingsPanel(
     child: Text(
       text,
-      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14, height: 1.5),
+      style: TextStyle(color: cs.onSurfaceVariant, fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14, height: 1.5),
     ),
   );
 

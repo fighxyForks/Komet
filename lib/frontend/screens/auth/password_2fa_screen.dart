@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../../backend/modules/account/account_models.dart';
 import '../../../core/protocol/packet.dart';
 import '../../../l10n/app_localizations.dart';
@@ -212,8 +211,8 @@ class _Password2FAScreenState extends State<Password2FAScreen>
                   filled: true,
                   suffixIcon: IconButton(
                     icon: AnimatedSlashIcon(
-                      icon: Symbols.visibility,
-                      slashedIcon: Symbols.visibility_off,
+                      icon: IosSymbols.visibility(context),
+                      slashedIcon: IosSymbols.visibilityOff(context),
                       slashed: _isPasswordVisible,
                       color: cs.onSurfaceVariant,
                     ),

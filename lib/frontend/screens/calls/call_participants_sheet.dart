@@ -12,6 +12,7 @@ import '../../widgets/prompt_dialog.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class CallParticipantView {
   final String name;
@@ -499,10 +500,10 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
           if (p.screenSharing)
             Icon(Symbols.screen_share, size: 18, color: cs.primary),
           if (p.videoEnabled)
-            Icon(Symbols.videocam, size: 18, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.videocam(context), size: 18, color: cs.onSurfaceVariant),
           AnimatedSlashIcon(
-            icon: Symbols.mic,
-            slashedIcon: Symbols.mic_off,
+            icon: IosSymbols.mic(context),
+            slashedIcon: IosSymbols.micOff(context),
             slashed: !p.audioEnabled,
             size: 18,
             color: p.audioEnabled ? cs.onSurfaceVariant : cs.error,

@@ -16,6 +16,9 @@ import '../../../l10n/app_localizations.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class MediaDevicesScreen extends StatefulWidget {
   const MediaDevicesScreen({super.key});
@@ -114,7 +117,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
                   else
                     for (var i = 0; i < microphones.length; i++)
                       _ChoiceTile(
-                        icon: Symbols.mic,
+                        icon: IosSymbols.mic(context),
                         label: microphones[i].label.isNotEmpty
                             ? microphones[i].label
                             : l10n.callMicrophoneFallback(i + 1),
@@ -134,7 +137,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
               builder: (context, selected, _) => SettingsCard(
                 children: [
                   _ChoiceTile(
-                    icon: Symbols.photo_camera,
+                    icon: IosSymbols.camera(context),
                     label: l10n.mediaDevicesSystemCamera,
                     selected: selected.isEmpty,
                     onTap: () => _pickCamera(''),
@@ -162,7 +165,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
                     ValueListenableBuilder<String>(
                       valueListenable: AppCamera.current,
                       builder: (context, camera, _) => SettingsToggleTile(
-                        icon: Symbols.tune,
+                        icon: IosSymbols.tune(context),
                         label: l10n.mediaDevicesVideoNoteCustom,
                         subtitle: custom && camera.isEmpty
                             ? l10n.mediaDevicesVideoNoteCustomMissing
@@ -276,7 +279,7 @@ class _ChoiceTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                   ),
                 ),
@@ -287,8 +290,7 @@ class _ChoiceTile extends StatelessWidget {
                 transitionBuilder: (child, animation) =>
                     ScaleTransition(scale: animation, child: child),
                 child: selected
-                    ? Icon(
-                        Symbols.check_circle,
+                    ? Icon(IosSymbols.checkCircle(context),
                         key: const ValueKey('on'),
                         color: cs.primary,
                         fill: 1,

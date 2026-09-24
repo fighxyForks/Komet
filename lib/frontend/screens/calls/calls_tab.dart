@@ -383,7 +383,7 @@ class _CallsTabState extends State<CallsTab>
                 label,
                 style: TextStyle(
                   color: cs.primary,
-                  fontSize: 16,
+                  fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,

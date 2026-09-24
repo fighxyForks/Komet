@@ -22,6 +22,7 @@ import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_metrics.dart';
 import '../../widgets/glass/ios_typography.dart';
 import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 enum _Stage {
   checking,
@@ -224,7 +225,7 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
-                      icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                      icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -320,7 +321,7 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
             textAlign: TextAlign.center,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -361,7 +362,7 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
             textAlign: TextAlign.center,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
               fontWeight: FontWeight.w600,
             ),
           ),

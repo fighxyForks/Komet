@@ -14,6 +14,9 @@ import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../backend/modules/account/account_models.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 
 String _passwordErrorText(Object error, AppLocalizations l10n) =>
@@ -164,8 +167,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
-              Symbols.arrow_back,
+            icon: Icon(IosSymbols.chevronBack(context),
               color: cs.onSurface,
               size: 24,
               weight: 400,
@@ -203,14 +205,14 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
         children: [
           _buildHeaderTile(
             cs,
-            icon: Symbols.lock_open,
+            icon: IosSymbols.lockOpen(context),
             title: l10n.passwordEntryNotSetTitle,
             subtitle: l10n.passwordEntry2faSubtitle,
           ),
           Divider(height: 1, color: cs.outlineVariant.withValues(alpha: 0.3)),
           _buildActionRow(
             cs,
-            icon: Symbols.settings,
+            icon: IosSymbols.settings(context),
             label: l10n.passwordEntrySetupAction,
             isLast: true,
             onTap: () => Navigator.push(
@@ -246,7 +248,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
                     color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Symbols.lock, color: cs.primary, size: 24),
+                  child: Icon(IosSymbols.lock(context), color: cs.primary, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -314,7 +316,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
                     color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Symbols.lock, color: cs.primary, size: 24),
+                  child: Icon(IosSymbols.lock(context), color: cs.primary, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -325,7 +327,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
                         l10n.passwordEntrySetTitle,
                         style: TextStyle(
                           color: cs.onSurface,
-                          fontSize: 16,
+                          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -393,7 +395,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
               ),
               _buildActionRow(
                 cs,
-                icon: Symbols.delete,
+                icon: IosSymbols.delete(context),
                 label: l10n.passwordEntryDeleteAction,
                 isLast: true,
                 textColor: cs.error,
@@ -436,7 +438,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
                   title,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -488,13 +490,12 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
                       label,
                       style: TextStyle(
                         color: textColor ?? cs.onSurface,
-                        fontSize: 16,
+                        fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-                  Icon(
-                    Symbols.chevron_right,
+                  Icon(IosSymbols.chevronRight(context),
                     color: cs.outline,
                     size: 20,
                     weight: 400,
@@ -648,7 +649,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
         backgroundColor: iosSettingsBackground(context),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -683,14 +684,14 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Symbols.error, color: cs.error, size: 20),
+                  Icon(IosSymbols.error(context), color: cs.error, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _errorMessage!,
                       style: TextStyle(
                         color: cs.onErrorContainer,
-                        fontSize: 14,
+                        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                       ),
                     ),
                   ),
@@ -741,7 +742,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                 ),
                 child: Center(
                   child: isActive
-                      ? Icon(Symbols.check, color: cs.onPrimary, size: 16)
+                      ? Icon(IosSymbols.check(context), color: cs.onPrimary, size: 16)
                       : Text(
                           '${index + 1}',
                           style: TextStyle(
@@ -1028,7 +1029,7 @@ class _TwoFactorPasswordChangeScreenState
         backgroundColor: iosSettingsBackground(context),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -1206,7 +1207,7 @@ class _TwoFactorEmailChangeScreenState
         backgroundColor: iosSettingsBackground(context),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -1366,7 +1367,7 @@ class _TwoFactorRemoveScreenState extends State<TwoFactorRemoveScreen> {
         backgroundColor: iosSettingsBackground(context),
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -1391,7 +1392,7 @@ class _TwoFactorRemoveScreenState extends State<TwoFactorRemoveScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Symbols.warning, color: cs.error),
+                  Icon(IosSymbols.warning(context), color: cs.error),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -1462,8 +1463,8 @@ class _PasswordFieldState extends State<_PasswordField> {
         ),
         suffixIcon: IconButton(
           icon: AnimatedSlashIcon(
-            icon: Symbols.visibility,
-            slashedIcon: Symbols.visibility_off,
+            icon: IosSymbols.visibility(context),
+            slashedIcon: IosSymbols.visibilityOff(context),
             slashed: _visible,
             color: cs.onSurfaceVariant,
           ),

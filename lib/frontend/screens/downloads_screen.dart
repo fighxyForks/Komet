@@ -344,8 +344,7 @@ class _DownloadsEmpty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Symbols.download,
+            Icon(IosSymbols.download(context),
               size: 52,
               color: cs.onSurfaceVariant.withValues(alpha: 0.35),
             ),
@@ -387,18 +386,18 @@ class _DownloadTile extends StatelessWidget {
       items: [
         if (onGoToMessage != null)
           ChatMenuItem(
-            icon: Symbols.visibility,
+            icon: IosSymbols.visibility(context),
             label: l10n.sharedGoToMessage,
             onTap: onGoToMessage,
           ),
         if (onSaveToGallery != null)
           ChatMenuItem(
-            icon: Symbols.photo_library,
+            icon: IosSymbols.photoLibrary(context),
             label: l10n.photoViewerSaveToGallery,
             onTap: onSaveToGallery,
           ),
         ChatMenuItem(
-          icon: Symbols.download,
+          icon: IosSymbols.download(context),
           label: l10n.photoViewerSaveAs,
           onTap: onSaveAs,
         ),

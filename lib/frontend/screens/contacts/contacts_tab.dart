@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../../core/config/debug_test.dart';
 import '../../../core/contacts/contact_labels.dart';
 import '../../../core/contacts/device_contacts_service.dart';
@@ -291,7 +290,7 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
                   ),
                   if (!ios)
                     IconButton(
-                      icon: Icon(Symbols.search, color: cs.onSurface),
+                      icon: Icon(IosSymbols.search(context), color: cs.onSurface),
                       onPressed: _openSearchById,
                     ),
                 ],

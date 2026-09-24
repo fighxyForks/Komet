@@ -8,6 +8,8 @@ import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart' show messagesModule;
 import 'package:komet/models/chat_call.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import '../../../../widgets/glass/ios_glass.dart';
+import '../../../../widgets/glass/ios_typography.dart';
 
 class ChatCallBanner extends StatelessWidget {
   final ChatCall call;
@@ -62,7 +64,7 @@ class ChatCallBanner extends StatelessWidget {
                     style: TextStyle(
                       color: cs.onSurface,
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                     ),
                   ),
                   const SizedBox(height: 2),

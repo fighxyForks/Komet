@@ -10,6 +10,10 @@ import '../../../l10n/app_localizations.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 Future<void> showCallMicrophoneSheet(
   BuildContext context, {
@@ -140,7 +144,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
             if (options == null)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(child: IosActivityIndicator()),
               )
             else
               Flexible(
@@ -162,7 +166,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
                           l10n.callMicrophoneEmpty,
                           style: TextStyle(
                             color: cs.onSurfaceVariant,
-                            fontSize: 14,
+                            fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                           ),
                         ),
                       ),
@@ -172,7 +176,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
                         id: option.id,
                         label: option.label,
                         detail: option.detail,
-                        icon: Symbols.mic,
+                        icon: IosSymbols.mic(context),
                         viaDevice: option.isDevice,
                       ),
                     if (monitors.isNotEmpty) ...[
@@ -218,7 +222,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
             _load();
           },
           tooltip: l10n.callMicrophoneRefresh,
-          icon: Icon(Symbols.refresh, color: cs.onSurfaceVariant),
+          icon: Icon(IosSymbols.refresh(context), color: cs.onSurfaceVariant),
         ),
       ],
     ),
@@ -269,7 +273,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: selected ? cs.primary : cs.onSurface,
-          fontSize: 16,
+          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
         ),
       ),
@@ -281,7 +285,7 @@ class _MicrophoneSheetState extends State<_MicrophoneSheet> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
             ),
-      trailing: selected ? Icon(Symbols.check, color: cs.primary) : null,
+      trailing: selected ? Icon(IosSymbols.check(context), color: cs.primary) : null,
       enabled: !_switching,
       onTap: () => _select(id, viaDevice: viaDevice),
     );

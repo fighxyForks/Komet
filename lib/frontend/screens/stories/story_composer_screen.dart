@@ -10,6 +10,7 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/primary_loading_button.dart';
 import '../../../core/config/app_frost.dart';
 import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 const int _storyExpiration = 86400000;
 
@@ -152,7 +153,7 @@ class _StoryComposerScreenState extends State<StoryComposerScreen> {
     if (widget.isVideo) {
       final c = _video;
       if (c == null || !c.value.isInitialized) {
-        return const CircularProgressIndicator(color: Colors.white);
+        return const IosActivityIndicator(color: Colors.white);
       }
       final size = c.value.size;
       foreground = Center(

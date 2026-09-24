@@ -350,7 +350,7 @@ class ChatHeaderRow extends StatelessWidget {
   Widget _materialRow(BuildContext context) {
     final nameStyle = TextStyle(
       color: cs.onSurface,
-      fontSize: 16,
+      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
       fontWeight: FontWeight.w600,
       fontFamily: displayFontOf(context),
     );

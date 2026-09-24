@@ -7,6 +7,9 @@ import '../../../core/config/app_shape.dart';
 import '../../widgets/color_wheel_picker.dart';
 import '../../widgets/mesh_gradient_background.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class CustomGradientResult {
   final List<Color> colors;
@@ -284,7 +287,7 @@ class _Swatch extends StatelessWidget {
                       color: cs.surfaceContainerHighest,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Symbols.close, size: 14, color: cs.onSurface),
+                    child: Icon(IosSymbols.close(context), size: 14, color: cs.onSurface),
                   ),
                 ),
               ),
@@ -313,7 +316,7 @@ class _AddSwatch extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: cs.outlineVariant, width: 1.5),
         ),
-        child: Icon(Symbols.add, color: cs.onSurface, size: 22),
+        child: Icon(IosSymbols.add(context), color: cs.onSurface, size: 22),
       ),
     );
   }
@@ -340,7 +343,7 @@ class _SaveButton extends StatelessWidget {
             'Сохранить',
             style: TextStyle(
               color: cs.onPrimary,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
               fontWeight: FontWeight.w700,
               fontFamily: displayFontOf(context),
             ),

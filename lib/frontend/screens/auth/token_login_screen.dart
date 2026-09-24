@@ -194,7 +194,7 @@ class _TokenLoginScreenState extends State<TokenLoginScreen> {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Icon(Symbols.warning, size: 20, color: cs.onSecondaryContainer),
+            Icon(IosSymbols.warning(context), size: 20, color: cs.onSecondaryContainer),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
@@ -363,7 +363,7 @@ class _TokenLoginScreenState extends State<TokenLoginScreen> {
         return ChoiceChip(
           label: Text(opt.label),
           avatar: isSelected
-              ? Icon(Symbols.check, size: 18, color: cs.onSecondaryContainer)
+              ? Icon(IosSymbols.check(context), size: 18, color: cs.onSecondaryContainer)
               : Icon(opt.icon, size: 18, color: cs.onSurfaceVariant),
           selected: isSelected,
           showCheckmark: false,

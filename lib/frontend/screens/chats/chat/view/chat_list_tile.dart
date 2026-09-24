@@ -175,7 +175,7 @@ class _ActivitySubtitleState extends State<ActivitySubtitle> {
                   )
                 : TextStyle(
                     color: cs.primary,
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                     fontWeight: FontWeight.w500,
                     height: 1.2,
                   ),
