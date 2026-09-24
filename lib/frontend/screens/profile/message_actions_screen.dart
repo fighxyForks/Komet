@@ -5,6 +5,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_message_actions_style.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/glass/ios_glass.dart';
@@ -87,7 +88,11 @@ class _StyleCard extends StatelessWidget {
                       selected: current == item.style,
                       onTap: () {
                         if (current == item.style) return;
-                        Haptics.selection();
+                        if (IosGlass.of(context)) {
+                          IosHaptics.selectionChange();
+                        } else {
+                          Haptics.selection();
+                        }
                         AppMessageActionsStyle.save(item.style);
                       },
                     ),

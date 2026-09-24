@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import 'glass_capsule.dart';
 import 'ios_palette.dart';
 import 'ios_glass.dart';
@@ -28,7 +28,7 @@ class GlassSwitch extends StatelessWidget {
       onChanged: onChanged == null
           ? null
           : (v) {
-              Haptics.selection();
+              IosHaptics.toggle();
               onChanged!(v);
             },
       activeTrackColor: cs.primary,
@@ -182,7 +182,7 @@ class GlassTabStrip extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
                   if (tab == selected) return;
-                  Haptics.selection();
+                  IosHaptics.selectionChange();
                   onSelected(tab);
                 },
                 child: Stack(
@@ -265,7 +265,7 @@ class IosSegmentedControl<T extends Object> extends StatelessWidget {
         children: children,
         proportionalWidth: proportional,
         onValueChanged: (v) {
-          if (v != null) Haptics.selection();
+          if (v != null) IosHaptics.selectionChange();
           onValueChanged(v);
         },
       ),
@@ -377,7 +377,7 @@ class IosCheckbox extends StatelessWidget {
           onPressed: onChanged == null
               ? null
               : () {
-                  Haptics.selection();
+                  IosHaptics.toggle();
                   onChanged!(!value);
                 },
           child: AnimatedContainer(

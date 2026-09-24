@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../motion/ios_motion.dart';
+
 typedef PhotoHeroOrigin = Rect? Function();
 
 Rect? photoHeroRect(GlobalKey? key) =>
@@ -53,11 +55,25 @@ class PhotoHeroController {
 
   bool enabled = true;
 
+  /// Interactive dismiss handoff into reverse hero flight.
+  Offset? dismissMediaOffset;
+  double dismissMediaScale = 1;
+  double dismissVelocityY = 0;
+
   Rect? get areaRect => photoHeroRect(areaKey);
 
   Rect? get originRect => enabled ? origin() : null;
 
   bool get canFly => image.value != null && originRect != null;
+
+  bool get hasDismissHandoff =>
+      dismissMediaOffset != null && dismissMediaOffset != Offset.zero;
+
+  void clearDismissHandoff() {
+    dismissMediaOffset = null;
+    dismissMediaScale = 1;
+    dismissVelocityY = 0;
+  }
 
   void dispose() {
     image.dispose();
@@ -68,8 +84,8 @@ class PhotoHeroController {
 class PhotoHeroRoute<T> extends PageRouteBuilder<T> {
   PhotoHeroRoute({required this.hero, required WidgetBuilder builder})
     : super(
-        transitionDuration: const Duration(milliseconds: 320),
-        reverseTransitionDuration: const Duration(milliseconds: 280),
+        transitionDuration: IosMotion.heroOpen,
+        reverseTransitionDuration: IosMotion.heroClose,
         pageBuilder: (context, animation, secondaryAnimation) =>
             PhotoHeroScope(controller: hero, child: builder(context)),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
@@ -81,6 +97,36 @@ class PhotoHeroRoute<T> extends PageRouteBuilder<T> {
       );
 
   final PhotoHeroController hero;
+
+  @override
+  Simulation? createSimulation({required bool forward}) {
+    final navContext = navigator?.context;
+    final reduce =
+        navContext != null && IosMotion.reduceMotionOf(navContext);
+    final target = forward ? 1.0 : 0.0;
+    final current = controller?.value ?? (forward ? 0.0 : 1.0);
+    if (reduce) {
+      return SnapSimulation(target);
+    }
+    var velocity = 0.0;
+    if (!forward && hero.dismissVelocityY != 0) {
+      final span = hero.areaRect?.height ??
+          (navContext != null
+              ? MediaQuery.sizeOf(navContext).height
+              : 800.0);
+      // Closing: animation 1→0. A dismiss fling should accelerate toward 0.
+      velocity = -springVelocityFromPixels(
+        pixelsPerSecond: hero.dismissVelocityY.abs(),
+        spanPixels: span,
+      );
+    }
+    return SettlingSpringSimulation(
+      IosMotion.hero,
+      current,
+      target,
+      velocity,
+    );
+  }
 
   @override
   void dispose() {
@@ -241,7 +287,10 @@ class _PhotoHeroTransitionState extends State<_PhotoHeroTransition> {
     _setFlying(widget.controller.canFly);
   }
 
-  void _stopFlight() => _setFlying(false);
+  void _stopFlight() {
+    widget.controller.clearDismissHandoff();
+    _setFlying(false);
+  }
 
   void _setFlying(bool value) {
     if (_flying == value) return;
@@ -296,23 +345,61 @@ class _PhotoHeroTransitionState extends State<_PhotoHeroTransition> {
   @override
   Widget build(BuildContext context) {
     final provider = widget.controller.image.value;
-    if (!_flying || provider == null) {
-      return FadeTransition(opacity: widget.animation, child: widget.child);
-    }
-    return Stack(
-      children: [
-        widget.child,
-        Positioned.fill(
-          child: IgnorePointer(
-            child: AnimatedBuilder(
-              animation: widget.animation,
-              child: _imageWidget(provider),
-              builder: (context, child) => _layoutFlight(child!),
-            ),
-          ),
+    final reduce = IosMotion.reduceMotionOf(context);
+    if (reduce || !_flying || provider == null) {
+      return AnimatedBuilder(
+        animation: widget.animation,
+        child: widget.child,
+        builder: (context, child) => Stack(
+          fit: StackFit.expand,
+          children: [
+            ColoredBox(color: Colors.black.withValues(alpha: _dimOpacity)),
+            FadeTransition(opacity: widget.animation, child: child!),
+          ],
         ),
-      ],
+      );
+    }
+    return AnimatedBuilder(
+      animation: widget.animation,
+      child: _imageWidget(provider),
+      builder: (context, flight) => Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: Colors.black.withValues(alpha: _dimOpacity)),
+          widget.child,
+          Positioned.fill(child: IgnorePointer(child: _layoutFlight(flight!))),
+        ],
+      ),
     );
+  }
+
+  double get _flightT => widget.animation.value.clamp(0.0, 1.0);
+
+  /// Background page dim: ~150ms in on open, ~100ms out on close.
+  double get _dimOpacity {
+    final v = widget.animation.value.clamp(0.0, 1.0);
+    final openMs = IosMotion.heroOpen.inMilliseconds.toDouble();
+    final closeMs = IosMotion.heroClose.inMilliseconds.toDouble();
+    final dimIn = IosMotion.dimIn.inMilliseconds / openMs;
+    final dimOut = IosMotion.dimOut.inMilliseconds / closeMs;
+    if (widget.animation.status == AnimationStatus.reverse) {
+      // Fade out over the first dimOut fraction of the reverse (1→0).
+      final faded = ((1.0 - v) / dimOut).clamp(0.0, 1.0);
+      return 1.0 - faded;
+    }
+    if (v >= dimIn) return 1;
+    return (v / dimIn).clamp(0.0, 1.0);
+  }
+
+  Rect _handoffTarget(Rect target) {
+    final offset = widget.controller.dismissMediaOffset;
+    if (offset == null) return target;
+    final scale = widget.controller.dismissMediaScale.clamp(0.5, 1.0);
+    final cx = target.center.dx + offset.dx;
+    final cy = target.center.dy + offset.dy;
+    final w = target.width * scale;
+    final h = target.height * scale;
+    return Rect.fromCenter(center: Offset(cx, cy), width: w, height: h);
   }
 
   Widget _layoutFlight(Widget image) {
@@ -323,10 +410,9 @@ class _PhotoHeroTransitionState extends State<_PhotoHeroTransition> {
     if (area == null || imageSize == null) {
       return _position(image, from, from, 1);
     }
-    final t = Curves.fastOutSlowIn.transform(
-      widget.animation.value.clamp(0.0, 1.0),
-    );
-    final target = _inscribe(imageSize, area, cover: false);
+    final t = _flightT;
+    final fitted = _inscribe(imageSize, area, cover: false);
+    final target = _handoffTarget(fitted);
     return _position(
       image,
       Rect.lerp(from, target, t)!,

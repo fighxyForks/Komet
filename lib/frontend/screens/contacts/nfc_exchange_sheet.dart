@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../motion/ios_haptics.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/contacts.dart';
@@ -127,7 +128,11 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
     if (id == null || _peerId != null) return;
     _peerId = id;
     _peerPhone = (event.phone != null && event.phone! > 0) ? event.phone : null;
-    HapticFeedback.mediumImpact();
+    if (IosGlass.of(context)) {
+      IosHaptics.success();
+    } else {
+      HapticFeedback.mediumImpact();
+    }
     _reveal.forward(from: 0);
     setState(() => _stage = _Stage.found);
     final info = await ContactInfoFetch.get(id);

@@ -2,7 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
+import '../../motion/ios_motion.dart';
 import '../animated_overlay_popup.dart';
 import '../chat_menu_item.dart';
 import 'glass_capsule.dart';
@@ -53,7 +54,6 @@ void showGlassMenu({
     ),
   );
   overlay.insert(entry);
-  Haptics.medium();
 }
 
 class GlassMenuPlacement {
@@ -168,16 +168,19 @@ class GlassMenuLayer extends StatefulWidget {
 class _GlassMenuLayerState extends State<GlassMenuLayer>
     with SingleTickerProviderStateMixin, AnimatedOverlayPopup<GlassMenuLayer> {
   @override
-  Duration get overlayForwardDuration => const Duration(milliseconds: 380);
+  void initState() {
+    super.initState();
+    IosHaptics.menuOpen();
+  }
 
   @override
-  Duration get overlayReverseDuration => const Duration(milliseconds: 200);
+  bool get overlayUseSpring => true;
 
   @override
-  Curve get overlayForwardCurve => Curves.easeOutBack;
+  Duration get overlayForwardDuration => IosMotion.overlayForward;
 
   @override
-  Curve get overlayReverseCurve => Curves.easeInCubic;
+  Duration get overlayReverseDuration => IosMotion.overlayReverse;
 
   @override
   VoidCallback get onOverlayDismiss => widget.onDismiss;
@@ -185,9 +188,9 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
   void _onItemTap(ChatMenuItem item) {
     if (item.isSectionHeader || item.onTap == null) return;
     if (item.destructive) {
-      Haptics.medium();
+      IosHaptics.destructiveActivate();
     } else {
-      Haptics.tap();
+      IosHaptics.itemActivate();
     }
     closeOverlay().then((_) => item.onTap?.call());
   }
@@ -200,10 +203,12 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
       screen: MediaQuery.sizeOf(context),
       anchor: widget.anchorRect,
     );
+    final reduce = IosMotion.reduceMotionOf(context);
     return AnimatedBuilder(
       animation: overlayAnimation,
       builder: (context, child) {
         final t = overlayAnimation.value.clamp(0.0, 1.0);
+        final scale = reduce ? 1.0 : (0.88 + 0.12 * t);
         return Stack(
           children: [
             Positioned.fill(
@@ -228,7 +233,7 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
                 child: Opacity(
                   opacity: t,
                   child: Transform.scale(
-                    scale: 0.82 + 0.18 * t,
+                    scale: scale,
                     alignment: origin,
                     child: child,
                   ),
@@ -344,11 +349,7 @@ class GlassMenuRow extends StatelessWidget {
           child: Row(
             children: [
               if (item.icon != null) ...[
-                Icon(
-                  item.icon,
-                  size: GlassMenuStyle.iconSize,
-                  color: fg,
-                ),
+                Icon(item.icon, size: GlassMenuStyle.iconSize, color: fg),
                 const SizedBox(width: 12),
               ],
               Expanded(

@@ -6,6 +6,7 @@ import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/security/app_lock.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/custom_notification.dart';
@@ -60,7 +61,12 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
       );
       if (!ok) return;
     }
-    Haptics.selection();
+    if (!mounted) return;
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     await _lock.setBiometric(value);
   }
 
@@ -116,7 +122,12 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
       },
     );
     if (picked == null) return;
-    Haptics.selection();
+    if (!mounted) return;
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     await _lock.setIdleMinutes(picked);
   }
 

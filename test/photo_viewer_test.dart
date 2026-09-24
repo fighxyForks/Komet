@@ -115,10 +115,14 @@ void main() {
     expect(chromeOpacity(), 1);
 
     await tester.tapAt(tester.getCenter(find.byType(PageView)));
+    // Chrome toggle is deferred by IosMotion.singleTapDelay so double-tap
+    // zoom can claim the second tap without a laggy shared GestureDetector.
+    await tester.pump(const Duration(milliseconds: 200));
     await tester.pump();
     expect(chromeOpacity(), 0);
 
     await tester.tapAt(tester.getCenter(find.byType(PageView)));
+    await tester.pump(const Duration(milliseconds: 200));
     await tester.pump();
     expect(chromeOpacity(), 1);
   });

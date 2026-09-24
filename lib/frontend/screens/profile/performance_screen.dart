@@ -4,6 +4,7 @@ import '../../widgets/glass/glass_controls.dart';
 
 import '../../../core/config/app_cache_extent.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/glass/ios_glass.dart';
@@ -41,7 +42,11 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
   }
 
   Future<void> _onChangeEnd(double v) async {
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     final inLow = v < AppCacheExtent.lowWarnThreshold;
     final inHigh = v >= AppCacheExtent.highWarnThreshold;
 

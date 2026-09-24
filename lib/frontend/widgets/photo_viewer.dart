@@ -27,6 +27,11 @@ import '../../core/config/app_colors.dart';
 import '../../main.dart';
 import '../../models/attachment.dart';
 import 'attachment/photo_hero.dart';
+import 'media_scrubber.dart';
+import '../motion/gallery_dismiss.dart';
+import '../motion/ios_haptics.dart';
+import '../motion/ios_motion.dart';
+import '../motion/zoom_transform.dart';
 import 'animated_slash_icon.dart';
 import 'chat_menu_overlay.dart';
 import 'custom_notification.dart';
@@ -156,7 +161,8 @@ class PhotoViewerScreen extends StatefulWidget {
   State<PhotoViewerScreen> createState() => _PhotoViewerScreenState();
 }
 
-class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
+class _PhotoViewerScreenState extends State<PhotoViewerScreen>
+    with TickerProviderStateMixin {
   static const int _prefetchThreshold = 3;
   static const int _maxCachedVideoPlayers = 5;
 
@@ -183,10 +189,24 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
   bool _chromeVisible = true;
   int _total = 0;
   bool _saving = false;
+  late final GalleryDismissController _dismiss;
+
+  /// Exposed for widget tests of dismiss thresholds / arbitration.
+  @visibleForTesting
+  GalleryDismissController get debugDismissController => _dismiss;
+
+  late final AnimationController _zoomAnim;
+  Timer? _singleTapTimer;
+  Offset? _pinchFocal;
+  Offset? _tapLocal;
+  DateTime? _lastTapAt;
 
   @override
   void initState() {
     super.initState();
+    _dismiss = GalleryDismissController(vsync: this);
+    _zoomAnim = AnimationController.unbounded(vsync: this);
+    _dismiss.addListener(_onDismissChanged);
     _heroTransform.addListener(_syncHero);
     _heroTransform.addListener(_syncZoom);
     _items = _localItems();
@@ -198,6 +218,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
     _controller = PageController(initialPage: _index);
     unawaited(_loadFeed());
   }
+
+  void _onDismissChanged() {
+    _syncSwipe();
+  }
+
+  bool get _dismissAllowed =>
+      !_zoomed && _pointers < 2 && !_dismiss.isCommitting;
 
   void _syncHero() {
     final hero = widget.hero;
@@ -221,24 +248,34 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
   void _syncZoom() {
     final zoomed = _transformFor(_current.id).value.getMaxScaleOnAxis() > 1.01;
     if (zoomed == _zoomed) return;
-    _zoomed = zoomed;
+    setState(() => _zoomed = zoomed);
+    if (_zoomed && _dismiss.isDragging) {
+      _dismiss.onDragCancel();
+    }
     _syncSwipe();
   }
 
   void _updatePointers(int delta) {
     final next = _pointers + delta;
     _pointers = next < 0 ? 0 : next;
+    if (_pointers >= 2 && _dismiss.isDragging) {
+      _dismiss.onDragCancel();
+    }
     _syncSwipe();
   }
 
   void _syncSwipe() {
-    final enabled = _pointers < 2 && !_zoomed;
+    final enabled = _pointers < 2 && !_zoomed && !_dismiss.isActive;
     if (enabled == _swipeEnabled) return;
     setState(() => _swipeEnabled = enabled);
   }
 
   @override
   void dispose() {
+    _singleTapTimer?.cancel();
+    _dismiss.removeListener(_onDismissChanged);
+    _dismiss.dispose();
+    _zoomAnim.dispose();
     _controller.dispose();
     _heroTransform.dispose();
     for (final transform in _pageTransforms.values) {
@@ -447,12 +484,46 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
     _activateVideoSessions();
     _syncHero();
     _syncZoom();
+    _precacheNeighbors(index);
     if (index >= _items.length - _prefetchThreshold) unawaited(_loadMore());
+  }
+
+  void _precacheNeighbors(int index) {
+    if (!mounted) return;
+    final config = createLocalImageConfiguration(context);
+    for (final i in {index - 1, index + 1}) {
+      if (i < 0 || i >= _items.length) continue;
+      final photo = _items[i].photo;
+      if (photo == null) continue;
+      final url = photo.baseUrl ?? photo.previewData;
+      if (url == null || url.isEmpty) continue;
+      final provider = ResizeImage.resizeIfNeeded(
+        1200,
+        1200,
+        NetworkImage(url),
+      );
+      final stream = provider.resolve(config);
+      late final ImageStreamListener listener;
+      listener = ImageStreamListener(
+        (ImageInfo info, bool synchronousCall) {
+          info.dispose();
+          stream.removeListener(listener);
+        },
+        onError: (Object error, StackTrace? stackTrace) {
+          stream.removeListener(listener);
+        },
+      );
+      stream.addListener(listener);
+    }
   }
 
   void _step(int delta) {
     final next = _index + delta;
     if (next < 0 || next >= _items.length) return;
+    if (IosMotion.reduceMotionOf(context)) {
+      _controller.jumpToPage(next);
+      return;
+    }
     _controller.animateToPage(
       next,
       duration: const Duration(milliseconds: 220),
@@ -762,114 +833,349 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
     action();
   }
 
+  bool get _doubleTapZoomPossible {
+    if (_current.isVideo) return false;
+    if (IosMotion.reduceMotionOf(context)) return false;
+    return true;
+  }
+
+  bool _isEdgeTap(Offset global) {
+    final size = MediaQuery.sizeOf(context);
+    final inset = IosMotion.doubleTapEdgeInset;
+    return global.dx < inset ||
+        global.dy < inset ||
+        global.dx > size.width - inset ||
+        global.dy > size.height - inset;
+  }
+
+  void _onPageTapUp(TapUpDetails details) {
+    final now = DateTime.now();
+    final pos = details.localPosition;
+    final global = details.globalPosition;
+    final lastAt = _lastTapAt;
+    final lastPos = _tapLocal;
+    final canDouble = _doubleTapZoomPossible;
+    if (canDouble &&
+        lastAt != null &&
+        lastPos != null &&
+        now.difference(lastAt) <= IosMotion.singleTapDelay &&
+        (pos - lastPos).distance <= 48) {
+      _singleTapTimer?.cancel();
+      _lastTapAt = null;
+      _tapLocal = null;
+      _handleDoubleTapZoom(pos, global);
+      return;
+    }
+    _singleTapTimer?.cancel();
+    if (!canDouble || _isEdgeTap(global)) {
+      _lastTapAt = null;
+      _tapLocal = null;
+      _toggleChrome();
+      return;
+    }
+    _lastTapAt = now;
+    _tapLocal = pos;
+    _singleTapTimer = Timer(IosMotion.singleTapDelay, () {
+      _lastTapAt = null;
+      _tapLocal = null;
+      if (mounted) _toggleChrome();
+    });
+  }
+
+  void _handleDoubleTapZoom(Offset focalViewport, Offset global) {
+    if (_isEdgeTap(global)) {
+      _toggleChrome();
+      return;
+    }
+    final transform = _transformFor(_current.id);
+    final currentScale = transform.value.getMaxScaleOnAxis();
+    final targetScale = currentScale > 1.05
+        ? 1.0
+        : IosMotion.doubleTapZoomScale;
+    final target = targetScale <= 1.01
+        ? Matrix4.identity()
+        : matrixForZoomAt(
+            current: transform.value,
+            focalViewport: focalViewport,
+            targetScale: targetScale,
+          );
+    if (IosMotion.reduceMotionOf(context)) {
+      transform.value = target;
+      return;
+    }
+    animateMatrixSpring(
+      controller: _zoomAnim,
+      transform: transform,
+      target: target,
+      spring: IosMotion.standard,
+    );
+  }
+
+  void _onZoomInteractionEnd(ScaleEndDetails details) {
+    final transform = _transformFor(_current.id);
+    final scale = transform.value.getMaxScaleOnAxis();
+    final soft = IosMotion.zoomSoftMax;
+    double targetScale = scale;
+    if (scale < 1.01) {
+      targetScale = 1.0;
+    } else if (scale > soft) {
+      targetScale = soft;
+    }
+    final viewport = MediaQuery.sizeOf(context);
+    final focal = _pinchFocal ?? Offset(viewport.width / 2, viewport.height / 2);
+    Matrix4 target;
+    if (targetScale <= 1.01) {
+      target = Matrix4.identity();
+    } else if ((targetScale - scale).abs() > 0.01) {
+      target = matrixForZoomAt(
+        current: transform.value,
+        focalViewport: focal,
+        targetScale: targetScale,
+      );
+    } else {
+      target = transform.value.clone();
+    }
+    target = clampPanToBounds(matrix: target, viewport: viewport);
+    final sameScale =
+        (target.getMaxScaleOnAxis() - transform.value.getMaxScaleOnAxis())
+            .abs() <
+        0.01;
+    final sameTx =
+        (target.storage[12] - transform.value.storage[12]).abs() < 0.5;
+    final sameTy =
+        (target.storage[13] - transform.value.storage[13]).abs() < 0.5;
+    if (!(sameScale && sameTx && sameTy)) {
+      if (IosMotion.reduceMotionOf(context)) {
+        transform.value = target;
+      } else {
+        animateMatrixSpring(
+          controller: _zoomAnim,
+          transform: transform,
+          target: target,
+          spring: IosMotion.dismissSnap,
+        );
+      }
+    }
+  }
+
+  void _onDismissDragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (_dismiss.onDragEnd(velocity)) {
+      unawaited(_commitDismiss());
+    }
+  }
+
+  Future<void> _commitDismiss() async {
+    if (!mounted) return;
+    final reduce = IosMotion.reduceMotionOf(context);
+    final velocityY = _dismiss.gestureVelocityY;
+    final hero = widget.hero;
+    if (hero != null) {
+      _syncHero();
+      if (hero.originRect != null) {
+        hero.dismissMediaOffset = Offset(0, _dismiss.offset);
+        hero.dismissMediaScale = _dismiss.mediaScale;
+        hero.dismissVelocityY = velocityY;
+        Navigator.of(context).pop();
+        return;
+      }
+    }
+    await _dismiss.flyOff(
+      velocityY: velocityY,
+      reduceMotion: reduce,
+      onDone: () {
+        if (mounted) Navigator.of(context).maybePop();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.of(context).padding;
     final hasMenu = _current.isVideo || !(widget.actions?.isEmpty ?? true);
+    final size = MediaQuery.sizeOf(context);
+    _dismiss.updateViewportHeight(size.height);
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _step(1),
-          const SingleActivator(LogicalKeyboardKey.arrowRight): () => _step(-1),
-        },
-        child: Focus(
-          autofocus: true,
-          child: Stack(
-            children: [
-              Positioned.fill(child: _buildPager()),
-              Positioned.fill(
-                child: IgnorePointer(
-                  ignoring: !_chromeVisible,
-                  child: AnimatedOpacity(
-                    opacity: _chromeVisible ? 1 : 0,
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    child: Stack(
-                      children: [
-                        if (_index < _items.length - 1)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: _arrow(IosSymbols.chevronLeft(context), () => _step(1)),
-                          ),
-                        if (_index > 0)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: _arrow(
-                              IosSymbols.chevronRight(context),
-                              () => _step(-1),
-                            ),
-                          ),
-                        Positioned(
-                          top: padding.top + 8,
-                          left: 8,
-                          right: 8,
-                          child: Builder(
-                            builder: (ctx) {
-                              final iosChrome = IosGlass.of(ctx);
-                              return Row(
-                                children: [
-                                  if (iosChrome)
-                                    IosViewerGlassButton(
-                                      icon: IosSymbols.close(ctx),
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(),
-                                    )
-                                  else
-                                    IconButton(
-                                      icon: Icon(IosSymbols.close(context),
-                                        color: Colors.white,
-                                      ),
-                                      onPressed: () =>
-                                          Navigator.of(ctx).pop(),
-                                    ),
-                                  const Spacer(),
-                                  if (_saving && _current.isVideo)
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 14,
-                                      ),
-                                      child: SmallSpinner(
-                                        size: 20,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  if (hasMenu)
-                                    Builder(
-                                      builder: (btnContext) => iosChrome
-                                          ? IosViewerGlassButton(
-                                              icon: IosSymbols.ellipsisHoriz(
-                                                btnContext,
-                                              ),
-                                              onPressed: () =>
-                                                  _openMenu(btnContext),
-                                            )
-                                          : IconButton(
-                                              icon: Icon(IosSymbols.ellipsis(context),
-                                                color: Colors.white,
-                                              ),
-                                              onPressed: () =>
-                                                  _openMenu(btnContext),
-                                            ),
-                                    ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          child: _buildBottomBar(padding.bottom),
-                        ),
-                      ],
-                    ),
-                  ),
+      backgroundColor: Colors.transparent,
+      body: RawGestureDetector(
+        gestures: <Type, GestureRecognizerFactory>{
+          GalleryDismissDragRecognizer:
+              GestureRecognizerFactoryWithHandlers<
+                GalleryDismissDragRecognizer
+              >(
+                () => GalleryDismissDragRecognizer(
+                  canStart: () => _dismissAllowed,
+                  debugOwner: this,
                 ),
+                (GalleryDismissDragRecognizer instance) {
+                  instance.onStart = (_) => _dismiss.onDragStart();
+                  instance.onUpdate = (details) {
+                    final crossed = _dismiss.onDragUpdate(details.delta.dy);
+                    if (crossed && IosGlass.of(context)) {
+                      IosHaptics.dismissThreshold();
+                    }
+                  };
+                  instance.onEnd = (details) {
+                    if (IosMotion.reduceMotionOf(context) &&
+                        !IosMotion.shouldCommitDismiss(
+                          offset: _dismiss.offset,
+                          velocityY: details.primaryVelocity ?? 0,
+                          viewportHeight: MediaQuery.sizeOf(context).height,
+                        )) {
+                      _dismiss.snapBackImmediate();
+                      return;
+                    }
+                    _onDismissDragEnd(details);
+                  };
+                  instance.onCancel = () {
+                    if (IosMotion.reduceMotionOf(context)) {
+                      _dismiss.snapBackImmediate();
+                    } else {
+                      _dismiss.onDragCancel();
+                    }
+                  };
+                },
               ),
-            ],
+        },
+        child: CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _step(1),
+            const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+                _step(-1),
+          },
+          child: Focus(
+            autofocus: true,
+            child: AnimatedBuilder(
+              animation: _dismiss,
+              builder: (context, child) {
+                final chromeFade = (1.0 - _dismiss.chromeProgress).clamp(
+                  0.0,
+                  1.0,
+                );
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ColoredBox(
+                      color: Colors.black.withValues(
+                        alpha: _dismiss.backgroundOpacity,
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Transform.translate(
+                        offset: Offset(0, _dismiss.offset),
+                        child: Transform.scale(
+                          scale: _dismiss.mediaScale,
+                          filterQuality: FilterQuality.low,
+                          child: child,
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        ignoring: !_chromeVisible || chromeFade < 0.05,
+                        child: AnimatedOpacity(
+                          opacity: _chromeVisible ? chromeFade : 0,
+                          duration: _dismiss.isDragging || _dismiss.isActive
+                              ? Duration.zero
+                              : const Duration(milliseconds: 220),
+                          curve: Curves.easeOut,
+                          child: Stack(
+                            children: [
+                              if (_index < _items.length - 1)
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: _arrow(
+                                    IosSymbols.chevronLeft(context),
+                                    () => _step(1),
+                                  ),
+                                ),
+                              if (_index > 0)
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: _arrow(
+                                    IosSymbols.chevronRight(context),
+                                    () => _step(-1),
+                                  ),
+                                ),
+                              Positioned(
+                                top: padding.top + 8,
+                                left: 8,
+                                right: 8,
+                                child: Builder(
+                                  builder: (ctx) {
+                                    final iosChrome = IosGlass.of(ctx);
+                                    return Row(
+                                      children: [
+                                        if (iosChrome)
+                                          IosViewerGlassButton(
+                                            icon: IosSymbols.close(ctx),
+                                            onPressed: () =>
+                                                Navigator.of(ctx).pop(),
+                                          )
+                                        else
+                                          IconButton(
+                                            icon: Icon(
+                                              IosSymbols.close(context),
+                                              color: Colors.white,
+                                            ),
+                                            onPressed: () =>
+                                                Navigator.of(ctx).pop(),
+                                          ),
+                                        const Spacer(),
+                                        if (_saving && _current.isVideo)
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                            ),
+                                            child: SmallSpinner(
+                                              size: 20,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        if (hasMenu)
+                                          Builder(
+                                            builder: (btnContext) => iosChrome
+                                                ? IosViewerGlassButton(
+                                                    icon:
+                                                        IosSymbols.ellipsisHoriz(
+                                                          btnContext,
+                                                        ),
+                                                    onPressed: () =>
+                                                        _openMenu(btnContext),
+                                                  )
+                                                : IconButton(
+                                                    icon: Icon(
+                                                      IosSymbols.ellipsis(
+                                                        context,
+                                                      ),
+                                                      color: Colors.white,
+                                                    ),
+                                                    onPressed: () =>
+                                                        _openMenu(btnContext),
+                                                  ),
+                                          ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                child: _buildBottomBar(padding.bottom),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+              child: RepaintBoundary(child: _buildPager()),
+            ),
           ),
         ),
       ),
@@ -910,22 +1216,37 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
     final item = _items[i];
     final video = item.video;
     if (video != null) {
-      return _VideoSurface(
-        key: ValueKey('video:${item.id}'),
-        session: _videoSessionFor(item),
-        quarterTurns: _quarterTurns[item.id] ?? 0,
-        onSurfaceTap: _toggleChrome,
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: IosMotion.galleryPageGap / 2,
+        ),
+        child: _VideoSurface(
+          key: ValueKey('video:${item.id}'),
+          session: _videoSessionFor(item),
+          quarterTurns: _quarterTurns[item.id] ?? 0,
+          onSurfaceTap: _toggleChrome,
+        ),
       );
     }
 
     final isHero = widget.hero != null && item.id == _heroId;
     final page = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: _toggleChrome,
+      onTapUp: _onPageTapUp,
       child: InteractiveViewer(
-        minScale: 1,
-        maxScale: 5,
+        minScale: 0.8,
+        maxScale: IosMotion.zoomHardMax,
+        panEnabled: _zoomed,
         transformationController: _transformFor(item.id),
+        interactionEndFrictionCoefficient: 1,
+        onInteractionStart: (_) {
+          _singleTapTimer?.cancel();
+          _zoomAnim.stop();
+        },
+        onInteractionUpdate: (details) {
+          _pinchFocal = details.localFocalPoint;
+        },
+        onInteractionEnd: _onZoomInteractionEnd,
         child: Center(
           child: RotatedBox(
             quarterTurns: _quarterTurns[item.id] ?? 0,
@@ -934,7 +1255,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
         ),
       ),
     );
-    return isHero ? PhotoHeroTarget(child: page) : page;
+    final gapped = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: IosMotion.galleryPageGap / 2,
+      ),
+      child: page,
+    );
+    return isHero ? PhotoHeroTarget(child: gapped) : gapped;
   }
 
   Widget _arrow(IconData icon, VoidCallback onTap) {
@@ -993,10 +1320,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                   tooltip: l10n.sharedDownload,
                 ),
               IconButton(
-                icon: Icon(
-                  IosSymbols.rotate(context),
-                  color: Colors.white,
-                ),
+                icon: Icon(IosSymbols.rotate(context), color: Colors.white),
                 onPressed: _rotate,
                 tooltip: l10n.photoViewerRotate,
               ),
@@ -1436,7 +1760,11 @@ class _VideoSurface extends StatelessWidget {
         attachment.previewData ??
         '';
     if (url.isEmpty) {
-      return Icon(IosSymbols.videocam(context), color: Colors.white38, size: 64);
+      return Icon(
+        IosSymbols.videocam(context),
+        color: Colors.white38,
+        size: 64,
+      );
     }
     return CachedNetworkImage(
       imageUrl: url,
@@ -1556,8 +1884,6 @@ class _VideoControlPanel extends StatelessWidget {
     final duration = value?.duration ?? fallbackDuration;
     final position = value?.position ?? Duration.zero;
     final maxMs = duration.inMilliseconds.toDouble();
-    final positionMs = position.inMilliseconds.toDouble().clamp(0, maxMs);
-    final sliderValue = dragValue ?? positionMs.toDouble();
     final isPlaying = value?.isPlaying ?? false;
 
     return Padding(
@@ -1596,7 +1922,9 @@ class _VideoControlPanel extends StatelessWidget {
                   child: IconButton(
                     key: const ValueKey('video-play-toggle'),
                     icon: Icon(
-                      isPlaying ? IosSymbols.pause(context) : IosSymbols.play(context),
+                      isPlaying
+                          ? IosSymbols.pause(context)
+                          : IosSymbols.play(context),
                       color: Colors.white,
                       fill: 1,
                     ),
@@ -1616,40 +1944,20 @@ class _VideoControlPanel extends StatelessWidget {
               ],
             ),
           ),
-          Row(
-            children: [
-              SizedBox(
-                width: 42,
-                child: Text(
-                  _formatViewerDuration(position),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: IosGlass.of(context) ? IosTypography.callLabel : 11,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: _ViewerSlider(
-                  value: maxMs <= 0
-                      ? 0
-                      : sliderValue.clamp(0, maxMs).toDouble(),
-                  max: maxMs <= 0 ? 1 : maxMs,
-                  onChanged: maxMs <= 0 ? null : onSeekChanged,
-                  onChangeEnd: maxMs <= 0 ? null : onSeekEnd,
-                ),
-              ),
-              SizedBox(
-                width: 42,
-                child: Text(
-                  _formatViewerDuration(duration),
-                  textAlign: TextAlign.end,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: IosGlass.of(context) ? IosTypography.callLabel : 11,
-                  ),
-                ),
-              ),
-            ],
+          MediaScrubber(
+            position: dragValue == null
+                ? position
+                : Duration(milliseconds: dragValue!.round()),
+            duration: duration,
+            buffered: value?.buffered.isNotEmpty == true
+                ? value!.buffered.last.end
+                : null,
+            onSeek: maxMs <= 0
+                ? null
+                : (d) => onSeekChanged(d.inMilliseconds.toDouble()),
+            onSeekEnd: maxMs <= 0
+                ? null
+                : (d) => onSeekEnd(d.inMilliseconds.toDouble()),
           ),
         ],
       ),
@@ -1661,13 +1969,11 @@ class _ViewerSlider extends StatelessWidget {
   final double value;
   final double max;
   final ValueChanged<double>? onChanged;
-  final ValueChanged<double>? onChangeEnd;
 
   const _ViewerSlider({
     required this.value,
     required this.max,
     required this.onChanged,
-    this.onChangeEnd,
   });
 
   @override
@@ -1682,7 +1988,6 @@ class _ViewerSlider extends StatelessWidget {
           value: max <= 0 ? 0 : v,
           activeColor: Colors.white,
           onChanged: onChanged,
-          onChangeEnd: onChangeEnd,
         ),
       );
     }
@@ -1695,24 +2000,9 @@ class _ViewerSlider extends StatelessWidget {
         inactiveTrackColor: Colors.white30,
         thumbColor: Colors.white,
       ),
-      child: Slider(
-        min: 0,
-        max: max,
-        value: v,
-        onChanged: onChanged,
-        onChangeEnd: onChangeEnd,
-      ),
+      child: Slider(min: 0, max: max, value: v, onChanged: onChanged),
     );
   }
-}
-
-String _formatViewerDuration(Duration duration) {
-  final seconds = duration.inSeconds;
-  final minutes = seconds ~/ 60;
-  if (minutes >= 60) {
-    return '${minutes ~/ 60}:${pad2(minutes % 60)}:${pad2(seconds % 60)}';
-  }
-  return '${pad2(minutes)}:${pad2(seconds % 60)}';
 }
 
 class _VideoSettingsButton extends StatelessWidget {
@@ -1745,10 +2035,7 @@ class _VideoSettingsButton extends StatelessWidget {
             if (box == null || !box.hasSize) return;
             final check = IosSymbols.check(btnContext);
             final items = <ChatMenuItem>[
-              ChatMenuItem(
-                label: l10n.videoViewerSpeed,
-                isSectionHeader: true,
-              ),
+              ChatMenuItem(label: l10n.videoViewerSpeed, isSectionHeader: true),
               for (final value in speeds)
                 ChatMenuItem(
                   icon: value == speed ? check : null,
@@ -1848,7 +2135,11 @@ class _SettingChoice extends StatelessWidget {
           child: Text(label, style: const TextStyle(color: Colors.white)),
         ),
         if (selected)
-          Icon(IosSymbols.check(context), color: MediaAccent.of(context), size: 18),
+          Icon(
+            IosSymbols.check(context),
+            color: MediaAccent.of(context),
+            size: 18,
+          ),
       ],
     );
   }

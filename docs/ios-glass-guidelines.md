@@ -37,3 +37,7 @@ Use `IosSymbols.*(context)` in build methods and other places with a `BuildConte
 - [ ] Scroll paths do not keep live blur over moving content
 - [ ] New icons go through `IosSymbols` when a context is available
 - [ ] `flutter analyze lib test` and `flutter test` are clean
+
+## Related
+
+- Gestures and motion: [ios-motion-guidelines.md](./ios-motion-guidelines.md)
