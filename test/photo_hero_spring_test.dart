@@ -92,10 +92,10 @@ void main() {
     );
     addTearDown(route.dispose);
     final sim = route.createSimulation(forward: false);
-    expect(sim, isA<SpringSimulation>());
+    expect(sim, isA<SettlingSpringSimulation>());
     expect(sim!.dx(0), lessThan(0));
     final open = route.createSimulation(forward: true);
-    expect(open, isA<SpringSimulation>());
+    expect(open, isA<SettlingSpringSimulation>());
     expect(open!.dx(0), 0);
   });
 }

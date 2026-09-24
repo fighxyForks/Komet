@@ -121,7 +121,7 @@ class PhotoHeroRoute<T> extends PageRouteBuilder<T> {
         spanPixels: span,
       );
     }
-    return SpringSimulation(
+    return SettlingSpringSimulation(
       IosMotion.hero,
       current,
       target,

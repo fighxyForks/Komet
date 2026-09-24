@@ -172,13 +172,14 @@ TickerFuture animateSpring(
   SpringDescription? spring,
   double velocity = 0,
 }) {
-  final simulation = SpringSimulation(
-    spring ?? IosMotion.standard,
-    controller.value,
-    target,
-    velocity,
+  return controller.animateWith(
+    SettlingSpringSimulation(
+      spring ?? IosMotion.standard,
+      controller.value,
+      target,
+      velocity,
+    ),
   );
-  return controller.animateWith(simulation);
 }
 
 /// Maps a pixel-space fling into controller-value velocity.
@@ -207,4 +208,27 @@ final class SnapSimulation extends Simulation {
 
   @override
   bool isDone(double time) => true;
+}
+
+/// [SpringSimulation] that snaps exactly to [end] once settled.
+final class SettlingSpringSimulation extends Simulation {
+  SettlingSpringSimulation(
+    SpringDescription spring,
+    double start,
+    this._end,
+    double velocity, {
+    Tolerance tolerance = Tolerance.defaultTolerance,
+  }) : _inner = SpringSimulation(spring, start, _end, velocity, tolerance: tolerance);
+
+  final double _end;
+  final SpringSimulation _inner;
+
+  @override
+  double x(double time) => _inner.isDone(time) ? _end : _inner.x(time);
+
+  @override
+  double dx(double time) => _inner.isDone(time) ? 0 : _inner.dx(time);
+
+  @override
+  bool isDone(double time) => _inner.isDone(time);
 }

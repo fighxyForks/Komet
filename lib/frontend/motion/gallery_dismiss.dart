@@ -111,7 +111,7 @@ class GalleryDismissController extends ChangeNotifier {
   }
 
   void _snapBack(double velocityY) {
-    final simulation = SpringSimulation(
+    final simulation = SettlingSpringSimulation(
       IosMotion.dismissSnap,
       _anim.value,
       0,
@@ -153,7 +153,7 @@ class GalleryDismissController extends ChangeNotifier {
       onDone();
       return;
     }
-    final simulation = SpringSimulation(
+    final simulation = SettlingSpringSimulation(
       IosMotion.soft,
       _anim.value,
       target,
