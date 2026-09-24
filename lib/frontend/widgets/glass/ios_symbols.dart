@@ -181,4 +181,136 @@ abstract final class IosSymbols {
     material: Symbols.error_outline,
     cupertino: CupertinoIcons.exclamationmark_circle,
   );
+
+  static IconData chevronBack(BuildContext c) => resolve(
+    c,
+    material: Symbols.arrow_back_ios_new,
+    cupertino: CupertinoIcons.chevron_back,
+  );
+
+  static IconData ellipsisHoriz(BuildContext c) => resolve(
+    c,
+    material: Symbols.more_horiz,
+    cupertino: CupertinoIcons.ellipsis,
+  );
+
+  static IconData reply(BuildContext c) =>
+      resolve(c, material: Symbols.reply, cupertino: CupertinoIcons.reply);
+
+  static IconData forward(BuildContext c) => resolve(
+    c,
+    material: Symbols.forward,
+    cupertino: CupertinoIcons.arrowshape_turn_up_right,
+  );
+
+  static IconData copy(BuildContext c) => resolve(
+    c,
+    material: Symbols.content_copy,
+    cupertino: CupertinoIcons.doc_on_doc,
+  );
+
+  static IconData edit(BuildContext c) =>
+      resolve(c, material: Symbols.edit, cupertino: CupertinoIcons.pencil);
+
+  static IconData pin(BuildContext c) =>
+      resolve(c, material: Symbols.push_pin, cupertino: CupertinoIcons.pin);
+
+  static IconData pinOff(BuildContext c) => resolve(
+    c,
+    material: Symbols.keep_off,
+    cupertino: CupertinoIcons.pin_slash,
+  );
+
+  static IconData flag(BuildContext c) =>
+      resolve(c, material: Symbols.flag, cupertino: CupertinoIcons.flag);
+
+  static IconData info(BuildContext c) => resolve(
+    c,
+    material: Symbols.info,
+    cupertino: CupertinoIcons.info_circle,
+  );
+
+  static IconData history(BuildContext c) => resolve(
+    c,
+    material: Symbols.history,
+    cupertino: CupertinoIcons.clock,
+  );
+
+  static IconData visibility(BuildContext c) => resolve(
+    c,
+    material: Symbols.visibility,
+    cupertino: CupertinoIcons.eye,
+  );
+
+  static IconData markUnread(BuildContext c) => resolve(
+    c,
+    material: Symbols.mark_chat_unread,
+    cupertino: CupertinoIcons.envelope_badge,
+  );
+
+  static IconData send(BuildContext c) =>
+      resolve(c, material: Symbols.send, cupertino: CupertinoIcons.paperplane_fill);
+
+  static IconData attach(BuildContext c) => resolve(
+    c,
+    material: Symbols.attachment,
+    cupertino: CupertinoIcons.paperclip,
+  );
+
+  static IconData add(BuildContext c) =>
+      resolve(c, material: Symbols.add, cupertino: CupertinoIcons.plus);
+
+  static IconData photo(BuildContext c) => resolve(
+    c,
+    material: Symbols.image,
+    cupertino: CupertinoIcons.photo,
+  );
+
+  static IconData doc(BuildContext c) => resolve(
+    c,
+    material: Symbols.description,
+    cupertino: CupertinoIcons.doc,
+  );
+
+  static IconData location(BuildContext c) => resolve(
+    c,
+    material: Symbols.location_on,
+    cupertino: CupertinoIcons.location,
+  );
+
+  static IconData chart(BuildContext c) => resolve(
+    c,
+    material: Symbols.bar_chart,
+    cupertino: CupertinoIcons.chart_bar,
+  );
+
+  static IconData keyboardDown(BuildContext c) => resolve(
+    c,
+    material: Symbols.keyboard_arrow_down,
+    cupertino: CupertinoIcons.chevron_down,
+  );
+
+  static IconData schedule(BuildContext c) => resolve(
+    c,
+    material: Symbols.schedule,
+    cupertino: CupertinoIcons.clock,
+  );
+
+  static IconData bookmark(BuildContext c) => resolve(
+    c,
+    material: Symbols.bookmark,
+    cupertino: CupertinoIcons.bookmark_fill,
+  );
+
+  static IconData download(BuildContext c) => resolve(
+    c,
+    material: Symbols.download,
+    cupertino: CupertinoIcons.cloud_download,
+  );
+
+  static IconData goToMessage(BuildContext c) => resolve(
+    c,
+    material: Symbols.arrow_forward,
+    cupertino: CupertinoIcons.arrow_right,
+  );
 }

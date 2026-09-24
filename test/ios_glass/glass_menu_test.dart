@@ -124,7 +124,13 @@ void main() {
       await tester.pumpAndSettle();
       final context = tester.element(find.text('Удалить'));
       final text = tester.widget<Text>(find.text('Удалить'));
-      expect(text.style?.color, Theme.of(context).colorScheme.error);
+      expect(
+        text.style?.color,
+        anyOf(
+          Theme.of(context).colorScheme.error,
+          const Color(0xFFFF3B30),
+        ),
+      );
     });
 
     testWidgets('без iOS остаётся прежнее меню', (tester) async {

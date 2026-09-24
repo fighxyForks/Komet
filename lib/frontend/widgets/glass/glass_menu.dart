@@ -1,13 +1,16 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/utils/haptics.dart';
 import '../animated_overlay_popup.dart';
 import '../chat_menu_item.dart';
 import 'glass_capsule.dart';
 import 'ios_metrics.dart';
+import 'ios_palette.dart';
+import 'ios_typography.dart';
+import 'ios_symbols.dart';
+import 'ios_glass.dart';
 import 'ios_tappable.dart';
 
 class GlassMenuStyle {
@@ -16,7 +19,7 @@ class GlassMenuStyle {
   static const double gap = 8;
   static const double radius = IosMetrics.menuRadius;
   static const double rowHeight = IosMetrics.minHitTarget;
-  static const double fontSize = 15;
+  static const double fontSize = 17;
   static const double iconSize = 19;
 
   static Color tint(ColorScheme cs) => cs.brightness == Brightness.dark
@@ -165,10 +168,16 @@ class GlassMenuLayer extends StatefulWidget {
 class _GlassMenuLayerState extends State<GlassMenuLayer>
     with SingleTickerProviderStateMixin, AnimatedOverlayPopup<GlassMenuLayer> {
   @override
-  Duration get overlayForwardDuration => const Duration(milliseconds: 320);
+  Duration get overlayForwardDuration => const Duration(milliseconds: 380);
 
   @override
-  Duration get overlayReverseDuration => const Duration(milliseconds: 180);
+  Duration get overlayReverseDuration => const Duration(milliseconds: 200);
+
+  @override
+  Curve get overlayForwardCurve => Curves.easeOutBack;
+
+  @override
+  Curve get overlayReverseCurve => Curves.easeInCubic;
 
   @override
   VoidCallback get onOverlayDismiss => widget.onDismiss;
@@ -214,7 +223,7 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
                 child: Opacity(
                   opacity: t,
                   child: Transform.scale(
-                    scale: 0.3 + 0.7 * t,
+                    scale: 0.82 + 0.18 * t,
                     alignment: origin,
                     child: child,
                   ),
@@ -299,19 +308,21 @@ class GlassMenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final fg = item.destructive ? cs.error : cs.onSurface;
+    final ios = IosGlass.of(context);
+    final fg = item.destructive
+        ? (ios ? const Color(0xFFFF3B30) : cs.error)
+        : (ios ? IosPalette.label(cs) : cs.onSurface);
     return IosTappable(
       onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: GlassMenuStyle.rowHeight),
+      child: SizedBox(
+        height: GlassMenuStyle.rowHeight,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
               Icon(
                 item.icon,
                 size: GlassMenuStyle.iconSize,
-                weight: 450,
                 color: fg,
               ),
               const SizedBox(width: 12),
@@ -323,16 +334,19 @@ class GlassMenuRow extends StatelessWidget {
                   style: TextStyle(
                     color: fg,
                     fontSize: GlassMenuStyle.fontSize,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: ios ? IosTypography.regular : FontWeight.w400,
+                    letterSpacing: ios
+                        ? IosTypography.letterSpacing(GlassMenuStyle.fontSize)
+                        : null,
                   ),
                 ),
               ),
               if (item.showChevron)
                 Icon(
-                  Symbols.chevron_right,
+                  IosSymbols.chevronRight(context),
                   size: 18,
-                  weight: 450,
-                  color: cs.onSurface.withValues(alpha: 0.5),
+                  color: (ios ? IosPalette.secondaryLabel(cs) : cs.onSurface)
+                      .withValues(alpha: 0.5),
                 ),
             ],
           ),
