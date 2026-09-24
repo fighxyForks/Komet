@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../../widgets/small_spinner.dart';
-import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
+
+/// Sticky date-pill idle behaviour shared with [ChatScreen].
+abstract final class FloatingDateBehavior {
+  /// Fade the floating date out after this much scroll idle.
+  static const Duration idleHideDelay = Duration(milliseconds: 1250);
+}
 
 // #***! плашка с датой между группами сообщений
 class DateSeparatorLabel extends StatelessWidget {
@@ -49,12 +55,27 @@ class DateSeparatorLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     if (floating && IosGlass.of(context)) {
+      // Opaque solid fill so message text does not bleed through the sticky
+      // pill. Avoid BackdropFilter here — it is an overlay, but a DecoratedBox
+      // is cheaper and reads more clearly while scrolling.
+      final fill = cs.brightness == Brightness.dark
+          ? const Color(0xF21C1C1E)
+          : const Color(0xF5F2F2F7);
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Center(
-          child: GlassBackground(
+          child: DecoratedBox(
             key: const ValueKey('ios-floating-date'),
-            shadow: false,
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: cs.brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.14)
+                    : Colors.black.withValues(alpha: 0.06),
+                width: 0.6,
+              ),
+            ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               child: Text(
@@ -192,16 +213,39 @@ class MessageListEdgeVignette extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
+    // Prefer an opaque chat-background color so content fading under the
+    // status bar / floating header stays readable over wallpapers and mesh
+    // gradients. Keep this a cheap DecoratedBox — no BackdropFilter.
+    var base = ios ? IosPalette.background(cs) : cs.surface;
+    if (base.a < 1.0) {
+      final fallback =
+          cs.brightness == Brightness.dark ? Colors.black : Colors.white;
+      base = Color.alphaBlend(base, fallback);
+    }
+    final colors = top
+        ? [
+            base,
+            base.withValues(alpha: 0.92),
+            base.withValues(alpha: 0.55),
+            base.withValues(alpha: 0.0),
+          ]
+        : [
+            base,
+            base.withValues(alpha: 0.0),
+          ];
+    final stops = top ? const [0.0, 0.35, 0.72, 1.0] : null;
     return IgnorePointer(
-      child: Container(
-        height: height,
+      child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: top ? Alignment.topCenter : Alignment.bottomCenter,
             end: top ? Alignment.bottomCenter : Alignment.topCenter,
-            colors: [cs.surface, cs.surface.withValues(alpha: 0.0)],
+            colors: colors,
+            stops: stops,
           ),
         ),
+        child: SizedBox(height: height, width: double.infinity),
       ),
     );
   }

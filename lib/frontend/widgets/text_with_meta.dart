@@ -35,7 +35,6 @@ class RenderTextWithMeta extends RenderBox
   RenderTextWithMeta(this._fillWidth);
 
   static const double _gap = 8;
-  static const double _baselineNudge = 2;
 
   bool _fillWidth;
   set fillWidth(bool value) {
@@ -142,11 +141,35 @@ class RenderTextWithMeta extends RenderBox
     size = constraints.constrain(Size(width, height));
 
     (_text.parentData! as TextWithMetaParentData).offset = Offset.zero;
+
+    double metaDy;
+    if (metaOnOwnLine) {
+      metaDy = size.height - metaSize.height;
+    } else {
+      // Align the meta row's alphabetic baseline with the last line of body
+      // text (iOS messenger style). Falls back to bottom alignment when a
+      // baseline is unavailable.
+      final textBl = _text.getDistanceToBaseline(TextBaseline.alphabetic);
+      final metaBl = _meta.getDistanceToBaseline(TextBaseline.alphabetic);
+      if (paragraph != null && textBl != null && metaBl != null) {
+        final length = paragraph.text.toPlainText().length;
+        final caret = paragraph.getOffsetForCaret(
+          TextPosition(offset: length),
+          Rect.zero,
+        );
+        final lastLineBaseline = caret.dy + textBl;
+        metaDy = lastLineBaseline - metaBl;
+      } else {
+        metaDy = size.height - metaSize.height;
+      }
+    }
+
+    final maxDy = math.max(0.0, size.height - metaSize.height);
+    metaDy = metaDy.clamp(0.0, maxDy);
+
     (_meta.parentData! as TextWithMetaParentData).offset = Offset(
       math.max(0, size.width - metaSize.width),
-      metaOnOwnLine
-          ? size.height - metaSize.height
-          : size.height - metaSize.height - _baselineNudge,
+      metaDy,
     );
   }
 

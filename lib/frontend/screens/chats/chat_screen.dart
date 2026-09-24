@@ -545,7 +545,8 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool get _chromeVignette =>
-      _effectiveChrome == ChatChromeStyle.none && _wallpaper == null;
+      AppIosGlass.active.value ||
+      (_effectiveChrome == ChatChromeStyle.none && _wallpaper == null);
 
   final ValueNotifier<double> _composerHeight = ValueNotifier(96);
   final ValueNotifier<double> _pinnedBannerHeight = ValueNotifier(0);
@@ -4587,7 +4588,7 @@ class _ChatScreenState extends State<ChatScreen>
     if (!_scrollController.hasClients) return;
 
     _floatingDateTimer?.cancel();
-    _floatingDateTimer = Timer(const Duration(seconds: 1), () {
+    _floatingDateTimer = Timer(FloatingDateBehavior.idleHideDelay, () {
       if (mounted) _floatingDateAnimController.reverse();
     });
 
@@ -4796,11 +4797,11 @@ class _ChatScreenState extends State<ChatScreen>
 
   double _defaultEdgeVignetteHeight() {
     final glossy = _glossyChrome;
-    return MediaQuery.paddingOf(context).top +
-        ChatAppBar.headerHeight(
-                glossy: glossy,
-                ios: AppIosGlass.active.value,
-              );
+    final ios = AppIosGlass.active.value;
+    final base = MediaQuery.paddingOf(context).top +
+        ChatAppBar.headerHeight(glossy: glossy, ios: ios);
+    // Fade just below the floating header capsules.
+    return ios ? base + 12 : base;
   }
 
   Widget _buildMessagesArea() {
