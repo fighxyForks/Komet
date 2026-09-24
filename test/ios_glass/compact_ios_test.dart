@@ -295,11 +295,11 @@ void main() {
     );
     final banner = find.byKey(const ValueKey('ios-pinned-banner'));
     expect(tester.widget(banner), isA<GlassCapsule>());
-    expect(tester.widget<GlassCapsule>(banner).allowNative, isTrue);
+    expect(tester.widget<GlassCapsule>(banner).allowNative, isFalse);
     expect(tester.getSize(banner).height, lessThanOrEqualTo(50));
   });
 
-  testWidgets('кнопка «вниз» — нативное стекло', (tester) async {
+  testWidgets('кнопка «вниз» — непрозрачная Flutter-капсула', (tester) async {
     final controller = AnimationController(vsync: const TestVSync(), value: 1);
     addTearDown(controller.dispose);
     await tester.pumpWidget(
@@ -324,7 +324,7 @@ void main() {
     final button = tester.widget<GlassCapsule>(
       find.byKey(const ValueKey('ios-scroll-down')),
     );
-    expect(button.allowNative, isTrue);
+    expect(button.allowNative, isFalse);
   });
 
   test('плашка голосового в iOS выше и заметнее', () {

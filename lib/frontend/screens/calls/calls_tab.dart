@@ -576,6 +576,7 @@ class _CallsTabState extends State<CallsTab>
                       message: 'Нет звонков',
                     )
                   : ListView.builder(
+                      key: const PageStorageKey<String>('calls-list'),
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.only(bottom: 120),
                       itemCount: filteredCalls.length,

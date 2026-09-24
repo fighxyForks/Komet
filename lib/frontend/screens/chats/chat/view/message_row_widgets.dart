@@ -87,7 +87,9 @@ class _SwipeToReplyState extends State<SwipeToReply>
     _rawX = raw;
     var visual = raw;
     if (IosMotion.reduceMotionOf(context)) {
-      if (visual < -IosMotion.replyMaxVisual) visual = -IosMotion.replyMaxVisual;
+      if (visual < -IosMotion.replyMaxVisual) {
+        visual = -IosMotion.replyMaxVisual;
+      }
     } else {
       visual = IosMotion.rubberBand(
         offset: raw,
@@ -279,6 +281,7 @@ class PinnedMessageBanner extends StatelessWidget {
     if (ios) {
       return GlassCapsule(
         key: const ValueKey('ios-pinned-banner'),
+        allowNative: false,
         borderRadius: floating
             ? (borderRadius ?? BorderRadius.circular(20))
             : BorderRadius.zero,

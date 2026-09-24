@@ -35,6 +35,25 @@ void main() {
       expect(find.byType(LiquidGlassContainer), findsNothing);
     });
 
+    testWidgets('iOS 26 без нативного вида не размывает фон', (tester) async {
+      AppIosGlass.debugIosMajorVersion = 26;
+      AppIosGlass.debugNativeGlassSupported = true;
+      await tester.pumpWidget(
+        _host(
+          const GlassCapsule(
+            allowNative: false,
+            width: 120,
+            height: 44,
+            child: Text('field'),
+          ),
+        ),
+      );
+      expect(AppIosGlass.nativeViews, isTrue);
+      expect(find.byType(LiquidGlassContainer), findsNothing);
+      expect(find.byType(BackdropFilter), findsNothing);
+      expect(find.text('field'), findsOneWidget);
+    });
+
     testWidgets('непрозрачная капсула всё ещё принимает нажатие', (
       tester,
     ) async {

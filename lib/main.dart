@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:kolibri/kolibri.dart' show initKolibri;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -109,6 +110,7 @@ import 'frontend/debug/performance_monitor.dart';
 import 'frontend/screens/auth/login_screen.dart';
 import 'frontend/widgets/adaptive_shell.dart';
 import 'frontend/widgets/custom_notification.dart';
+import 'frontend/motion/ios_motion.dart';
 import 'frontend/widgets/glass/ios_glass.dart';
 import 'frontend/widgets/liquid_glass.dart';
 import 'frontend/widgets/mesh_gradient_background.dart';
@@ -206,6 +208,11 @@ void main(List<String> args) async {
     return animojiModule.animojis;
   };
   WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    final images = PaintingBinding.instance.imageCache;
+    images.maximumSize = 300;
+    images.maximumSizeBytes = 50 << 20;
+  }
   await initKolibri();
   DebugTest.parse(args);
   CallNoMute.parse(args);
@@ -1241,11 +1248,23 @@ class KometAppState extends State<KometApp>
                           children: [
                             if (gradientColors != null && gradientColors.isNotEmpty)
                               Positioned.fill(
-                                child: MeshGradientBackground(
-                                  colors: gradientColors,
-                                  animate: gradientWallpaper!.gradientAnimated,
-                                  rotation: gradientWallpaper.gradientRotation,
-                                  stepOnPulse: AppIosGlass.active.value,
+                                child: ListenableBuilder(
+                                  listenable: AppIosGlass.chromeListenable,
+                                  builder: (context, _) {
+                                    final still = IosMotion.freezeLiveEffects(
+                                      context,
+                                    );
+                                    return MeshGradientBackground(
+                                      colors: gradientColors,
+                                      animate:
+                                          gradientWallpaper!.gradientAnimated &&
+                                          !still,
+                                      rotation:
+                                          gradientWallpaper.gradientRotation,
+                                      stepOnPulse:
+                                          AppIosGlass.active.value && !still,
+                                    );
+                                  },
                                 ),
                               ),
                             RepaintBoundary(

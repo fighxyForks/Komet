@@ -369,7 +369,7 @@ void main() {
     );
     expect(capsules, findsNWidgets(2));
     for (final capsule in capsules.evaluate()) {
-      expect((capsule.widget as GlassCapsule).allowNative, isTrue);
+      expect((capsule.widget as GlassCapsule).allowNative, isFalse);
       expect(tester.getSize(find.byWidget(capsule.widget)).height, 46);
     }
     await tester.tap(capsules.first);

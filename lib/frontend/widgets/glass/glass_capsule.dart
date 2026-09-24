@@ -95,7 +95,8 @@ class GlassBackground extends StatelessWidget {
       builder: (context, _) {
         final cs = Theme.of(context).colorScheme;
         final ios = IosGlass.of(context);
-        final opaque = forceOpaque ||
+        final opaque =
+            forceOpaque ||
             MediaQuery.highContrastOf(context) ||
             (ios &&
                 (MediaQuery.disableAnimationsOf(context) ||
@@ -227,7 +228,10 @@ class GlassCapsule extends StatelessWidget {
             context,
             GlassBackground(
               borderRadius: borderRadius ?? GlassStyle.capsule,
-              tint: fallbackTint ?? tint ?? Theme.of(context).colorScheme.surfaceContainerHigh,
+              tint:
+                  fallbackTint ??
+                  tint ??
+                  Theme.of(context).colorScheme.surfaceContainerHigh,
               sigma: 0,
               shadow: shadow,
               forceOpaque: true,
@@ -263,7 +267,7 @@ class GlassCapsule extends StatelessWidget {
           tint: fallbackTint ?? tint,
           sigma: fallbackSigma,
           shadow: shadow,
-          forceOpaque: forceOpaque,
+          forceOpaque: forceOpaque || IosGlass.of(context),
           child: SizedBox(width: width, height: height, child: content),
         );
         return _tappable(context, surface);
@@ -283,6 +287,7 @@ class GlassIconButton extends StatelessWidget {
   final double iconSize;
   final Color? color;
   final Color? tint;
+  final bool allowNative;
 
   const GlassIconButton({
     super.key,
@@ -296,6 +301,7 @@ class GlassIconButton extends StatelessWidget {
     this.iconSize = 22,
     this.color,
     this.tint,
+    this.allowNative = true,
   }) : assert(icon != null || child != null);
 
   @override
@@ -311,6 +317,7 @@ class GlassIconButton extends StatelessWidget {
         width: size,
         height: size,
         tint: tint,
+        allowNative: allowNative,
         onTap: enabled
             ? () {
                 onPressed?.call();
