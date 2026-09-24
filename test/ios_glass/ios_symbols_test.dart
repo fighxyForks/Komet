@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_empty_state.dart';
@@ -18,6 +19,13 @@ void main() {
   });
 
   tearDown(AppIosGlass.debugReset);
+
+  test('the Cupertino icon font ships with the app', () async {
+    const family =
+        'packages/${CupertinoIcons.iconFontPackage}/${CupertinoIcons.iconFont}';
+    final manifest = await rootBundle.loadString('FontManifest.json');
+    expect(manifest, contains('"family":"$family"'));
+  });
 
   testWidgets('IosSymbols resolves Cupertino icons in iOS mode', (tester) async {
     AppIosGlass.debugSetSupported(true);
