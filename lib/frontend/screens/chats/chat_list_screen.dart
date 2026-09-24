@@ -26,7 +26,12 @@ import '../../widgets/encryption_lock_badge.dart';
 import '../../widgets/online_dot.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/chat_menu_overlay.dart';
+import '../../../core/calls/active_call.dart';
+import '../calls/call_screen.dart';
 import '../../../core/config/app_ios_glass.dart';
+import '../../../core/config/app_native_tab_minimize_prototype.dart';
+import '../../native/native_tab_chrome.dart';
+import '../../../core/native/native_tab_chrome_bridge.dart';
 import '../../../core/utils/perf_trace.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
@@ -1661,6 +1666,10 @@ class _ChatListScreenState extends State<ChatListScreen>
       if (!_listScrollActive.value) {
         _listScrollActive.value = true;
       }
+      if (n is ScrollUpdateNotification &&
+          AppNativeTabMinimizePrototype.enabled.value) {
+        NativeTabChromeBridge.onScrollDelta(n.scrollDelta ?? 0);
+      }
     } else if (ending) {
       _listScrollOpaqueHold?.cancel();
       _listScrollOpaqueHold = Timer(const Duration(milliseconds: 120), () {
@@ -2572,6 +2581,39 @@ class _ChatListScreenState extends State<ChatListScreen>
   ) {
     final ios = IosGlass.of(context);
     final badges = ios ? [_iosChatsBadge()] : const <String?>[];
+    if (ios &&
+        AppIosGlass.nativeViews &&
+        AppNativeTabMinimizePrototype.enabled.value) {
+      return AnimatedPositioned(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        left: 0,
+        right: 0,
+        bottom: _isSelectionMode ? -140 : bottomInset,
+        child: NativeTabChromeHost(
+          items: _iosNavItems,
+          currentIndex: _currentNavIndex,
+          height: 96,
+          onTap: _onNavTabSelected,
+          onCallAccessoryTap: () {
+            final active = ActiveCall.instance.current.value;
+            if (active == null) return;
+            final nav = Navigator.of(context, rootNavigator: true);
+            nav.push(
+              iosPageRoute(
+                context,
+                builder: (_) => CallScreen(
+                  name: active.name,
+                  avatarUrl: active.avatarUrl,
+                  session: active.session,
+                  isGroup: active.isGroup,
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    }
     if (ios && AppIosGlass.nativeViews) {
       return AnimatedPositioned(
         duration: const Duration(milliseconds: 300),
