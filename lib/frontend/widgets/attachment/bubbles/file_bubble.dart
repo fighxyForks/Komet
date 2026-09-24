@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/main.dart';
@@ -204,7 +203,7 @@ class FileBubble extends StatelessWidget {
                       return ValueListenableBuilder<AudioFileTrack?>(
                         valueListenable: MediaPlayback.instance.audioFile,
                         builder: (context, track, _) {
-                          if (!cached) return button(Symbols.download);
+                          if (!cached) return button(IosSymbols.download(context));
                           if (track?.cacheName != cacheName ||
                               !AudioPlaybackController.isInitialized) {
                             return button(IosSymbols.play(ctx.context));

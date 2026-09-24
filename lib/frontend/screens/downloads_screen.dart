@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as p;
 
@@ -542,11 +541,11 @@ class _DownloadPreviewState extends State<_DownloadPreview> {
         .replaceFirst('.', '')
         .toUpperCase();
     final (color, icon) = switch (widget.record.kind) {
-      DownloadKind.photo => (const Color(0xFF3CA95E), Symbols.image),
-      DownloadKind.video => (const Color(0xFF4A8FE7), Symbols.movie),
-      DownloadKind.gif => (const Color(0xFFE684AE), Symbols.gif_box),
-      DownloadKind.audio => (const Color(0xFF8C68D8), Symbols.audio_file),
-      DownloadKind.file => (const Color(0xFFF2B735), Symbols.description),
+      DownloadKind.photo => (const Color(0xFF3CA95E), IosSymbols.photo(context)),
+      DownloadKind.video => (const Color(0xFF4A8FE7), IosSymbols.movie(context)),
+      DownloadKind.gif => (const Color(0xFFE684AE), IosSymbols.gifBox(context)),
+      DownloadKind.audio => (const Color(0xFF8C68D8), IosSymbols.audioFile(context)),
+      DownloadKind.file => (const Color(0xFFF2B735), IosSymbols.doc(context)),
     };
     return ColoredBox(
       color: color,

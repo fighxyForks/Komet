@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
@@ -188,7 +187,7 @@ class _CustomGradientEditorScreenState
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                 child: Row(
                   children: [
-                    Icon(Symbols.rotate_right, color: cs.onSurfaceVariant, size: 20),
+                    Icon(IosSymbols.rotateRight(context), color: cs.onSurfaceVariant, size: 20),
                     Expanded(
                       child: IosSlider(
                         value: _rotation % 8,

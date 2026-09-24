@@ -63,8 +63,7 @@ Future<T?> showIosAlert<T>({
   }
 
   if (content == null &&
-      AppIosGlass.nativeViews &&
-      NativeLiquidGlassUtils.supportsLiquidGlass) {
+      AppIosGlass.nativeViews) {
     final nativeActions = [
       for (final a in actions)
         LiquidGlassAlertAction(

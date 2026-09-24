@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../screens/profile/lottie_polygon_screen.dart';
@@ -27,7 +26,7 @@ class DebugLottiePolygonSection extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  Symbols.animation,
+                  IosSymbols.animation(context),
                   color: cs.onSurfaceVariant,
                   size: 22,
                   weight: 400,

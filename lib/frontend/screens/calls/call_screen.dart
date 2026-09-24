@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart'
     show MediaStream, RTCVideoRenderer, RTCVideoValue, RTCVideoViewObjectFit;
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/messages.dart' show ContactCache;
 import '../../../core/cache/info_cache.dart';
@@ -34,6 +33,7 @@ import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
 import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_metrics.dart';
+import '../../widgets/glass/ios_tappable.dart';
 
 class CallScreen extends StatefulWidget {
   final String name;
@@ -743,7 +743,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                           right: -2,
                           child: _tileBadge(
                             cs,
-                            Symbols.front_hand,
+                            IosSymbols.handRaised(context),
                             cs.tertiaryContainer,
                             cs.onTertiaryContainer,
                           ),
@@ -754,7 +754,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                           left: -2,
                           child: _tileBadge(
                             cs,
-                            Symbols.screen_share,
+                            IosSymbols.screenShare(context),
                             cs.primaryContainer,
                             cs.onPrimaryContainer,
                           ),
@@ -765,7 +765,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                           right: -2,
                           child: _tileBadge(
                             cs,
-                            Symbols.mic_off,
+                            IosSymbols.micOff(context),
                             cs.surfaceContainerHighest,
                             cs.onSurfaceVariant,
                           ),
@@ -847,7 +847,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               right: 8,
               child: _tileBadge(
                 cs,
-                Symbols.front_hand,
+                IosSymbols.handRaised(context),
                 cs.tertiaryContainer,
                 cs.onTertiaryContainer,
               ),
@@ -858,7 +858,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               left: 8,
               child: _tileBadge(
                 cs,
-                Symbols.screen_share,
+                IosSymbols.screenShare(context),
                 cs.primaryContainer,
                 cs.onPrimaryContainer,
               ),
@@ -1005,7 +1005,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               onPressed: () => Navigator.of(context).maybePop(),
               tooltip: l10n.callTooltipMinimize,
               icon: Icon(
-                Symbols.close_fullscreen,
+                IosSymbols.closeFullscreen(context),
                 color: cs.onSurface,
                 weight: 500,
                 size: 26,
@@ -1076,9 +1076,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (session == null) return null;
     final pills = <Widget>[
       if (session.peerMuted)
-        _statePill(cs, Symbols.mic_off, l10n.callPeerMicOff),
+        _statePill(cs, IosSymbols.micOff(context), l10n.callPeerMicOff),
       if (session.peerVideo)
-        _statePill(cs, Symbols.videocam, l10n.callPeerCameraOn),
+        _statePill(cs, IosSymbols.videocam(context), l10n.callPeerCameraOn),
     ];
     if (pills.isEmpty) return null;
     return Wrap(
@@ -1439,21 +1439,23 @@ class _CallButton extends StatelessWidget {
 
     final Widget face;
     if (ios) {
-      // Flutter glass look only — no BackdropFilter / platform view per button.
       final glassBg = destructive
           ? kDangerRed
           : (background == cs.primary
               ? cs.primary.withValues(alpha: 0.95)
               : Colors.white.withValues(alpha: 0.18));
-      face = Material(
-        color: Colors.transparent,
-        child: InkWell(
-          customBorder: const CircleBorder(),
+      face = Semantics(
+        button: true,
+        label: label,
+        enabled: !busy,
+        child: IosTappable(
           onTap: busy ? null : onTap,
           onLongPress: busy ? null : onLongPress,
-          child: Ink(
+          borderRadius: BorderRadius.circular(size / 2),
+          child: Container(
             width: size,
             height: size,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: glassBg,
@@ -1471,11 +1473,9 @@ class _CallButton extends StatelessWidget {
                 ),
               ],
             ),
-            child: Center(
-              child: busy
-                  ? SmallSpinner(size: 22, color: foreground)
-                  : _buildIcon(),
-            ),
+            child: busy
+                ? SmallSpinner(size: 22, color: foreground)
+                : _buildIcon(),
           ),
         ),
       );
@@ -1632,13 +1632,13 @@ class _CallInfoSheet extends StatelessWidget {
     );
 
     final badges = <Widget>[
-      _badge(cs, Symbols.call, l10n.callBadgeAudio),
+      _badge(cs, IosSymbols.phone(context), l10n.callBadgeAudio),
       if (info?.record == true)
-        _badge(cs, Symbols.radio_button_checked, l10n.callBadgeRecording),
+        _badge(cs, IosSymbols.radioChecked(context), l10n.callBadgeRecording),
       if (info?.denoise == true)
-        _badge(cs, Symbols.noise_control_on, l10n.callBadgeNoiseSuppression),
+        _badge(cs, IosSymbols.noiseControlOn(context), l10n.callBadgeNoiseSuppression),
       if (info?.animoji == true)
-        _badge(cs, Symbols.mood, l10n.callBadgeAnimoji),
+        _badge(cs, IosSymbols.mood(context), l10n.callBadgeAnimoji),
     ];
 
     return SafeArea(

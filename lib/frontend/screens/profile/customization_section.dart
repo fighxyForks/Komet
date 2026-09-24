@@ -121,7 +121,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
           child: Row(
             children: [
-              Icon(IosSymbols.palette(context),
+              Icon(IosSymbols.adapt(context, Symbols.palette),
                 color: cs.onSurfaceVariant,
                 size: 22,
                 weight: 400,
@@ -140,7 +140,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
               AnimatedRotation(
                 duration: const Duration(milliseconds: 200),
                 turns: _expanded ? 0.5 : 0,
-                child: Icon(IosSymbols.expandMore(context),
+                child: Icon(IosSymbols.adapt(context, Symbols.expand_more),
                   color: cs.outline,
                   size: 22,
                   weight: 400,
@@ -169,7 +169,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
       );
       tiles.add(
         SettingsNavTile(
-          icon: category.icon,
+          icon: IosSymbols.adapt(context, category.icon),
           label: category.title,
           onTap: () => _open(category),
           isLast: i == _categories.length - 1,

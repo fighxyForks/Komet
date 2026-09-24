@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/chats.dart';
@@ -453,7 +452,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
                   child: _avatar != null
                       ? Image.file(_avatar!, fit: BoxFit.cover)
                       : Icon(
-                          Symbols.add_a_photo,
+                          IosSymbols.addAPhoto(context),
                           color: cs.onSurfaceVariant,
                           size: 20,
                         ),

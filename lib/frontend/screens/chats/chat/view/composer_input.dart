@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/core/config/app_chat_chrome.dart';
@@ -343,7 +342,7 @@ class ComposerInputBar extends StatelessWidget {
                                         behavior: HitTestBehavior.opaque,
                                         onTap: onToggleStickerPanel,
                                         child: Icon(
-                                          Symbols.face,
+                                          IosSymbols.face(context),
                                           color: mutedIcon,
                                           size: 24,
                                           weight: 400,
@@ -1087,7 +1086,7 @@ class ComposerInputBar extends StatelessWidget {
                     color: lock > 0.6 ? cs.primary : cs.onSurfaceVariant,
                   ),
                   Icon(
-                    Symbols.keyboard_arrow_up,
+                    IosSymbols.keyboardArrowUp(context),
                     size: 14,
                     color: cs.onSurfaceVariant,
                   ),
@@ -1425,7 +1424,7 @@ class _HistoryStrip extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              _iconForFilename(e.filename),
+                              _iconForFilename(context, e.filename),
                               color: cs.onSurfaceVariant,
                               size: 22,
                             ),
@@ -1578,8 +1577,8 @@ String _labelForEntry(FileHistoryEntry e) {
   return lastDot > 0 ? n.substring(0, lastDot) : n;
 }
 
-IconData _iconForFilename(String? name) {
-  if (name == null || !name.contains('.')) return Symbols.description;
+IconData _iconForFilename(BuildContext context, String? name) {
+  if (name == null || !name.contains('.')) return IosSymbols.doc(context);
   final ext = name.split('.').last.toLowerCase();
   switch (ext) {
     case 'jpg':
@@ -1590,43 +1589,43 @@ IconData _iconForFilename(String? name) {
     case 'bmp':
     case 'heic':
     case 'heif':
-      return Symbols.image;
+      return IosSymbols.photo(context);
     case 'mp4':
     case 'mov':
     case 'avi':
     case 'mkv':
     case 'webm':
     case '3gp':
-      return Symbols.movie;
+      return IosSymbols.movie(context);
     case 'mp3':
     case 'wav':
     case 'ogg':
     case 'flac':
     case 'm4a':
     case 'aac':
-      return Symbols.audio_file;
+      return IosSymbols.audioFile(context);
     case 'pdf':
-      return Symbols.picture_as_pdf;
+      return IosSymbols.pictureAsPdf(context);
     case 'zip':
     case 'rar':
     case '7z':
     case 'tar':
     case 'gz':
-      return Symbols.folder_zip;
+      return IosSymbols.folderZip(context);
     case 'doc':
     case 'docx':
     case 'txt':
     case 'rtf':
     case 'odt':
     case 'md':
-      return Symbols.article;
+      return IosSymbols.article(context);
     case 'xls':
     case 'xlsx':
     case 'csv':
-      return Symbols.table_chart;
+      return IosSymbols.tableChart(context);
     case 'ppt':
     case 'pptx':
-      return Symbols.slideshow;
+      return IosSymbols.slideshow(context);
     case 'dart':
     case 'js':
     case 'ts':
@@ -1647,8 +1646,8 @@ IconData _iconForFilename(String? name) {
     case 'xml':
     case 'yaml':
     case 'yml':
-      return Symbols.code;
+      return IosSymbols.code(context);
     default:
-      return Symbols.description;
+      return IosSymbols.doc(context);
   }
 }

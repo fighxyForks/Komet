@@ -4,7 +4,6 @@ import '../../glass/ios_glass.dart';
 import '../../glass/ios_typography.dart';
 import '../../glass/ios_tracking.dart';
 import 'ios_bubble_metrics.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:komet/main.dart';
 
@@ -201,28 +200,28 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
     Color color;
 
     if (status == null || status == 'sent') {
-      icon = Symbols.check;
+      icon = IosSymbols.check(context);
       color = Colors.white54;
     } else {
       switch (status) {
         case 'sending':
         case 'pending':
-          icon = Symbols.schedule;
+          icon = IosSymbols.schedule(context);
           color = widget.cs.onPrimaryContainer.withValues(alpha: 0.55);
         case 'sent':
-          icon = Symbols.check;
+          icon = IosSymbols.check(context);
           color = widget.cs.onPrimaryContainer.withValues(alpha: 0.55);
         case 'delivered':
-          icon = Symbols.done_all;
+          icon = IosSymbols.doneAll(context);
           color = widget.cs.onPrimaryContainer.withValues(alpha: 0.55);
         case 'read':
-          icon = Symbols.done_all;
+          icon = IosSymbols.doneAll(context);
           color = kReadReceiptBlue;
         case 'error':
-          icon = Symbols.error;
+          icon = IosSymbols.error2(context);
           color = Colors.redAccent;
         default:
-          icon = Symbols.check;
+          icon = IosSymbols.check(context);
           color = widget.cs.onPrimaryContainer.withValues(alpha: 0.55);
       }
     }
@@ -274,15 +273,15 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                   }
                   final IconData icon;
                   if (_audio.playing.value) {
-                    icon = Symbols.pause;
+                    icon = IosSymbols.pause(context);
                   } else if (_audio.downloaded.value) {
-                    icon = Symbols.play_arrow;
+                    icon = IosSymbols.play(context);
                   } else {
-                    icon = Symbols.arrow_downward;
+                    icon = IosSymbols.arrowDownward(context);
                   }
                   // Play triangle sits optically a hair right of center.
                   final opticalNudge =
-                      icon == Symbols.play_arrow ? 1.5 : 0.0;
+                      icon == IosSymbols.play(context) ? 1.5 : 0.0;
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 160),
                     transitionBuilder: (child, animation) =>
@@ -361,7 +360,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
       glyph = SmallSpinner(size: 14, color: accent);
     } else if (_transcriptionVisible) {
       glyph = Icon(
-        Symbols.keyboard_arrow_up,
+        IosSymbols.keyboardArrowUp(context),
         key: const ValueKey('voice-transcribe-expanded'),
         size: 22,
         color: accent,

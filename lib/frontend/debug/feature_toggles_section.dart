@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../backend/modules/contacts.dart';
@@ -128,7 +127,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.swipe_right,
+            icon: IosSymbols.swipeRight(context),
             title: 'Свайп-назад в десктоп-режиме',
             subtitle: (_) =>
                 'Включает жест «провести от левого края, чтобы '
@@ -311,7 +310,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.terminal,
+            icon: IosSymbols.terminal(context),
             title: 'Команды',
             subtitle: (_) => 'Панель команд по вводу «/» в строке сообщения',
             valueListenable: AppCommands.current,

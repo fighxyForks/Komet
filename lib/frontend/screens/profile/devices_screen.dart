@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/config/app_colors.dart';
@@ -285,7 +284,7 @@ class _DevicesScreenState extends State<DevicesScreen>
               const SizedBox(height: 20),
               IosSettingsButton(
                 onPressed: _startWebQrAuth,
-                icon: Symbols.qr_code_scanner,
+                icon: IosSymbols.qrCodeScanner(context),
                 label: l10n.devicesScanQrButton,
               ),
             ],
@@ -565,12 +564,12 @@ class _DevicesScreenState extends State<DevicesScreen>
                               children: [
                                 _buildDetailRow(
                                   cs,
-                                  Symbols.location_city,
+                                  IosSymbols.locationCity(context),
                                   _formatPlace(details),
                                 ),
                                 _buildDetailRow(
                                   cs,
-                                  Symbols.dns,
+                                  IosSymbols.dns(context),
                                   details['isp'] ??
                                       AppLocalizations.of(
                                         context,
@@ -578,7 +577,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                                 ),
                                 _buildDetailRow(
                                   cs,
-                                  Symbols.public,
+                                  IosSymbols.public(context),
                                   details['as'] ??
                                       AppLocalizations.of(
                                         context,
@@ -587,20 +586,20 @@ class _DevicesScreenState extends State<DevicesScreen>
                                 if (details['mobile'] == true)
                                   _buildDetailRow(
                                     cs,
-                                    Symbols.stay_current_portrait,
+                                    IosSymbols.stayCurrentPortrait(context),
                                     l10n.devicesMobileNetworkLabel,
                                     color: Colors.blueAccent,
                                   ),
                                 if (details['proxy'] == true)
                                   _buildDetailRow(
                                     cs,
-                                    Symbols.vpn_lock,
+                                    IosSymbols.vpnLock(context),
                                     l10n.devicesProxyDetectedLabel,
                                     color: Colors.orangeAccent,
                                   ),
                                 _buildDetailRow(
                                   cs,
-                                  Symbols.schedule,
+                                  IosSymbols.schedule(context),
                                   details['timezone'] ??
                                       AppLocalizations.of(
                                         context,
@@ -619,7 +618,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
                                   child: Icon(
-                                    Symbols.do_not_disturb_on,
+                                    IosSymbols.doNotDisturbOn(context),
                                     size: 20,
                                     color: cs.onSurfaceVariant.withValues(
                                       alpha: 0.4,

@@ -4,7 +4,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:komet/main.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/messages.dart'
     show CachedMessage, ContactCache;
@@ -461,7 +460,7 @@ class _CommonChatsTabState extends State<CommonChatsTab>
     final cs = Theme.of(context).colorScheme;
     if (_loading) return _loadingState(cs);
     if (_chats.isEmpty) {
-      return _emptyState(cs, widget.emptyLabel, Symbols.group);
+      return _emptyState(cs, widget.emptyLabel, IosSymbols.group(context));
     }
 
     final list = Column(
@@ -1313,11 +1312,11 @@ class _ProfileVoiceTileState extends State<_ProfileVoiceTile> {
                       : 0.0;
                   final IconData icon;
                   if (_player.playing.value) {
-                    icon = Symbols.pause;
+                    icon = IosSymbols.pause(context);
                   } else if (_player.downloaded.value) {
-                    icon = Symbols.play_arrow;
+                    icon = IosSymbols.play(context);
                   } else {
-                    icon = Symbols.arrow_downward;
+                    icon = IosSymbols.arrowDownward(context);
                   }
                   return Stack(
                     alignment: Alignment.center,

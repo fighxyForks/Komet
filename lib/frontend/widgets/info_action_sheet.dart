@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'sheet_helpers.dart';
@@ -221,7 +222,7 @@ class _InfoActionSheetState extends State<_InfoActionSheet> {
     if (!widget.headerGlow) {
       return Center(
         child: Icon(
-          widget.headerIcon,
+          IosSymbols.adapt(context, widget.headerIcon!),
           size: 72,
           color: cs.primary,
           weight: 400,
@@ -231,7 +232,7 @@ class _InfoActionSheetState extends State<_InfoActionSheet> {
     return Center(
       child: _GlowHalo(
         child: Icon(
-          widget.headerIcon,
+          IosSymbols.adapt(context, widget.headerIcon!),
           size: 104,
           fill: 1,
           weight: 300,
@@ -249,7 +250,7 @@ class _InfoActionSheetState extends State<_InfoActionSheet> {
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 2),
-          child: Icon(item.icon, size: 26, color: iconColor, weight: 400),
+          child: Icon(IosSymbols.adapt(context, item.icon), size: 26, color: iconColor, weight: 400),
         ),
         const SizedBox(width: 16),
         Expanded(

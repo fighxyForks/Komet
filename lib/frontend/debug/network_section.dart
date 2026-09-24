@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../main.dart';
@@ -37,7 +36,7 @@ class DebugNetworkSection extends StatelessWidget {
           child: state == null
               ? const SizedBox.shrink()
               : DebugToggleTile(
-                  icon: Symbols.vpn_key_off,
+                  icon: IosSymbols.vpnKeyOff(context),
                   title: 'Обход VPN',
                   subtitle: (_) =>
                       'Если обнаружен VPN (tun-интерфейс), '
@@ -64,7 +63,7 @@ class DebugNetworkSection extends StatelessWidget {
           child: state == null
               ? const SizedBox.shrink()
               : DebugToggleTile(
-                  icon: Symbols.gpp_bad,
+                  icon: IosSymbols.gppBad(context),
                   title: 'Отключить проверку TLS',
                   subtitle: (_) =>
                       'Принимать любой сертификат сервера. '

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/calls/call_session.dart';
@@ -146,14 +145,14 @@ class _KometHubState extends State<_KometHub> {
       children: [
         _tile(
           cs,
-          Symbols.forum,
+          IosSymbols.forum(context),
           l10n.hubChatTileTitle,
           l10n.hubChatTileSubtitle,
           () => _go(_HubPage.chat),
         ),
         _tile(
           cs,
-          Symbols.stadia_controller,
+          IosSymbols.stadiaController(context),
           l10n.hubGamesTitle,
           l10n.hubGamesTileSubtitle,
           () => _go(_HubPage.games),
@@ -170,14 +169,14 @@ class _KometHubState extends State<_KometHub> {
       children: [
         _tile(
           cs,
-          Symbols.grid_on,
+          IosSymbols.gridOn(context),
           l10n.hubCheckersTitle,
           l10n.hubCheckersTileSubtitle,
           () => _go(_HubPage.checkers),
         ),
         _tile(
           cs,
-          Symbols.more_horiz,
+          IosSymbols.ellipsisHoriz(context),
           l10n.hubMoreSoonTitle,
           l10n.hubMoreSoonSubtitle,
           null,
@@ -650,7 +649,7 @@ class _CheckersViewState extends State<_CheckersView> {
         ),
         child: king
             ? Icon(
-                Symbols.star,
+                IosSymbols.star(context),
                 fill: 1,
                 size: 16,
                 color: white

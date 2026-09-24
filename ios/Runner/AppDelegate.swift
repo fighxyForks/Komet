@@ -45,6 +45,7 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       registerScreen(messenger)
       registerClipboard(messenger)
       registerAppearance(messenger)
+      registerAccessibility(messenger)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -186,6 +187,16 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       self?.window?.overrideUserInterfaceStyle = brightness == "system"
         ? .unspecified : (brightness == "dark" ? .dark : .light)
       result(nil)
+    }
+  }
+
+
+  private func registerAccessibility(_ messenger: FlutterBinaryMessenger) {
+    method("ru.komet.app/accessibility", messenger) { call, result in
+      KometAccessibility.shared.handle(call, result: result)
+    }
+    events("ru.komet.app/accessibility_events", messenger) { sink in
+      KometAccessibility.shared.attach(sink)
     }
   }
 

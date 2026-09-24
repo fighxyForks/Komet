@@ -7,6 +7,9 @@ import '../../../core/utils/haptics.dart';
 import '../../motion/ios_haptics.dart';
 import '../springy_tap.dart';
 import 'ios_glass.dart';
+import 'ios_palette.dart';
+import 'ios_symbols.dart';
+import '../../../core/config/app_ios_glass.dart';
 
 Rect globalRectOf(BuildContext context) {
   final box = context.findRenderObject() as RenderBox?;
@@ -87,44 +90,61 @@ class GlassBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final base = tint ?? GlassStyle.tint(cs);
-    final fill = forceOpaque
-        ? base.withValues(alpha: 1)
-        : base;
-    final painted = DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        border: Border.all(color: GlassStyle.rim(cs), width: 0.6),
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color.alphaBlend(GlassStyle.highlight(cs), fill),
-            fill,
-          ],
-          stops: const [0, 0.6],
-        ),
-      ),
-      child: child,
-    );
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        boxShadow: shadow ? [GlassStyle.shadow(cs)] : null,
-      ),
-      child: ClipRRect(
-        borderRadius: borderRadius,
-        child: forceOpaque
-            ? painted
-            : BackdropFilter(
-                filter: ui.ImageFilter.compose(
-                  outer: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-                  inner: const ColorFilter.matrix(GlassStyle.vibrancy),
-                ),
-                child: painted,
-              ),
-      ),
+    return ListenableBuilder(
+      listenable: AppIosGlass.chromeListenable,
+      builder: (context, _) {
+        final cs = Theme.of(context).colorScheme;
+        final ios = IosGlass.of(context);
+        final opaque = forceOpaque ||
+            MediaQuery.highContrastOf(context) ||
+            (ios &&
+                (MediaQuery.disableAnimationsOf(context) ||
+                    !AppIosGlass.nativeViews));
+        final base = opaque && ios
+            ? (tint ?? IosPalette.grouped(cs)).withValues(alpha: 1)
+            : (tint ?? GlassStyle.tint(cs));
+        final fill = opaque ? base.withValues(alpha: 1) : base;
+        final rim = opaque && ios
+            ? IosPalette.separator(cs)
+            : GlassStyle.rim(cs);
+        final painted = DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            border: Border.all(color: rim, width: 0.6),
+            gradient: opaque && ios
+                ? null
+                : LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color.alphaBlend(GlassStyle.highlight(cs), fill),
+                      fill,
+                    ],
+                    stops: const [0, 0.6],
+                  ),
+            color: opaque && ios ? fill : null,
+          ),
+          child: child,
+        );
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            boxShadow: shadow ? [GlassStyle.shadow(cs)] : null,
+          ),
+          child: ClipRRect(
+            borderRadius: borderRadius,
+            child: opaque
+                ? painted
+                : BackdropFilter(
+                    filter: ui.ImageFilter.compose(
+                      outer: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+                      inner: const ColorFilter.matrix(GlassStyle.vibrancy),
+                    ),
+                    child: painted,
+                  ),
+          ),
+        );
+      },
     );
   }
 }
@@ -302,7 +322,7 @@ class GlassIconButton extends StatelessWidget {
           child:
               child ??
               Icon(
-                icon,
+                IosSymbols.adapt(context, icon!),
                 size: iconSize,
                 weight: 500,
                 color: color ?? cs.onSurface,
@@ -386,7 +406,7 @@ class GlassButtonGroup extends StatelessWidget {
                         child:
                             item.child ??
                             Icon(
-                              item.icon,
+                              IosSymbols.adapt(context, item.icon!),
                               size: iconSize,
                               weight: 500,
                               color: cs.onSurface,

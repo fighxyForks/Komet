@@ -418,7 +418,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
                     color: cs.surfaceContainerHigh,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(type.icon, color: cs.onSurface, size: 20),
+                  child: Icon(IosSymbols.adapt(context, type.icon), color: cs.onSurface, size: 20),
                 ),
                 title: type.label,
                 selected: _types.contains(type.filter),
@@ -562,14 +562,14 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
           children: [
             _buildToggle(
               cs,
-              icon: IosSymbols.notifications(context),
+              icon: Symbols.notifications,
               title: 'Чаты с уведомлениями',
               value: _onlyNotMuted,
               onChanged: (v) => setState(() => _onlyNotMuted = v),
             ),
             _buildToggle(
               cs,
-              icon: IosSymbols.markUnread(context),
+              icon: Symbols.mark_chat_unread,
               title: 'Непрочитанные чаты',
               value: _onlyUnread,
               onChanged: (v) => setState(() => _onlyUnread = v),
@@ -590,7 +590,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
     padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
     child: Row(
       children: [
-        Icon(icon, color: cs.onSurfaceVariant, size: 22),
+        Icon(IosSymbols.adapt(context, icon), color: cs.onSurfaceVariant, size: 22),
         const SizedBox(width: 16),
         Expanded(
           child: Text(

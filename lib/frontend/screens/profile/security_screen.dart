@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../../main.dart' show accountModule;
 import '../../../backend/modules/account.dart'
     show PrivacyConfig, BlockedContact;
@@ -138,7 +137,7 @@ class _SecurityScreenState extends State<SecurityScreen>
     final l10n = AppLocalizations.of(context)!;
     return showInfoActionSheet(
       context,
-      headerIcon: Symbols.encrypted,
+      headerIcon: IosSymbols.encrypted(context),
       headerGlow: true,
       title: l10n.securityModeTitle,
       subtitle: l10n.securityModeSheetSubtitle,
@@ -437,7 +436,7 @@ class _SecurityScreenState extends State<SecurityScreen>
               child: Row(
                 children: [
                   Icon(
-                    Symbols.key,
+                    IosSymbols.key(context),
                     color: cs.onSurfaceVariant,
                     size: 22,
                     weight: 400,
@@ -599,7 +598,7 @@ class _SecurityScreenState extends State<SecurityScreen>
           ),
           _settingsRow(
             cs,
-            icon: Symbols.contact_page,
+            icon: IosSymbols.contactPage(context),
             label: l10n.securityShowMyNumber,
             trailingText: _getPrivacyLabel(
               _privacyConfig?.phoneNumberPrivacy ?? 'ALL',
@@ -960,7 +959,7 @@ class _SecurityScreenState extends State<SecurityScreen>
         children: [
           _settingsRow(
             cs,
-            icon: pending ? Symbols.error : Symbols.person_remove,
+            icon: pending ? IosSymbols.error2(context) : IosSymbols.personRemove(context),
             label: pending
                 ? l10n.securityDeleteProfileScheduled(
                     formatDateNumeric(scheduledAt),
@@ -1183,7 +1182,7 @@ class _SecurityScreenState extends State<SecurityScreen>
       height: 22,
       decoration: BoxDecoration(color: cs.error, shape: BoxShape.circle),
       child: Icon(
-        Symbols.priority_high,
+        IosSymbols.priorityHigh(context),
         color: cs.onError,
         size: 14,
         weight: 700,

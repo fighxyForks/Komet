@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import 'package:komet/core/config/app_fonts.dart';
 import 'package:komet/core/config/app_shape.dart';
@@ -8,6 +7,7 @@ import 'package:komet/core/utils/format.dart';
 import 'package:komet/frontend/widgets/sheet_helpers.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import '../glass/ios_sheet.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 Future<String?> showPastePreviewSheet(
   BuildContext context, {
@@ -193,10 +193,10 @@ class _AttachmentTile extends StatelessWidget {
 
   final PastedAttachment item;
 
-  IconData get _icon => switch (item.kind) {
-    PastedAttachmentKind.image => Symbols.image,
-    PastedAttachmentKind.video => Symbols.movie,
-    PastedAttachmentKind.file => Symbols.description,
+  IconData _icon(BuildContext context) => switch (item.kind) {
+    PastedAttachmentKind.image => IosSymbols.photo(context),
+    PastedAttachmentKind.video => IosSymbols.movie(context),
+    PastedAttachmentKind.file => IosSymbols.doc(context),
   };
 
   @override
@@ -218,10 +218,10 @@ class _AttachmentTile extends StatelessWidget {
                     item.file,
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) =>
-                        Icon(_icon, size: 22, color: cs.onSurfaceVariant),
+                        Icon(_icon(context), size: 22, color: cs.onSurfaceVariant),
                   ),
                 )
-              : Icon(_icon, size: 22, color: cs.onSurfaceVariant),
+              : Icon(_icon(context), size: 22, color: cs.onSurfaceVariant),
         ),
         const SizedBox(width: 12),
         Expanded(

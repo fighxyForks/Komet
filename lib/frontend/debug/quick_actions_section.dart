@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../screens/auth/login_screen.dart';
@@ -31,7 +30,7 @@ class DebugQuickActionsSection extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Symbols.bug_report,
+                      IosSymbols.bugReport(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -61,7 +60,7 @@ class DebugQuickActionsSection extends StatelessWidget {
                       ),
                     ),
                     Icon(
-                      Symbols.save_alt,
+                      IosSymbols.saveAlt(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -91,7 +90,7 @@ class DebugQuickActionsSection extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Symbols.dialpad,
+                      IosSymbols.dialpad(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,

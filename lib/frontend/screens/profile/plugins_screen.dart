@@ -9,7 +9,6 @@ import '../../widgets/confirm_dialog.dart';
 import '../../widgets/prompt_dialog.dart';
 import '../../widgets/glass/ios_alert.dart';
 import '../../widgets/glass/ios_glass.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/plugins/plugin_installer.dart';
@@ -112,7 +111,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
                 Icon(
                   preview.signatureStatus == PluginSignatureStatus.verified
                       ? IosSymbols.verifiedUser(context)
-                      : Symbols.gpp_maybe,
+                      : IosSymbols.gppMaybe(context),
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -284,7 +283,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
               SettingsCard(
                 children: [
                   ListTile(
-                    leading: const Icon(Symbols.extension),
+                    leading: Icon(IosSymbols.extension(context)),
                     title: Text(plugin.manifest.name),
                     subtitle: Text(
                       '${plugin.manifest.version} · ${plugin.manifest.commands.map((item) => item.name).join(', ')}\n'
@@ -309,7 +308,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
                               dimension: 22,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Symbols.update),
+                          : Icon(IosSymbols.update(context)),
                       title: const Text('Проверить обновления'),
                       onTap: _busy.contains(plugin.manifest.id)
                           ? null

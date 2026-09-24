@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 
@@ -34,7 +33,7 @@ class KometSettingsScreen extends StatelessWidget {
             SettingsCard(
               children: [
                 SettingsNavTile(
-                  icon: Symbols.extension,
+                  icon: IosSymbols.extension(context),
                   label: 'Плагины',
                   onTap: () => Navigator.push(
                     context,
@@ -45,7 +44,7 @@ class KometSettingsScreen extends StatelessWidget {
                   ValueListenableBuilder<bool>(
                     valueListenable: KometSettings.viewDeleted,
                     builder: (context, value, _) => SettingsToggleTile(
-                      icon: Symbols.delete_history,
+                      icon: IosSymbols.deleteHistory(context),
                       label: 'View deleted message',
                       subtitle: 'Показывать удалённые сообщения',
                       value: value,
@@ -55,7 +54,7 @@ class KometSettingsScreen extends StatelessWidget {
                   ValueListenableBuilder<bool>(
                     valueListenable: KometSettings.viewRedacted,
                     builder: (context, value, _) => SettingsToggleTile(
-                      icon: Symbols.history_edu,
+                      icon: IosSymbols.historyEdu(context),
                       label: 'View redacted message history',
                       subtitle:
                           'Показывать историю у редактированных сообщений',
@@ -87,7 +86,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.hideAllChatsFolder,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.folder_off,
+                    icon: IosSymbols.folderOff(context),
                     label: 'Hide "All" folder',
                     subtitle:
                         'Скрыть папку «Все», когда есть другие папки. '
@@ -99,7 +98,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.showHiddenChats,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.visibility_lock,
+                    icon: IosSymbols.visibilityLock(context),
                     label: 'Show hidden chats',
                     subtitle:
                         'Показывать скрытые чаты, которые обычно не '
@@ -144,7 +143,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.antiRead,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.mark_chat_read,
+                    icon: IosSymbols.markChatRead(context),
                     label: 'Anti read',
                     subtitle: 'Нечиталка сообщений',
                     value: value,
@@ -154,7 +153,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.selfOnlineCheck,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.radar,
+                    icon: IosSymbols.radar(context),
                     label: 'Self Online Check',
                     subtitle:
                         'Каждые ~10 секунд сверяет, когда вы были онлайн. '
@@ -176,7 +175,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.recordDebugLogs,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.bug_report,
+                    icon: IosSymbols.bugReport(context),
                     label: 'Запись отладочных логов',
                     subtitle:
                         'Пишет трафик протокола в файл на устройстве — '

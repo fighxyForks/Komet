@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
+import 'package:komet/core/config/ios_reduce_transparency.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -12,35 +13,90 @@ void main() {
 
   tearDown(AppIosGlass.debugReset);
 
-  group('Определение поддержки', () {
-    test('вне iOS 26 интерфейс недоступен и выключен', () async {
-      final active = await AppIosGlass.load();
-      expect(AppIosGlass.supported, isFalse);
-      expect(active, isFalse);
+  group('Activation matrix', () {
+    test('Android: style and native both false', () async {
+      AppIosGlass.debugStyleSupported = false;
+      AppIosGlass.debugNativeGlassSupported = false;
+      await AppIosGlass.load();
+      expect(AppIosGlass.styleSupported, isFalse);
+      expect(AppIosGlass.nativeGlassSupported, isFalse);
       expect(AppIosGlass.active.value, isFalse);
       expect(AppIosGlass.nativeViews, isFalse);
     });
 
-    test('на поддерживаемом устройстве включается по умолчанию', () async {
+    test('iOS 15: style true, nativeViews false', () async {
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 15;
+      AppIosGlass.debugNativeGlassSupported = false;
       await AppIosGlass.load();
-      AppIosGlass.debugSetSupported(true);
-      expect(AppIosGlass.enabled.value, isTrue);
+      expect(AppIosGlass.styleSupported, isTrue);
+      expect(AppIosGlass.nativeGlassSupported, isFalse);
       expect(AppIosGlass.active.value, isTrue);
+      expect(AppIosGlass.nativeViews, isFalse);
+    });
+
+    test('iOS 17: style true, nativeViews false', () async {
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 17;
+      AppIosGlass.debugNativeGlassSupported = false;
+      await AppIosGlass.load();
+      expect(AppIosGlass.styleSupported, isTrue);
+      expect(AppIosGlass.nativeGlassSupported, isFalse);
+      expect(AppIosGlass.active.value, isTrue);
+      expect(AppIosGlass.nativeViews, isFalse);
+    });
+
+    test('iOS 25: style true, nativeViews false', () async {
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 25;
+      AppIosGlass.debugNativeGlassSupported = false;
+      await AppIosGlass.load();
+      expect(AppIosGlass.styleSupported, isTrue);
+      expect(AppIosGlass.nativeGlassSupported, isFalse);
+      expect(AppIosGlass.active.value, isTrue);
+      expect(AppIosGlass.nativeViews, isFalse);
+    });
+
+    test('iOS 26: style and nativeViews both true', () async {
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 26;
+      AppIosGlass.debugNativeGlassSupported = true;
+      await AppIosGlass.load();
+      expect(AppIosGlass.styleSupported, isTrue);
+      expect(AppIosGlass.nativeGlassSupported, isTrue);
+      expect(AppIosGlass.active.value, isTrue);
+      expect(AppIosGlass.nativeViews, isTrue);
+    });
+
+    test('toggle off: both active and nativeViews false', () async {
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 26;
+      AppIosGlass.debugNativeGlassSupported = true;
+      await AppIosGlass.load();
+      await AppIosGlass.save(false);
+      expect(AppIosGlass.styleSupported, isTrue);
+      expect(AppIosGlass.nativeGlassSupported, isTrue);
+      expect(AppIosGlass.active.value, isFalse);
+      expect(AppIosGlass.nativeViews, isFalse);
     });
   });
 
-  group('Тумблер', () {
-    test('сохранённое выключение уважается при загрузке', () async {
+  group('Toggle persistence', () {
+    test('saved off is respected on load', () async {
       SharedPreferences.setMockInitialValues({AppIosGlass.prefKey: false});
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 26;
+      AppIosGlass.debugNativeGlassSupported = true;
       await AppIosGlass.load();
-      AppIosGlass.debugSetSupported(true);
       expect(AppIosGlass.enabled.value, isFalse);
       expect(AppIosGlass.active.value, isFalse);
+      expect(AppIosGlass.nativeViews, isFalse);
     });
 
-    test('переключение сразу меняет active и пишется в prefs', () async {
+    test('save flips active and prefs', () async {
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 18;
       await AppIosGlass.load();
-      AppIosGlass.debugSetSupported(true);
       await AppIosGlass.save(false);
       expect(AppIosGlass.active.value, isFalse);
       final prefs = await SharedPreferences.getInstance();
@@ -48,11 +104,27 @@ void main() {
       await AppIosGlass.save(true);
       expect(AppIosGlass.active.value, isTrue);
     });
+  });
 
-    test('без поддержки включённый тумблер ничего не активирует', () async {
+  group('Legacy debugSetSupported', () {
+    test('forces style on non-iOS host', () async {
       await AppIosGlass.load();
-      await AppIosGlass.save(true);
       expect(AppIosGlass.active.value, isFalse);
+      AppIosGlass.debugSetSupported(true);
+      expect(AppIosGlass.styleSupported, isTrue);
+      expect(AppIosGlass.active.value, isTrue);
+    });
+  });
+
+  group('Reduce Transparency', () {
+    test('blocks nativeViews even on iOS 26', () async {
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 26;
+      AppIosGlass.debugNativeGlassSupported = true;
+      await AppIosGlass.load();
+      expect(AppIosGlass.nativeViews, isTrue);
+      IosReduceTransparency.debugOverride = true;
+      expect(AppIosGlass.nativeViews, isFalse);
     });
   });
 }

@@ -27,7 +27,6 @@ import 'package:komet/frontend/screens/chats/chat_list_screen.dart';
 import 'package:komet/frontend/screens/chats/poll_create_screen.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
 import 'package:komet/frontend/widgets/chat_menu_overlay.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../../main.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../backend/api.dart';
@@ -3195,8 +3194,8 @@ class _ChatScreenState extends State<ChatScreen>
           ),
         ChatMenuItem(
           icon: (chat?.isMuted ?? false)
-              ? Symbols.volume_off
-              : Symbols.volume_up,
+              ? IosSymbols.volumeOff(context)
+              : IosSymbols.speaker(context),
           label: (chat?.isMuted ?? false)
               ? 'Включить уведомления'
               : 'Отключить уведомления',
@@ -3215,12 +3214,12 @@ class _ChatScreenState extends State<ChatScreen>
           onTap: _openWallpaperSheet,
         ),
         ChatMenuItem(
-          icon: Symbols.mop,
+          icon: IosSymbols.mop(context),
           label: 'Очистить историю',
           onTap: _clearHistory,
         ),
         ChatMenuItem(
-          icon: _encryptionEnabled ? Symbols.lock : Symbols.lock_open,
+          icon: _encryptionEnabled ? IosSymbols.lock(context) : IosSymbols.lockOpen(context),
           label: 'Шифрование сообщений',
           onTap: _openEncryptionSettings,
         ),

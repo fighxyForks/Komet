@@ -523,10 +523,14 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
 
   void _computeListGeometry(Size screenSize) {
     final n = _actions.length;
-    const menuWidth = 220.0;
+    const menuWidth = 250.0;
     const itemHeight = IosMetrics.minHitTarget;
+    const separatorHeight = 8.0;
     const vPad = 6.0;
-    final menuHeight = n * itemHeight + vPad * 2;
+    final separators =
+        _actions.where((a) => a.separatorBefore).length;
+    final menuHeight =
+        n * itemHeight + separators * separatorHeight + vPad * 2;
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     final bottomLimit =
         screenSize.height - math.max(keyboardInset, widget.bottomReservedSpace);
@@ -557,15 +561,14 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       menuX = rawX.clamp(8.0, screenSize.width - menuWidth - 8.0).toDouble();
     }
     _menuRect = Rect.fromLTWH(menuX, menuY, menuWidth, menuHeight);
-    _buttonHitRects = [
-      for (int i = 0; i < n; i++)
-        Rect.fromLTWH(
-          menuX,
-          menuY + vPad + i * itemHeight,
-          menuWidth,
-          itemHeight,
-        ),
-    ];
+    final hitRects = <Rect>[];
+    var y = menuY + vPad;
+    for (int i = 0; i < n; i++) {
+      if (_actions[i].separatorBefore) y += separatorHeight;
+      hitRects.add(Rect.fromLTWH(menuX, y, menuWidth, itemHeight));
+      y += itemHeight;
+    }
+    _buttonHitRects = hitRects;
   }
 
   @override
@@ -592,7 +595,12 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       if (widget.onCopyLink != null)
         _Action(IosSymbols.link(context), l10n.msgActionsCopyLink, _copyLink),
       if (widget.isMe && widget.onEdit != null)
-        _Action(IosSymbols.edit(context), l10n.msgActionsEdit, _edit),
+        _Action(
+          IosSymbols.edit(context),
+          l10n.msgActionsEdit,
+          _edit,
+          separatorBefore: true,
+        ),
       if (widget.onPin != null)
         _Action(
           widget.isPinned
@@ -627,6 +635,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
           l10n.msgActionsReport,
           _showReportView,
           destructive: true,
+          separatorBefore: true,
         ),
       if (widget.allowDelete)
         _Action(
@@ -634,6 +643,8 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
           l10n.msgActionsDelete,
           _delete,
           destructive: true,
+          separatorBefore: widget.onReport == null ||
+              widget.loadReportReasons == null,
         ),
     ];
   }
@@ -833,9 +844,11 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       builder: (ctx, _) {
         final t = _animation.value.clamp(0.0, 1.0);
         final e = showReactions ? _expandAnim.value.clamp(0.0, 1.0) : 0.0;
-        final reduce =
-            IosGlass.of(context) && IosMotion.reduceMotionOf(context);
-        final bubbleScale = reduce ? 1.0 : (1.0 + 0.045 * t);
+        final ios = IosGlass.of(context);
+        final reduce = ios && IosMotion.reduceMotionOf(context);
+        final bubbleScale = reduce
+            ? 1.0
+            : (1.0 + (ios ? 0.06 : 0.045) * t);
         final menuHidden = _panelOpen || _reactionsExpanded;
 
         return GestureDetector(
@@ -1718,7 +1731,16 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
               shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
               children: [
-                for (int i = 0; i < _actions.length; i++)
+                for (int i = 0; i < _actions.length; i++) ...[
+                  if (_actions[i].separatorBefore)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3.5),
+                      child: Divider(
+                        height: 1,
+                        thickness: 0.5,
+                        color: cs.onSurface.withValues(alpha: 0.12),
+                      ),
+                    ),
                   _ListMenuItem(
                     action: _actions[i],
                     highlighted: _hoveredIndex == i,
@@ -1734,6 +1756,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
                           }
                         : null,
                   ),
+                ],
               ],
             ),
           ),
@@ -1841,7 +1864,14 @@ class _Action {
   final String label;
   final VoidCallback onTap;
   final bool destructive;
-  const _Action(this.icon, this.label, this.onTap, {this.destructive = false});
+  final bool separatorBefore;
+  const _Action(
+    this.icon,
+    this.label,
+    this.onTap, {
+    this.destructive = false,
+    this.separatorBefore = false,
+  });
 }
 
 class _ReactionEmojiPicker extends StatefulWidget {
@@ -2087,14 +2117,21 @@ class _ListMenuItem extends StatelessWidget {
     final ios = IosGlass.of(context);
     final destructive = action.destructive;
     final iosRed = const Color(0xFFFF3B30);
-    final pillBg = destructive ? (ios ? iosRed : cs.error) : cs.primary;
-    final onPill = destructive
-        ? (ios ? Colors.white : cs.onError)
-        : cs.onPrimary;
     final restFg = destructive
         ? (ios ? iosRed : cs.error)
         : (ios ? IosPalette.label(cs) : cs.onSurface);
-    final fg = highlighted ? onPill : restFg;
+    final pillBg = ios
+        ? (highlighted
+            ? cs.onSurface.withValues(alpha: 0.12)
+            : Colors.transparent)
+        : (highlighted
+            ? (destructive ? cs.error : cs.primary)
+            : Colors.transparent);
+    final fg = ios
+        ? restFg
+        : (highlighted
+            ? (destructive ? cs.onError : cs.onPrimary)
+            : restFg);
     final inner = SizedBox(
       height: IosMetrics.minHitTarget,
       child: IosTappable(
@@ -2108,30 +2145,34 @@ class _ListMenuItem extends StatelessWidget {
             duration: const Duration(milliseconds: 140),
             curve: Curves.easeOutCubic,
             decoration: BoxDecoration(
-              color: highlighted ? pillBg : Colors.transparent,
+              color: pillBg,
               borderRadius: BorderRadius.circular(14),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12),
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                Icon(action.icon, color: fg, size: 20),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     action.label,
                     style: TextStyle(
                       color: fg,
                       fontSize: ios ? IosTypography.body : 14,
-                      fontWeight: highlighted
-                          ? FontWeight.w600
-                          : FontWeight.w500,
+                      fontWeight: ios
+                          ? (highlighted
+                              ? IosTypography.semibold
+                              : IosTypography.regular)
+                          : (highlighted
+                              ? FontWeight.w600
+                              : FontWeight.w500),
                       letterSpacing: ios
                           ? IosTypography.letterSpacing(IosTypography.body)
                           : null,
                     ),
                   ),
                 ),
+                const SizedBox(width: 12),
+                Icon(action.icon, color: fg, size: ios ? 20 : 20),
               ],
             ),
           ),

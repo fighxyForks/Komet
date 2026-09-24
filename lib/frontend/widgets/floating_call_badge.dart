@@ -5,7 +5,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart'
     show MediaStream, RTCVideoRenderer, RTCVideoViewObjectFit;
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/calls/active_call.dart';
@@ -445,7 +444,7 @@ class _CallBadgeState extends State<_CallBadge>
           onTap: _openCall,
           child: Center(
             child: Icon(
-              Symbols.open_in_full,
+              IosSymbols.openInFull(context),
               size: 16,
               weight: 600,
               color: cs.onSurface,

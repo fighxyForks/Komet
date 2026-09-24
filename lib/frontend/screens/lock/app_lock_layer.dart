@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_fonts.dart';
 import '../../../core/security/app_lock.dart';
@@ -10,6 +9,7 @@ import '../../../core/utils/haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import 'lock_glyph.dart';
 import 'passcode_pad.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class AppLockLayer extends StatefulWidget {
   final Widget child;
@@ -419,7 +419,7 @@ class _LockScreenState extends State<_LockScreen> with WidgetsBindingObserver {
                                   onBiometric: _biometricReady
                                       ? () => unawaited(_promptBiometric())
                                       : null,
-                                  biometricIcon: Symbols.fingerprint,
+                                  biometricIcon: IosSymbols.fingerprint(context),
                                   keySize: PasscodeKeypad.keySizeFor(
                                     constraints.maxHeight - _chromeHeight,
                                   ),

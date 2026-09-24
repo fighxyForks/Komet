@@ -3,7 +3,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/core/config/countries.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/l10n/terms_of_service.dart';
@@ -835,7 +834,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Symbols.dns, color: cs.onSurface),
+                  leading: Icon(IosSymbols.dns(context), color: cs.onSurface),
                   title: Text(
                     l10n.loginChangeServer,
                     style: TextStyle(
@@ -891,7 +890,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 if (BuildProfile.tokenLogin)
                   ListTile(
-                    leading: Icon(Symbols.key, color: cs.onSurface),
+                    leading: Icon(IosSymbols.key(context), color: cs.onSurface),
                     title: Text(
                       l10n.loginSignInWithToken,
                       style: TextStyle(

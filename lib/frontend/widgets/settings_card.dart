@@ -86,7 +86,7 @@ class IosSettingsIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
-        icon,
+        IosSymbols.adapt(context, icon),
         size: 19,
         weight: 500,
         fill: 1,
@@ -186,7 +186,7 @@ class SettingsToggleTile extends StatelessWidget {
                   IosSettingsIcon(icon: icon)
                 else
                   Icon(
-                    icon,
+                    IosSymbols.adapt(context, icon),
                     color: cs.onSurfaceVariant,
                     size: 22,
                     weight: 400,

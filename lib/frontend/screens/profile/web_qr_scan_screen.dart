@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/config/app_colors.dart';
@@ -91,7 +90,7 @@ class _WebQrScanScreenState extends State<WebQrScanScreen> {
                 final on = state.torchState == TorchState.on;
                 return AnimatedSlashIcon(
                   icon: IosSymbols.flashOn(context),
-                  slashedIcon: Symbols.flash_off,
+                  slashedIcon: IosSymbols.flashOff(context),
                   slashed: !on,
                   color: Colors.white,
                 );

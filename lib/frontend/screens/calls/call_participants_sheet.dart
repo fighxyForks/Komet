@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/calls/call_admin.dart';
 import '../../../core/calls/call_session.dart';
@@ -132,11 +131,11 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
                   style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
                 ),
               ),
-              _action(cs, Symbols.mic_off, 'Выключить микрофон', () {
+              _action(cs, IosSymbols.micOff(context), 'Выключить микрофон', () {
                 Navigator.pop(sheetContext);
                 _run((a) => a.muteMicrophone(_ref(p)));
               }),
-              _action(cs, Symbols.videocam_off, 'Запросить камеру', () {
+              _action(cs, IosSymbols.videocamOff(context), 'Запросить камеру', () {
                 Navigator.pop(sheetContext);
                 _run(
                   (a) =>
@@ -145,7 +144,7 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
               }),
               _action(
                 cs,
-                isAdmin ? Symbols.remove_moderator : Symbols.shield_person,
+                isAdmin ? IosSymbols.removeModerator(context) : IosSymbols.shieldPerson(context),
                 isAdmin ? 'Снять администратора' : 'Назначить администратором',
                 () {
                   Navigator.pop(sheetContext);
@@ -158,7 +157,7 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
               ),
               _action(
                 cs,
-                isSpeaker ? Symbols.voice_over_off : Symbols.record_voice_over,
+                isSpeaker ? IosSymbols.voiceOverOff(context) : IosSymbols.recordVoiceOver(context),
                 isSpeaker ? 'Убрать из спикеров' : 'Сделать спикером',
                 () {
                   Navigator.pop(sheetContext);
@@ -169,23 +168,23 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
                   );
                 },
               ),
-              _action(cs, Symbols.arrow_upward, 'Повысить (promote)', () {
+              _action(cs, IosSymbols.arrowUpward(context), 'Повысить (promote)', () {
                 Navigator.pop(sheetContext);
                 _run((a) => a.setPromoted(_ref(p), true));
               }),
-              _action(cs, Symbols.arrow_downward, 'Понизить (demote)', () {
+              _action(cs, IosSymbols.arrowDownward(context), 'Понизить (demote)', () {
                 Navigator.pop(sheetContext);
                 _run((a) => a.setPromoted(_ref(p), false));
               }),
-              _action(cs, Symbols.push_pin, 'Закрепить', () {
+              _action(cs, IosSymbols.pin(context), 'Закрепить', () {
                 Navigator.pop(sheetContext);
                 _run((a) => a.setPinned(_ref(p), true));
               }),
-              _action(cs, Symbols.keep_off, 'Открепить', () {
+              _action(cs, IosSymbols.pinOff(context), 'Открепить', () {
                 Navigator.pop(sheetContext);
                 _run((a) => a.setPinned(_ref(p), false));
               }),
-              _action(cs, Symbols.person_remove, 'Удалить из звонка', () {
+              _action(cs, IosSymbols.personRemove(context), 'Удалить из звонка', () {
                 Navigator.pop(sheetContext);
                 _run((a) => a.removeParticipant(_ref(p)));
               }, destructive: true),
@@ -400,15 +399,15 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _chip(cs, Symbols.mic_off, 'Заглушить всех', () {
+                _chip(cs, IosSymbols.micOff(context), 'Заглушить всех', () {
                   _run((a) => a.muteEveryone());
                 }),
-                _chip(cs, Symbols.do_not_touch, 'Опустить руки', () {
+                _chip(cs, IosSymbols.doNotTouch(context), 'Опустить руки', () {
                   _run((a) => a.lowerAllHands());
                 }),
                 _chip(
                   cs,
-                  handRaised ? Symbols.back_hand : Symbols.front_hand,
+                  handRaised ? IosSymbols.backHand(context) : IosSymbols.handRaised(context),
                   handRaised ? 'Опустить руку' : 'Поднять руку',
                   () => _run((a) => a.setHandRaised(!handRaised)),
                   active: handRaised,
@@ -416,8 +415,8 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
                 _chip(
                   cs,
                   _recording
-                      ? Symbols.stop_circle
-                      : Symbols.radio_button_checked,
+                      ? IosSymbols.stopCircle(context)
+                      : IosSymbols.radioChecked(context),
                   _recording ? 'Остановить запись' : 'Начать запись',
                   () async {
                     final next = !_recording;
@@ -431,9 +430,9 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
                   },
                   active: _recording,
                 ),
-                _chip(cs, Symbols.tune, 'Настройки', _showOptions),
-                _chip(cs, Symbols.shield_person, 'Права ролей', _showFeatures),
-                _chip(cs, Symbols.person_add, 'Добавить по ссылке', _addByLink),
+                _chip(cs, IosSymbols.tune(context), 'Настройки', _showOptions),
+                _chip(cs, IosSymbols.shieldPerson(context), 'Права ролей', _showFeatures),
+                _chip(cs, IosSymbols.personAdd(context), 'Добавить по ссылке', _addByLink),
               ],
             ),
           ),

@@ -281,13 +281,7 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      IosSymbols.personAdd(context),
-                      color: ios ? cs.primary : cs.onSurface,
-                    ),
-                    onPressed: _openNfcExchange,
-                  ),
+                  ContactsNfcExchangeButton(onPressed: _openNfcExchange),
                   if (!ios)
                     IconButton(
                       icon: Icon(IosSymbols.search(context), color: cs.onSurface),
@@ -626,6 +620,23 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ContactsNfcExchangeButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const ContactsNfcExchangeButton({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    if (IosGlass.of(context)) return const SizedBox.shrink();
+    final cs = Theme.of(context).colorScheme;
+    return IconButton(
+      key: const ValueKey('contacts-nfc-exchange'),
+      icon: Icon(IosSymbols.personAdd(context), color: cs.onSurface),
+      onPressed: onPressed,
     );
   }
 }

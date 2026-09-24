@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../main.dart';
@@ -217,8 +216,8 @@ class _PollViewState extends State<PollView>
               Icon(
                 multiple
                     ? (selected
-                          ? Symbols.check_box
-                          : Symbols.check_box_outline_blank)
+                          ? IosSymbols.checkBox(context)
+                          : IosSymbols.checkBoxOutlineBlank(context))
                     : IosSymbols.radioUnchecked(context),
                 size: 20,
                 color: selected ? widget.accentColor : widget.dimColor,
@@ -276,10 +275,10 @@ class _PollViewState extends State<PollView>
     final fillFactor = (value * f).clamp(0.0, 1.0);
 
     final dotIcon = multiple
-        ? (answer.mine ? Symbols.check_box : Symbols.check_box_outline_blank)
+        ? (answer.mine ? IosSymbols.checkBox(context) : IosSymbols.checkBoxOutlineBlank(context))
         : (answer.mine
-              ? Symbols.radio_button_checked
-              : Symbols.radio_button_unchecked);
+              ? IosSymbols.radioChecked(context)
+              : IosSymbols.radioUnchecked(context));
     final dotColor = answer.mine ? widget.accentColor : widget.dimColor;
 
     return Padding(

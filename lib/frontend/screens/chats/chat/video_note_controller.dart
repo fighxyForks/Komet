@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException, rootBundle;
 import 'package:lottie/lottie.dart' show AssetLottie;
 import 'package:path_provider/path_provider.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../widgets/glossy_pill.dart';
@@ -501,7 +500,7 @@ class _CameraControls extends StatelessWidget {
             _ControlButton(
               onTap: controller.flipCamera,
               child: Icon(
-                Symbols.flip_camera_ios,
+                IosSymbols.flipCameraIos(context),
                 size: 24,
                 color: cs.onSurface,
                 fill: 1,

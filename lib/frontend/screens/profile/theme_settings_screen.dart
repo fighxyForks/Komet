@@ -203,7 +203,7 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
                       },
                     ),
                   _ModeTile(
-                    icon: IosSymbols.palette(context),
+                    icon: Symbols.palette,
                     label: l10n.themeSettingsCustomTitle,
                     selected: customSelected,
                     onTap: (_) {
@@ -230,7 +230,7 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
                                   )
                                 : ColoredBox(
                                     color: cs.surfaceContainerHighest,
-                                    child: Icon(IosSymbols.palette(context),
+                                    child: Icon(IosSymbols.adapt(context, Symbols.palette),
                                       color: cs.onSurface,
                                       size: 18,
                                     ),
@@ -274,7 +274,7 @@ class _ModeTileState extends State<_ModeTile> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return SettingsRadioTile(
-      leading: Icon(widget.icon, color: cs.onSurface, size: 22, weight: 500),
+      leading: Icon(IosSymbols.adapt(context, widget.icon), color: cs.onSurface, size: 22, weight: 500),
       label: widget.label,
       selected: widget.selected,
       onTapDown: (d) => _lastTapPosition = d.globalPosition,
@@ -304,7 +304,7 @@ class _AmoledCardState extends State<_AmoledCard> {
         padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
         child: Row(
           children: [
-            Icon(Symbols.contrast, color: cs.onSurface, size: 24, weight: 500),
+            Icon(IosSymbols.adapt(context, Symbols.contrast), color: cs.onSurface, size: 24, weight: 500),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -456,7 +456,7 @@ class _TimeRow extends StatelessWidget {
       onTap: enabled ? () => _pick(context) : null,
       child: Row(
         children: [
-          Icon(icon, color: cs.onSurface, size: 22, weight: 500),
+          Icon(IosSymbols.adapt(context, icon), color: cs.onSurface, size: 22, weight: 500),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

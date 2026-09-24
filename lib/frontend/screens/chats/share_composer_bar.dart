@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/share_sender.dart';
@@ -178,7 +177,7 @@ class _ShareComposerBarState extends State<ShareComposerBar> {
           IconButton(
             onPressed: _toggleEmoji,
             icon: Icon(
-              Symbols.mood,
+              IosSymbols.mood(context),
               color: _emojiOpen ? cs.primary : cs.onSurfaceVariant,
               size: 26,
               fill: _emojiOpen ? 1 : 0,

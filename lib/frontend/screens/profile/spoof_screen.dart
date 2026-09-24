@@ -28,8 +28,8 @@ import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../auth/login_screen.dart';
 import '../../widgets/glass/ios_route.dart';
-import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_typography.dart';
 
 enum SpoofingMethod { partial, full }
@@ -481,7 +481,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
     return SettingsCard(
       children: [
         SettingsToggleTile(
-          icon: IosSymbols.security(context),
+          icon: Symbols.security,
           label: l10n.spoofEnableTitle,
           subtitle: _spoofingEnabled
               ? l10n.spoofEnableSubtitleOn
@@ -508,7 +508,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
       child: Row(
         children: [
           Icon(
-            Symbols.touch_app,
+            IosSymbols.adapt(context, Symbols.touch_app),
             size: 20,
             weight: 400,
             color: cs.onSecondaryContainer,
@@ -536,13 +536,13 @@ class _SpoofScreenState extends State<SpoofScreen> {
 
     if (_selectedMethod == SpoofingMethod.partial) {
       descriptionWidget = _buildDescriptionTile(
-        icon: IosSymbols.checkCircle(context),
+        icon: Symbols.check_circle,
         color: kSuccessGreen,
         text: l10n.spoofMethodPartialDescription,
       );
     } else {
       descriptionWidget = _buildDescriptionTile(
-        icon: IosSymbols.warning(context),
+        icon: Symbols.warning,
         color: theme.colorScheme.error,
         text: l10n.spoofMethodFullDescription,
       );
@@ -685,7 +685,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildDescriptionTile(
-            icon: IosSymbols.info(context),
+            icon: Symbols.info,
             color: Theme.of(context).colorScheme.tertiary,
             text: l10n.spoofIdentifiersDescription,
           ),
@@ -713,7 +713,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
             decoration: _inputDecoration(l10n.spoofFieldDeviceId, Symbols.tag)
                 .copyWith(
                   suffixIcon: IconButton(
-                    icon: const Icon(Symbols.autorenew),
+                    icon: Icon(IosSymbols.autorenew(context)),
                     tooltip: l10n.spoofRegenerateIdTooltip,
                     onPressed: _generateNewDeviceId,
                   ),
@@ -772,7 +772,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon),
+      prefixIcon: Icon(IosSymbols.adapt(context, icon)),
       border: const OutlineInputBorder(borderRadius: AppShape.buttonRadius),
       filled: true,
       fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,

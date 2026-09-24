@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import 'package:komet/core/media/raster.dart';
@@ -882,15 +881,15 @@ class _PhotoAdjustEditorState extends State<PhotoAdjustEditor> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _blurOption(l10n.photoEditorBlurOff, Symbols.block, BlurMode.off),
+          _blurOption(l10n.photoEditorBlurOff, IosSymbols.block(context), BlurMode.off),
           _blurOption(
             l10n.photoEditorBlurRadial,
-            Symbols.blur_circular,
+            IosSymbols.blurCircular(context),
             BlurMode.radial,
           ),
           _blurOption(
             l10n.photoEditorBlurLinear,
-            Symbols.blur_linear,
+            IosSymbols.blurLinear(context),
             BlurMode.linear,
           ),
         ],
@@ -941,7 +940,7 @@ class _PhotoAdjustEditorState extends State<PhotoAdjustEditor> {
           const Spacer(),
           _tabIcon(IosSymbols.tune(context), _Tab.adjust),
           const SizedBox(width: 26),
-          _tabIcon(Symbols.water_drop, _Tab.blur),
+          _tabIcon(IosSymbols.waterDrop(context), _Tab.blur),
           const SizedBox(width: 26),
           _tabIcon(IosSymbols.showChart(context), _Tab.curves),
           const Spacer(),

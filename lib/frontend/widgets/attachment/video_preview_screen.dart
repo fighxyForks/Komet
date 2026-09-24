@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:video_player/video_player.dart';
 
@@ -859,7 +858,7 @@ class _QualityBadge extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const Icon(Symbols.hd, color: Colors.white, size: 22, fill: 1),
+          Icon(IosSymbols.hd(context), color: Colors.white, size: 22, fill: 1),
         ],
       ),
     );

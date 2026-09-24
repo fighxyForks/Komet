@@ -3499,11 +3499,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get appearanceIosGlassTitle => 'iOS 26 interface';
+  String get appearanceIosGlassTitle => 'iOS interface';
 
   @override
   String get appearanceIosGlassSubtitle =>
-      'Liquid Glass buttons, menus and bars. On by default on iOS 26 and later.';
+      'iOS typography, controls and layout. Liquid Glass materials on iOS 26 and later.';
 
   @override
   String get iosChannelMute => 'Mute';

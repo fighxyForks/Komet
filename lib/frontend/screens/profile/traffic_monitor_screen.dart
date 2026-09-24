@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -179,7 +178,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
                   IconButton(
                     tooltip: 'Поделиться (без чувствительных данных)',
                     icon: Icon(
-                      Symbols.ios_share,
+                      IosSymbols.iosShare(context),
                       color: activeColor,
                       size: 22,
                       weight: 400,
@@ -269,7 +268,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Symbols.cell_tower, size: 48, color: cs.onSurfaceVariant),
+          Icon(IosSymbols.cellTower(context), size: 48, color: cs.onSurfaceVariant),
           const SizedBox(height: 12),
           Text(
             _monitor.enabled ? 'Ожидание трафика…' : 'Захват выключен',
@@ -328,7 +327,7 @@ class _TrafficRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(_directionIcon(e.direction), color: accent, size: 15),
+                    Icon(_directionIcon(context, e.direction), color: accent, size: 15),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -450,14 +449,14 @@ class _TrafficRow extends StatelessWidget {
     }
   }
 
-  IconData _directionIcon(TrafficDirection d) {
+  IconData _directionIcon(BuildContext context, TrafficDirection d) {
     switch (d) {
       case TrafficDirection.outgoing:
-        return Symbols.north_east;
+        return IosSymbols.northEast(context);
       case TrafficDirection.incoming:
-        return Symbols.south_west;
+        return IosSymbols.southWest(context);
       case TrafficDirection.event:
-        return Symbols.lan;
+        return IosSymbols.lan(context);
     }
   }
 

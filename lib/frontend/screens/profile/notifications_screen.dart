@@ -2,7 +2,6 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/push/fkm_bridge.dart';
 import '../../../core/push/fkm_controller.dart';
@@ -179,7 +178,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     SettingsCard(
                       children: [
                         SettingsNavTile(
-                          icon: Symbols.install_mobile,
+                          icon: IosSymbols.installMobile(context),
                           label: l10n.webPushTitle,
                           onTap: _openWebPush,
                           isLast: true,
@@ -263,7 +262,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         ),
                       ),
                       SettingsToggleTile(
-                        icon: Symbols.music_note,
+                        icon: IosSymbols.musicNote(context),
                         label: l10n.notificationsSoundLabel,
                         value: _sound,
                         enabled: _allNotifications,
@@ -314,7 +313,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SettingsCard(
                     children: [
                       SettingsToggleTile(
-                        icon: Symbols.vibration,
+                        icon: IosSymbols.vibration(context),
                         label: l10n.notificationsHapticsLabel,
                         subtitle: l10n.notificationsHapticsSubtitle,
                         value: _hapticsEnabled,

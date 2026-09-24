@@ -425,6 +425,9 @@ class DebugSessionLog {
     return files;
   }
 
+  bool _samePath(String a, String b) =>
+      a.replaceAll('\\', '/') == b.replaceAll('\\', '/');
+
   int _startMillis(File file) {
     final name = file.uri.pathSegments.last;
     final dot = name.indexOf('.');
@@ -454,7 +457,10 @@ class DebugSessionLog {
     final dir = _dir;
     if (dir != null) {
       for (final file in await _sessionFiles()) {
-        if (_currentFile != null && file.path == _currentFile!.path) continue;
+        if (_currentFile != null &&
+            _samePath(file.path, _currentFile!.path)) {
+          continue;
+        }
         try {
           final session = await _readSession(file);
           if (session != null && !session.startedAt.isBefore(cutoff)) {

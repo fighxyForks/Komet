@@ -30,7 +30,8 @@ void main() {
       await tester.pumpWidget(_host(const GlassCapsule(child: Text('chrome'))));
       expect(find.text('chrome'), findsOneWidget);
       expect(find.byType(GlassBackground), findsOneWidget);
-      expect(find.byType(BackdropFilter), findsOneWidget);
+      // Style tier without nativeViews prefers opaque fills (no live blur).
+      expect(find.byType(BackdropFilter), findsNothing);
       expect(find.byType(LiquidGlassContainer), findsNothing);
     });
 
@@ -195,5 +196,26 @@ void main() {
       ),
     );
     expect(seen, {'outside': true, 'inside': false});
+  });
+
+  testWidgets('высокий контраст делает GlassBackground непрозрачным', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, app) {
+          final mq = MediaQuery.of(context);
+          return MediaQuery(
+            data: mq.copyWith(highContrast: true),
+            child: IosGlass(child: app!),
+          );
+        },
+        home: const Scaffold(
+          body: Center(child: GlassBackground(child: Text('opaque'))),
+        ),
+      ),
+    );
+    expect(find.text('opaque'), findsOneWidget);
+    expect(find.byType(BackdropFilter), findsNothing);
   });
 }

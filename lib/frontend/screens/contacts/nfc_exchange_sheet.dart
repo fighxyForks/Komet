@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../motion/ios_haptics.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/contacts.dart';
 import '../../../core/cache/info_cache.dart';
@@ -267,11 +266,11 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
           child: SmallSpinner(size: 36),
         );
       case _Stage.unsupported:
-        return _message(cs, Symbols.nfc, l10n.nfcUnsupported);
+        return _message(cs, IosSymbols.nfc(context), l10n.nfcUnsupported);
       case _Stage.disabled:
-        return _message(cs, Symbols.nfc, l10n.nfcDisabled);
+        return _message(cs, IosSymbols.nfc(context), l10n.nfcDisabled);
       case _Stage.failed:
-        return _message(cs, Symbols.bluetooth_disabled, _failReason);
+        return _message(cs, IosSymbols.bluetoothDisabled(context), _failReason);
       case _Stage.scanning:
         return _scanning(cs);
       case _Stage.exchanging:
@@ -316,7 +315,7 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
                 child: child,
               ),
               child: Center(
-                child: Icon(Symbols.nfc, color: cs.primary, size: 48),
+                child: Icon(IosSymbols.nfc(context), color: cs.primary, size: 48),
               ),
             ),
           ),
@@ -357,7 +356,7 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
                 child: child,
               ),
               child: Center(
-                child: Icon(Symbols.sync, color: cs.primary, size: 40),
+                child: Icon(IosSymbols.sync(context), color: cs.primary, size: 40),
               ),
             ),
           ),

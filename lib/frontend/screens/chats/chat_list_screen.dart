@@ -2105,12 +2105,12 @@ class _ChatListScreenState extends State<ChatListScreen>
                                             _buildPopupMenuItem(
                                               1,
                                               'Избранное',
-                                              Symbols.bookmark,
+                                              IosSymbols.bookmark(context),
                                             ),
                                             _buildPopupMenuItem(
                                               2,
                                               'Прочитать всё',
-                                              Symbols.done_all,
+                                              IosSymbols.doneAll(context),
                                             ),
                                           ],
                                         ),
@@ -2184,7 +2184,10 @@ class _ChatListScreenState extends State<ChatListScreen>
             ),
           ),
           if (_folders.length > 1 && ios && !_showFoldersShimmer)
-            _buildIosFolderStrip()
+            ListenableBuilder(
+              listenable: AppIosGlass.chromeListenable,
+              builder: (context, _) => _buildIosFolderStrip(),
+            )
           else if (_folders.length > 1)
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -2416,8 +2419,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                               previewMedia: isPlaceholder
                                   ? null
                                   : chat.lastMsgMedia,
-                              titleIcon: chatKindIcon(
-                                'DIALOG',
+                              titleIcon: chatKindIcon('DIALOG',
                                 isBot: _isBotDialog(secondId, chat),
                               ),
                               hasMiniApp: _hasMiniApp(secondId, chat),
@@ -2831,7 +2833,15 @@ class _ChatListScreenState extends State<ChatListScreen>
                     ),
                   ),
                 ),
-                _buildDockedBottomNav(cs, pageW, navInnerW, bottomInset),
+                ListenableBuilder(
+                  listenable: AppIosGlass.chromeListenable,
+                  builder: (context, _) => _buildDockedBottomNav(
+                    cs,
+                    pageW,
+                    navInnerW,
+                    bottomInset,
+                  ),
+                ),
                 AnimatedBuilder(
                   animation: Listenable.merge([
                     _fabController,
@@ -3756,17 +3766,17 @@ class _ChatListScreenState extends State<ChatListScreen>
           onTap: () => unawaited(_markChatRead(chat.id)),
         ),
       ChatMenuItem(
-        icon: pinned ? Symbols.keep_off : Symbols.keep,
+        icon: pinned ? IosSymbols.pinOff(context) : IosSymbols.keep(context),
         label: pinned ? l10n.chatActionUnpin : l10n.chatActionPin,
         onTap: () => unawaited(_pinChats([chat])),
       ),
       ChatMenuItem(
-        icon: chat.isMuted ? Symbols.notifications : Symbols.notifications_off,
+        icon: chat.isMuted ? IosSymbols.notifications(context) : IosSymbols.notificationsOff(context),
         label: chat.isMuted ? l10n.chatActionUnmute : l10n.chatActionMute,
         onTap: () => unawaited(_muteChats([chat])),
       ),
       ChatMenuItem(
-        icon: widget.archiveMode ? Symbols.unarchive : Symbols.archive,
+        icon: widget.archiveMode ? IosSymbols.unarchive(context) : IosSymbols.archive(context),
         label: widget.archiveMode
             ? l10n.chatActionUnarchive
             : l10n.chatActionArchive,
@@ -4115,7 +4125,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                                         children: [
                                           if (titleIcon != null) ...[
                                             Icon(
-                                              titleIcon,
+                                              IosSymbols.adapt(context, titleIcon),
                                               color: cs.outline,
                                               size: 15,
                                               weight: 500,
@@ -4351,7 +4361,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         _buildFabMenuItem(
-          Symbols.group_add,
+          IosSymbols.personAddGroup(context),
           'Создать группу',
           onTap: () {
             _toggleFab();
@@ -4360,7 +4370,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         ),
         const SizedBox(height: 4),
         _buildFabMenuItem(
-          Symbols.campaign,
+          IosSymbols.campaign(context),
           'Создать канал',
           onTap: () {
             _toggleFab();
@@ -4369,7 +4379,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         ),
         const SizedBox(height: 4),
         _buildFabMenuItem(
-          Symbols.person_add,
+          IosSymbols.personAdd(context),
           'Создать контакт',
           onTap: () {
             _toggleFab();
@@ -4378,7 +4388,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         ),
         const SizedBox(height: 4),
         _buildFabMenuItem(
-          Symbols.create_new_folder,
+          IosSymbols.createNewFolder(context),
           'Создать папку',
           onTap: () {
             _toggleFab();
@@ -4457,7 +4467,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             ),
             GlassIconButton(
               key: const ValueKey('ios-create-button'),
-              icon: Symbols.edit_square,
+              icon: IosSymbols.editSquare(context),
               iconSize: 21,
               tooltip: MaterialLocalizations.of(context).showMenuTooltip,
               onPressedAt: _showIosCreateMenu,

@@ -6,7 +6,6 @@ import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -696,8 +695,8 @@ class _VideoNoteBubbleState extends State<VideoNoteBubble>
                 children: [
                   Icon(
                     _transcriptionVisible
-                        ? Symbols.keyboard_arrow_up
-                        : Symbols.arrow_right_alt,
+                        ? IosSymbols.keyboardArrowUp(context)
+                        : IosSymbols.arrowRightAlt(context),
                     size: 15,
                     color: Colors.white,
                   ),
