@@ -35,6 +35,8 @@ import 'package:komet/l10n/app_localizations.dart';
 import '../small_spinner.dart';
 import '../../../core/security/app_lock.dart';
 import '../glass/ios_sheet.dart';
+import '../../../core/native/native_sheet_bridge.dart';
+import '../glass/glass_capsule.dart' show globalRectOf;
 
 const int _navItemCount = 5;
 
@@ -69,7 +71,19 @@ Future<void> showAttachmentSheet(
   VoidCallback? onShareLocation,
   VoidCallback? onCreatePoll,
   ValueChanged<CachedContact>? onSendContact,
-}) {
+  Rect? sourceFrame,
+}) async {
+  if (NativeSheetBridge.isEligibleWithContext(context)) {
+    final source = sourceFrame ?? globalRectOf(context);
+    final presented = await NativeSheetBridge.present(
+      sourceFrame: source == Rect.zero ? null : source,
+    );
+    if (presented) {
+      await NativeSheetBridge.waitForResult();
+      return;
+    }
+  }
+  if (!context.mounted) return;
   return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
