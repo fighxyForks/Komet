@@ -197,6 +197,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
 
   late final AnimationController _zoomAnim;
   Timer? _singleTapTimer;
+  Offset? _pinchFocal;
   Offset? _tapLocal;
   DateTime? _lastTapAt;
 
@@ -838,18 +839,19 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     return true;
   }
 
-  bool _isEdgeTap(Offset pos) {
+  bool _isEdgeTap(Offset global) {
     final size = MediaQuery.sizeOf(context);
     final inset = IosMotion.doubleTapEdgeInset;
-    return pos.dx < inset ||
-        pos.dy < inset ||
-        pos.dx > size.width - inset ||
-        pos.dy > size.height - inset;
+    return global.dx < inset ||
+        global.dy < inset ||
+        global.dx > size.width - inset ||
+        global.dy > size.height - inset;
   }
 
   void _onPageTapUp(TapUpDetails details) {
     final now = DateTime.now();
     final pos = details.localPosition;
+    final global = details.globalPosition;
     final lastAt = _lastTapAt;
     final lastPos = _tapLocal;
     final canDouble = _doubleTapZoomPossible;
@@ -861,11 +863,11 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
       _singleTapTimer?.cancel();
       _lastTapAt = null;
       _tapLocal = null;
-      _handleDoubleTapZoom(pos);
+      _handleDoubleTapZoom(pos, global);
       return;
     }
     _singleTapTimer?.cancel();
-    if (!canDouble || _isEdgeTap(pos)) {
+    if (!canDouble || _isEdgeTap(global)) {
       _lastTapAt = null;
       _tapLocal = null;
       _toggleChrome();
@@ -880,13 +882,8 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     });
   }
 
-  void _handleDoubleTapZoom(Offset focalViewport) {
-    final size = MediaQuery.sizeOf(context);
-    final inset = IosMotion.doubleTapEdgeInset;
-    if (focalViewport.dx < inset ||
-        focalViewport.dy < inset ||
-        focalViewport.dx > size.width - inset ||
-        focalViewport.dy > size.height - inset) {
+  void _handleDoubleTapZoom(Offset focalViewport, Offset global) {
+    if (_isEdgeTap(global)) {
       _toggleChrome();
       return;
     }
@@ -925,11 +922,11 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
       targetScale = soft;
     }
     final viewport = MediaQuery.sizeOf(context);
+    final focal = _pinchFocal ?? Offset(viewport.width / 2, viewport.height / 2);
     Matrix4 target;
     if (targetScale <= 1.01) {
       target = Matrix4.identity();
     } else if ((targetScale - scale).abs() > 0.01) {
-      final focal = Offset(viewport.width / 2, viewport.height / 2);
       target = matrixForZoomAt(
         current: transform.value,
         focalViewport: focal,
@@ -1015,7 +1012,9 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
                   instance.onStart = (_) => _dismiss.onDragStart();
                   instance.onUpdate = (details) {
                     final crossed = _dismiss.onDragUpdate(details.delta.dy);
-                    if (crossed) IosHaptics.dismissThreshold();
+                    if (crossed && IosGlass.of(context)) {
+                      IosHaptics.dismissThreshold();
+                    }
                   };
                   instance.onEnd = (details) {
                     if (IosMotion.reduceMotionOf(context) &&
@@ -1239,9 +1238,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
         maxScale: IosMotion.zoomHardMax,
         panEnabled: _zoomed,
         transformationController: _transformFor(item.id),
+        interactionEndFrictionCoefficient: 1,
         onInteractionStart: (_) {
           _singleTapTimer?.cancel();
           _zoomAnim.stop();
+        },
+        onInteractionUpdate: (details) {
+          _pinchFocal = details.localFocalPoint;
         },
         onInteractionEnd: _onZoomInteractionEnd,
         child: Center(

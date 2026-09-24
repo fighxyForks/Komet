@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 
 import 'ios_motion.dart';
 
+final Expando<VoidCallback> _matrixSpringTicks = Expando<VoidCallback>();
+
 /// Matrix that scales around a viewport focal point so that point stays put.
 Matrix4 matrixForZoomAt({
   required Matrix4 current,
@@ -103,9 +105,13 @@ TickerFuture animateMatrixSpring({
     transform.value = _lerpMatrix(from, to, t);
   }
 
+  final previous = _matrixSpringTicks[controller];
+  if (previous != null) controller.removeListener(previous);
+  _matrixSpringTicks[controller] = null;
   controller
     ..stop()
     ..value = 0;
+  _matrixSpringTicks[controller] = tick;
   controller.addListener(tick);
   final future = animateSpring(
     controller,
@@ -113,9 +119,11 @@ TickerFuture animateMatrixSpring({
     spring: spring ?? IosMotion.standard,
     velocity: velocity,
   );
-  future.whenComplete(() {
+  future.whenCompleteOrCancel(() {
+    if (!identical(_matrixSpringTicks[controller], tick)) return;
     controller.removeListener(tick);
-    transform.value = to;
+    _matrixSpringTicks[controller] = null;
+    if (controller.value >= 0.999) transform.value = to;
   });
   return future;
 }
