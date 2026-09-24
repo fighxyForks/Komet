@@ -6,6 +6,7 @@ import '../widgets/glossy_pill.dart';
 import '../widgets/small_spinner.dart';
 import 'load_simulator.dart';
 import 'render_stress_screen.dart';
+import '../widgets/glass/ios_route.dart';
 
 class DebugLoadSimulationSection extends StatefulWidget {
   const DebugLoadSimulationSection({super.key});
@@ -214,7 +215,7 @@ class _DebugLoadSimulationSectionState
 
   void _openRenderStress() {
     Navigator.of(context).push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         settings: const RouteSettings(name: 'RenderStressScreen'),
         builder: (_) => const RenderStressScreen(),
       ),

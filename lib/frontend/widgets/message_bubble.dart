@@ -52,6 +52,7 @@ import 'glass/ios_tracking.dart';
 import 'glass/ios_palette.dart';
 import 'glass/screen_gradient_bubble.dart';
 import 'sender_name_color.dart';
+import './glass/ios_route.dart';
 
 final Expando<MessageType> _contentTypeCache = Expando<MessageType>();
 final Expando<List<MessageAttachment>> _contentAttachmentsCache =
@@ -1656,7 +1657,7 @@ class MessageBubble extends StatelessWidget {
     }
 
     Navigator.of(context).push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => WebAppScreen(
           title: button.text,
           entryPoint: WebAppEntryPoint.inlineButton,

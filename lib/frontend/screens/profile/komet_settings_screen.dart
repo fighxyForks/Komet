@@ -9,6 +9,7 @@ import '../../../main.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import 'plugins_screen.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class KometSettingsScreen extends StatelessWidget {
   const KometSettingsScreen({super.key});
@@ -41,7 +42,7 @@ class KometSettingsScreen extends StatelessWidget {
                   label: 'Плагины',
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const PluginsScreen()),
+                    iosPageRoute(context, builder: (_) => const PluginsScreen()),
                   ),
                 ),
                 if (BuildProfile.hiddenContentViewers) ...[

@@ -15,6 +15,7 @@ import 'mesh_gradient_background.dart';
 import 'custom_notification.dart';
 import '../../core/config/app_fonts.dart';
 import '../../core/security/app_lock.dart';
+import './glass/ios_route.dart';
 
 enum WallpaperPickType { none, theme, gallery, gradient }
 
@@ -75,7 +76,7 @@ Future<WallpaperPick?> showChatWallpaperSheet(
   required ChatWallpaper? current,
 }) {
   return Navigator.of(context).push<WallpaperPick>(
-    MaterialPageRoute(
+    iosPageRoute(context,
       fullscreenDialog: true,
       builder: (_) => ChatWallpaperGalleryScreen(current: current),
     ),
@@ -124,7 +125,7 @@ class _ChatWallpaperGalleryScreenState
   Future<void> _openGradientEditor() async {
     final current = widget.current;
     final result = await Navigator.of(context).push<CustomGradientResult>(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => CustomGradientEditorScreen(
           initialColors: current?.isGradient == true
               ? current!.gradientColors

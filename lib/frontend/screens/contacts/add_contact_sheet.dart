@@ -11,6 +11,7 @@ import 'package:komet/frontend/widgets/custom_notification.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import '../../widgets/glass/ios_route.dart';
 
 Future<void> showAddContactSheet(BuildContext context) {
   return showBlurredCard<void>(
@@ -64,7 +65,7 @@ class _AddContactCardState extends State<_AddContactCard> {
 
   Future<void> _pickCountry() async {
     final picked = await Navigator.of(context).push<CountryName>(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => SelectCountryScreen(
           selectedCountry: _country,
           countries: api.registrationCountries,

@@ -10,6 +10,7 @@ import '../chats/chat_wallpaper_preview_screen.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class ChatBackgroundScreen extends StatefulWidget {
   const ChatBackgroundScreen({super.key});
@@ -91,7 +92,7 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
     final bytes = await pickWallpaperBytes(context);
     if (bytes == null || !mounted) return;
     final settings = await Navigator.of(context).push<WallpaperImageSettings>(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => ChatWallpaperPreviewScreen(imageBytes: bytes),
       ),
     );

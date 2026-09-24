@@ -6,6 +6,7 @@ import '../screens/calls/call_screen.dart';
 import '../widgets/auth_limits_sheet.dart';
 import '../widgets/glossy_pill.dart';
 import '../widgets/login_success_screen.dart';
+import '../widgets/glass/ios_route.dart';
 
 class DebugPreviewsSection extends StatelessWidget {
   final bool micSignalOn;
@@ -39,7 +40,7 @@ class DebugPreviewsSection extends StatelessWidget {
                 if (!context.mounted) return;
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  iosPageRoute(context,
                     builder: (_) =>
                         LoginSuccessScreen(preview: true, avatar: avatar),
                   ),
@@ -123,7 +124,7 @@ class DebugPreviewsSection extends StatelessWidget {
                   icon: Symbols.phone,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    iosPageRoute(context,
                       builder: (_) => const CallScreen(name: 'Кирил Г.'),
                     ),
                   ),

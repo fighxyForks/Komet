@@ -8,6 +8,7 @@ import '../../main.dart';
 import 'avatar_photo_actions.dart';
 import 'custom_notification.dart';
 import 'small_spinner.dart';
+import './glass/ios_route.dart';
 
 class AvatarHistoryScreen extends StatefulWidget {
   final int contactId;
@@ -43,7 +44,7 @@ class AvatarHistoryScreen extends StatefulWidget {
     final url = currentAvatarUrl;
     if (url == null || url.isEmpty) return Future.value(null);
     return Navigator.of(context).push<ProfileData>(
-      MaterialPageRoute<ProfileData>(
+      iosPageRoute<ProfileData>(context, 
         fullscreenDialog: true,
         builder: (_) => AvatarHistoryScreen(
           contactId: contactId,

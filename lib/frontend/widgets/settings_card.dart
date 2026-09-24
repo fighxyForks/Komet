@@ -4,6 +4,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../core/config/app_shape.dart';
 import 'glass/glass_controls.dart';
 import 'glass/ios_glass.dart';
+import 'glass/ios_metrics.dart';
+import 'glass/ios_tappable.dart';
 import 'glass/ios_typography.dart';
 import 'glossy_pill.dart';
 
@@ -39,7 +41,7 @@ class SettingsPanel extends StatelessWidget {
 }
 
 class IosGroupedSection extends StatelessWidget {
-  static const double defaultRadius = 26;
+  static const double defaultRadius = IosMetrics.groupedRadius;
 
   final Widget child;
   final Color? color;
@@ -174,60 +176,57 @@ class SettingsToggleTile extends StatelessWidget {
       opacity: enabled ? 1 : 0.4,
       child: IgnorePointer(
         ignoring: !enabled,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => onChanged(!value),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              child: Row(
-                children: [
-                  if (IosGlass.of(context))
-                    IosSettingsIcon(icon: icon)
-                  else
-                    Icon(
-                      icon,
-                      color: cs.onSurfaceVariant,
-                      size: 22,
-                      weight: 400,
-                    ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+        child: IosTappable(
+          onTap: () => onChanged(!value),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Row(
+              children: [
+                if (IosGlass.of(context))
+                  IosSettingsIcon(icon: icon)
+                else
+                  Icon(
+                    icon,
+                    color: cs.onSurfaceVariant,
+                    size: 22,
+                    weight: 400,
+                  ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: cs.onSurface,
+                          fontSize: IosGlass.of(context)
+                              ? IosTypography.listTitle
+                              : 16,
+                          fontWeight: IosGlass.of(context)
+                              ? IosType.body
+                              : FontWeight.w500,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
                         Text(
-                          label,
+                          subtitle!,
                           style: TextStyle(
-                            color: cs.onSurface,
+                            color: cs.onSurfaceVariant,
                             fontSize: IosGlass.of(context)
-                                ? IosTypography.listTitle
-                                : 16,
-                            fontWeight: IosGlass.of(context)
-                                ? IosType.body
-                                : FontWeight.w500,
+                                ? IosTypography.listSubtitle
+                                : 13,
+                            height: 1.3,
                           ),
                         ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle!,
-                            style: TextStyle(
-                              color: cs.onSurfaceVariant,
-                              fontSize: IosGlass.of(context)
-                                  ? IosTypography.listSubtitle
-                                  : 13,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  GlassSwitch(value: value, onChanged: onChanged),
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                GlassSwitch(value: value, onChanged: onChanged),
+              ],
             ),
           ),
         ),
@@ -257,51 +256,48 @@ class SettingsNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap ?? () {},
-        borderRadius: isLast
-            ? const BorderRadius.vertical(
-                bottom: Radius.circular(AppShape.card),
-              )
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
-          child: Row(
-            children: [
-              leading ??
-                  (IosGlass.of(context) && icon != null
-                      ? IosSettingsIcon(icon: icon!, color: tintColor)
-                      : Icon(
-                          icon,
-                          color: tintColor ?? cs.onSurfaceVariant,
-                          size: 22,
-                          weight: 400,
-                        )),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: tintColor ?? cs.onSurface,
-                    fontSize: IosGlass.of(context)
-                        ? IosTypography.listTitle
-                        : 16,
-                    fontWeight: IosGlass.of(context)
-                        ? IosType.body
-                        : FontWeight.w500,
-                  ),
+    return IosTappable(
+      onTap: onTap ?? () {},
+      borderRadius: isLast
+          ? const BorderRadius.vertical(
+              bottom: Radius.circular(AppShape.card),
+            )
+          : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
+        child: Row(
+          children: [
+            leading ??
+                (IosGlass.of(context) && icon != null
+                    ? IosSettingsIcon(icon: icon!, color: tintColor)
+                    : Icon(
+                        icon,
+                        color: tintColor ?? cs.onSurfaceVariant,
+                        size: 22,
+                        weight: 400,
+                      )),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: tintColor ?? cs.onSurface,
+                  fontSize: IosGlass.of(context)
+                      ? IosTypography.listTitle
+                      : 16,
+                  fontWeight: IosGlass.of(context)
+                      ? IosType.body
+                      : FontWeight.w500,
                 ),
               ),
-              Icon(
-                Symbols.chevron_right,
-                color: cs.outline,
-                size: 20,
-                weight: 400,
-              ),
-            ],
-          ),
+            ),
+            Icon(
+              Symbols.chevron_right,
+              color: cs.outline,
+              size: 20,
+              weight: 400,
+            ),
+          ],
         ),
       ),
     );

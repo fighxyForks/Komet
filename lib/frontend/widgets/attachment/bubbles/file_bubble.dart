@@ -28,6 +28,7 @@ import '../../photo_viewer.dart';
 import '../../share_unopenable_file.dart';
 import '../../upload_progress_ring.dart';
 import 'bubble_context.dart';
+import '../../glass/ios_route.dart';
 
 class FileBubble extends StatelessWidget {
   static const double _previewWidth = 240;
@@ -439,7 +440,7 @@ class FileBubble extends StatelessWidget {
     if (!context.mounted || shown == null) return;
 
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => PhotoViewerScreen(
           photos: [PhotoAttachment(localPath: shown.path)],
           chatId: ctx.message.chatId,

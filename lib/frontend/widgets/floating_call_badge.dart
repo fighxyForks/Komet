@@ -22,6 +22,7 @@ import 'draggable_floating_layer.dart';
 import 'glossy_pill.dart';
 import 'lottie_slash_icon.dart';
 import 'small_spinner.dart';
+import './glass/ios_route.dart';
 
 class FloatingCallBadgeLayer extends StatelessWidget {
   const FloatingCallBadgeLayer({super.key});
@@ -280,7 +281,7 @@ class _CallBadgeState extends State<_CallBadge>
     final navigator = KometApp.navigatorKey.currentState;
     if (navigator == null) return;
     navigator.push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => CallScreen(
           name: widget.call.name,
           avatarUrl: widget.call.avatarUrl,

@@ -9,6 +9,7 @@ import '../../../main.dart' show webAppModule;
 import '../../widgets/custom_notification.dart';
 import 'web_app_bridge.dart';
 import 'web_app_screen.dart';
+import '../../widgets/glass/ios_route.dart';
 
 Future<void> openMiniApp(
   BuildContext context, {
@@ -22,7 +23,7 @@ Future<void> openMiniApp(
 
   if (webViewSupported) {
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => WebAppScreen(
           title: title,
           entryPoint: entryPoint,

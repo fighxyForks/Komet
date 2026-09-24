@@ -20,6 +20,7 @@ import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
 import 'custom_gradient_editor_screen.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
@@ -109,7 +110,7 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
   Future<void> _openEditor() async {
     if (_accountId == 0) return;
     final result = await Navigator.of(context).push<CustomGradientResult>(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => CustomGradientEditorScreen(
           initialColors: _wallpaper?.gradientColors,
           initialAnimated: _wallpaper?.gradientAnimated ?? false,

@@ -62,6 +62,7 @@ import 'join_requests_screen.dart';
 import 'profile_action_sheets.dart';
 import '../../../core/config/app_fonts.dart';
 import 'chat_info/chat_members_controller.dart';
+import '../../widgets/glass/ios_route.dart';
 
 enum ChatInfoTab { media }
 
@@ -1148,7 +1149,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
 
   void _openJoinRequests() {
     Navigator.of(context).push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => JoinRequestsScreen(chatId: widget.chatId),
       ),
     );
@@ -1497,7 +1498,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     final active = CallController.instance.activeSession;
     if (active != null) {
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) => CallScreen(
             name: _customName,
             avatarUrl: avatarUrl,
@@ -1512,7 +1513,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       final session = await CallController.instance.startOutgoing(peerId);
       if (!mounted) return;
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) => CallScreen(
             name: _customName,
             avatarUrl: avatarUrl,

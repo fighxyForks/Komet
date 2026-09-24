@@ -20,6 +20,7 @@ import '../../widgets/small_spinner.dart';
 import '../../widgets/web_qr_login.dart';
 import 'web_qr_scan_screen.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});
@@ -96,7 +97,7 @@ class _DevicesScreenState extends State<DevicesScreen>
     if (canScan) {
       qr = await Navigator.push<String>(
         context,
-        MaterialPageRoute(builder: (context) => const WebQrScanScreen()),
+        iosPageRoute(context, builder: (context) => const WebQrScanScreen()),
       );
     } else {
       qr = await _showPasteQrDialog();

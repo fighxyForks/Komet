@@ -17,6 +17,7 @@ import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import 'web_push_screen.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -93,7 +94,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
   void _openWebPush() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const WebPushScreen()),
+      iosPageRoute(context, builder: (context) => const WebPushScreen()),
     );
   }
 

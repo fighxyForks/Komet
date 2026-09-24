@@ -10,6 +10,7 @@ import 'chat_background_screen.dart';
 import 'font_settings_screen.dart';
 import 'message_actions_screen.dart';
 import 'theme_settings_screen.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class _CustomizationCategory {
   final IconData icon;
@@ -73,7 +74,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
 
   void _open(_CustomizationCategory category) {
     Haptics.tap();
-    Navigator.push(context, MaterialPageRoute(builder: category.builder));
+    Navigator.push(context, iosPageRoute(context, builder: category.builder));
   }
 
   @override

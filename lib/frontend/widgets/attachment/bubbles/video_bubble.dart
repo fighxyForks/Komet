@@ -16,6 +16,7 @@ import 'bubble_context.dart';
 import 'ios_bubble_metrics.dart';
 import 'progressive_media_image.dart';
 import 'video_note_bubble.dart';
+import '../../glass/ios_route.dart';
 
 class VideoBubble extends StatelessWidget {
   final BubbleContext ctx;
@@ -308,7 +309,7 @@ Future<void> openVideoPlayer(BubbleContext ctx, VideoAttachment video) async {
   }
 
   Navigator.of(context).push(
-    MaterialPageRoute(
+    iosPageRoute(context,
       fullscreenDialog: true,
       builder: (_) => PhotoViewerScreen.video(
         attachment: video,

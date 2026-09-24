@@ -5,6 +5,7 @@ import '../../main.dart';
 import '../screens/profile/traffic_monitor_screen.dart';
 import '../widgets/connection_status.dart';
 import 'debug_toggle_tile.dart';
+import '../widgets/glass/ios_route.dart';
 
 class DebugNetworkSection extends StatelessWidget {
   final KometAppState? appState;
@@ -82,7 +83,7 @@ class DebugNetworkSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const TrafficMonitorScreen()),
+                iosPageRoute(context, builder: (_) => const TrafficMonitorScreen()),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(

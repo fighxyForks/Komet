@@ -16,6 +16,7 @@ import '../../widgets/auth_limits_sheet.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/login_success_screen.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class CodeConfirmationScreen extends StatefulWidget {
   final String phoneNumber;
@@ -344,7 +345,7 @@ class _CodeConfirmationScreenState extends State<CodeConfirmationScreen>
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
+          iosPageRoute(context,
             builder: (context) => Password2FAScreen(
               trackId: trackId,
               hint: result.challengeHint,
@@ -358,7 +359,7 @@ class _CodeConfirmationScreenState extends State<CodeConfirmationScreen>
       if (result.isRegistration) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
+          iosPageRoute(context,
             builder: (context) => RegistrationScreen(
               phoneNumber: widget.phoneNumber,
               registerToken: result.registerToken!,

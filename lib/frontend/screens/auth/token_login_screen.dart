@@ -10,6 +10,7 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class TokenLoginScreen extends StatefulWidget {
   final int? returnToAccountId;
@@ -107,7 +108,7 @@ class _TokenLoginScreenState extends State<TokenLoginScreen> {
       await accountModule.loginWithToken(_tokenController.text.trim());
       if (!mounted) return;
       await Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const AdaptiveShell()),
+        iosPageRoute(context, builder: (_) => const AdaptiveShell()),
         (route) => false,
       );
     } catch (e) {
