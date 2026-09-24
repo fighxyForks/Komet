@@ -129,43 +129,118 @@ class IosSettingsScaffold extends StatelessWidget {
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,
-      body: NestedScrollView(
+      body: _CollapsingIosSettings(
+        background: bg,
+        separator: IosPalette.separator(cs),
+        largeTitle: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: IosPalette.label(cs),
+            fontSize: IosTypography.largeTitle,
+            fontWeight: IosType.largeTitle,
+            letterSpacing: IosTypography.letterSpacing(
+              IosTypography.largeTitle,
+            ),
+          ),
+        ),
+        middle: middle,
+        leading: barLeading,
+        trailing: barTrailing,
+        body: body,
+      ),
+    );
+  }
+}
+
+class _CollapsingIosSettings extends StatefulWidget {
+  final Color background;
+  final Color separator;
+  final Widget largeTitle;
+  final Widget? middle;
+  final Widget? leading;
+  final Widget? trailing;
+  final Widget body;
+
+  const _CollapsingIosSettings({
+    required this.background,
+    required this.separator,
+    required this.largeTitle,
+    required this.middle,
+    required this.leading,
+    required this.trailing,
+    required this.body,
+  });
+
+  @override
+  State<_CollapsingIosSettings> createState() => _CollapsingIosSettingsState();
+}
+
+class _CollapsingIosSettingsState extends State<_CollapsingIosSettings> {
+  bool _scrolled = false;
+
+  bool _onScroll(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
+    final scrolled = notification.metrics.pixels > 0.5;
+    if (scrolled != _scrolled) setState(() => _scrolled = scrolled);
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bar = _scrolled
+        ? widget.background.withValues(alpha: 0.94)
+        : widget.background.withValues(alpha: 0);
+    final hairline = _scrolled
+        ? widget.separator.withValues(alpha: 0.45)
+        : const Color(0x00000000);
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScroll,
+      child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
+          final covered = _scrolled || innerBoxIsScrolled;
+          final coveredBar = covered
+              ? widget.background.withValues(alpha: 0.94)
+              : bar;
+          final coveredLine = covered
+              ? widget.separator.withValues(alpha: 0.45)
+              : hairline;
           return [
-            CupertinoSliverNavigationBar(
-              largeTitle: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: IosPalette.label(cs),
-                  fontSize: IosTypography.largeTitle,
-                  fontWeight: IosType.largeTitle,
-                  letterSpacing: IosTypography.letterSpacing(
-                    IosTypography.largeTitle,
-                  ),
+            SliverOverlapAbsorber(
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+              sliver: CupertinoSliverNavigationBar(
+                largeTitle: widget.largeTitle,
+                middle: widget.middle,
+                alwaysShowMiddle: false,
+                automaticBackgroundVisibility: false,
+                enableBackgroundFilterBlur: false,
+                backgroundColor: coveredBar,
+                border: Border(
+                  bottom: BorderSide(color: coveredLine, width: 0.5),
                 ),
+                automaticallyImplyLeading: false,
+                leading: widget.leading,
+                trailing: widget.trailing,
               ),
-              middle: middle,
-              alwaysShowMiddle: false,
-              backgroundColor: innerBoxIsScrolled
-                  ? bg.withValues(alpha: 0.94)
-                  : bg.withValues(alpha: 0),
-              border: Border(
-                bottom: BorderSide(
-                  color: innerBoxIsScrolled
-                      ? IosPalette.separator(cs).withValues(alpha: 0.45)
-                      : Colors.transparent,
-                  width: 0.5,
-                ),
-              ),
-              automaticallyImplyLeading: false,
-              leading: barLeading,
-              trailing: barTrailing,
             ),
           ];
         },
-        body: body,
+        body: Builder(
+          builder: (context) {
+            final handle = NestedScrollView.sliverOverlapAbsorberHandleFor(
+              context,
+            );
+            return ListenableBuilder(
+              listenable: handle,
+              builder: (context, child) => Padding(
+                padding: EdgeInsets.only(top: handle.layoutExtent ?? 0),
+                child: child,
+              ),
+              child: widget.body,
+            );
+          },
+        ),
       ),
     );
   }
