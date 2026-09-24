@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../../backend/modules/contacts.dart';
 import '../../../../core/utils/haptics.dart';
@@ -262,7 +262,7 @@ class _ContactCardState extends State<_ContactCard> {
                   _ContactActionButton(
                     key: const ValueKey('contact-add-button'),
                     tooltip: l10n.nfcAddContact,
-                    icon: Symbols.person_add,
+                    icon: IosSymbols.personAdd(context),
                     color: buttonColor,
                     foreground: ctx.text,
                     loading: _adding || _isContact == null,
@@ -275,7 +275,7 @@ class _ContactCardState extends State<_ContactCard> {
                 _ContactActionButton(
                   key: const ValueKey('contact-profile-button'),
                   tooltip: l10n.contactBubbleOpenProfile,
-                  icon: Symbols.chat_bubble,
+                  icon: IosSymbols.chatBubble(context),
                   color: buttonColor,
                   foreground: ctx.text,
                   onPressed: widget.resolvedContactId == null

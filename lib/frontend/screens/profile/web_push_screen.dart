@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/ios_metrics.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/api.dart';
 import '../../../core/utils/format.dart';
@@ -11,11 +13,12 @@ import '../../../core/webpush/web_push_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart' show accountModule, api;
 import '../../widgets/confirm_dialog.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 const String kWebPushSiteUrl = 'https://push.komet.pw';
 
@@ -190,12 +193,8 @@ class _WebPushScreenState extends State<WebPushScreen> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.webPushTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.webPushTitle,
       body: SafeArea(
         top: false,
         child: _stage == _Stage.loading
@@ -263,7 +262,7 @@ class _WebPushScreenState extends State<WebPushScreen> {
       SectionHeader(
         _linked ? l10n.webPushLinkedTitle : l10n.webPushInstallTitle,
         padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-        fontSize: 14,
+        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
       ),
       _explainer(cs, _linked ? l10n.webPushLinkedBody : l10n.webPushInstallBody),
       if (_link != null) ...[
@@ -279,7 +278,7 @@ class _WebPushScreenState extends State<WebPushScreen> {
       SettingsCard(
         children: [
           SettingsNavTile(
-            icon: Symbols.logout,
+            icon: IosSymbols.logout(context),
             label: l10n.webPushSignOut,
             tintColor: cs.error,
             onTap: _busy ? null : _signOut,
@@ -340,20 +339,21 @@ class _WebPushScreenState extends State<WebPushScreen> {
   Widget _explainer(ColorScheme cs, String text) => SettingsPanel(
     child: Text(
       text,
-      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14, height: 1.5),
+      style: TextStyle(color: cs.onSurfaceVariant, fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14, height: 1.5),
     ),
   );
 
-  Widget _primary(String label, VoidCallback? onPressed) => SizedBox(
-    width: double.infinity,
-    child: FilledButton(
-      onPressed: _busy ? null : onPressed,
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-      ),
-      child: _busy
-          ? const SmallSpinner(size: 20)
-          : Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-    ),
-  );
+  Widget _primary(String label, VoidCallback? onPressed) {
+    if (_busy) {
+      return const SizedBox(
+        width: double.infinity,
+        height: IosMetrics.minHitTarget,
+        child: Center(child: SmallSpinner(size: 20)),
+      );
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: IosSettingsButton(label: label, onPressed: onPressed),
+    );
+  }
 }

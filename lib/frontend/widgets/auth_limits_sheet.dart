@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -58,12 +59,12 @@ Future<void> showAuthLimitsSheet(
         subtitle: l10n.authLimitsLoginSubtitle(liftsAt),
         items: [
           InfoActionSheetItem(
-            icon: Symbols.password,
+            icon: IosSymbols.password(context),
             title: l10n.authLimitsLogin2faTitle,
             body: l10n.authLimitsLogin2faBody,
           ),
           InfoActionSheetItem(
-            icon: Symbols.devices,
+            icon: IosSymbols.devices(context),
             title: l10n.authLimitsLoginSessionsTitle,
             body: l10n.authLimitsLoginSessionsBody,
           ),
@@ -79,17 +80,17 @@ Future<void> showAuthLimitsSheet(
         subtitle: l10n.authLimitsSignupSubtitle,
         items: [
           InfoActionSheetItem(
-            icon: Symbols.chat_bubble,
+            icon: IosSymbols.chatBubble(context),
             title: l10n.authLimitsSignupMessagesTitle,
             body: l10n.authLimitsSignupMessagesBody,
           ),
           InfoActionSheetItem(
-            icon: Symbols.group,
+            icon: IosSymbols.group(context),
             title: l10n.authLimitsSignupGroupsTitle,
             body: l10n.authLimitsSignupGroupsBody,
           ),
           InfoActionSheetItem(
-            icon: Symbols.schedule,
+            icon: IosSymbols.schedule(context),
             title: l10n.authLimitsSignupMoreTitle,
             body: l10n.authLimitsSignupMoreBody,
           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../../core/utils/format.dart';
 import '../../../../models/attachment.dart';
@@ -21,21 +21,21 @@ class CallBubble extends StatelessWidget {
     final IconData icon;
     final String label;
     if (call.isGroup) {
-      icon = call.isVideo ? Symbols.videocam : Symbols.groups;
+      icon = call.isVideo ? IosSymbols.videocam(ctx.context) : IosSymbols.group(ctx.context);
       label = call.isVideo ? 'Групповой видеозвонок' : 'Групповой звонок';
     } else if (call.isVideo) {
-      icon = Symbols.videocam;
+      icon = IosSymbols.videocam(ctx.context);
       label = missed
           ? (isMe ? 'Отменённый видеозвонок' : 'Пропущенный видеозвонок')
           : (isMe ? 'Исходящий видеозвонок' : 'Входящий видеозвонок');
     } else {
-      icon = Symbols.call;
+      icon = IosSymbols.phone(ctx.context);
       label = missed
           ? (isMe ? 'Отменённый звонок' : 'Пропущенный звонок')
           : (isMe ? 'Исходящий звонок' : 'Входящий звонок');
     }
 
-    final directionIcon = isMe ? Symbols.call_made : Symbols.call_received;
+    final directionIcon = isMe ? IosSymbols.callMade(ctx.context) : IosSymbols.callReceived(ctx.context);
 
     final subtitle = missed
         ? ctx.clockText

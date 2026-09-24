@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart'
     show MediaStream, RTCVideoRenderer, RTCVideoViewObjectFit;
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/calls/active_call.dart';
 import '../../core/calls/call_session.dart';
@@ -22,6 +23,7 @@ import 'draggable_floating_layer.dart';
 import 'glossy_pill.dart';
 import 'lottie_slash_icon.dart';
 import 'small_spinner.dart';
+import './glass/ios_route.dart';
 
 class FloatingCallBadgeLayer extends StatelessWidget {
   const FloatingCallBadgeLayer({super.key});
@@ -280,7 +282,7 @@ class _CallBadgeState extends State<_CallBadge>
     final navigator = KometApp.navigatorKey.currentState;
     if (navigator == null) return;
     navigator.push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => CallScreen(
           name: widget.call.name,
           avatarUrl: widget.call.avatarUrl,
@@ -504,8 +506,7 @@ class _CallBadgeState extends State<_CallBadge>
                   shape: BoxShape.circle,
                   border: Border.all(color: cs.surfaceContainerHigh, width: 2),
                 ),
-                child: Icon(
-                  Symbols.mic_off,
+                child: Icon(IosSymbols.micOff(context),
                   size: 12,
                   fill: 1,
                   color: cs.onSurfaceVariant,
@@ -588,8 +589,7 @@ class _CallBadgeState extends State<_CallBadge>
           background: kDangerRed,
           label: l10n.callEndButton,
           onTap: _hangup,
-          child: const Icon(
-            Symbols.call_end,
+          child: Icon(IosSymbols.phoneDown(context),
             size: 20,
             fill: 1,
             color: Colors.white,

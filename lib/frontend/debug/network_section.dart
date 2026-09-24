@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../main.dart';
 import '../screens/profile/traffic_monitor_screen.dart';
 import '../widgets/connection_status.dart';
 import 'debug_toggle_tile.dart';
+import '../widgets/glass/ios_route.dart';
 
 class DebugNetworkSection extends StatelessWidget {
   final KometAppState? appState;
@@ -22,7 +24,7 @@ class DebugNetworkSection extends StatelessWidget {
           child: state == null
               ? const SizedBox.shrink()
               : DebugToggleTile(
-                  icon: Symbols.speed,
+                  icon: IosSymbols.speed(context),
                   title: 'Оверлей FPS',
                   subtitle: (_) =>
                       'Показ текущего фреймрейта поверх интерфейса',
@@ -48,7 +50,7 @@ class DebugNetworkSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: DebugToggleTile(
-            icon: Symbols.wifi_off,
+            icon: IosSymbols.wifiOff(context),
             title: 'Офлайн (тест)',
             subtitle: (_) =>
                 'Показать индикаторы соединения во всех '
@@ -82,7 +84,7 @@ class DebugNetworkSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const TrafficMonitorScreen()),
+                iosPageRoute(context, builder: (_) => const TrafficMonitorScreen()),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -91,8 +93,7 @@ class DebugNetworkSection extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Symbols.lan,
+                    Icon(IosSymbols.devices(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -122,8 +123,7 @@ class DebugNetworkSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Icon(
-                      Symbols.chevron_right,
+                    Icon(IosSymbols.chevronRight(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,

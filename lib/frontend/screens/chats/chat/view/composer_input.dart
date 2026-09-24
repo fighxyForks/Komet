@@ -17,6 +17,8 @@ import 'package:komet/frontend/screens/chats/chat/voice_record_controller.dart';
 import 'package:komet/frontend/widgets/composer_morph_icon.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';
@@ -72,6 +74,7 @@ class ComposerInputBar extends StatelessWidget {
     this.bottomSafe = true,
     this.vignette = false,
     this.iosGlass = false,
+    this.forceOpaqueChrome = false,
   });
 
   final String chatType;
@@ -118,6 +121,7 @@ class ComposerInputBar extends StatelessWidget {
   final bool bottomSafe;
   final bool vignette;
   final bool iosGlass;
+  final bool forceOpaqueChrome;
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +225,7 @@ class ComposerInputBar extends StatelessWidget {
                         isChannel ? 'Подписаться' : 'Вступить',
                         style: TextStyle(
                           color: cs.onPrimary,
-                          fontSize: 16,
+                          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -258,7 +262,7 @@ class ComposerInputBar extends StatelessWidget {
                   isMuted ? 'Включить уведомления' : 'Отключить уведомления',
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -274,7 +278,7 @@ class ComposerInputBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _messagePreview(cs, forwards),
+          _messagePreview(context, cs, forwards),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: _barSideInset,
@@ -702,6 +706,8 @@ class ComposerInputBar extends StatelessWidget {
       return GlassCapsule(
         key: const ValueKey('ios-composer-field'),
         borderRadius: BorderRadius.circular(_controlSize / 2),
+        allowNative: false,
+        forceOpaque: forceOpaqueChrome,
         child: child,
       );
     }
@@ -714,6 +720,7 @@ class ComposerInputBar extends StatelessWidget {
               cs.surface,
             ),
       blurSigma: _frost ? AppFrost.sigma : null,
+      forceOpaque: forceOpaqueChrome,
       liquid: _liquid,
       backdropKey: backdropKey,
       borderRadius: BorderRadius.circular(28),
@@ -755,6 +762,8 @@ class ComposerInputBar extends StatelessWidget {
       return GlassCapsule(
         key: const ValueKey('ios-composer-action'),
         tint: color.a >= 1 ? color : null,
+        allowNative: false,
+        forceOpaque: forceOpaqueChrome,
         onTap: onTap,
         onLongPress: onLongPress,
         child: child,
@@ -771,6 +780,7 @@ class ComposerInputBar extends StatelessWidget {
     return GlossyPill(
       color: color,
       blurSigma: _frost ? AppFrost.sigma : null,
+      forceOpaque: forceOpaqueChrome,
       liquid: _liquid,
       backdropKey: backdropKey,
       borderRadius: BorderRadius.circular(_controlSize / 2),
@@ -782,8 +792,8 @@ class ComposerInputBar extends StatelessWidget {
     );
   }
 
-  Widget _replyIconButton(ColorScheme cs) {
-    final icon = Icon(Symbols.reply, size: 20, color: cs.primary);
+  Widget _replyIconButton(BuildContext context, ColorScheme cs) {
+    final icon = Icon(IosSymbols.reply(context), size: 20, color: cs.primary);
     if (onPickReplyChat == null) return icon;
     return InkWell(
       onTap: onPickReplyChat,
@@ -792,12 +802,12 @@ class ComposerInputBar extends StatelessWidget {
     );
   }
 
-  Widget _messagePreview(ColorScheme cs, List<CachedMessage> forwards) {
-    if (forwards.isNotEmpty) return _forwardPreview(cs, forwards);
-    return _replyPreview(cs);
+  Widget _messagePreview(BuildContext context, ColorScheme cs, List<CachedMessage> forwards) {
+    if (forwards.isNotEmpty) return _forwardPreview(context, cs, forwards);
+    return _replyPreview(context, cs);
   }
 
-  Widget _forwardPreview(ColorScheme cs, List<CachedMessage> messages) {
+  Widget _forwardPreview(BuildContext context, ColorScheme cs, List<CachedMessage> messages) {
     final first = messages.first;
     final senderName = ContactCache.get(first.senderId);
     final info = ReplyInfo(
@@ -821,11 +831,11 @@ class ComposerInputBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 6, 8, 2),
       child: Row(
         children: [
-          Icon(Symbols.forward, size: 20, color: cs.primary),
+          Icon(IosSymbols.forward(context), size: 20, color: cs.primary),
           const SizedBox(width: 10),
           Container(width: 2, height: 34, color: cs.primary),
           const SizedBox(width: 10),
-          _previewThumb(cs, visual),
+          _previewThumb(context, cs, visual),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -837,16 +847,18 @@ class ComposerInputBar extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: cs.primary,
-                    fontSize: 13,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.callout
+                        : 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (preview.isNotEmpty) _previewLine(cs, visual, preview),
+                if (preview.isNotEmpty) _previewLine(context, cs, visual, preview),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Symbols.close, size: 20),
+            icon: Icon(IosSymbols.close(context), size: 20),
             color: cs.onSurfaceVariant,
             onPressed: onCancelForward,
           ),
@@ -866,7 +878,7 @@ class ComposerInputBar extends StatelessWidget {
     return '$count сообщений';
   }
 
-  Widget _replyPreview(ColorScheme cs) {
+  Widget _replyPreview(BuildContext context, ColorScheme cs) {
     return ValueListenableBuilder<CachedMessage?>(
       valueListenable: replyTo,
       builder: (context, reply, _) {
@@ -888,11 +900,11 @@ class ComposerInputBar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 6, 8, 2),
           child: Row(
             children: [
-              _replyIconButton(cs),
+              _replyIconButton(context, cs),
               const SizedBox(width: 10),
               Container(width: 2, height: 34, color: cs.primary),
               const SizedBox(width: 10),
-              _previewThumb(cs, visual),
+              _previewThumb(context, cs, visual),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -904,16 +916,18 @@ class ComposerInputBar extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: cs.primary,
-                        fontSize: 13,
+                        fontSize: IosGlass.of(context)
+                            ? IosTypography.callout
+                            : 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (preview.isNotEmpty) _previewLine(cs, visual, preview),
+                    if (preview.isNotEmpty) _previewLine(context, cs, visual, preview),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Symbols.close, size: 20),
+                icon: Icon(IosSymbols.close(context), size: 20),
                 color: cs.onSurfaceVariant,
                 onPressed: onCancelReply,
               ),
@@ -927,18 +941,23 @@ class ComposerInputBar extends StatelessWidget {
 
   static const double _previewThumbSide = 34;
 
-  Widget _previewThumb(ColorScheme cs, ReplyPreview preview) {
+  Widget _previewThumb(BuildContext context, ColorScheme cs, ReplyPreview preview) {
     if (!preview.hasMedia) return const SizedBox.shrink();
     const size = Size(_previewThumbSide, _previewThumbSide);
     return Padding(
       padding: const EdgeInsets.only(right: 10),
-      child: preview.thumbnail(size: size, cs: cs, radius: 6),
+      child: preview.thumbnail(context: context, size: size, cs: cs, radius: 6),
     );
   }
 
-  Widget _previewLine(ColorScheme cs, ReplyPreview preview, String text) {
+  Widget _previewLine(BuildContext context, ColorScheme cs, ReplyPreview preview, String text) {
     final icon = preview.hasMedia ? null : preview.icon;
-    final style = TextStyle(color: cs.onSurfaceVariant, fontSize: 13);
+    final style = TextStyle(
+      color: IosGlass.of(context)
+          ? IosPalette.secondaryLabel(cs)
+          : cs.onSurfaceVariant,
+      fontSize: IosGlass.of(context) ? IosTypography.callout : 13,
+    );
     if (icon == null) {
       return Text(
         text,
@@ -1063,8 +1082,7 @@ class ComposerInputBar extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Symbols.lock,
+                  Icon(IosSymbols.lock(context),
                     size: 16,
                     color: lock > 0.6 ? cs.primary : cs.onSurfaceVariant,
                   ),
@@ -1108,7 +1126,7 @@ class ComposerInputBar extends StatelessWidget {
               formatElapsed(ms),
               style: TextStyle(
                 color: cs.onSurface,
-                fontSize: 16,
+                fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                 fontFeatures: const [ui.FontFeature.tabularFigures()],
               ),
             ),
@@ -1126,7 +1144,7 @@ class ComposerInputBar extends StatelessWidget {
                         '‹ Влево — отмена',
                         style: TextStyle(
                           color: cs.onSurfaceVariant,
-                          fontSize: 14,
+                          fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                         ),
                       ),
                     ),
@@ -1138,8 +1156,7 @@ class ComposerInputBar extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Icon(
-                          Symbols.arrow_back,
+                        Icon(IosSymbols.back(context),
                           size: 16,
                           color: cs.onSurfaceVariant,
                         ),
@@ -1148,7 +1165,7 @@ class ComposerInputBar extends StatelessWidget {
                           'Отмена',
                           style: TextStyle(
                             color: cs.onSurfaceVariant,
-                            fontSize: 14,
+                            fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                           ),
                         ),
                       ],
@@ -1182,7 +1199,7 @@ class ComposerInputBar extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Icon(Symbols.delete, size: 22, color: cs.error),
+                      child: Icon(IosSymbols.delete(context), size: 22, color: cs.error),
                     ),
                   )
                 : video
@@ -1212,6 +1229,8 @@ class ComposerInputBar extends StatelessWidget {
               child: GlassCapsule(
                 key: key,
                 height: 46,
+                allowNative: false,
+                forceOpaque: forceOpaqueChrome,
                 onTap: onTap,
                 child: Center(child: child),
               ),
@@ -1220,7 +1239,7 @@ class ComposerInputBar extends StatelessWidget {
               const SizedBox(width: 10),
               GlassIconButton(
                 key: const ValueKey('ios-channel-search'),
-                icon: Symbols.search,
+                icon: IosSymbols.search(context),
                 size: 46,
                 tooltip: AppLocalizations.of(context)!.iosChatSearch,
                 onPressed: onOpenSearch,
@@ -1314,10 +1333,9 @@ class _AttachButton extends StatelessWidget {
                               ),
                             ),
                           Icon(
-                            Symbols.attachment,
+                            IosSymbols.attach(context),
                             color: iconColor,
                             size: 22,
-                            weight: 400,
                           ),
                         ],
                       ),
@@ -1449,8 +1467,7 @@ class _HistoryStrip extends StatelessWidget {
                               width: 0.5,
                             ),
                           ),
-                          child: Icon(
-                            Symbols.close,
+                          child: Icon(IosSymbols.close(context),
                             size: 12,
                             color: cs.onSurfaceVariant,
                           ),

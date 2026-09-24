@@ -1,8 +1,16 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/chat_menu_overlay.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/confirm_dialog.dart';
+import '../../widgets/prompt_dialog.dart';
+import '../../widgets/glass/ios_alert.dart';
+import '../../widgets/glass/ios_glass.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/plugins/plugin_installer.dart';
 import '../../../core/plugins/plugin_models.dart';
@@ -51,9 +59,12 @@ class _PluginsScreenState extends State<PluginsScreen> {
   }
 
   Future<void> _installUrl() async {
-    final value = await showDialog<String>(
-      context: context,
-      builder: (_) => const PluginUrlDialog(),
+    final value = await showTextInputDialog(
+      context,
+      title: 'Установить по URL',
+      hint: 'https://example.org/plugin.kinet',
+      confirmLabel: 'Загрузить',
+      keyboardType: TextInputType.url,
     );
     if (value == null || value.isEmpty || !mounted) return;
     final uri = Uri.tryParse(value);
@@ -79,77 +90,79 @@ class _PluginsScreenState extends State<PluginsScreen> {
     PluginPackagePreview preview, {
     Uri? sourceUrl,
   }) async {
-    final accepted = await showDialog<bool>(
+    final accepted = await showIosAlert<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(preview.manifest.name),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Версия ${preview.manifest.version} · ${preview.manifest.author}',
-              ),
-              if (preview.manifest.description.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(preview.manifest.description),
-              ],
+      title: preview.manifest.name,
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Версия ${preview.manifest.version} · ${preview.manifest.author}',
+            ),
+            if (preview.manifest.description.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    preview.signatureStatus == PluginSignatureStatus.verified
-                        ? Symbols.verified_user
-                        : Symbols.gpp_maybe,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      preview.signatureStatus == PluginSignatureStatus.verified
-                          ? 'Подпись Ed25519 проверена\n${preview.signerFingerprint}'
-                          : 'Плагин не подписан',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Плагин получит разрешения:',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              if (preview.manifest.permissions.isEmpty)
-                const Text('Нет')
-              else
-                for (final permission in preview.manifest.permissions)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Symbols.check, size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(permission.label)),
-                      ],
-                    ),
-                  ),
+              Text(preview.manifest.description),
             ],
-          ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  preview.signatureStatus == PluginSignatureStatus.verified
+                      ? IosSymbols.verifiedUser(context)
+                      : Symbols.gpp_maybe,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    preview.signatureStatus == PluginSignatureStatus.verified
+                        ? 'Подпись Ed25519 проверена\n${preview.signerFingerprint}'
+                        : 'Плагин не подписан',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Плагин получит разрешения:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            if (preview.manifest.permissions.isEmpty)
+              const Text('Нет')
+            else
+              for (final permission in preview.manifest.permissions)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(IosSymbols.check(context), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(permission.label)),
+                    ],
+                  ),
+                ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Разрешить и установить'),
-          ),
-        ],
       ),
+      actions: const [
+        IosAlertAction(
+          id: 'cancel',
+          label: 'Отмена',
+          result: false,
+          isCancel: true,
+        ),
+        IosAlertAction(
+          id: 'install',
+          label: 'Разрешить и установить',
+          result: true,
+          isDefault: true,
+        ),
+      ],
     );
     if (accepted != true || !mounted) return;
     try {
@@ -177,24 +190,12 @@ class _PluginsScreenState extends State<PluginsScreen> {
         showCustomNotification(context, 'Обновлений нет');
         return;
       }
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Обновить плагин?'),
-          content: Text(
+      final confirmed = await showConfirmDialog(
+        context,
+        title: 'Обновить плагин?',
+        message:
             '${plugin.manifest.name}: ${plugin.manifest.version} → ${update.version}',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Отмена'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Обновить'),
-            ),
-          ],
-        ),
+        confirmLabel: 'Обновить',
       );
       if (confirmed != true) return;
       await _updater.apply(update);
@@ -209,22 +210,12 @@ class _PluginsScreenState extends State<PluginsScreen> {
   }
 
   Future<void> _uninstall(PluginDescriptor plugin) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Удалить плагин?'),
-        content: Text(plugin.manifest.name),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Отмена'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Удалить'),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: 'Удалить плагин?',
+      message: plugin.manifest.name,
+      confirmLabel: 'Удалить',
+      destructive: true,
     );
     if (confirmed != true) return;
     _setBusy(plugin.manifest.id, true);
@@ -250,21 +241,36 @@ class _PluginsScreenState extends State<PluginsScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        title: const Text('Плагины'),
-        backgroundColor: cs.surface,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) =>
-                value == 'file' ? _installFile() : _installUrl(),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'file', child: Text('Установить .kinet')),
-              PopupMenuItem(value: 'url', child: Text('Установить по URL')),
-            ],
-          ),
-        ],
+    return IosSettingsScaffold(
+      title: 'Плагины',
+      useConnectionTitle: false,
+      trailing: Builder(
+        builder: (btnContext) => CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            final box = btnContext.findRenderObject() as RenderBox?;
+            final overlay = Overlay.of(btnContext).context.findRenderObject() as RenderBox?;
+            if (box == null || overlay == null) return;
+            final origin = box.localToGlobal(Offset.zero, ancestor: overlay);
+            showChatMenu(
+              context: btnContext,
+              anchorRect: origin & box.size,
+              items: [
+                ChatMenuItem(
+                  icon: IosSymbols.uploadFile(context),
+                  label: 'Установить .kinet',
+                  onTap: _installFile,
+                ),
+                ChatMenuItem(
+                  icon: IosSymbols.link(context),
+                  label: 'Установить по URL',
+                  onTap: _installUrl,
+                ),
+              ],
+            );
+          },
+          child: Icon(IosSymbols.ellipsisHoriz(context), color: cs.primary),
+        ),
       ),
       body: ValueListenableBuilder<List<PluginDescriptor>>(
         valueListenable: PluginStore.instance.plugins,
@@ -311,7 +317,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
                     ),
                   if (plugin.origin == PluginOrigin.installed)
                     ListTile(
-                      leading: Icon(Symbols.delete, color: cs.error),
+                      leading: Icon(IosSymbols.delete(context), color: cs.error),
                       title: Text('Удалить', style: TextStyle(color: cs.error)),
                       onTap: () => _uninstall(plugin),
                     ),
@@ -326,6 +332,7 @@ class _PluginsScreenState extends State<PluginsScreen> {
   }
 }
 
+
 class PluginUrlDialog extends StatefulWidget {
   const PluginUrlDialog({super.key});
 
@@ -334,7 +341,7 @@ class PluginUrlDialog extends StatefulWidget {
 }
 
 class _PluginUrlDialogState extends State<PluginUrlDialog> {
-  final TextEditingController _controller = TextEditingController();
+  final _controller = TextEditingController();
 
   @override
   void dispose() {
@@ -349,6 +356,32 @@ class _PluginUrlDialogState extends State<PluginUrlDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (IosGlass.of(context)) {
+      return CupertinoAlertDialog(
+        title: const Text('Установить по URL'),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: CupertinoTextField(
+            controller: _controller,
+            autofocus: true,
+            keyboardType: TextInputType.url,
+            placeholder: 'https://example.org/plugin.kinet',
+            onSubmitted: (_) => _submit(),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: _submit,
+            child: const Text('Загрузить'),
+          ),
+        ],
+      );
+    }
     return AlertDialog(
       title: const Text('Установить по URL'),
       content: TextField(

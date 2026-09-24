@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/storage/app_database.dart';
 import '../../core/storage/token_storage.dart';
@@ -424,8 +424,7 @@ class _AccountRow extends StatelessWidget {
                 ),
               ),
               if (active)
-                Icon(
-                  Symbols.check_circle,
+                Icon(IosSymbols.checkCircle(context),
                   color: highlighted ? onPill : cs.primary,
                   size: 20,
                 ),
@@ -472,7 +471,7 @@ class _AddAccountRow extends StatelessWidget {
                       : cs.primary.withValues(alpha: 0.12),
                 ),
                 alignment: Alignment.center,
-                child: Icon(Symbols.add, color: fg, size: 20, weight: 500),
+                child: Icon(IosSymbols.add(context), color: fg, size: 20, weight: 500),
               ),
               const SizedBox(width: 14),
               Text(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../../backend/modules/chats.dart';
 import '../../../core/calls/call_controller.dart';
 import '../../../core/config/app_media_cache.dart';
@@ -24,6 +24,8 @@ import '../../debug/sync_probe_section.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/connection_status.dart';
 import '../../widgets/sheet_helpers.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class DebugMenuScreen extends StatefulWidget {
   const DebugMenuScreen({super.key});
@@ -79,7 +81,7 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
 
   void _pickCacheLimit() {
     final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       shape: kSheetShape,
@@ -109,7 +111,7 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
                   style: TextStyle(color: cs.onSurface, fontSize: 16),
                 ),
                 trailing: AppMediaCacheLimit.current.value == preset
-                    ? Icon(Symbols.check, color: cs.primary)
+                    ? Icon(IosSymbols.check(context), color: cs.primary)
                     : null,
                 onTap: () {
                   AppMediaCacheLimit.save(preset);
@@ -201,11 +203,10 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final appState = KometApp.stateOf(context);
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: const ConnectionSpinner(),
       body: SafeArea(

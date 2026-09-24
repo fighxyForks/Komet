@@ -132,6 +132,8 @@ from pub.dev — `core/protocol/packet.dart` only wraps the already-decoded payl
 
 ## Key Conventions (see [AGENTS.md](./AGENTS.md) for the full, canonical list)
 
+iOS liquid-glass performance rules and helpers: [docs/ios-glass-guidelines.md](./docs/ios-glass-guidelines.md).
+
 - **No comments in code.** Write self-documenting code instead.
 - **Use `showCustomNotification(context, 'text')`** for all user-facing notifications — never use SnackBars.
 - When a fix can be done quickly with a hack or properly with a rewrite, **choose the proper rewrite**.

@@ -102,7 +102,7 @@ void main() {
     expect(SlidingPillNav.heightFor(ios: false), 68);
   });
 
-  testWidgets('капсулы шапки 46 точек и помещаются в 56', (tester) async {
+  testWidgets('капсулы шапки 44 точки и помещаются в 56', (tester) async {
     final status = ValueNotifier<String>('в сети');
     final scheduled = ValueNotifier<int>(0);
     final unread = ValueNotifier<int>(0);
@@ -145,15 +145,15 @@ void main() {
     );
     expect(
       tester.getSize(find.byKey(const ValueKey('chat-header-back'))),
-      const Size(46, 46),
+      const Size(44, 44),
     );
     expect(
       tester.getSize(find.byKey(const ValueKey('chat-header-title'))).height,
-      46,
+      44,
     );
     expect(
       tester.getSize(find.byKey(const ValueKey('chat-header-menu'))),
-      const Size(42, 46),
+      const Size(44, 44),
     );
     expect(tester.takeException(), isNull);
   });

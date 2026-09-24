@@ -1,19 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 
 import '../../../core/config/app_fonts.dart';
 import '../../../core/security/app_lock.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/confirm_dialog.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../lock/lock_glyph.dart';
 import '../lock/passcode_setup_screen.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class PasscodeSettingsScreen extends StatefulWidget {
   const PasscodeSettingsScreen({super.key});
@@ -40,7 +44,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
   Future<void> _setUp({required bool changing}) async {
     final l10n = AppLocalizations.of(context)!;
     final done = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const PasscodeSetupScreen()),
+      iosPageRoute(context, builder: (_) => const PasscodeSetupScreen()),
     );
     if (done != true || !mounted) return;
     showCustomNotification(
@@ -62,7 +66,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
 
   Future<void> _pickIdle() async {
     final l10n = AppLocalizations.of(context)!;
-    final picked = await showModalBottomSheet<int>(
+    final picked = await showIosSheet<int>(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       shape: kSheetShape,
@@ -101,7 +105,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                     ),
                     title: Text(_idleLabel(l10n, minutes)),
                     trailing: minutes == _lock.idleMinutes.value
-                        ? Icon(Symbols.check, color: cs.primary)
+                        ? Icon(IosSymbols.check(context), color: cs.primary)
                         : null,
                     onTap: () => Navigator.pop(sheetContext, minutes),
                   ),
@@ -139,12 +143,8 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.passcodeTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.passcodeTitle,
       body: SafeArea(
         top: false,
         child: ValueListenableBuilder<bool>(
@@ -159,17 +159,17 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 52,
-                  child: FilledButton.icon(
+                  child: IosSettingsButton(
                     onPressed: () => _setUp(changing: false),
-                    icon: const Icon(Symbols.lock),
-                    label: Text(l10n.passcodeEnable),
+                    icon: IosSymbols.lock(context),
+                    label: l10n.passcodeEnable,
                   ),
                 )
               else ...[
                 SettingsCard(
                   children: [
                     SettingsNavTile(
-                      icon: Symbols.password,
+                      icon: IosSymbols.password(context),
                       label: l10n.passcodeChange,
                       onTap: () => _setUp(changing: true),
                     ),
@@ -177,7 +177,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                       ValueListenableBuilder<bool>(
                         valueListenable: _lock.biometric,
                         builder: (context, value, _) => SettingsToggleTile(
-                          icon: Symbols.fingerprint,
+                          icon: IosSymbols.fingerprint(context),
                           label: l10n.passcodeBiometric,
                           subtitle: l10n.passcodeBiometricHint,
                           value: value,
@@ -187,7 +187,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                     ValueListenableBuilder<int>(
                       valueListenable: _lock.idleMinutes,
                       builder: (context, minutes, _) => _ValueTile(
-                        icon: Symbols.timer,
+                        icon: IosSymbols.timer(context),
                         label: l10n.passcodeAutoLock,
                         value: _idleLabel(l10n, minutes),
                         onTap: _pickIdle,
@@ -199,7 +199,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                 SettingsCard(
                   children: [
                     SettingsNavTile(
-                      icon: Symbols.lock_open,
+                      icon: IosSymbols.lockOpen(context),
                       label: l10n.passcodeDisable,
                       tintColor: cs.error,
                       onTap: _disable,
@@ -286,7 +286,7 @@ class _Hero extends StatelessWidget {
             enabled ? l10n.passcodeOnDescription : l10n.passcodeOffDescription,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
               height: 1.4,
               color: cs.onSurfaceVariant,
             ),
@@ -328,15 +328,14 @@ class _ValueTile extends StatelessWidget {
                   label,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
               Text(value, style: TextStyle(color: cs.primary, fontSize: 14.5)),
               const SizedBox(width: 4),
-              Icon(
-                Symbols.chevron_right,
+              Icon(IosSymbols.chevronRight(context),
                 color: cs.outline,
                 size: 20,
                 weight: 400,

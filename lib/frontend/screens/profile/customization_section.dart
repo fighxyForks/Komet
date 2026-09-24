@@ -10,6 +10,10 @@ import 'chat_background_screen.dart';
 import 'font_settings_screen.dart';
 import 'message_actions_screen.dart';
 import 'theme_settings_screen.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class _CustomizationCategory {
   final IconData icon;
@@ -73,7 +77,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
 
   void _open(_CustomizationCategory category) {
     Haptics.tap();
-    Navigator.push(context, MaterialPageRoute(builder: category.builder));
+    Navigator.push(context, iosPageRoute(context, builder: category.builder));
   }
 
   @override
@@ -108,8 +112,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
           child: Row(
             children: [
-              Icon(
-                Symbols.palette,
+              Icon(IosSymbols.palette(context),
                 color: cs.onSurfaceVariant,
                 size: 22,
                 weight: 400,
@@ -120,7 +123,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
                   'Кастомизация',
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -128,8 +131,7 @@ class _CustomizationSectionState extends State<CustomizationSection> {
               AnimatedRotation(
                 duration: const Duration(milliseconds: 200),
                 turns: _expanded ? 0.5 : 0,
-                child: Icon(
-                  Symbols.expand_more,
+                child: Icon(IosSymbols.expandMore(context),
                   color: cs.outline,
                   size: 22,
                   weight: 400,

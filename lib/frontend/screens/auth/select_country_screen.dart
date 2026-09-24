@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/core/config/countries.dart';
 import 'package:komet/l10n/app_localizations.dart';
+import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class SelectCountryScreen extends StatefulWidget {
   final CountryName selectedCountry;
@@ -95,13 +96,13 @@ class _SelectCountryScreenState extends State<SelectCountryScreen> {
     final lang = Localizations.localeOf(context).languageCode;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosAuthBackground(context),
       appBar: AppBar(
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
         ),
         title: _isSearching
             ? TextField(
@@ -144,7 +145,7 @@ class _SelectCountryScreenState extends State<SelectCountryScreen> {
               });
             },
             icon: Icon(
-              _isSearching ? Symbols.close : Symbols.search,
+              _isSearching ? IosSymbols.close(context) : IosSymbols.search(context),
               color: cs.onSurface,
             ),
           ),
@@ -174,7 +175,7 @@ class _SelectCountryScreenState extends State<SelectCountryScreen> {
               ),
             ),
             trailing: isSelected
-                ? Icon(Symbols.check, color: cs.primary)
+                ? Icon(IosSymbols.check(context), color: cs.primary)
                 : null,
             onTap: () {
               Navigator.pop(context, country);

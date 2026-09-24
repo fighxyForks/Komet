@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/storage/chat_encryption_store.dart';
 import '../../widgets/custom_notification.dart';
@@ -9,6 +10,8 @@ import '../../widgets/primary_loading_button.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ChatEncryptionScreen extends StatefulWidget {
   final int accountId;
@@ -93,7 +96,7 @@ class _ChatEncryptionScreenState extends State<ChatEncryptionScreen> {
         backgroundColor: cs.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface, weight: 400),
+          icon: Icon(IosSymbols.back(context), color: cs.onSurface, weight: 400),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -139,7 +142,7 @@ class _ChatEncryptionScreenState extends State<ChatEncryptionScreen> {
                           'Ключ',
                           style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: 16,
+                            fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -159,7 +162,7 @@ class _ChatEncryptionScreenState extends State<ChatEncryptionScreen> {
                             ),
                             suffixIcon: IconButton(
                               icon: AnimatedSlashIcon(
-                                icon: Symbols.visibility,
+                                icon: IosSymbols.visibility(context),
                                 slashedIcon: Symbols.visibility_off,
                                 slashed: _keyVisible,
                                 color: cs.onSurfaceVariant,

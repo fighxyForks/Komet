@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:komet/main.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../../core/media/preview_image.dart';
 import '../../../../core/utils/format.dart';
@@ -487,8 +487,7 @@ class PhotoBubble extends StatelessWidget {
               color: Colors.black54,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Symbols.play_arrow,
+            child: Icon(IosSymbols.play(ctx.context),
               color: Colors.white,
               size: side * 0.625,
             ),
@@ -710,7 +709,7 @@ class PhotoBubble extends StatelessWidget {
       height: h,
       color: cs.surfaceContainerHighest,
       child: Center(
-        child: Icon(Symbols.image, size: 48, color: cs.onSurfaceVariant),
+        child: Icon(IosSymbols.photo(ctx.context), size: 48, color: cs.onSurfaceVariant),
       ),
     );
   }

@@ -5,6 +5,9 @@ import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_alert.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -16,7 +19,6 @@ import '../../../core/utils/device_locale.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/spoof_profile.dart';
 import '../../../main.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/info_action_sheet.dart';
 import '../../../core/config/app_colors.dart';
@@ -25,6 +27,10 @@ import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../auth/login_screen.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 enum SpoofingMethod { partial, full }
 
@@ -315,41 +321,43 @@ class _SpoofScreenState extends State<SpoofScreen> {
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<String>(
+    final confirmed = await showIosAlert<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: AppShape.dialogBorder,
-        title: Text(l10n.spoofDialogApplyTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.spoofDialogApplyContent),
-            const SizedBox(height: 12),
-            Text(
-              l10n.spoofDialogApplyWarning,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                fontWeight: FontWeight.w500,
-              ),
+      title: l10n.spoofDialogApplyTitle,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.spoofDialogApplyContent),
+          const SizedBox(height: 12),
+          Text(
+            l10n.spoofDialogApplyWarning,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop('cancel'),
-            child: Text(l10n.spoofDialogApplyDeny),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop('relogin'),
-            child: Text(l10n.spoofDialogReloginConfirm),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop('apply'),
-            child: Text(l10n.spoofDialogApplyConfirm),
           ),
         ],
       ),
+      actions: [
+        IosAlertAction(
+          id: 'cancel',
+          label: l10n.spoofDialogApplyDeny,
+          result: 'cancel',
+          isCancel: true,
+        ),
+        IosAlertAction(
+          id: 'relogin',
+          label: l10n.spoofDialogReloginConfirm,
+          result: 'relogin',
+        ),
+        IosAlertAction(
+          id: 'apply',
+          label: l10n.spoofDialogApplyConfirm,
+          result: 'apply',
+          isDefault: true,
+        ),
+      ],
     );
 
     if (!mounted || confirmed == null) return;
@@ -367,7 +375,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
         final navState = KometApp.navigatorKey.currentState;
         if (navState != null) {
           await navState.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            iosPageRoute(context, builder: (_) => const LoginScreen()),
             (route) => false,
           );
         }
@@ -428,14 +436,9 @@ class _SpoofScreenState extends State<SpoofScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.spoofScreenTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.spoofScreenTitle,
       body: _isLoading
           ? const Center(child: SmallSpinner(size: 36))
           : SafeArea(
@@ -470,7 +473,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
   Widget _sectionHeader(String title) => SectionHeader(
     title,
     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-    fontSize: 14,
+    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
   );
 
   Widget _buildEnableCard() {
@@ -478,7 +481,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
     return SettingsCard(
       children: [
         SettingsToggleTile(
-          icon: Symbols.security,
+          icon: IosSymbols.security(context),
           label: l10n.spoofEnableTitle,
           subtitle: _spoofingEnabled
               ? l10n.spoofEnableSubtitleOn
@@ -533,13 +536,13 @@ class _SpoofScreenState extends State<SpoofScreen> {
 
     if (_selectedMethod == SpoofingMethod.partial) {
       descriptionWidget = _buildDescriptionTile(
-        icon: Symbols.check_circle,
+        icon: IosSymbols.checkCircle(context),
         color: kSuccessGreen,
         text: l10n.spoofMethodPartialDescription,
       );
     } else {
       descriptionWidget = _buildDescriptionTile(
-        icon: Symbols.warning,
+        icon: IosSymbols.warning(context),
         color: theme.colorScheme.error,
         text: l10n.spoofMethodFullDescription,
       );
@@ -550,24 +553,20 @@ class _SpoofScreenState extends State<SpoofScreen> {
         children: [
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: SegmentedButton<SpoofingMethod>(
-              showSelectedIcon: false,
-              segments: [
-                ButtonSegment(
-                  value: SpoofingMethod.partial,
-                  label: Text(l10n.spoofMethodPartial),
-                  icon: const Icon(Symbols.security),
+            child: IosSegmentedControl<SpoofingMethod>(
+              groupValue: _selectedMethod,
+              children: {
+                SpoofingMethod.partial: Text(
+                  l10n.spoofMethodPartial,
+                  textAlign: TextAlign.center,
                 ),
-                ButtonSegment(
-                  value: SpoofingMethod.full,
-                  label: Text(l10n.spoofMethodFull),
-                  icon: const Icon(Symbols.public),
+                SpoofingMethod.full: Text(
+                  l10n.spoofMethodFull,
+                  textAlign: TextAlign.center,
                 ),
-              ],
-              selected: {_selectedMethod},
-              onSelectionChanged: (s) async {
-                final next = s.first;
-                if (next == _selectedMethod) return;
+              },
+              onValueChanged: (next) async {
+                if (next == null || next == _selectedMethod) return;
                 if (next == SpoofingMethod.full) {
                   final confirmed = await _confirmFullSpoofing();
                   if (!confirmed || !mounted) return;
@@ -686,7 +685,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildDescriptionTile(
-            icon: Symbols.info,
+            icon: IosSymbols.info(context),
             color: Theme.of(context).colorScheme.tertiary,
             text: l10n.spoofIdentifiersDescription,
           ),
@@ -795,7 +794,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
           return ChoiceChip(
             label: Text(opt.label),
             avatar: isSelected
-                ? Icon(Symbols.check, size: 18, color: cs.onSecondaryContainer)
+                ? Icon(IosSymbols.check(context), size: 18, color: cs.onSecondaryContainer)
                 : (opt.icon != null
                       ? Icon(opt.icon, size: 18, color: cs.onSurfaceVariant)
                       : null),
@@ -831,39 +830,22 @@ class _SpoofScreenState extends State<SpoofScreen> {
         children: [
           Expanded(
             flex: 1,
-            child: FilledButton.tonal(
-              onPressed: _applyGeneratedData,
+            child: GestureDetector(
               onLongPress: _loadDeviceData,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 16,
-                ),
-                shape: AppShape.buttonBorder,
+              child: IosSettingsButton(
+                filled: false,
+                onPressed: _applyGeneratedData,
+                label: l10n.spoofButtonGenerate,
               ),
-              child: Text(l10n.spoofButtonGenerate),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 1,
-            child: FilledButton(
+            child: IosSettingsButton(
               onPressed: _saveSpoofingSettings,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 16,
-                ),
-                shape: AppShape.buttonBorder,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Symbols.save_alt),
-                  const SizedBox(width: 8),
-                  Text(l10n.spoofButtonApply),
-                ],
-              ),
+              icon: Symbols.save_alt,
+              label: l10n.spoofButtonApply,
             ),
           ),
         ],

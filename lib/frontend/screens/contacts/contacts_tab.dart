@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../../core/config/debug_test.dart';
 import '../../../core/contacts/contact_labels.dart';
 import '../../../core/contacts/device_contacts_service.dart';
@@ -17,14 +16,22 @@ import '../../widgets/connection_status.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/spectrum_tint.dart';
-import '../../widgets/springy_tap.dart';
 import '../chats/chat_info_screen.dart';
 import 'nfc_exchange_sheet.dart';
 import 'open_contact_profile.dart';
 import '../../../core/config/app_frost.dart';
 import '../../../core/config/app_fonts.dart';
-import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_tappable.dart';
+import '../../widgets/glass/ios_empty_state.dart';
+import '../../widgets/glass/ios_metrics.dart';
+import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 
 enum _SearchMode { phone, id }
 
@@ -87,7 +94,7 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
 
   Future<void> _openSearchById() async {
     final cs = Theme.of(context).colorScheme;
-    await showModalBottomSheet<void>(
+    await showIosSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cs.surfaceContainerHigh,
@@ -129,6 +136,7 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
     ColorScheme cs,
     CachedContact contact,
   ) {
+    final ios = IosGlass.of(context);
     final labels = contactLabels(
       idLabel: AppLocalizations.of(context)!.contactIdFallback('${contact.id}'),
       firstName: contact.firstName,
@@ -140,105 +148,112 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
         ? 'Был(а) недавно'
         : labels.subtitle;
 
-    return SpringyTap(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => openContactDialogProfile(
-            context,
-            contactId: contact.id,
-            name: nameToDisplay,
-            avatarUrl: contact.baseUrl,
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: cs.primary.withValues(alpha: 0.1),
+                width: 1,
+              ),
+            ),
+            child: KometAvatar(
+              name: nameToDisplay,
+              imageUrl: contact.baseUrl,
+              size: 48,
+            ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: cs.primary.withValues(alpha: 0.1),
-                      width: 1,
-                    ),
-                  ),
-                  child: KometAvatar(
-                    name: nameToDisplay,
-                    imageUrl: contact.baseUrl,
-                    size: 48,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              nameToDisplay,
-                              style: TextStyle(
-                                color: cs.onSurface,
-                                fontSize: 16,
-                                fontWeight: IosGlass.of(context)
-                                    ? IosType.name
-                                    : FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (contact.isVerified) ...[
-                            const SizedBox(width: 4),
-                            Icon(
-                              Symbols.verified,
-                              color: cs.primary,
-                              size: 16,
-                              weight: 600,
-                              fill: 1,
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            color: cs.onSurfaceVariant,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        nameToDisplay,
+                        style: TextStyle(
+                          color: ios ? IosPalette.label(cs) : cs.onSurface,
+                          fontSize: ios ? IosTypography.listTitle : 16,
+                          fontWeight: ios ? IosType.name : FontWeight.w600,
+                          letterSpacing: ios
+                              ? IosTypography.letterSpacing(
+                                  IosTypography.listTitle,
+                                )
+                              : null,
                         ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (contact.isVerified) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        IosSymbols.verified(context),
+                        color: cs.primary,
+                        size: 16,
+                      ),
                     ],
-                  ),
+                  ],
                 ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: ios
+                          ? IosPalette.secondaryLabel(cs)
+                          : cs.onSurfaceVariant,
+                      fontSize: ios ? IosTypography.listSubtitle : 14,
+                      letterSpacing: ios
+                          ? IosTypography.letterSpacing(
+                              IosTypography.listSubtitle,
+                            )
+                          : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ),
-        ),
+        ],
       ),
+    );
+
+    return IosTappable(
+      onTap: () => openContactDialogProfile(
+        context,
+        contactId: contact.id,
+        name: nameToDisplay,
+        avatarUrl: contact.baseUrl,
+      ),
+      child: row,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
+    final bg = ios ? IosPalette.grouped(cs) : spectrumSurfaceColor(cs);
 
     return Scaffold(
-      backgroundColor: spectrumSurfaceColor(cs),
+      backgroundColor: bg,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              padding: EdgeInsets.fromLTRB(20, ios ? 8 : 16, 12, ios ? 8 : 12),
               child: Row(
                 children: [
                   Expanded(
@@ -249,10 +264,17 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
                         Text(
                           'Контакты',
                           style: TextStyle(
-                            color: cs.onSurface,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
+                            color: ios ? IosPalette.label(cs) : cs.onSurface,
+                            fontSize: ios ? IosTypography.largeTitle : 24,
+                            fontWeight: ios
+                                ? IosType.largeTitle
+                                : FontWeight.w700,
                             fontFamily: displayFontOf(context),
+                            letterSpacing: ios
+                                ? IosTypography.letterSpacing(
+                                    IosTypography.largeTitle,
+                                  )
+                                : null,
                           ),
                         ),
                         const ConnectionStatusLine(),
@@ -260,28 +282,35 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Symbols.person_add, color: cs.onSurface),
+                    icon: Icon(
+                      IosSymbols.personAdd(context),
+                      color: ios ? cs.primary : cs.onSurface,
+                    ),
                     onPressed: _openNfcExchange,
                   ),
-                  IconButton(
-                    icon: Icon(Symbols.search, color: cs.onSurface),
-                    onPressed: _openSearchById,
-                  ),
+                  if (!ios)
+                    IconButton(
+                      icon: Icon(IosSymbols.search(context), color: cs.onSurface),
+                      onPressed: _openSearchById,
+                    ),
                 ],
               ),
             ),
+            if (ios)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: IosFlatSearchBar(
+                  hint: 'Поиск',
+                  onTap: _openSearchById,
+                ),
+              ),
             Expanded(
               child: _isLoading
                   ? const Center(child: SmallSpinner(size: 36))
                   : _contacts.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Нет контактов',
-                        style: TextStyle(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 16,
-                        ),
-                      ),
+                  ? IosEmptyState(
+                      icon: IosSymbols.personCropCircle(context),
+                      message: 'Нет контактов',
                     )
                   : ListView.builder(
                       physics: const BouncingScrollPhysics(),
@@ -371,7 +400,7 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
       if (!mounted) return;
       navigator.pop();
       navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (routeContext) => ChatInfoScreen(
             chatId: chatId,
             name:
@@ -432,7 +461,7 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
       if (!mounted) return;
       navigator.pop();
       navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (routeContext) => ChatInfoScreen(
             chatId: chatId,
             name:
@@ -481,36 +510,35 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
                     child: Text(
                       'Найти контакт',
                       style: TextStyle(
-                        color: cs.onSurface,
-                        fontSize: 18,
+                        color: IosGlass.of(context)
+                            ? IosPalette.label(cs)
+                            : cs.onSurface,
+                        fontSize: IosGlass.of(context)
+                            ? IosTypography.headerTitle
+                            : 18,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                    icon: Icon(
+                      IosSymbols.close(context),
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              SegmentedButton<_SearchMode>(
-                segments: const [
-                  ButtonSegment(
-                    value: _SearchMode.phone,
-                    label: Text('Номер'),
-                    icon: Icon(Symbols.call, size: 18),
-                  ),
-                  ButtonSegment(
-                    value: _SearchMode.id,
-                    label: Text('ID'),
-                    icon: Icon(Symbols.tag, size: 18),
-                  ),
-                ],
-                selected: {_mode},
-                onSelectionChanged: (s) => _setMode(s.first),
-                showSelectedIcon: false,
-                style: ButtonStyle(visualDensity: VisualDensity.compact),
+              IosSegmentedControl<_SearchMode>(
+                groupValue: _mode,
+                onValueChanged: (m) {
+                  if (m != null) _setMode(m);
+                },
+                children: const {
+                  _SearchMode.phone: Text('Номер'),
+                  _SearchMode.id: Text('ID'),
+                },
               ),
               const SizedBox(height: 12),
               TextField(
@@ -524,17 +552,22 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
                 onChanged: (_) {
                   if (_error != null) setState(() => _error = null);
                 },
-                style: TextStyle(color: cs.onSurface, fontSize: 16),
+                style: TextStyle(
+                  color: cs.onSurface,
+                  fontSize: IosGlass.of(context) ? IosTypography.body : 16,
+                ),
                 decoration: InputDecoration(
                   hintText: _mode == _SearchMode.phone
                       ? 'Введите номер телефона'
                       : 'Введите ID контакта',
                   hintStyle: TextStyle(
                     color: cs.onSurfaceVariant,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.body : 16,
                   ),
                   prefixIcon: Icon(
-                    _mode == _SearchMode.phone ? Symbols.call : Symbols.tag,
+                    _mode == _SearchMode.phone
+                        ? IosSymbols.phone(context)
+                        : IosSymbols.number(context),
                     color: cs.onSurfaceVariant,
                     size: 20,
                   ),
@@ -561,7 +594,7 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
                   child: Row(
                     children: [
                       Icon(
-                        Symbols.error_outline,
+                        IosSymbols.error(context),
                         size: 18,
                         color: cs.onErrorContainer,
                       ),
@@ -580,16 +613,15 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
                 ),
               ],
               const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _loading ? null : _submit,
-                style: FilledButton.styleFrom(
-                  shape: AppShape.buttonBorder,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: _loading
-                    ? const SmallSpinner(size: 20)
-                    : const Text('Найти'),
-              ),
+              _loading
+                  ? const SizedBox(
+                      height: IosMetrics.minHitTarget,
+                      child: Center(child: SmallSpinner(size: 20)),
+                    )
+                  : IosSettingsButton(
+                      label: 'Найти',
+                      onPressed: _submit,
+                    ),
             ],
           ),
         ),

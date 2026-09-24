@@ -1,11 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/utils/haptics.dart';
 import 'glass_capsule.dart';
 import 'ios_palette.dart';
 import 'ios_glass.dart';
+import 'ios_metrics.dart';
+import 'ios_symbols.dart';
+import 'ios_typography.dart';
 
 class GlassSwitch extends StatelessWidget {
   final bool value;
@@ -19,9 +21,16 @@ class GlassSwitch extends StatelessWidget {
       return Switch(value: value, onChanged: onChanged);
     }
     final cs = Theme.of(context).colorScheme;
+    // Keep CupertinoSwitch — LiquidGlassToggle is a platform view and is not
+    // safe one-per-row in settings lists (glass budget ≤1–2 views/screen).
     return CupertinoSwitch(
       value: value,
-      onChanged: onChanged,
+      onChanged: onChanged == null
+          ? null
+          : (v) {
+              Haptics.selection();
+              onChanged!(v);
+            },
       activeTrackColor: cs.primary,
     );
   }
@@ -64,7 +73,7 @@ class IosFlatSearchBar extends StatelessWidget {
     super.key,
     required this.hint,
     this.onTap,
-    this.height = 42,
+    this.height = IosMetrics.searchBarHeight,
   });
 
   @override
@@ -86,9 +95,22 @@ class IosFlatSearchBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Symbols.search, size: 20, weight: 500, color: color),
+              Icon(
+                IosSymbols.search(context),
+                size: 18,
+                color: color,
+              ),
               const SizedBox(width: 6),
-              Text(hint, style: TextStyle(color: color, fontSize: 17)),
+              Text(
+                hint,
+                style: TextStyle(
+                  color: color,
+                  fontSize: IosTypography.composer,
+                  letterSpacing: IosTypography.letterSpacing(
+                    IosTypography.composer,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -137,7 +159,7 @@ class GlassTabStrip extends StatelessWidget {
     required this.selected,
     required this.onSelected,
     this.controller,
-    this.height = 42,
+    this.height = IosMetrics.searchBarHeight,
   });
 
   @override
@@ -200,6 +222,180 @@ class GlassTabStrip extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Adaptive segmented control: Cupertino sliding in iOS mode, Material otherwise.
+class IosSegmentedControl<T extends Object> extends StatelessWidget {
+  final Map<T, Widget> children;
+  final T? groupValue;
+  final ValueChanged<T?> onValueChanged;
+  final bool proportional;
+
+  const IosSegmentedControl({
+    super.key,
+    required this.children,
+    required this.groupValue,
+    required this.onValueChanged,
+    this.proportional = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!IosGlass.of(context)) {
+      return SegmentedButton<T>(
+        showSelectedIcon: false,
+        segments: [
+          for (final e in children.entries)
+            ButtonSegment<T>(value: e.key, label: e.value),
+        ],
+        selected: {if (groupValue != null) groupValue as T},
+        onSelectionChanged: (set) {
+          if (set.isNotEmpty) onValueChanged(set.first);
+        },
+      );
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: CupertinoSlidingSegmentedControl<T>(
+        groupValue: groupValue,
+        children: children,
+        proportionalWidth: proportional,
+        onValueChanged: (v) {
+          if (v != null) Haptics.selection();
+          onValueChanged(v);
+        },
+      ),
+    );
+  }
+}
+
+/// Adaptive slider: Cupertino in iOS mode, Material otherwise.
+class IosSlider extends StatelessWidget {
+  final double value;
+  final ValueChanged<double>? onChanged;
+  final ValueChanged<double>? onChangeEnd;
+  final double min;
+  final double max;
+  final int? divisions;
+
+  const IosSlider({
+    super.key,
+    required this.value,
+    this.onChanged,
+    this.onChangeEnd,
+    this.min = 0,
+    this.max = 1,
+    this.divisions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!IosGlass.of(context)) {
+      return Slider(
+        value: value,
+        onChanged: onChanged,
+        onChangeEnd: onChangeEnd,
+        min: min,
+        max: max,
+        divisions: divisions,
+      );
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: CupertinoSlider(
+        value: value.clamp(min, max),
+        onChanged: onChanged,
+        onChangeEnd: onChangeEnd,
+        min: min,
+        max: max,
+        divisions: divisions,
+      ),
+    );
+  }
+}
+
+/// Adaptive progress indicator: Cupertino in iOS mode, Material otherwise.
+class IosActivityIndicator extends StatelessWidget {
+  final double? radius;
+  final Color? color;
+  final double strokeWidth;
+
+  const IosActivityIndicator({
+    super.key,
+    this.radius,
+    this.color,
+    this.strokeWidth = 2,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (IosGlass.of(context)) {
+      return CupertinoActivityIndicator(
+        radius: radius ?? 10,
+        color: color,
+      );
+    }
+    final size = (radius ?? 10) * 2;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CircularProgressIndicator(
+        strokeWidth: strokeWidth,
+        color: color,
+      ),
+    );
+  }
+}
+
+/// Adaptive checkbox: Cupertino-style check in iOS mode.
+class IosCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool?>? onChanged;
+
+  const IosCheckbox({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!IosGlass.of(context)) {
+      return Checkbox(value: value, onChanged: onChanged);
+    }
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: IosMetrics.minHitTarget,
+      height: IosMetrics.minHitTarget,
+      child: Center(
+        child: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: onChanged == null
+              ? null
+              : () {
+                  Haptics.selection();
+                  onChanged!(!value);
+                },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: value ? cs.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: value ? cs.primary : IosPalette.secondaryLabel(cs),
+                width: 1.5,
+              ),
+            ),
+            child: value
+                ? const Icon(CupertinoIcons.check_mark, size: 14, color: Colors.white)
+                : null,
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import '../../core/config/app_shape.dart';
+
+import 'glass/ios_alert.dart';
 
 String _resourceLabel(PermissionResourceType type) {
   if (type == PermissionResourceType.CAMERA) return 'камера';
@@ -30,23 +31,24 @@ Future<PermissionResponse> askWebViewPermission(
       ? request.origin.host
       : 'Веб-страница';
 
-  final granted = await showDialog<bool>(
+  final granted = await showIosAlert<bool>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      shape: AppShape.dialogBorder,
-      title: const Text('Запрос доступа'),
-      content: Text('$host запрашивает доступ к: $labels.'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text('Запретить'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          child: const Text('Разрешить'),
-        ),
-      ],
-    ),
+    title: 'Запрос доступа',
+    message: '$host запрашивает доступ к: $labels.',
+    actions: const [
+      IosAlertAction(
+        id: 'deny',
+        label: 'Запретить',
+        result: false,
+        isCancel: true,
+      ),
+      IosAlertAction(
+        id: 'allow',
+        label: 'Разрешить',
+        result: true,
+        isDefault: true,
+      ),
+    ],
   );
 
   return PermissionResponse(

@@ -5,6 +5,10 @@ import 'dart:ui' show lerpDouble;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_alert.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -57,7 +61,9 @@ import 'security_screen.dart';
 import 'spoof_screen.dart';
 import '../../widgets/media_playback_pill.dart';
 import '../../../core/config/app_fonts.dart';
-import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
@@ -441,58 +447,29 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     if (!ok || !context.mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CloudStorageScreen()),
+      iosPageRoute(context, builder: (_) => const CloudStorageScreen()),
     );
   }
 
   Future<void> _confirmLogout() async {
-    final cs = Theme.of(context).colorScheme;
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await showIosAlert<bool>(
       context: context,
-      backgroundColor: cs.surfaceContainerHigh,
-      shape: kSheetShape,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Выйти из аккаунта?',
-                  style: TextStyle(
-                    color: cs.onSurface,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Данные аккаунта будут удалены с этого устройства.',
-                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-                ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: cs.error,
-                    foregroundColor: cs.onError,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: AppShape.buttonBorder,
-                  ),
-                  child: const Text('Выйти'),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Отмена'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      title: 'Выйти из аккаунта?',
+      message: 'Данные аккаунта будут удалены с этого устройства.',
+      actions: const [
+        IosAlertAction(
+          id: 'cancel',
+          label: 'Отмена',
+          result: false,
+          isCancel: true,
+        ),
+        IosAlertAction(
+          id: 'logout',
+          label: 'Выйти',
+          result: true,
+          isDestructive: true,
+        ),
+      ],
     );
     if (confirmed != true || !mounted) return;
     await _doLogout();
@@ -511,12 +488,11 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       // #***! вышли из аккаунта — дальше экран входа по телефону, прошлая версия
       await api.connect(authenticated: false);
     } catch (_) {}
-    if (navState != null) {
-      await navState.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
-    }
+    if (!mounted || navState == null || !navState.mounted) return;
+    await navState.pushAndRemoveUntil(
+      iosPageRoute(context, builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -548,7 +524,9 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         final delta = expandedH - collapsedH;
         _syncHeaderDelta(delta);
         return Scaffold(
-          backgroundColor: spectrumSurfaceColor(cs),
+          backgroundColor: IosGlass.of(context)
+              ? IosPalette.grouped(cs)
+              : spectrumSurfaceColor(cs),
           body: NotificationListener<ScrollNotification>(
             onNotification: (n) => _handleScrollNotification(n, delta),
             child: CustomScrollView(
@@ -587,12 +565,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           items: [
                             if (BuildProfile.digitalId)
                               _SettingsItem(
-                                icon: Symbols.badge,
+                                icon: IosSymbols.badge(context),
                                 label: 'Цифровой ID',
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(
+                                    iosPageRoute(context,
                                       builder: (context) =>
                                           AppDigitalIdNative.current.value ||
                                               !webViewSupported
@@ -603,12 +581,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 },
                               ),
                             _SettingsItem(
-                              icon: Symbols.language,
+                              icon: IosSymbols.language(context),
                               label: 'Войти в Сферум',
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
+                                  iosPageRoute(context,
                                     builder: (context) => WebAppScreen(
                                       title: 'Сферум',
                                       entryPoint: WebAppEntryPoint.settings,
@@ -620,12 +598,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                             ),
                             if (showExtraInfo)
                               _SettingsItem(
-                                icon: Symbols.info,
+                                icon: IosSymbols.info(context),
                                 label: AppLocalizations.of(context)!.infoTitle,
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(
+                                    iosPageRoute(context,
                                       builder: (context) => const InfoScreen(),
                                     ),
                                   );
@@ -650,12 +628,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       context,
                       items: [
                         _SettingsItem(
-                          icon: Symbols.notifications_active,
+                          icon: IosSymbols.notificationsActive(context),
                           label: 'Уведомления',
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) =>
                                     const NotificationsScreen(),
                               ),
@@ -663,12 +641,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           },
                         ),
                         _SettingsItem(
-                          icon: Symbols.videocam,
+                          icon: IosSymbols.videocam(context),
                           label: 'Камера и микрофон',
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) =>
                                     const MediaDevicesScreen(),
                               ),
@@ -681,11 +659,11 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () => _openCloudStorage(context),
                         ),
                         _SettingsItem(
-                          icon: Symbols.vpn_lock,
+                          icon: IosSymbols.vpnLock(context),
                           label: 'Прокси',
                           onTap: () {
                             final cs = Theme.of(context).colorScheme;
-                            showModalBottomSheet<void>(
+                            showIosSheet<void>(
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: cs.surfaceContainerHigh,
@@ -706,19 +684,19 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
+                                iosPageRoute(context,
                                   builder: (context) => const SpoofScreen(),
                                 ),
                               );
                             },
                           ),
                         _SettingsItem(
-                          icon: Symbols.lock,
+                          icon: IosSymbols.lock(context),
                           label: 'Безопасность',
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 settings: const RouteSettings(
                                   name: 'SecurityScreen',
                                 ),
@@ -728,12 +706,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           },
                         ),
                         _SettingsItem(
-                          icon: Symbols.devices,
+                          icon: IosSymbols.devices(context),
                           label: 'Устройства',
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) => const DevicesScreen(),
                               ),
                             );
@@ -776,12 +754,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 context,
                                 items: [
                                   _SettingsItem(
-                                    icon: Symbols.construction,
+                                    icon: IosSymbols.construction(context),
                                     label: 'Для разработчиков',
                                     onTap: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(
+                                        iosPageRoute(context,
                                           builder: (context) =>
                                               const DebugMenuScreen(),
                                         ),
@@ -824,7 +802,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) =>
                                     const KometSettingsScreen(),
                               ),
@@ -832,7 +810,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           },
                         ),
                         _SettingsItem(
-                          icon: Symbols.logout,
+                          icon: IosSymbols.logout(context),
                           label: 'Выйти из аккаунта',
                           tintColor: cs.error,
                           onTap: _confirmLogout,
@@ -1005,8 +983,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: Icon(
-                        Symbols.qr_code_2,
+                      icon: Icon(IosSymbols.qrCode(context),
                         color: iconColor,
                         size: 26,
                         weight: 400,
@@ -1030,8 +1007,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       children: [
                         IconButton(
                           key: _avatarMenuKey,
-                          icon: Icon(
-                            Symbols.more_vert,
+                          icon: Icon(IosSymbols.moreVert(context),
                             color: iconColor,
                             size: 22,
                             weight: 400,
@@ -1041,8 +1017,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                               : _openAvatarMenu,
                         ),
                         IconButton(
-                          icon: Icon(
-                            Symbols.edit,
+                          icon: Icon(IosSymbols.edit(context),
                             color: iconColor,
                             size: 22,
                             weight: 400,
@@ -1050,7 +1025,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) => const EditProfileScreen(),
                               ),
                             );
@@ -1074,9 +1049,20 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                         name,
                         style: TextStyle(
                           color: nameColor,
-                          fontSize: lerpDouble(20, 26, pt),
+                          fontSize: IosGlass.of(context)
+                              ? lerpDouble(
+                                  IosTypography.headerTitle,
+                                  28,
+                                  pt,
+                                )
+                              : lerpDouble(20, 26, pt),
                           fontWeight: FontWeight.w700,
                           fontFamily: displayFontOf(context),
+                          letterSpacing: IosGlass.of(context)
+                              ? IosTypography.letterSpacing(
+                                  IosTypography.headerTitle,
+                                )
+                              : null,
                         ),
                       ),
                     ),
@@ -1117,17 +1103,23 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                       isVisible: _isPhoneVisible,
                                       style: TextStyle(
                                         color: subColor,
-                                        fontSize: 14,
+                                        fontSize: IosGlass.of(context)
+                                            ? IosTypography.listSubtitle
+                                            : 14,
                                         fontWeight: FontWeight.w400,
-                                        letterSpacing: 0.5,
+                                        letterSpacing: IosGlass.of(context)
+                                            ? IosTypography.letterSpacing(
+                                                IosTypography.listSubtitle,
+                                              )
+                                            : null,
                                       ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 4),
                                 AnimatedSlashIcon(
-                                  icon: Symbols.visibility,
-                                  slashedIcon: Symbols.visibility_off,
+                                  icon: IosSymbols.visibility(context),
+                                  slashedIcon: IosSymbols.visibilityOff(context),
                                   slashed: !_isPhoneVisible,
                                   size: 14,
                                   color: Color.lerp(
@@ -1298,7 +1290,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       child: GestureDetector(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+          iosPageRoute(context, builder: (context) => const EditProfileScreen()),
         ),
         child: GlossyPill(
           color: cs.surfaceContainerHigh,
@@ -1319,7 +1311,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   bio,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1353,7 +1345,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               child: Padding(
                 padding: const EdgeInsets.all(6),
                 child: Icon(
-                  alignLeft ? Symbols.chevron_left : Symbols.chevron_right,
+                  alignLeft ? IosSymbols.chevronLeft(context) : IosSymbols.chevronRight(context),
                   color: Colors.white,
                   size: 24,
                 ),
@@ -1399,8 +1391,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Symbols.check_circle,
+                    Icon(IosSymbols.checkCircle(context),
                       fill: 1,
                       size: 15,
                       color: online ? kSuccessGreen : cs.mutedText,
@@ -1410,7 +1401,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       label,
                       style: TextStyle(
                         color: textColor ?? cs.onSurfaceVariant,
-                        fontSize: 14,
+                        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                         fontWeight: FontWeight.w400,
                       ),
                     ),

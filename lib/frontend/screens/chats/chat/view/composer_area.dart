@@ -105,6 +105,7 @@ class ComposerArea extends StatelessWidget {
   final bool replyDisabled;
 
   final bool composerFrosted;
+  final ValueListenable<bool>? scrollOpaque;
 
   const ComposerArea({
     super.key,
@@ -167,6 +168,7 @@ class ComposerArea extends StatelessWidget {
     required this.forwardDisabled,
     this.replyDisabled = false,
     required this.composerFrosted,
+    this.scrollOpaque,
   });
 
   @override
@@ -244,64 +246,73 @@ class ComposerArea extends StatelessWidget {
               ),
               AnimatedBuilder(
                 animation: stickers.anim,
-                builder: (context, _) => ComposerInputBar(
-                  bottomSafe: stickers.anim.value == 0,
-                  chatType: commentsMode ? 'CHAT' : chatType,
-                  chrome: chrome,
-                  vignette: chromeVignette,
-                  style: ComposerChrome.effective,
-                  background: ComposerMaterial.effective,
-                  iosGlass: AppIosGlass.active.value,
-                  backdropKey: pillBackdrop,
-                  attachAnim: attachAnim,
-                  replyTo: replyTo,
-                  forwardMessages: forwardMessages,
-                  myId: myId,
-                  hasText: hasText,
-                  uploadStatus: uploadStatus,
-                  messageController: messageController,
-                  messageFocusNode: messageFocusNode,
-                  voiceRec: voiceRec,
-                  note: note,
-                  onToggleStickerPanel: onToggleStickerPanel,
-                  onSendText: onSendMessage,
-                  onScheduleMessage: onScheduleMessage,
-                  onOpenAttach: onOpenAttach,
-                  onOpenAttachScheduled: onOpenAttachScheduled,
-                  onSendHistory: onSendHistory,
-                  onCancelReply: onCancelReply,
-                  onCancelForward: onCancelForward,
-                  onPickReplyChat: commentsMode || !crossChatReplySupported
-                      ? null
-                      : () => unawaited(onPickReplyChat()),
-                  formatElapsed: formatElapsed,
-                  contextMenuBuilder: (ctx, state) => formatContextMenu(
-                    messageController,
-                    ctx,
-                    state,
-                    pasteItem: pasteMenuItem(ctx, state),
-                  ),
-                  onPasteMedia: ClipboardMedia.supported
-                      ? onPasteMedia
-                      : null,
-                  onInsertContent: onInsertContent,
-                  isMuted: isMuted,
-                  onToggleMute: onToggleMute,
-                  channelSubscribed: channelSubscribed,
-                  canPostToChannel: canPostToChannel,
-                  channelSubscribing: channelSubscribing,
-                  onSubscribe: onSubscribe,
-                  onOpenSearch: onOpenSearch,
-                  showStickerButton: !commentsMode && selectedCommand == null,
-                  showAttachButton: !commentsMode && selectedCommand == null,
-                  forceSend: commentsMode || selectedCommand != null,
-                  readOnly: selectedCommand != null,
-                  hintText: selectedCommand != null
-                      ? AppLocalizations.of(context)!.composerHintCommandArgs
-                      : commentsMode
-                      ? AppLocalizations.of(context)!.composerHintComment
-                      : null,
-                ),
+                builder: (context, _) {
+                  Widget bar({required bool opaque}) => ComposerInputBar(
+                    bottomSafe: stickers.anim.value == 0,
+                    chatType: commentsMode ? 'CHAT' : chatType,
+                    chrome: chrome,
+                    vignette: chromeVignette,
+                    style: ComposerChrome.effective,
+                    background: ComposerMaterial.effective,
+                    iosGlass: AppIosGlass.active.value,
+                    forceOpaqueChrome: opaque,
+                    backdropKey: pillBackdrop,
+                    attachAnim: attachAnim,
+                    replyTo: replyTo,
+                    forwardMessages: forwardMessages,
+                    myId: myId,
+                    hasText: hasText,
+                    uploadStatus: uploadStatus,
+                    messageController: messageController,
+                    messageFocusNode: messageFocusNode,
+                    voiceRec: voiceRec,
+                    note: note,
+                    onToggleStickerPanel: onToggleStickerPanel,
+                    onSendText: onSendMessage,
+                    onScheduleMessage: onScheduleMessage,
+                    onOpenAttach: onOpenAttach,
+                    onOpenAttachScheduled: onOpenAttachScheduled,
+                    onSendHistory: onSendHistory,
+                    onCancelReply: onCancelReply,
+                    onCancelForward: onCancelForward,
+                    onPickReplyChat: commentsMode || !crossChatReplySupported
+                        ? null
+                        : () => unawaited(onPickReplyChat()),
+                    formatElapsed: formatElapsed,
+                    contextMenuBuilder: (ctx, state) => formatContextMenu(
+                      messageController,
+                      ctx,
+                      state,
+                      pasteItem: pasteMenuItem(ctx, state),
+                    ),
+                    onPasteMedia: ClipboardMedia.supported
+                        ? onPasteMedia
+                        : null,
+                    onInsertContent: onInsertContent,
+                    isMuted: isMuted,
+                    onToggleMute: onToggleMute,
+                    channelSubscribed: channelSubscribed,
+                    canPostToChannel: canPostToChannel,
+                    channelSubscribing: channelSubscribing,
+                    onSubscribe: onSubscribe,
+                    onOpenSearch: onOpenSearch,
+                    showStickerButton: !commentsMode && selectedCommand == null,
+                    showAttachButton: !commentsMode && selectedCommand == null,
+                    forceSend: commentsMode || selectedCommand != null,
+                    readOnly: selectedCommand != null,
+                    hintText: selectedCommand != null
+                        ? AppLocalizations.of(context)!.composerHintCommandArgs
+                        : commentsMode
+                        ? AppLocalizations.of(context)!.composerHintComment
+                        : null,
+                  );
+                  final listen = scrollOpaque;
+                  if (listen == null) return bar(opaque: false);
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: listen,
+                    builder: (context, opaque, _) => bar(opaque: opaque),
+                  );
+                },
               ),
               StickerPanelView(
                 stickers: stickers,

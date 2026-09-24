@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/models/chat_folder.dart';
 import '../../../backend/modules/folders.dart';
@@ -11,6 +11,7 @@ import '../../widgets/confirm_dialog.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/sheet_helpers.dart';
 import 'folder_edit_sheet.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 enum _FolderAction { edit, create, delete }
 
@@ -23,7 +24,7 @@ Future<void> showFolderActionSheet(
   final canEdit = !isAllChats && (folder.canEditTitle || folder.canEditFilters);
   final canDelete = !isAllChats && folder.canDelete;
 
-  final action = await showModalBottomSheet<_FolderAction>(
+  final action = await showIosSheet<_FolderAction>(
     context: context,
     backgroundColor: cs.surfaceContainerHigh,
     shape: kSheetShape,
@@ -48,18 +49,18 @@ Future<void> showFolderActionSheet(
           ),
           if (canEdit)
             _ActionRow(
-              icon: Symbols.edit,
+              icon: IosSymbols.edit(context),
               label: 'Изменить',
               onTap: () => Navigator.pop(ctx, _FolderAction.edit),
             ),
           _ActionRow(
-            icon: Symbols.create_new_folder,
+            icon: IosSymbols.createNewFolder(context),
             label: 'Новая папка',
             onTap: () => Navigator.pop(ctx, _FolderAction.create),
           ),
           if (canDelete)
             _ActionRow(
-              icon: Symbols.delete,
+              icon: IosSymbols.delete(context),
               label: 'Удалить',
               color: cs.error,
               onTap: () => Navigator.pop(ctx, _FolderAction.delete),

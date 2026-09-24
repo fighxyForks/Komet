@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../widgets/custom_notification.dart';
 import '../widgets/glossy_pill.dart';
@@ -74,7 +74,7 @@ class DebugIdSearchSection extends StatelessWidget {
                 onPressed: isSearching ? null : onSearch,
                 child: isSearching
                     ? const SmallSpinner(size: 20)
-                    : const Icon(Symbols.search, size: 20),
+                    : Icon(IosSymbols.search(context), size: 20),
               ),
             ],
           ),
@@ -272,8 +272,7 @@ class _SearchResultCard extends StatelessWidget {
           ),
           IconButton(
             tooltip: 'Скопировать id',
-            icon: Icon(
-              Symbols.content_copy,
+            icon: Icon(IosSymbols.copy(context),
               size: 18,
               color: cs.onSurfaceVariant,
             ),
@@ -411,7 +410,7 @@ class _ErrorChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Symbols.error_outline, size: 16, color: cs.onErrorContainer),
+          Icon(IosSymbols.error(context), size: 16, color: cs.onErrorContainer),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../backend/modules/messages.dart';
 import '../../core/media/audio_file_track.dart';
@@ -340,8 +340,8 @@ class _PillSurface extends StatelessWidget {
                         animation: tick,
                         builder: (context, _) => _IconTap(
                           icon: isPlaying()
-                              ? Symbols.pause
-                              : Symbols.play_arrow,
+                              ? IosSymbols.pause(context)
+                              : IosSymbols.play(context),
                           color: cs.primary,
                           size: 19,
                           onTap: onToggle,
@@ -361,7 +361,7 @@ class _PillSurface extends StatelessWidget {
                       if (onSpeed != null)
                         _SpeedChip(label: _speedLabel(), onTap: onSpeed!),
                       _IconTap(
-                        icon: Symbols.close,
+                        icon: IosSymbols.close(context),
                         color: cs.onSurfaceVariant,
                         size: 17,
                         onTap: onClose,

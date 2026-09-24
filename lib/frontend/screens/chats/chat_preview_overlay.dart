@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/app_localizations.dart';
@@ -161,7 +161,7 @@ class _ChatPreviewOverlayState extends State<ChatPreviewOverlay>
 
   List<ChatMenuItem> _items(AppLocalizations l10n) => [
     ChatMenuItem(
-      icon: Symbols.chat,
+      icon: IosSymbols.chat(context),
       label: l10n.chatPreviewOpen,
       onTap: () => unawaited(_open()),
     ),

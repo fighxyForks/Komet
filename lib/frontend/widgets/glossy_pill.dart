@@ -97,6 +97,7 @@ class GlossyPill extends StatelessWidget {
   final bool liquid;
   final BackdropKey? backdropKey;
   final bool keepInkLayer;
+  final bool forceOpaque;
 
   const GlossyPill({
     super.key,
@@ -113,19 +114,21 @@ class GlossyPill extends StatelessWidget {
     this.liquid = false,
     this.backdropKey,
     this.keepInkLayer = false,
+    this.forceOpaque = false,
   }) : borderRadius =
            borderRadius ?? const BorderRadius.all(Radius.circular(100));
 
   bool get _inert => !keepInkLayer && onTap == null && onLongPress == null;
 
   double? _sigmaFor(Color base) =>
-      blurSigma != null && base.a < 1 ? blurSigma : null;
+      forceOpaque ? null : (blurSigma != null && base.a < 1 ? blurSigma : null);
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<VisualStyle>(
       valueListenable: AppVisualStyle.current,
       builder: (context, style, _) {
+        if (forceOpaque) return _flat(context);
         if (style == VisualStyle.materialYou) return _flat(context);
         if (liquid && LiquidGlass.isSupported) return _liquid(context);
         return ValueListenableBuilder<bool>(

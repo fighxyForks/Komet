@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:lottie/lottie.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_animations.dart';
-import '../../../core/config/app_fonts.dart';
 
 class LottiePolygonScreen extends StatelessWidget {
   const LottiePolygonScreen({super.key});
@@ -19,28 +18,9 @@ class LottiePolygonScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Symbols.chevron_left, size: 28),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Lottie полигон',
-          style: TextStyle(
-            fontFamily: displayFontOf(context),
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: cs.onSurface,
-          ),
-        ),
-        centerTitle: true,
-      ),
+    return IosSettingsScaffold(
+      title: 'Lottie полигон',
+      useConnectionTitle: false,
       body: SafeArea(
         top: false,
         child: GridView.count(

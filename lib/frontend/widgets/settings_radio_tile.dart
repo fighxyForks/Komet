@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 class SettingsRadioTile extends StatelessWidget {
   final Widget leading;
@@ -66,8 +66,8 @@ class SettingsRadioTile extends StatelessWidget {
               if (description != null) const SizedBox(width: 8),
               Icon(
                 selected
-                    ? Symbols.radio_button_checked
-                    : Symbols.radio_button_unchecked,
+                    ? IosSymbols.radioChecked(context)
+                    : IosSymbols.radioUnchecked(context),
                 color: selected ? cs.primary : cs.outline,
                 size: 22,
                 fill: selected ? 1 : 0,

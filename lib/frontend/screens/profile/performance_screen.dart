@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../widgets/connection_status.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 import '../../../core/config/app_cache_extent.dart';
 import '../../../core/utils/haptics.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class PerformanceScreen extends StatefulWidget {
   const PerformanceScreen({super.key});
@@ -91,12 +94,8 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     final cs = Theme.of(context).colorScheme;
     final hint = cs.onSurfaceVariant;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: 'Производительность',
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: 'Производительность',
       body: SafeArea(
         top: false,
         child: ListView(
@@ -111,7 +110,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                     'Кеш сообщений',
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -126,7 +125,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                     style: TextStyle(color: hint, fontSize: 12),
                   ),
                   const SizedBox(height: 4),
-                  Slider(
+                  IosSlider(
                     value: _value,
                     min: AppCacheExtent.min,
                     max: AppCacheExtent.max,

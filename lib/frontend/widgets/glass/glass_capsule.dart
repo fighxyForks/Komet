@@ -71,6 +71,7 @@ class GlassBackground extends StatelessWidget {
   final Color? tint;
   final bool shadow;
   final double sigma;
+  final bool forceOpaque;
   final Widget child;
 
   const GlassBackground({
@@ -79,6 +80,7 @@ class GlassBackground extends StatelessWidget {
     this.tint,
     this.shadow = true,
     this.sigma = GlassStyle.sigma,
+    this.forceOpaque = false,
     required this.child,
   });
 
@@ -86,6 +88,25 @@ class GlassBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final base = tint ?? GlassStyle.tint(cs);
+    final fill = forceOpaque
+        ? base.withValues(alpha: 1)
+        : base;
+    final painted = DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: borderRadius,
+        border: Border.all(color: GlassStyle.rim(cs), width: 0.6),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.alphaBlend(GlassStyle.highlight(cs), fill),
+            fill,
+          ],
+          stops: const [0, 0.6],
+        ),
+      ),
+      child: child,
+    );
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: borderRadius,
@@ -93,28 +114,15 @@ class GlassBackground extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(
-          filter: ui.ImageFilter.compose(
-            outer: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-            inner: const ColorFilter.matrix(GlassStyle.vibrancy),
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: borderRadius,
-              border: Border.all(color: GlassStyle.rim(cs), width: 0.6),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color.alphaBlend(GlassStyle.highlight(cs), base),
-                  base,
-                ],
-                stops: const [0, 0.6],
+        child: forceOpaque
+            ? painted
+            : BackdropFilter(
+                filter: ui.ImageFilter.compose(
+                  outer: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+                  inner: const ColorFilter.matrix(GlassStyle.vibrancy),
+                ),
+                child: painted,
               ),
-            ),
-            child: child,
-          ),
-        ),
       ),
     );
   }
@@ -131,6 +139,7 @@ class GlassCapsule extends StatelessWidget {
   final bool shadow;
   final Color? fallbackTint;
   final double fallbackSigma;
+  final bool forceOpaque;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final String? traceLabel;
@@ -147,6 +156,7 @@ class GlassCapsule extends StatelessWidget {
     this.shadow = true,
     this.fallbackTint,
     this.fallbackSigma = GlassStyle.sigma,
+    this.forceOpaque = false,
     this.onTap,
     this.onLongPress,
     this.traceLabel,
@@ -171,12 +181,34 @@ class GlassCapsule extends StatelessWidget {
   static String? traceLabelOf(Key? key) =>
       key is ValueKey<String> ? key.value : null;
 
+  Widget _tappable(Widget surface) {
+    if (onTap == null && onLongPress == null) return surface;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap == null ? null : _handleTap,
+      onLongPress: onLongPress,
+      child: SpringyTap(pressedScale: 0.94, child: surface),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final content = Padding(padding: padding, child: child);
     return NativeGlassGate(
       label: _traceLabel(),
       builder: (context, useNative) {
+        if (forceOpaque) {
+          return _tappable(
+            GlassBackground(
+              borderRadius: borderRadius ?? GlassStyle.capsule,
+              tint: fallbackTint ?? tint ?? Theme.of(context).colorScheme.surfaceContainerHigh,
+              sigma: 0,
+              shadow: shadow,
+              forceOpaque: true,
+              child: SizedBox(width: width, height: height, child: content),
+            ),
+          );
+        }
         if (useNative && allowNative) {
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -205,15 +237,10 @@ class GlassCapsule extends StatelessWidget {
           tint: fallbackTint ?? tint,
           sigma: fallbackSigma,
           shadow: shadow,
+          forceOpaque: forceOpaque,
           child: SizedBox(width: width, height: height, child: content),
         );
-        if (onTap == null && onLongPress == null) return surface;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap == null ? null : _handleTap,
-          onLongPress: onLongPress,
-          child: SpringyTap(pressedScale: 0.94, child: surface),
-        );
+        return _tappable(surface);
       },
     );
   }

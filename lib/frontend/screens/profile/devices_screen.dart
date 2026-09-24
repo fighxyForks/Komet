@@ -4,7 +4,9 @@ import 'dart:math';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/config/build_profile.dart';
@@ -12,7 +14,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart' show accountModule;
 import '../../../backend/modules/account.dart' show SessionInfo;
 import '../../widgets/custom_notification.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/prompt_dialog.dart';
@@ -20,6 +21,9 @@ import '../../widgets/small_spinner.dart';
 import '../../widgets/web_qr_login.dart';
 import 'web_qr_scan_screen.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});
@@ -96,7 +100,7 @@ class _DevicesScreenState extends State<DevicesScreen>
     if (canScan) {
       qr = await Navigator.push<String>(
         context,
-        MaterialPageRoute(builder: (context) => const WebQrScanScreen()),
+        iosPageRoute(context, builder: (context) => const WebQrScanScreen()),
       );
     } else {
       qr = await _showPasteQrDialog();
@@ -216,27 +220,8 @@ class _DevicesScreenState extends State<DevicesScreen>
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Symbols.chevron_left, size: 28),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: ConnectionTitleText(
-          l10n.devicesTitle,
-          style: TextStyle(
-            fontFamily: displayFontOf(context),
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: cs.onSurface,
-          ),
-        ),
-        centerTitle: true,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.devicesTitle,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -275,7 +260,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                     width: 1,
                   ),
                 ),
-                child: Icon(Symbols.devices, color: cs.onSurface, size: 28),
+                child: Icon(IosSymbols.devices(context), color: cs.onSurface, size: 28),
               ),
               const SizedBox(height: 16),
               Text(
@@ -292,29 +277,16 @@ class _DevicesScreenState extends State<DevicesScreen>
                 l10n.devicesPromoSubtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                   height: 1.3,
                 ),
               ),
               const SizedBox(height: 20),
-              FilledButton.icon(
+              IosSettingsButton(
                 onPressed: _startWebQrAuth,
-                icon: const Icon(Symbols.qr_code_scanner, size: 22),
-                label: Text(
-                  l10n.devicesScanQrButton,
-                  style: TextStyle(
-                    fontFamily: displayFontOf(context),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 14,
-                  ),
-                ),
+                icon: Symbols.qr_code_scanner,
+                label: l10n.devicesScanQrButton,
               ),
             ],
           ),
@@ -481,7 +453,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                       title,
                       style: TextStyle(
                         fontFamily: displayFontOf(context),
-                        fontSize: 16,
+                        fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                         fontWeight: FontWeight.w700,
                         color: cs.onSurface,
                       ),
@@ -529,7 +501,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                               color: isOnline
                                   ? Colors.greenAccent
                                   : cs.onSurfaceVariant,
-                              fontSize: 14,
+                              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -561,8 +533,7 @@ class _DevicesScreenState extends State<DevicesScreen>
                                   alpha: 0.5,
                                 ),
                               )
-                            : Icon(
-                                Symbols.add_circle,
+                            : Icon(IosSymbols.addCircle(context),
                                 size: 20,
                                 color: cs.onSurfaceVariant.withValues(
                                   alpha: 0.4,

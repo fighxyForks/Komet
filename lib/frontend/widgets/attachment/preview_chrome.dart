@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/config/app_colors.dart';
 
@@ -147,7 +147,7 @@ class _FileToggleState extends State<PreviewFileToggle> {
             Color.lerp(Colors.white, MediaAccent.of(context), 0.4),
             t,
           );
-          return Icon(Symbols.description, color: color, size: 24);
+          return Icon(IosSymbols.doc(context), color: color, size: 24);
         },
       ),
     );
@@ -167,10 +167,10 @@ class PreviewSendButton extends StatelessWidget {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: const SizedBox(
+        child: SizedBox(
           width: 52,
           height: 52,
-          child: Icon(Symbols.send, color: Colors.white, size: 24, fill: 1),
+          child: Icon(IosSymbols.send(context), color: Colors.white, size: 24, fill: 1),
         ),
       ),
     );

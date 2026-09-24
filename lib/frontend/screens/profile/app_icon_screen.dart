@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:flutter/services.dart';
 
-import '../../widgets/connection_status.dart';
 
 import '../../../core/config/app_icon.dart';
 import '../../../core/utils/haptics.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class AppIconScreen extends StatefulWidget {
   const AppIconScreen({super.key});
@@ -47,12 +49,8 @@ class _AppIconScreenState extends State<AppIconScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: 'Иконка приложения',
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: 'Иконка приложения',
       body: SafeArea(
         top: false,
         child: ListView(
@@ -68,7 +66,7 @@ class _AppIconScreenState extends State<AppIconScreen> {
                     'Внешний вид иконки',
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -104,7 +102,7 @@ class _AppIconScreenState extends State<AppIconScreen> {
                               label: icon.title,
                               labelStyle: TextStyle(
                                 color: cs.onSurface,
-                                fontSize: 16,
+                                fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                                 fontWeight: FontWeight.w600,
                               ),
                               selected: current == icon,

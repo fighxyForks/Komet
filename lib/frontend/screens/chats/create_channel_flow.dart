@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/chats.dart';
 import '../../../core/utils/image_utils.dart';
@@ -12,10 +13,13 @@ import '../../widgets/sheet_helpers.dart';
 import '../../widgets/swipe_route.dart';
 import 'chat_screen.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 Future<void> showCreateChannelFlow(BuildContext context) async {
   final cs = Theme.of(context).colorScheme;
-  await showModalBottomSheet<void>(
+  await showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: cs.surfaceContainerHigh,
@@ -146,7 +150,7 @@ class _CreateChannelFlowState extends State<_CreateChannelFlow> {
                   ),
                   IconButton(
                     onPressed: _creating ? null : () => Navigator.pop(context),
-                    icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                    icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -186,7 +190,7 @@ class _CreateChannelFlowState extends State<_CreateChannelFlow> {
                         hintText: 'Название канала',
                         hintStyle: TextStyle(
                           color: cs.onSurfaceVariant,
-                          fontSize: 16,
+                          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                         ),
                         border: InputBorder.none,
                         isDense: true,
@@ -268,7 +272,7 @@ class _PillButton extends StatelessWidget {
                 : (disabled
                       ? cs.onSurface.withValues(alpha: 0.4)
                       : cs.onSurface),
-            fontSize: 14,
+            fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
             fontWeight: FontWeight.w600,
           ),
         ),

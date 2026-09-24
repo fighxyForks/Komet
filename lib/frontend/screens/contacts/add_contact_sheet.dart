@@ -10,7 +10,12 @@ import 'package:komet/frontend/screens/contacts/open_contact_profile.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 Future<void> showAddContactSheet(BuildContext context) {
   return showBlurredCard<void>(
@@ -64,7 +69,7 @@ class _AddContactCardState extends State<_AddContactCard> {
 
   Future<void> _pickCountry() async {
     final picked = await Navigator.of(context).push<CountryName>(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => SelectCountryScreen(
           selectedCountry: _country,
           countries: api.registrationCountries,
@@ -205,12 +210,11 @@ class _AddContactCardState extends State<_AddContactCard> {
                     _country.phoneCode,
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  Icon(
-                    Symbols.keyboard_arrow_down,
+                  Icon(IosSymbols.chevronDown(context),
                     size: 20,
                     color: cs.onSurfaceVariant,
                   ),
@@ -291,15 +295,13 @@ class _AddContactCardState extends State<_AddContactCard> {
             ? SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: cs.primary,
+                child: IosActivityIndicator(strokeWidth: 2, color: cs.primary,
                 ),
               )
             : Text(
                 l10n.addContactSave,
-                style: const TextStyle(
-                  fontSize: 16,
+                style: TextStyle(
+                  fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -331,12 +333,10 @@ class _AddContactCardState extends State<_AddContactCard> {
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            child: FilledButton.tonal(
+            child: IosSettingsButton(
+              filled: false,
               onPressed: () => setState(() => _notFoundPhone = null),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: Text(l10n.addContactSearchOther),
+              label: l10n.addContactSearchOther,
             ),
           ),
         ],

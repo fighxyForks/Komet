@@ -14,6 +14,8 @@ import 'package:komet/frontend/screens/stories/story_viewer_screen.dart';
 import 'package:komet/frontend/widgets/encryption_lock_badge.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_metrics.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/online_dot.dart';
@@ -133,8 +135,8 @@ class ChatHeaderRow extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onPressed,
       child: SizedBox(
-        width: 42,
-        height: 46,
+        width: IosMetrics.minHitTarget,
+        height: IosMetrics.minHitTarget,
         child: Center(
           child: Icon(icon, size: 22, weight: 500, color: cs.onSurface),
         ),
@@ -154,8 +156,8 @@ class ChatHeaderRow extends StatelessWidget {
     final back = _backWithBadge(
       cs,
       SizedBox(
-        width: ios ? 46 : 56,
-        height: ios ? 46 : 56,
+        width: ios ? IosMetrics.minHitTarget : 56,
+        height: ios ? IosMetrics.minHitTarget : 56,
         child: _chromePill(
           context,
           key: const ValueKey('chat-header-back'),
@@ -169,10 +171,11 @@ class ChatHeaderRow extends StatelessWidget {
           child: Center(
             child: Icon(
               embedded
-                  ? Symbols.close
-                  : (ios ? Symbols.arrow_back_ios_new : Symbols.arrow_back),
+                  ? IosSymbols.close(context)
+                  : (ios
+                      ? IosSymbols.chevronBack(context)
+                      : IosSymbols.back(context)),
               color: cs.onSurface,
-              weight: 500,
               size: ios ? 21 : 24,
             ),
           ),
@@ -184,7 +187,7 @@ class ChatHeaderRow extends StatelessWidget {
       key: const ValueKey('chat-header-title'),
       onTap: onOpenInfo,
       padding: ios
-          ? const EdgeInsets.fromLTRB(5, 5, 14, 5)
+          ? const EdgeInsets.fromLTRB(5, 4, 14, 4)
           : const EdgeInsets.fromLTRB(6, 6, 16, 6),
       child: Row(
         mainAxisSize: ios ? MainAxisSize.min : MainAxisSize.max,
@@ -198,8 +201,7 @@ class ChatHeaderRow extends StatelessWidget {
                       radius: d / 2,
                       backgroundColor: cs.primary,
                       child: Icon(
-                        Symbols.bookmark,
-                        fill: 1,
+                        IosSymbols.bookmark(context),
                         color: cs.onPrimary,
                         size: d * 0.5,
                       ),
@@ -254,11 +256,9 @@ class ChatHeaderRow extends StatelessWidget {
                     if (isOfficial) ...[
                       const SizedBox(width: 4),
                       Icon(
-                        Symbols.verified,
+                        IosSymbols.verified(context),
                         color: cs.primary,
                         size: 16,
-                        weight: 600,
-                        fill: 1,
                       ),
                     ],
                   ],
@@ -288,7 +288,7 @@ class ChatHeaderRow extends StatelessWidget {
       key: const ValueKey('chat-header-actions'),
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: SizedBox(
-        height: ios ? 46 : 56,
+        height: ios ? IosMetrics.minHitTarget : 56,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -297,18 +297,24 @@ class ChatHeaderRow extends StatelessWidget {
               builder: (_, count, _) => count > 0
                   ? _headerAction(
                       ios,
-                      icon: Symbols.schedule,
+                      icon: IosSymbols.schedule(context),
                       onPressed: onOpenScheduled,
                     )
                   : const SizedBox.shrink(),
             ),
             if (showCall)
-              _headerAction(ios, icon: Symbols.call, onPressed: onCall),
+              _headerAction(
+                ios,
+                icon: IosSymbols.phone(context),
+                onPressed: onCall,
+              ),
             Builder(
               builder: (btnContext) => _headerAction(
                 ios,
                 key: const ValueKey('chat-header-menu'),
-                icon: ios ? Symbols.more_horiz : Symbols.more_vert,
+                icon: ios
+                    ? IosSymbols.ellipsisHoriz(context)
+                    : Symbols.more_vert,
                 onPressed: () => onMenu(btnContext),
               ),
             ),
@@ -344,7 +350,7 @@ class ChatHeaderRow extends StatelessWidget {
   Widget _materialRow(BuildContext context) {
     final nameStyle = TextStyle(
       color: cs.onSurface,
-      fontSize: 16,
+      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
       fontWeight: FontWeight.w600,
       fontFamily: displayFontOf(context),
     );
@@ -354,7 +360,7 @@ class ChatHeaderRow extends StatelessWidget {
           cs,
           IconButton(
             icon: Icon(
-              embedded ? Symbols.close : Symbols.arrow_back,
+              embedded ? IosSymbols.close(context) : IosSymbols.back(context),
               weight: 400,
               color: cs.onSurface,
             ),
@@ -380,8 +386,7 @@ class ChatHeaderRow extends StatelessWidget {
                         ? CircleAvatar(
                             radius: d / 2,
                             backgroundColor: cs.primary,
-                            child: Icon(
-                              Symbols.bookmark,
+                            child: Icon(IosSymbols.bookmark(context),
                               fill: 1,
                               color: cs.onPrimary,
                               size: d * 0.5,
@@ -434,8 +439,7 @@ class ChatHeaderRow extends StatelessWidget {
                           ),
                           if (isOfficial) ...[
                             const SizedBox(width: 4),
-                            Icon(
-                              Symbols.verified,
+                            Icon(IosSymbols.verified(context),
                               color: cs.primary,
                               size: 16,
                               weight: 600,
@@ -468,8 +472,7 @@ class ChatHeaderRow extends StatelessWidget {
           valueListenable: scheduledCount,
           builder: (_, count, _) => count > 0
               ? IconButton(
-                  icon: Icon(
-                    Symbols.schedule,
+                  icon: Icon(IosSymbols.schedule(context),
                     weight: 400,
                     color: cs.onSurface,
                   ),
@@ -479,12 +482,12 @@ class ChatHeaderRow extends StatelessWidget {
         ),
         if (showCall)
           IconButton(
-            icon: Icon(Symbols.call, weight: 400, color: cs.onSurface),
+            icon: Icon(IosSymbols.phone(context), weight: 400, color: cs.onSurface),
             onPressed: onCall,
           ),
         Builder(
           builder: (btnContext) => IconButton(
-            icon: Icon(Symbols.more_vert, weight: 400, color: cs.onSurface),
+            icon: Icon(IosSymbols.ellipsis(context), weight: 400, color: cs.onSurface),
             onPressed: () => onMenu(btnContext),
           ),
         ),

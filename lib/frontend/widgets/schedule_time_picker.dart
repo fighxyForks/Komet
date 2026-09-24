@@ -6,6 +6,7 @@ import 'custom_notification.dart';
 import 'sheet_helpers.dart';
 import '../../core/config/app_fonts.dart';
 import '../../core/config/app_shape.dart';
+import './glass/ios_sheet.dart';
 
 const List<String> _weekdayShort = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 
@@ -16,7 +17,7 @@ Future<DateTime?> showScheduleTimePicker(
   DateTime? initial,
   String title = 'Отправить позже',
 }) {
-  return showModalBottomSheet<DateTime>(
+  return showIosSheet<DateTime>(
     context: context,
     backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
     shape: kSheetShape,

@@ -3,7 +3,10 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/ios_metrics.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -14,7 +17,6 @@ import '../../../core/storage/app_database.dart';
 import '../../../core/utils/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/glossy_pill.dart';
@@ -22,6 +24,10 @@ import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 enum _EnvState { loading, notConfigured, ready }
 
@@ -319,7 +325,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
     final accountId = _accountId;
     if (chatId == null || accountId == null) return;
 
-    showModalBottomSheet(
+    showIosSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -347,7 +353,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
   }
 
   void _onCardTap(CloudFile file) {
-    showModalBottomSheet(
+    showIosSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -368,19 +374,12 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
-          onPressed: _onBack,
-        ),
-        title: ConnectionTitleText(
-          l10n.cloudStorageTitle,
-          style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600),
-        ),
+    return IosSettingsScaffold(
+      title: l10n.cloudStorageTitle,
+      leading: CupertinoButton(
+        padding: EdgeInsets.zero,
+        onPressed: _onBack,
+        child: Icon(IosSymbols.chevronLeft(context), size: 28, color: cs.primary),
       ),
       body: switch (_envState) {
         _EnvState.loading => const Center(child: SmallSpinner(size: 36)),
@@ -413,25 +412,15 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
               style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
             ),
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _isCreatingEnv ? null : _setupEnv,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 14,
-                ),
-                shape: AppShape.buttonBorder,
-              ),
-              child: _isCreatingEnv
-                  ? SmallSpinner(size: 18, color: cs.onPrimary)
-                  : Text(
-                      l10n.cloudStorageStart,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-            ),
+            _isCreatingEnv
+                ? const SizedBox(
+                    height: IosMetrics.minHitTarget,
+                    child: Center(child: SmallSpinner(size: 18)),
+                  )
+                : IosSettingsButton(
+                    onPressed: _setupEnv,
+                    label: l10n.cloudStorageStart,
+                  ),
           ],
         ),
       ),
@@ -601,24 +590,9 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
               style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
             ),
             const SizedBox(height: 24),
-            FilledButton(
+            IosSettingsButton(
               onPressed: _mode.isOpen ? null : _mode.open,
-              style: FilledButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: cs.onPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 14,
-                ),
-                shape: AppShape.buttonBorder,
-              ),
-              child: Text(
-                l10n.cloudStorageUpload,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              label: l10n.cloudStorageUpload,
             ),
           ],
         ),
@@ -636,7 +610,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
         child: Opacity(
           opacity: t,
           child: _CornerAction(
-            icon: Symbols.upload_file,
+            icon: IosSymbols.uploadFile(context),
             label: l10n.cloudStorageFromFile,
             onTap: _pickAndUploadFile,
           ),
@@ -648,7 +622,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
         child: Opacity(
           opacity: t,
           child: _CornerAction(
-            icon: Symbols.tag,
+            icon: IosSymbols.tag(context),
             label: l10n.cloudStorageById,
             onTap: _showSendByIdSheet,
           ),
@@ -731,7 +705,7 @@ class _CornerAction extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: cs.onSurface,
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1097,7 +1071,7 @@ class _FileDetailsSheetState extends State<_FileDetailsSheet> {
                   ? SmallSpinner(size: 20, color: cs.primary)
                   : IconButton(
                       icon: Icon(
-                        isExpired ? Symbols.add_link : Symbols.content_copy,
+                        isExpired ? IosSymbols.link(context) : IosSymbols.copy(context),
                         color: isExpired ? cs.error : cs.onSurfaceVariant,
                         size: 20,
                       ),
@@ -1221,7 +1195,7 @@ class _SendByIdSheetState extends State<_SendByIdSheet> {
             l10n.cloudStorageSendByIdTitle,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -1248,19 +1222,15 @@ class _SendByIdSheetState extends State<_SendByIdSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _sending ? null : _submit,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-              shape: AppShape.buttonBorder,
-            ),
-            child: _sending
-                ? SmallSpinner(size: 18, color: cs.onPrimary)
-                : Text(
-                    l10n.cloudStorageSend,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-          ),
+          _sending
+              ? const SizedBox(
+                  height: IosMetrics.minHitTarget,
+                  child: Center(child: SmallSpinner(size: 18)),
+                )
+              : IosSettingsButton(
+                  onPressed: _submit,
+                  label: l10n.cloudStorageSend,
+                ),
         ],
       ),
     );

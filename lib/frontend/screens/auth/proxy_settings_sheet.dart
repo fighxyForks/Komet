@@ -8,6 +8,8 @@ import '../../../main.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/labeled_settings_field.dart';
 import '../../widgets/sheet_helpers.dart';
+import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 
 class ProxySettingsSheet extends StatefulWidget {
   const ProxySettingsSheet({super.key});
@@ -200,11 +202,12 @@ class _ProxySettingsSheetState extends State<ProxySettingsSheet> {
               ),
 
               const SizedBox(height: 16),
-              FilledButton(
+              IosSettingsButton(
+                label: isActive ? l10n.proxyApply : l10n.proxyDisable,
                 onPressed: (_busy || !(isActive || _applied.isEnabled))
                     ? null
                     : () => _apply(l10n),
-                child: Text(isActive ? l10n.proxyApply : l10n.proxyDisable),
+                minHeight: kIosAuthPrimaryHeight,
               ),
             ],
           ),

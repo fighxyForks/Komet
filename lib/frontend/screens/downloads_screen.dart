@@ -22,6 +22,10 @@ import '../widgets/glass/ios_glass.dart';
 import '../widgets/small_spinner.dart';
 import '../widgets/sheet_helpers.dart';
 import '../widgets/share_unopenable_file.dart';
+import '../widgets/glass/ios_sheet.dart';
+import '../widgets/glass/ios_symbols.dart';
+import '../widgets/glass/ios_typography.dart';
+import '../widgets/glass/ios_auth_chrome.dart';
 
 class DownloadsScreen extends StatefulWidget {
   const DownloadsScreen({super.key});
@@ -184,7 +188,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
 
   Future<void> _settings() async {
     final l10n = AppLocalizations.of(context)!;
-    final clear = await showModalBottomSheet<bool>(
+    final clear = await showIosSheet<bool>(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       shape: kSheetShape,
@@ -192,8 +196,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: ListTile(
-            leading: Icon(
-              Symbols.delete_sweep,
+            leading: Icon(IosSymbols.deleteSweep(context),
               color: Theme.of(sheetContext).colorScheme.error,
             ),
             title: Text(l10n.downloadsClearHistory),
@@ -213,7 +216,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       anchorRect: anchor,
       items: [
         ChatMenuItem(
-          icon: Symbols.delete_sweep,
+          icon: IosSymbols.deleteSweep(context),
           label: l10n.downloadsClearHistory,
           destructive: true,
           onTap: () => unawaited(_confirmClear()),
@@ -243,9 +246,9 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final ios = IosGlass.of(context);
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: ios ? iosAuthBackground(context) : cs.surface,
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: ios ? iosAuthBackground(context) : cs.surface,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 4,
         leadingWidth: ios ? 64 : null,
@@ -253,7 +256,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             ? Center(
                 child: GlassIconButton(
                   key: const ValueKey('downloads-back'),
-                  icon: Symbols.arrow_back_ios_new,
+                  icon: IosSymbols.chevronBack(context),
                   iconSize: 20,
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                   onPressed: () => Navigator.of(context).maybePop(),
@@ -262,13 +265,16 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             : null,
         title: Text(
           l10n.downloadsTitle,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: ios ? IosTypography.headerTitle : 20,
+            fontWeight: ios ? IosTypography.semibold : FontWeight.w700,
+          ),
         ),
         actions: [
           if (ios)
             GlassIconButton(
               key: const ValueKey('downloads-settings'),
-              icon: Symbols.tune,
+              icon: IosSymbols.tune(context),
               iconSize: 21,
               tooltip: l10n.downloadsSettings,
               onPressedAt: _showIosSettingsMenu,
@@ -337,8 +343,7 @@ class _DownloadsEmpty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Symbols.download,
+            Icon(IosSymbols.download(context),
               size: 52,
               color: cs.onSurfaceVariant.withValues(alpha: 0.35),
             ),
@@ -380,18 +385,18 @@ class _DownloadTile extends StatelessWidget {
       items: [
         if (onGoToMessage != null)
           ChatMenuItem(
-            icon: Symbols.visibility,
+            icon: IosSymbols.visibility(context),
             label: l10n.sharedGoToMessage,
             onTap: onGoToMessage,
           ),
         if (onSaveToGallery != null)
           ChatMenuItem(
-            icon: Symbols.photo_library,
+            icon: IosSymbols.photoLibrary(context),
             label: l10n.photoViewerSaveToGallery,
             onTap: onSaveToGallery,
           ),
         ChatMenuItem(
-          icon: Symbols.download,
+          icon: IosSymbols.download(context),
           label: l10n.photoViewerSaveAs,
           onTap: onSaveAs,
         ),
@@ -445,7 +450,9 @@ class _DownloadTile extends StatelessWidget {
                 key: ValueKey('download-more-${record.cacheName}'),
                 tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
                 icon: Icon(
-                  IosGlass.of(context) ? Symbols.more_horiz : Symbols.more_vert,
+                  IosGlass.of(context)
+                      ? IosSymbols.ellipsisHoriz(context)
+                      : IosSymbols.ellipsis(context),
                   color: cs.onSurfaceVariant,
                 ),
                 onPressed: () => _openMenu(buttonContext),

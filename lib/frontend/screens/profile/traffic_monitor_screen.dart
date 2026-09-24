@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -16,6 +17,9 @@ import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class TrafficMonitorScreen extends StatefulWidget {
   const TrafficMonitorScreen({super.key});
@@ -91,7 +95,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -141,8 +145,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
-              Symbols.arrow_back,
+            icon: Icon(IosSymbols.chevronBack(context),
               color: cs.onSurface,
               size: 24,
               weight: 400,
@@ -185,8 +188,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
                   ),
                   IconButton(
                     tooltip: 'Очистить',
-                    icon: Icon(
-                      Symbols.delete_sweep,
+                    icon: Icon(IosSymbols.deleteSweep(context),
                       color: activeColor,
                       size: 24,
                       weight: 400,
@@ -236,7 +238,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: cs.onSurface,
-                        fontSize: 14,
+                        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'monospace',
                       ),
@@ -335,7 +337,7 @@ class _TrafficRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: cs.onSurface,
-                          fontSize: 14,
+                          fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'monospace',
                         ),
@@ -354,7 +356,7 @@ class _TrafficRow extends StatelessWidget {
                     ],
                     if (hasPayload)
                       Icon(
-                        expanded ? Symbols.expand_less : Symbols.expand_more,
+                        expanded ? IosSymbols.expandLess(context) : IosSymbols.expandMore(context),
                         color: cs.onSurfaceVariant,
                         size: 18,
                       ),
@@ -421,8 +423,7 @@ class _TrafficRow extends StatelessWidget {
           IconButton(
             tooltip: 'Скопировать',
             visualDensity: VisualDensity.compact,
-            icon: Icon(
-              Symbols.content_copy,
+            icon: Icon(IosSymbols.contentCopy(context),
               size: 16,
               color: cs.onSurfaceVariant,
             ),

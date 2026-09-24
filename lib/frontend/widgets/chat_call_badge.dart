@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 class ChatCallBadge extends StatelessWidget {
   final Color borderColor;
@@ -19,8 +19,7 @@ class ChatCallBadge extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: borderColor, width: 2),
       ),
-      child: Icon(
-        Symbols.call,
+      child: Icon(IosSymbols.phone(context),
         fill: 1,
         size: size * 0.55,
         color: cs.onPrimary,

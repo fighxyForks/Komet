@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../core/config/app_shape.dart';
+import 'glass/ios_glass.dart';
+import 'glass/ios_metrics.dart';
+import 'glass/ios_typography.dart';
 
 /// Standard rounded top shape for modal bottom sheets.
 const RoundedRectangleBorder kSheetShape = AppShape.sheetBorder;
@@ -23,19 +26,20 @@ class SheetButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
     final disabled = onTap == null;
     final fill = color ?? cs.primary;
     final labelColor = filled ? cs.onPrimary : (color ?? cs.onSurface);
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 44,
+        height: IosMetrics.minHitTarget,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: filled
               ? (disabled ? fill.withValues(alpha: 0.4) : fill)
               : cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(IosMetrics.minHitTarget / 2),
         ),
         child: Text(
           label,
@@ -43,8 +47,11 @@ class SheetButton extends StatelessWidget {
             color: disabled
                 ? labelColor.withValues(alpha: filled ? 0.85 : 0.4)
                 : labelColor,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+            fontSize: ios ? IosTypography.body : 14,
+            fontWeight: ios ? IosTypography.semibold : FontWeight.w600,
+            letterSpacing: ios
+                ? IosTypography.letterSpacing(IosTypography.body)
+                : null,
           ),
         ),
       ),
@@ -89,9 +96,10 @@ class SheetGrabber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
     return Container(
-      width: 40,
-      height: 4,
+      width: ios ? IosMetrics.grabberWidth : 40,
+      height: ios ? IosMetrics.grabberHeight : 4,
       margin: margin,
       decoration: BoxDecoration(
         color: cs.onSurfaceVariant.withValues(alpha: 0.35),

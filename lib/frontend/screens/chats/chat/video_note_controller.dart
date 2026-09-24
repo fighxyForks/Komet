@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show PlatformException, rootBundle;
 import 'package:lottie/lottie.dart' show AssetLottie;
 import 'package:path_provider/path_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../widgets/glossy_pill.dart';
 
@@ -470,8 +471,8 @@ class _StubPreview extends StatelessWidget {
         final hue = (ms / 40) % 360;
         return ColoredBox(
           color: HSVColor.fromAHSV(1, hue, 0.45, 0.35).toColor(),
-          child: const Center(
-            child: Icon(Symbols.videocam, size: 64, color: Colors.white54),
+          child: Center(
+            child: Icon(IosSymbols.videocam(context), size: 64, color: Colors.white54),
           ),
         );
       },

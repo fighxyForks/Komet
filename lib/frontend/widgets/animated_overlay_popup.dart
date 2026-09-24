@@ -5,6 +5,8 @@ mixin AnimatedOverlayPopup<T extends StatefulWidget>
   Duration get overlayForwardDuration;
   Duration get overlayReverseDuration;
   VoidCallback get onOverlayDismiss;
+  Curve get overlayForwardCurve => Curves.easeOutCubic;
+  Curve get overlayReverseCurve => Curves.easeInCubic;
 
   late final AnimationController _overlayController;
   late final Animation<double> overlayAnimation;
@@ -21,8 +23,8 @@ mixin AnimatedOverlayPopup<T extends StatefulWidget>
     );
     overlayAnimation = CurvedAnimation(
       parent: _overlayController,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
+      curve: overlayForwardCurve,
+      reverseCurve: overlayReverseCurve,
     );
     _overlayController.forward();
   }

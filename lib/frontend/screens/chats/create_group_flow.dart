@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/chats.dart';
 import '../../../backend/modules/contacts.dart';
@@ -17,10 +18,13 @@ import '../../widgets/small_spinner.dart';
 import '../../widgets/swipe_route.dart';
 import 'chat_screen.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 Future<void> showCreateGroupFlow(BuildContext context) async {
   final cs = Theme.of(context).colorScheme;
-  await showModalBottomSheet<void>(
+  await showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: cs.surfaceContainerHigh,
@@ -254,7 +258,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
               ),
             ],
           ),
@@ -285,8 +289,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
             decoration: InputDecoration(
               hintText: 'Найти по имени',
               hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-              prefixIcon: Icon(
-                Symbols.search,
+              prefixIcon: Icon(IosSymbols.search(context),
                 color: cs.onSurfaceVariant,
                 size: 20,
               ),
@@ -362,8 +365,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
                                   color: cs.primary,
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(
-                                  Symbols.check,
+                                child: Icon(IosSymbols.check(context),
                                   color: cs.onPrimary,
                                   size: 16,
                                 ),
@@ -415,7 +417,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
                 onPressed: _creating
                     ? null
                     : () => setState(() => _step = _Step.pickParticipants),
-                icon: Icon(Symbols.arrow_back, color: cs.onSurfaceVariant),
+                icon: Icon(IosSymbols.back(context), color: cs.onSurfaceVariant),
               ),
               Expanded(
                 child: Text(
@@ -429,7 +431,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
               ),
               IconButton(
                 onPressed: _creating ? null : () => Navigator.pop(context),
-                icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
               ),
             ],
           ),
@@ -468,7 +470,7 @@ class _CreateGroupFlowState extends State<_CreateGroupFlow> {
                     hintText: 'Название группы',
                     hintStyle: TextStyle(
                       color: cs.onSurfaceVariant,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     ),
                     border: InputBorder.none,
                     isDense: true,

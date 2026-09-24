@@ -41,6 +41,8 @@ import '../../widgets/chat_menu_overlay.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_metrics.dart';
+import '../../widgets/glass/ios_typography.dart';
 import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/settings_card.dart';
@@ -62,6 +64,8 @@ import 'join_requests_screen.dart';
 import 'profile_action_sheets.dart';
 import '../../../core/config/app_fonts.dart';
 import 'chat_info/chat_members_controller.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 enum ChatInfoTab { media }
 
@@ -684,7 +688,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                         padding: const EdgeInsets.only(left: 8),
                         child: GlassIconButton(
                           key: const ValueKey('info-back'),
-                          icon: Symbols.arrow_back_ios_new,
+                          icon: IosSymbols.chevronBack(context),
                           iconSize: 20,
                           tooltip: MaterialLocalizations.of(
                             context,
@@ -694,7 +698,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                       )
                     else
                       IconButton(
-                        icon: Icon(Symbols.arrow_back, color: iconColor),
+                        icon: Icon(IosSymbols.chevronBack(context), color: iconColor),
                         onPressed: () => Navigator.pop(context),
                       ),
                     Expanded(
@@ -715,9 +719,9 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                           padding: const EdgeInsets.only(right: 4),
                           child: Text(
                             '${_avatarIndex + 1}/$totalPhotos',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 14,
+                              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -846,13 +850,13 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           if (interactive && _avatarHover) ...[
             _avatarArrow(
               alignment: Alignment.centerLeft,
-              icon: Symbols.chevron_left,
+              icon: IosSymbols.chevronLeft(context),
               enabled: _avatarIndex > 0,
               onTap: () => _stepAvatar(-1),
             ),
             _avatarArrow(
               alignment: Alignment.centerRight,
-              icon: Symbols.chevron_right,
+              icon: IosSymbols.chevronRight(context),
               enabled: _avatarIndex < pages.length - 1,
               onTap: () => _stepAvatar(1),
             ),
@@ -1038,7 +1042,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         padding: const EdgeInsets.only(right: 8),
         child: GlassIconButton(
           key: const ValueKey('info-more'),
-          icon: Symbols.more_horiz,
+          icon: IosSymbols.ellipsisHoriz(context),
           tooltip: MaterialLocalizations.of(context).showMenuTooltip,
           onPressedAt: entries.isEmpty
               ? null
@@ -1060,12 +1064,12 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     }
     if (entries.isEmpty) {
       return IconButton(
-        icon: Icon(Symbols.more_vert, color: color),
+        icon: Icon(IosSymbols.moreVert(context), color: color),
         onPressed: null,
       );
     }
     return PopupMenuButton<VoidCallback>(
-      icon: Icon(Symbols.more_vert, color: color),
+      icon: Icon(IosSymbols.moreVert(context), color: color),
       onSelected: (action) => action(),
       itemBuilder: (_) => [
         for (final entry in entries)
@@ -1114,7 +1118,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     if (widget.chatType == 'DIALOG') {
       if (_isContact) {
         entries.add((
-          icon: Symbols.edit,
+          icon: IosSymbols.edit(context),
           label: l10n.editContactMenu,
           destructive: false,
           onTap: _openEdit,
@@ -1129,7 +1133,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         ));
       }
       entries.add((
-        icon: Symbols.delete,
+        icon: IosSymbols.delete(context),
         label: l10n.chatInfoMenuDeleteChat,
         destructive: true,
         onTap: _deleteChat,
@@ -1148,7 +1152,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
 
   void _openJoinRequests() {
     Navigator.of(context).push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => JoinRequestsScreen(chatId: widget.chatId),
       ),
     );
@@ -1202,11 +1206,17 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   }
 
   Widget _buildNameRow(ColorScheme cs, Color textColor, double t) {
+    final ios = IosGlass.of(context);
     final nameStyle = TextStyle(
       color: textColor,
-      fontSize: lerpDouble(22, 25, t)!,
+      fontSize: ios
+          ? lerpDouble(IosTypography.headerTitle, 28, t)!
+          : lerpDouble(22, 25, t)!,
       fontWeight: FontWeight.w700,
       fontFamily: displayFontOf(context),
+      letterSpacing: ios
+          ? IosTypography.letterSpacing(IosTypography.headerTitle)
+          : null,
     );
     final custom = _customName;
     final real = _realName;
@@ -1259,8 +1269,8 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                       ? Color.lerp(cs.primary, Colors.white, t)
                       : textColor.withValues(alpha: 0.7),
                   icon: AnimatedSlashIcon(
-                    icon: Symbols.visibility,
-                    slashedIcon: Symbols.visibility_off,
+                    icon: IosSymbols.visibility(context),
+                    slashedIcon: IosSymbols.visibilityOff(context),
                     slashed: !_showRealName,
                   ),
                   tooltip: real,
@@ -1314,7 +1324,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
 
   Widget _buildActions(ColorScheme cs) {
     final muteBtn = (
-      icon: Symbols.notifications,
+      icon: IosSymbols.notifications(context),
       slashedIcon: Symbols.notifications_off,
       slashed: _isMuted,
       label: _isMuted
@@ -1323,7 +1333,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       onTap: _muteBusy ? null : _toggleMute,
     );
     final chatBtn = (
-      icon: Symbols.chat_bubble,
+      icon: IosSymbols.chatBubble(context),
       slashedIcon: null,
       slashed: false,
       label: l10n.contactProfileActionChat,
@@ -1363,7 +1373,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         muteBtn,
         if (!_isBot)
           (
-            icon: Symbols.call,
+            icon: IosSymbols.call(context),
             slashedIcon: null,
             slashed: false,
             label: l10n.contactProfileActionCall,
@@ -1497,7 +1507,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     final active = CallController.instance.activeSession;
     if (active != null) {
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) => CallScreen(
             name: _customName,
             avatarUrl: avatarUrl,
@@ -1512,7 +1522,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       final session = await CallController.instance.startOutgoing(peerId);
       if (!mounted) return;
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) => CallScreen(
             name: _customName,
             avatarUrl: avatarUrl,
@@ -1713,7 +1723,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   }) {
     if (IosGlass.of(context)) {
       return IosGroupedSection(
-        radius: 18,
+        radius: IosMetrics.groupedRadius,
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
@@ -1735,7 +1745,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
 
   Widget _listSection(ColorScheme cs, Widget child) {
     if (IosGlass.of(context)) {
-      return IosGroupedSection(radius: 18, child: child);
+      return IosGroupedSection(radius: IosMetrics.groupedRadius, child: child);
     }
     return Container(
       decoration: BoxDecoration(
@@ -1893,7 +1903,14 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           children: [
             Text(
               label,
-              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(
+                color: IosGlass.of(context)
+                    ? IosPalette.secondaryLabel(cs)
+                    : cs.onSurfaceVariant,
+                fontSize: IosGlass.of(context)
+                    ? IosTypography.sectionHeader
+                    : 13,
+              ),
             ),
             const SizedBox(height: 4),
             FormattedMessageText(
@@ -1901,8 +1918,14 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
               ranges: const [],
               entityMode: TextEntityMode.copy,
               style: TextStyle(
-                color: isLink ? cs.primary : cs.onSurface,
-                fontSize: 16,
+                color: isLink
+                    ? cs.primary
+                    : (IosGlass.of(context)
+                        ? IosPalette.label(cs)
+                        : cs.onSurface),
+                fontSize: IosGlass.of(context)
+                    ? IosTypography.listTitle
+                    : 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1939,7 +1962,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
             ),
           ),
           IconButton(
-            icon: Icon(Symbols.qr_code_2, color: cs.primary, size: 22),
+            icon: Icon(IosSymbols.qrCode(context), color: cs.primary, size: 22),
             onPressed: () => showLinkQrSheet(
               context,
               name: widget.name,
@@ -2096,7 +2119,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           style: TextStyle(
             color: selected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 14,
+            fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
           ),
         ),
       ),
@@ -2291,7 +2314,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           child: SizedBox(
             width: 22,
             height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
+            child: IosActivityIndicator(strokeWidth: 2),
           ),
         ),
       );
@@ -2307,7 +2330,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(Symbols.expand_more, color: cs.primary, size: 26),
+            Icon(IosSymbols.expandMore(context), color: cs.primary, size: 26),
             const SizedBox(width: 14),
             Text(
               l10n.chatInfoShowMore,
@@ -2334,7 +2357,17 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           children: [
             Icon(icon, color: cs.primary, size: 26),
             const SizedBox(width: 14),
-            Text(label, style: TextStyle(color: cs.onSurface, fontSize: 16)),
+            Text(
+              label,
+              style: TextStyle(
+                color: IosGlass.of(context)
+                    ? IosPalette.label(cs)
+                    : cs.onSurface,
+                fontSize: IosGlass.of(context)
+                    ? IosTypography.listTitle
+                    : 16,
+              ),
+            ),
           ],
         ),
       ),
@@ -2410,14 +2443,28 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                   Text(
                     name,
                     style: TextStyle(
-                      color: cs.onSurface,
-                      fontSize: 15,
+                      color: IosGlass.of(context)
+                          ? IosPalette.label(cs)
+                          : cs.onSurface,
+                      fontSize: IosGlass.of(context)
+                          ? IosTypography.listTitle
+                          : 15,
                       fontWeight: FontWeight.w500,
+                      letterSpacing: IosGlass.of(context)
+                          ? IosTypography.letterSpacing(IosTypography.listTitle)
+                          : null,
                     ),
                   ),
                   Text(
                     sublabel,
-                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+                    style: TextStyle(
+                      color: IosGlass.of(context)
+                          ? IosPalette.secondaryLabel(cs)
+                          : cs.onSurfaceVariant,
+                      fontSize: IosGlass.of(context)
+                          ? IosTypography.listSubtitle
+                          : 13,
+                    ),
                   ),
                 ],
               ),
@@ -2745,7 +2792,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       icon: AnimatedRotation(
         turns: _extraContactExpanded ? 0.125 : 0,
         duration: const Duration(milliseconds: 220),
-        child: Icon(Symbols.add_circle, color: cs.primary, size: 22),
+        child: Icon(IosSymbols.addCircle(context), color: cs.primary, size: 22),
       ),
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

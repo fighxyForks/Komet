@@ -5,6 +5,7 @@ import '../../core/calls/call_link.dart';
 import '../screens/calls/call_screen.dart';
 import 'confirm_dialog.dart';
 import 'custom_notification.dart';
+import './glass/ios_route.dart';
 
 Future<bool> tryHandleCallLink(BuildContext context, String url) async {
   final token = CallLink.token(url);
@@ -57,7 +58,7 @@ Future<void> joinGroupCall(
     if (active == null) return;
     if (controller.activeJoinLink == token) {
       navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) =>
               CallScreen(name: name, session: active, isGroup: true),
         ),
@@ -71,7 +72,7 @@ Future<void> joinGroupCall(
   try {
     final session = await controller.joinByLink(token, isVideo: isVideo);
     navigator.push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => CallScreen(name: name, session: session, isGroup: true),
       ),
     );

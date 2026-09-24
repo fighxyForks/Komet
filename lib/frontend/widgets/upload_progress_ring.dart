@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 class UploadProgressRing extends StatelessWidget {
   final ValueListenable<List<double>> progress;
@@ -53,7 +53,7 @@ class UploadProgressRing extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(Symbols.close, size: iconSize, color: color),
+              Icon(IosSymbols.close(context), size: iconSize, color: color),
             ],
           ),
         );

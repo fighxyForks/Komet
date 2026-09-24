@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../core/config/app_fonts.dart';
 
 class DebugHeaderSection extends StatelessWidget {
@@ -11,8 +11,7 @@ class DebugHeaderSection extends StatelessWidget {
     return Row(
       children: [
         IconButton(
-          icon: Icon(
-            Symbols.arrow_back,
+          icon: Icon(IosSymbols.back(context),
             color: cs.onSurface,
             size: 24,
             weight: 400,

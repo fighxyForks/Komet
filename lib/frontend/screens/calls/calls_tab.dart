@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../../main.dart' show api, accountModule;
 import '../../../backend/modules/account.dart';
 import '../../../core/storage/app_database.dart';
@@ -22,6 +21,12 @@ import 'call_link_sheet.dart';
 import 'call_screen.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_tappable.dart';
+import '../../widgets/glass/ios_empty_state.dart';
 
 class CallsTab extends StatefulWidget {
   const CallsTab({super.key});
@@ -134,24 +139,25 @@ class _CallsTabState extends State<CallsTab>
   ) {
     final bool isMissed = call.status == CallStatus.missed;
 
-    String statusText;
-    IconData statusIcon;
+    final ios = IosGlass.of(context);
+    final String statusText;
+    final IconData statusIcon;
     switch (call.status) {
       case CallStatus.missed:
         statusText = 'Пропущенный';
-        statusIcon = Symbols.phone_missed;
+        statusIcon = IosSymbols.phoneMissed(context);
         break;
       case CallStatus.canceled:
         statusText = 'Отменённый';
-        statusIcon = Symbols.phone_disabled;
+        statusIcon = IosSymbols.phoneDisabled(context);
         break;
       case CallStatus.outgoing:
         statusText = 'Исходящий';
-        statusIcon = Symbols.call_made;
+        statusIcon = IosSymbols.callOutgoing(context);
         break;
       case CallStatus.incoming:
         statusText = 'Входящий';
-        statusIcon = Symbols.call_received;
+        statusIcon = IosSymbols.callIncoming(context);
         break;
     }
 
@@ -159,103 +165,116 @@ class _CallsTabState extends State<CallsTab>
         ? '${call.name} (${call.count})'
         : call.name;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: call.isGroup ? null : () => _callBack(call),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: call.isGroup ? cs.primaryContainer : null,
-                  border: Border.all(
-                    color: cs.primary.withValues(alpha: 0.1),
-                    width: 1,
-                  ),
-                ),
-                child: call.isGroup
-                    ? Icon(
-                        Symbols.groups,
-                        color: cs.onPrimaryContainer,
-                        size: 26,
-                      )
-                    : KometAvatar(
-                        name: call.name,
-                        imageUrl: call.avatarUrl,
-                        size: 48,
-                      ),
+    final secondary = ios
+        ? IosPalette.secondaryLabel(cs)
+        : cs.onSurfaceVariant;
+
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: call.isGroup ? cs.primaryContainer : null,
+              border: Border.all(
+                color: cs.primary.withValues(alpha: 0.1),
+                width: 1,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            child: call.isGroup
+                ? Icon(
+                    IosSymbols.people(context),
+                    color: cs.onPrimaryContainer,
+                    size: 26,
+                  )
+                : KometAvatar(
+                    name: call.name,
+                    imageUrl: call.avatarUrl,
+                    size: 48,
+                  ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  displayName,
+                  style: TextStyle(
+                    color: isMissed
+                        ? cs.error
+                        : (ios ? IosPalette.label(cs) : cs.onSurface),
+                    fontSize: ios ? IosTypography.listTitle : 16,
+                    fontWeight: ios ? IosType.title : FontWeight.w500,
+                    letterSpacing: ios
+                        ? IosTypography.letterSpacing(IosTypography.listTitle)
+                        : null,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 3),
+                Row(
                   children: [
-                    Text(
-                      displayName,
-                      style: TextStyle(
-                        color: isMissed ? cs.error : cs.onSurface,
-                        fontSize: 16,
-                        fontWeight: IosGlass.of(context)
-                            ? IosType.title
-                            : FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(statusIcon, size: 14, color: cs.onSurfaceVariant),
-                        const SizedBox(width: 4),
-                        Text(
-                          statusText,
-                          style: TextStyle(
-                            color: cs.onSurfaceVariant,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    Icon(statusIcon, size: 14, color: secondary),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          color: secondary,
+                          fontSize:
+                              ios ? IosTypography.listSubtitle : 14,
+                          letterSpacing: ios
+                              ? IosTypography.letterSpacing(
+                                  IosTypography.listSubtitle,
+                                )
+                              : null,
                         ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                _formatDate(call.time),
-                style: TextStyle(
-                  color: cs.onSurfaceVariant.withValues(alpha: 0.7),
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Builder(
-                builder: (btnContext) => IconButton(
-                  icon: Icon(
-                    Symbols.more_vert,
-                    color: cs.onSurfaceVariant,
-                    size: 20,
-                    weight: 400,
-                  ),
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
-                  onPressed: () => _showCallMenu(btnContext, call),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(width: 8),
+          Text(
+            _formatDate(call.time),
+            style: TextStyle(
+              color: secondary.withValues(alpha: 0.85),
+              fontSize: ios ? IosTypography.callLabel : 12,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Builder(
+            builder: (btnContext) => IconButton(
+              icon: Icon(
+                IosSymbols.ellipsis(context),
+                color: secondary,
+                size: 20,
+              ),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(
+                minWidth: 44,
+                minHeight: 44,
+              ),
+              onPressed: () => _showCallMenu(btnContext, call),
+            ),
+          ),
+        ],
       ),
+    );
+
+    return IosTappable(
+      onTap: call.isGroup ? null : () => _callBack(call),
+      child: row,
     );
   }
 
@@ -268,14 +287,14 @@ class _CallsTabState extends State<CallsTab>
       anchorRect: anchorRect,
       items: [
         ChatMenuItem(
-          icon: Symbols.delete,
+          icon: IosSymbols.delete(context),
           label: 'Удалить',
           destructive: true,
           onTap: () => _deleteCall(call),
         ),
         if (!call.isGroup)
           ChatMenuItem(
-            icon: Symbols.call,
+            icon: IosSymbols.phone(context),
             label: 'Перезвонить',
             onTap: () => _callBack(call),
           ),
@@ -312,7 +331,7 @@ class _CallsTabState extends State<CallsTab>
     final active = CallController.instance.activeSession;
     if (active != null) {
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) => CallScreen(
             name: call.name,
             avatarUrl: avatarUrl,
@@ -326,7 +345,7 @@ class _CallsTabState extends State<CallsTab>
       final session = await CallController.instance.startOutgoing(call.peerId);
       if (!mounted) return;
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) => CallScreen(
             name: call.name,
             avatarUrl: avatarUrl,
@@ -364,7 +383,7 @@ class _CallsTabState extends State<CallsTab>
                 label,
                 style: TextStyle(
                   color: cs.primary,
-                  fontSize: 16,
+                  fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,
@@ -405,7 +424,7 @@ class _CallsTabState extends State<CallsTab>
       final session = await controller.joinByLink(created.joinToken);
       if (!mounted) return;
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) =>
               CallScreen(name: name, session: session, isGroup: true),
         ),
@@ -459,8 +478,12 @@ class _CallsTabState extends State<CallsTab>
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? cs.primary : cs.onSurfaceVariant,
-            fontSize: 16,
+            color: isSelected
+                ? cs.primary
+                : (IosGlass.of(context)
+                    ? IosPalette.secondaryLabel(cs)
+                    : cs.onSurfaceVariant),
+            fontSize: IosGlass.of(context) ? IosTypography.body : 16,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -476,25 +499,34 @@ class _CallsTabState extends State<CallsTab>
         ? _calls.where((c) => c.status == CallStatus.missed).toList()
         : _calls;
 
+    final ios = IosGlass.of(context);
+    final bg = ios ? IosPalette.grouped(cs) : spectrumSurfaceColor(cs);
+
     return Scaffold(
-      backgroundColor: spectrumSurfaceColor(cs),
+      backgroundColor: bg,
       body: SafeArea(
         bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: EdgeInsets.fromLTRB(20, ios ? 8 : 16, 20, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Звонки',
                     style: TextStyle(
-                      color: cs.onSurface,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
+                      color: ios ? IosPalette.label(cs) : cs.onSurface,
+                      fontSize: ios ? IosTypography.largeTitle : 24,
+                      fontWeight:
+                          ios ? IosType.largeTitle : FontWeight.w700,
                       fontFamily: displayFontOf(context),
+                      letterSpacing: ios
+                          ? IosTypography.letterSpacing(
+                              IosTypography.largeTitle,
+                            )
+                          : null,
                     ),
                   ),
                   const ConnectionStatusLine(),
@@ -508,7 +540,7 @@ class _CallsTabState extends State<CallsTab>
                   Expanded(
                     child: _buildLinkAction(
                       cs,
-                      icon: Symbols.link,
+                      icon: IosSymbols.link(context),
                       label: 'Создать звонок',
                       onTap: _createGroupCall,
                     ),
@@ -516,7 +548,7 @@ class _CallsTabState extends State<CallsTab>
                   Expanded(
                     child: _buildLinkAction(
                       cs,
-                      icon: Symbols.group_add,
+                      icon: IosSymbols.personAddGroup(context),
                       label: 'Присоединиться',
                       onTap: _joinGroupCall,
                       alignEnd: true,
@@ -539,14 +571,9 @@ class _CallsTabState extends State<CallsTab>
               child: _isLoading
                   ? const Center(child: SmallSpinner(size: 36))
                   : filteredCalls.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Нет звонков',
-                        style: TextStyle(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 16,
-                        ),
-                      ),
+                  ? IosEmptyState(
+                      icon: IosSymbols.phone(context),
+                      message: 'Нет звонков',
                     )
                   : ListView.builder(
                       physics: const BouncingScrollPhysics(),

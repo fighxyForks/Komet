@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../screens/auth/login_screen.dart';
+import '../widgets/glass/ios_route.dart';
 
 class DebugQuickActionsSection extends StatelessWidget {
   final VoidCallback onExportLog;
@@ -79,7 +81,7 @@ class DebugQuickActionsSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                iosPageRoute(context, builder: (_) => const LoginScreen()),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -118,8 +120,7 @@ class DebugQuickActionsSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Icon(
-                      Symbols.chevron_right,
+                    Icon(IosSymbols.chevronRight(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,

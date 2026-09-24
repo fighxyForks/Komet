@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/utils/debouncer.dart';
@@ -188,7 +188,7 @@ class _StickerPanelState extends State<StickerPanel>
         _Section(
           title: 'Недавние',
           stickerIds: recents,
-          icon: Symbols.schedule,
+          icon: IosSymbols.schedule(context),
         ),
       );
     }
@@ -428,8 +428,7 @@ class _StickerPanelState extends State<StickerPanel>
                       fit: BoxFit.contain,
                       memCacheWidth: 84,
                       memCacheHeight: 84,
-                      errorWidget: (_, _, _) => Icon(
-                        Symbols.image,
+                      errorWidget: (_, _, _) => Icon(IosSymbols.photo(context),
                         size: 20,
                         color: cs.onSurfaceVariant,
                       ),
@@ -518,7 +517,7 @@ class _StickerPanelState extends State<StickerPanel>
         child: Row(
           children: [
             const SizedBox(width: 12),
-            Icon(Symbols.search, size: 22, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.search(context), size: 22, color: cs.onSurfaceVariant),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
@@ -547,8 +546,7 @@ class _StickerPanelState extends State<StickerPanel>
                 onTap: _clearSearch,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Icon(
-                    Symbols.close,
+                  child: Icon(IosSymbols.close(context),
                     size: 20,
                     color: cs.onSurfaceVariant,
                   ),

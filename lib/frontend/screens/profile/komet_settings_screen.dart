@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
-import '../../widgets/connection_status.dart';
 
 import '../../../core/config/build_profile.dart';
 import '../../../core/config/komet_settings.dart';
@@ -9,20 +10,16 @@ import '../../../main.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import 'plugins_screen.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class KometSettingsScreen extends StatelessWidget {
   const KometSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: 'Komet',
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: 'Komet',
       body: SafeArea(
         top: false,
         child: ListView(
@@ -41,7 +38,7 @@ class KometSettingsScreen extends StatelessWidget {
                   label: 'Плагины',
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const PluginsScreen()),
+                    iosPageRoute(context, builder: (_) => const PluginsScreen()),
                   ),
                 ),
                 if (BuildProfile.hiddenContentViewers) ...[
@@ -70,7 +67,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.fullTimestamp,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.schedule,
+                    icon: IosSymbols.schedule(context),
                     label: 'View full timestamp',
                     subtitle: 'Показывать время в секундах у сообщений',
                     value: value,
@@ -115,7 +112,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.archiveOnPull,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.archive,
+                    icon: IosSymbols.archive(context),
                     label: 'Pull-down archive',
                     subtitle:
                         'Прятать архив и показывать его, если потянуть '
@@ -137,7 +134,7 @@ class KometSettingsScreen extends StatelessWidget {
                 ValueListenableBuilder<bool>(
                   valueListenable: KometSettings.ghostMode,
                   builder: (context, value, _) => SettingsToggleTile(
-                    icon: Symbols.visibility_off,
+                    icon: IosSymbols.visibilityOff(context),
                     label: 'Ghost Mode',
                     subtitle: 'Вас не видно в сети',
                     value: value,

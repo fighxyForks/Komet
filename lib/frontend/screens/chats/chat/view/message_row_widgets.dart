@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/backend/modules/animoji.dart' show AnimojiModule;
 import 'package:komet/backend/modules/message_info.dart';
 import 'package:komet/backend/modules/messages.dart' show CachedMessage;
@@ -20,6 +19,8 @@ import 'package:komet/frontend/widgets/animated_text_swap.dart';
 import 'package:komet/frontend/widgets/directional_drag_recognizer.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';
 import 'package:komet/frontend/widgets/message_actions_overlay.dart'
     show
@@ -136,7 +137,11 @@ class _SwipeToReplyState extends State<SwipeToReply>
                     color: cs.surfaceContainerHighest,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Symbols.reply, size: 20, color: cs.primary),
+                  child: Icon(
+                    IosSymbols.reply(context),
+                    size: 20,
+                    color: cs.primary,
+                  ),
                 ),
               ),
             ),
@@ -213,7 +218,7 @@ class PinnedMessageBanner extends StatelessWidget {
                       style: TextStyle(
                         color: cs.primary,
                         fontWeight: FontWeight.w600,
-                        fontSize: ios ? 13 : 14,
+                        fontSize: ios ? IosTypography.callout : 14,
                         height: ios ? 1.15 : null,
                       ),
                     ),
@@ -229,7 +234,10 @@ class PinnedMessageBanner extends StatelessWidget {
               if (onUnpin != null) ...[
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+                  icon: Icon(
+                    IosSymbols.close(context),
+                    color: cs.onSurfaceVariant,
+                  ),
                   iconSize: 20,
                   visualDensity: VisualDensity.compact,
                   onPressed: onUnpin,
@@ -350,7 +358,7 @@ class _PinnedMessageTextState extends State<PinnedMessageText> {
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
         color: widget.color,
-        fontSize: 14,
+        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
       ),
     );
   }

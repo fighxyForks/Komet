@@ -20,6 +20,10 @@ import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ScheduledMessagesScreen extends StatefulWidget {
   final int chatId;
@@ -95,7 +99,7 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
     );
     final cs = Theme.of(context).colorScheme;
 
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showIosSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cs.surfaceContainerHigh,
@@ -156,7 +160,7 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
                   ),
                   child: Row(
                     children: [
-                      Icon(Symbols.schedule, size: 18, color: cs.primary),
+                      Icon(IosSymbols.schedule(context), size: 18, color: cs.primary),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -168,7 +172,7 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
                           ),
                         ),
                       ),
-                      Icon(Symbols.edit, size: 16, color: cs.onSurfaceVariant),
+                      Icon(IosSymbols.edit(context), size: 16, color: cs.onSurfaceVariant),
                     ],
                   ),
                 ),
@@ -248,7 +252,7 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
             Text(
               l10n.scheduledAppBarTitle,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                 fontWeight: FontWeight.w600,
                 fontFamily: displayFontOf(context),
               ),
@@ -286,7 +290,7 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Symbols.schedule, size: 56, color: cs.onSurfaceVariant),
+        Icon(IosSymbols.schedule(context), size: 56, color: cs.onSurfaceVariant),
         const SizedBox(height: 12),
         Text(
           AppLocalizations.of(context)!.scheduledEmpty,
@@ -350,7 +354,7 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
                             attach.$2,
                             style: TextStyle(
                               color: cs.onSurfaceVariant,
-                              fontSize: 14,
+                              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -373,8 +377,7 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(
-                        Symbols.schedule,
+                      Icon(IosSymbols.schedule(context),
                         size: 14,
                         color: cs.primary,
                         weight: 500,
@@ -395,11 +398,11 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
             ),
             const SizedBox(width: 4),
             IconButton(
-              icon: Icon(Symbols.edit, color: cs.onSurfaceVariant, weight: 400),
+              icon: Icon(IosSymbols.edit(context), color: cs.onSurfaceVariant, weight: 400),
               onPressed: () => _edit(msg),
             ),
             IconButton(
-              icon: Icon(Symbols.delete, color: cs.error, weight: 400),
+              icon: Icon(IosSymbols.delete(context), color: cs.error, weight: 400),
               onPressed: () => _delete(msg),
             ),
           ],

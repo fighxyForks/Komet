@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'chat_header.dart';
 import '../../../../../core/config/app_fonts.dart';
@@ -42,7 +43,7 @@ class SelectionTopBar extends StatelessWidget {
         child: Row(
           children: [
             IconButton(
-              icon: Icon(Symbols.close, color: cs.onSurface),
+              icon: Icon(IosSymbols.close(context), color: cs.onSurface),
               onPressed: onClear,
             ),
             const SizedBox(width: 4),
@@ -61,16 +62,16 @@ class SelectionTopBar extends StatelessWidget {
             ),
             if (copyMsgs.isNotEmpty)
               IconButton(
-                icon: Icon(Symbols.content_copy, color: cs.onSurface),
+                icon: Icon(IosSymbols.copy(context), color: cs.onSurface),
                 onPressed: () => onCopy(copyMsgs),
               ),
             if (editMsg != null)
               IconButton(
-                icon: Icon(Symbols.edit, color: cs.onSurface),
+                icon: Icon(IosSymbols.edit(context), color: cs.onSurface),
                 onPressed: () => onEdit(editMsg!),
               ),
             IconButton(
-              icon: Icon(Symbols.delete, color: cs.onSurface),
+              icon: Icon(IosSymbols.delete(context), color: cs.onSurface),
               onPressed: onDelete,
             ),
           ],
@@ -116,7 +117,7 @@ class SelectionTopBar extends StatelessWidget {
         onTap: onClear,
         child: Center(
           child: Icon(
-            Symbols.close,
+            IosSymbols.close(context),
             color: cs.onSurface,
             weight: 500,
             size: ios ? 21 : 24,
@@ -138,7 +139,7 @@ class SelectionTopBar extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: ios ? 16 : 18,
+              fontSize: ios ? IosTypography.headerTitle : 18,
               fontWeight: FontWeight.w600,
               fontFamily: displayFontOf(context),
             ),
@@ -154,10 +155,10 @@ class SelectionTopBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (copyMsgs.isNotEmpty)
-              actionBtn(Symbols.content_copy, () => onCopy(copyMsgs)),
+              actionBtn(IosSymbols.copy(context), () => onCopy(copyMsgs)),
             if (editMsg != null)
-              actionBtn(Symbols.edit, () => onEdit(editMsg!)),
-            actionBtn(Symbols.delete, onDelete),
+              actionBtn(IosSymbols.edit(context), () => onEdit(editMsg!)),
+            actionBtn(IosSymbols.delete(context), onDelete),
           ],
         ),
       ),
@@ -219,7 +220,7 @@ class SelectionBottomBar extends StatelessWidget {
                 child: _pill(
                   context,
                   cs,
-                  icon: Symbols.reply,
+                  icon: IosSymbols.reply(context),
                   label: 'Ответить',
                   iconLeading: false,
                   onTap: onReply,
@@ -233,7 +234,7 @@ class SelectionBottomBar extends StatelessWidget {
                 child: _pill(
                   context,
                   cs,
-                  icon: Symbols.forward,
+                  icon: IosSymbols.forward(context),
                   label: 'Переслать',
                   iconLeading: true,
                   onTap: onForward,
@@ -259,7 +260,7 @@ class SelectionBottomBar extends StatelessWidget {
       label,
       style: TextStyle(
         color: cs.onSurface,
-        fontSize: 16,
+        fontSize: IosGlass.of(context) ? IosTypography.body : 16,
         fontWeight: FontWeight.w600,
         fontFamily: displayFontOf(context),
       ),

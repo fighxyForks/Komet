@@ -4,9 +4,9 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../backend/modules/messages.dart';
@@ -32,6 +32,11 @@ import 'chat_menu_overlay.dart';
 import 'custom_notification.dart';
 import 'liquid_glass.dart';
 import 'small_spinner.dart';
+import 'glass/ios_auth_chrome.dart';
+import 'glass/ios_glass.dart';
+import 'glass/ios_symbols.dart';
+import 'glass/ios_typography.dart';
+import 'glass/glass_menu.dart';
 
 class PhotoViewerActions {
   final void Function(String messageId, int time)? goToMessage;
@@ -710,7 +715,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
       items: [
         if (actions?.goToMessage != null)
           ChatMenuItem(
-            icon: Symbols.visibility,
+            icon: IosSymbols.visibility(context),
             label: l10n.sharedGoToMessage,
             onTap: () => _popThen(
               () => actions!.goToMessage!(item.messageId, item.time),
@@ -718,13 +723,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
           ),
         if (actions?.forward != null)
           ChatMenuItem(
-            icon: Symbols.forward,
+            icon: IosSymbols.forward(context),
             label: l10n.msgActionsForward,
             onTap: () => _popThen(() => actions!.forward!(item.messageId)),
           ),
         if (actions?.delete != null)
           ChatMenuItem(
-            icon: Symbols.delete,
+            icon: IosSymbols.delete(context),
             label: l10n.msgActionsDelete,
             destructive: true,
             dividerAfter: true,
@@ -733,18 +738,18 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
           ),
         if (savesToGallery)
           ChatMenuItem(
-            icon: Symbols.photo_library,
+            icon: IosSymbols.photoLibrary(context),
             label: l10n.photoViewerSaveToGallery,
             onTap: _saveToDevice,
           ),
         ChatMenuItem(
-          icon: Symbols.download,
+          icon: IosSymbols.download(context),
           label: l10n.photoViewerSaveAs,
           onTap: _saveAs,
         ),
         if (actions?.viewAllMedia != null)
           ChatMenuItem(
-            icon: Symbols.grid_view,
+            icon: IosSymbols.grid(context),
             label: l10n.mediaViewerViewAll,
             onTap: () => _popThen(actions!.viewAllMedia!),
           ),
@@ -786,13 +791,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                         if (_index < _items.length - 1)
                           Align(
                             alignment: Alignment.centerLeft,
-                            child: _arrow(Symbols.chevron_left, () => _step(1)),
+                            child: _arrow(IosSymbols.chevronLeft(context), () => _step(1)),
                           ),
                         if (_index > 0)
                           Align(
                             alignment: Alignment.centerRight,
                             child: _arrow(
-                              Symbols.chevron_right,
+                              IosSymbols.chevronRight(context),
                               () => _step(-1),
                             ),
                           ),
@@ -800,35 +805,57 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                           top: padding.top + 8,
                           left: 8,
                           right: 8,
-                          child: Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Symbols.close,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () => Navigator.of(context).pop(),
-                              ),
-                              const Spacer(),
-                              if (_saving && _current.isVideo)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 14),
-                                  child: SmallSpinner(
-                                    size: 20,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              if (hasMenu)
-                                Builder(
-                                  builder: (btnContext) => IconButton(
-                                    icon: const Icon(
-                                      Symbols.more_vert,
-                                      color: Colors.white,
+                          child: Builder(
+                            builder: (ctx) {
+                              final iosChrome = IosGlass.of(ctx);
+                              return Row(
+                                children: [
+                                  if (iosChrome)
+                                    IosViewerGlassButton(
+                                      icon: IosSymbols.close(ctx),
+                                      onPressed: () =>
+                                          Navigator.of(ctx).pop(),
+                                    )
+                                  else
+                                    IconButton(
+                                      icon: Icon(IosSymbols.close(context),
+                                        color: Colors.white,
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.of(ctx).pop(),
                                     ),
-                                    onPressed: () => _openMenu(btnContext),
-                                  ),
-                                ),
-                            ],
+                                  const Spacer(),
+                                  if (_saving && _current.isVideo)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                      ),
+                                      child: SmallSpinner(
+                                        size: 20,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  if (hasMenu)
+                                    Builder(
+                                      builder: (btnContext) => iosChrome
+                                          ? IosViewerGlassButton(
+                                              icon: IosSymbols.ellipsisHoriz(
+                                                btnContext,
+                                              ),
+                                              onPressed: () =>
+                                                  _openMenu(btnContext),
+                                            )
+                                          : IconButton(
+                                              icon: Icon(IosSymbols.ellipsis(context),
+                                                color: Colors.white,
+                                              ),
+                                              onPressed: () =>
+                                                  _openMenu(btnContext),
+                                            ),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                         Positioned(
@@ -961,13 +988,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                 IconButton(
                   icon: _saving
                       ? const SmallSpinner(size: 20, color: Colors.white)
-                      : const Icon(Symbols.download, color: Colors.white),
+                      : Icon(IosSymbols.download(context), color: Colors.white),
                   onPressed: _saving ? null : _saveToDevice,
                   tooltip: l10n.sharedDownload,
                 ),
               IconButton(
-                icon: const Icon(
-                  Symbols.rotate_90_degrees_ccw,
+                icon: Icon(
+                  IosSymbols.rotate(context),
                   color: Colors.white,
                 ),
                 onPressed: _rotate,
@@ -1030,9 +1057,9 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
       child: SingleChildScrollView(
         child: Text(
           caption,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 15,
+            fontSize: IosGlass.of(context) ? IosTypography.body : 15,
             height: 1.3,
           ),
         ),
@@ -1057,9 +1084,9 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
             widget.isFile
                 ? l10n.photoViewerCounterFile(total)
                 : l10n.mediaViewerCounter(position, total),
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.callout : 16,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1118,7 +1145,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
   }
 
   Widget _broken() =>
-      const Icon(Symbols.broken_image, color: Colors.white54, size: 64);
+      Icon(IosSymbols.brokenImage(context), color: Colors.white54, size: 64);
 }
 
 class _VideoPlaybackSession extends ChangeNotifier {
@@ -1391,7 +1418,7 @@ class _VideoSurface extends StatelessWidget {
                         aspectRatio: session.value!.aspectRatio,
                         child: VideoPlayer(session._controller!),
                       )
-                    : _buildVideoPreview(session.attachment),
+                    : _buildVideoPreview(context, session.attachment),
               ),
             ),
             if (session.loading || session.buffering)
@@ -1402,20 +1429,20 @@ class _VideoSurface extends StatelessWidget {
     );
   }
 
-  Widget _buildVideoPreview(VideoAttachment attachment) {
+  Widget _buildVideoPreview(BuildContext context, VideoAttachment attachment) {
     final url =
         attachment.thumbnail ??
         attachment.baseUrl ??
         attachment.previewData ??
         '';
     if (url.isEmpty) {
-      return const Icon(Symbols.videocam, color: Colors.white38, size: 64);
+      return Icon(IosSymbols.videocam(context), color: Colors.white38, size: 64);
     }
     return CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.contain,
       errorWidget: (_, _, _) =>
-          const Icon(Symbols.videocam, color: Colors.white38, size: 64),
+          Icon(IosSymbols.videocam(context), color: Colors.white38, size: 64),
     );
   }
 }
@@ -1434,7 +1461,7 @@ class _VideoErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Symbols.error, color: Colors.white54, size: 64),
+          Icon(IosSymbols.error(context), color: Colors.white54, size: 64),
           const SizedBox(height: 12),
           Text(
             l10n.videoViewerFailed,
@@ -1548,8 +1575,8 @@ class _VideoControlPanel extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       AnimatedSlashIcon(
-                        icon: Symbols.volume_up,
-                        slashedIcon: Symbols.volume_off,
+                        icon: IosSymbols.volumeUp(context),
+                        slashedIcon: IosSymbols.volumeOff(context),
                         slashed: volume == 0,
                         color: Colors.white,
                         size: 20,
@@ -1569,7 +1596,7 @@ class _VideoControlPanel extends StatelessWidget {
                   child: IconButton(
                     key: const ValueKey('video-play-toggle'),
                     icon: Icon(
-                      isPlaying ? Symbols.pause : Symbols.play_arrow,
+                      isPlaying ? IosSymbols.pause(context) : IosSymbols.play(context),
                       color: Colors.white,
                       fill: 1,
                     ),
@@ -1595,7 +1622,10 @@ class _VideoControlPanel extends StatelessWidget {
                 width: 42,
                 child: Text(
                   _formatViewerDuration(position),
-                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: IosGlass.of(context) ? IosTypography.callLabel : 11,
+                  ),
                 ),
               ),
               Expanded(
@@ -1613,7 +1643,10 @@ class _VideoControlPanel extends StatelessWidget {
                 child: Text(
                   _formatViewerDuration(duration),
                   textAlign: TextAlign.end,
-                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: IosGlass.of(context) ? IosTypography.callLabel : 11,
+                  ),
                 ),
               ),
             ],
@@ -1639,6 +1672,20 @@ class _ViewerSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final v = value.clamp(0, max).toDouble();
+    if (IosGlass.of(context)) {
+      return SizedBox(
+        height: 28,
+        child: CupertinoSlider(
+          min: 0,
+          max: max <= 0 ? 1 : max,
+          value: max <= 0 ? 0 : v,
+          activeColor: Colors.white,
+          onChanged: onChanged,
+          onChangeEnd: onChangeEnd,
+        ),
+      );
+    }
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
         trackHeight: 2,
@@ -1651,7 +1698,7 @@ class _ViewerSlider extends StatelessWidget {
       child: Slider(
         min: 0,
         max: max,
-        value: value.clamp(0, max).toDouble(),
+        value: v,
         onChanged: onChanged,
         onChangeEnd: onChangeEnd,
       ),
@@ -1688,11 +1735,56 @@ class _VideoSettingsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final ios = IosGlass.of(context);
+    if (ios) {
+      return Builder(
+        builder: (btnContext) => IosViewerGlassButton(
+          icon: IosSymbols.settingsGear(btnContext),
+          onPressed: () {
+            final box = btnContext.findRenderObject() as RenderBox?;
+            if (box == null || !box.hasSize) return;
+            final check = IosSymbols.check(btnContext);
+            final items = <ChatMenuItem>[
+              ChatMenuItem(
+                label: l10n.videoViewerSpeed,
+                isSectionHeader: true,
+              ),
+              for (final value in speeds)
+                ChatMenuItem(
+                  icon: value == speed ? check : null,
+                  label: value == 1
+                      ? '1.0x'
+                      : '${value.toStringAsFixed(value % 1 == 0 ? 0 : 1)}x',
+                  onTap: () => onSpeedChanged(value),
+                  dividerAfter: qualities.length > 1 && value == speeds.last,
+                ),
+              if (qualities.length > 1)
+                ChatMenuItem(
+                  label: l10n.videoViewerQuality,
+                  isSectionHeader: true,
+                ),
+              if (qualities.length > 1)
+                for (final value in qualities)
+                  ChatMenuItem(
+                    icon: value == quality ? check : null,
+                    label: value,
+                    onTap: () => onQualityChanged(value),
+                  ),
+            ];
+            showGlassMenu(
+              context: btnContext,
+              anchorRect: box.localToGlobal(Offset.zero) & box.size,
+              items: items,
+            );
+          },
+        ),
+      );
+    }
     return PopupMenuButton<String>(
       key: const ValueKey('video-settings'),
       color: MediaAccent.schemeOf(context).surfaceContainerHigh,
       tooltip: l10n.videoViewerSettings,
-      icon: const Icon(Symbols.settings, color: Colors.white),
+      icon: Icon(IosSymbols.settingsGear(context), color: Colors.white),
       onSelected: (value) {
         if (value.startsWith('speed:')) {
           onSpeedChanged(double.parse(value.substring(6)));
@@ -1756,7 +1848,7 @@ class _SettingChoice extends StatelessWidget {
           child: Text(label, style: const TextStyle(color: Colors.white)),
         ),
         if (selected)
-          Icon(Symbols.check, color: MediaAccent.of(context), size: 18),
+          Icon(IosSymbols.check(context), color: MediaAccent.of(context), size: 18),
       ],
     );
   }

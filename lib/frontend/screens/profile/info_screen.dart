@@ -1,15 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../core/utils/format.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class InfoScreen extends StatefulWidget {
   const InfoScreen({super.key});
@@ -57,20 +58,8 @@ class _InfoScreenState extends State<InfoScreen> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: ConnectionTitleText(
-          l10n?.infoTitle ?? 'Info',
-          style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600),
-        ),
-      ),
+    return IosSettingsScaffold(
+      title: l10n?.infoTitle ?? 'Info',
       body: _isLoading
           ? const Center(child: SmallSpinner(size: 36))
           : _info == null
@@ -311,7 +300,7 @@ class _InfoScreenState extends State<InfoScreen> {
                 label,
                 style: TextStyle(
                   color: cs.onSurfaceVariant,
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -323,7 +312,7 @@ class _InfoScreenState extends State<InfoScreen> {
                 value,
                 style: TextStyle(
                   color: cs.onSurface,
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.end,
@@ -362,7 +351,7 @@ class _InfoScreenState extends State<InfoScreen> {
                 label,
                 style: TextStyle(
                   color: cs.onSurfaceVariant,
-                  fontSize: 14,
+                  fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   fontWeight: FontWeight.w400,
                 ),
               ),

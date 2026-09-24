@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 
 import '../../../core/config/app_wallpaper_tint.dart';
 import '../../../core/storage/app_database.dart';
@@ -10,6 +11,9 @@ import '../chats/chat_wallpaper_preview_screen.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ChatBackgroundScreen extends StatefulWidget {
   const ChatBackgroundScreen({super.key});
@@ -91,7 +95,7 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
     final bytes = await pickWallpaperBytes(context);
     if (bytes == null || !mounted) return;
     final settings = await Navigator.of(context).push<WallpaperImageSettings>(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => ChatWallpaperPreviewScreen(imageBytes: bytes),
       ),
     );
@@ -113,20 +117,9 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          'Фон чатов',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            fontFamily: displayFontOf(context),
-          ),
-        ),
-      ),
+    return IosSettingsScaffold(
+      title: 'Фон чатов',
+      useConnectionTitle: false,
       body: SafeArea(
         top: false,
         child: Column(
@@ -174,7 +167,7 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
             'Эти обои применяются ко всем чатам, где не выбран свой фон.',
             style: TextStyle(
               color: cs.onSurfaceVariant,
-              fontSize: 14,
+              fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
               height: 1.35,
             ),
           ),
@@ -229,7 +222,7 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
                   'Выбрать обои',
                   style: TextStyle(
                     color: cs.onPrimary,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                     fontWeight: FontWeight.w700,
                     fontFamily: displayFontOf(context),
                   ),

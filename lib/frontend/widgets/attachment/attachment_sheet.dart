@@ -28,21 +28,26 @@ import 'package:komet/frontend/widgets/attachment/video_preview_screen.dart';
 import 'package:komet/frontend/widgets/chat_menu_overlay.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:komet/frontend/widgets/sheet_helpers.dart';
 import 'package:komet/frontend/widgets/sliding_pill_nav.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
 import '../small_spinner.dart';
 import '../../../core/security/app_lock.dart';
+import '../glass/ios_sheet.dart';
 
 const int _navItemCount = 5;
 
-List<PillNavItem> _buildNavItems(AppLocalizations l10n) => [
-  PillNavItem(icon: Symbols.image, label: l10n.attachSheetGallery),
-  PillNavItem(icon: Symbols.description, label: l10n.scheduledAttachFile),
-  PillNavItem(icon: Symbols.location_on, label: l10n.scheduledAttachLocation),
-  PillNavItem(icon: Symbols.bar_chart, label: l10n.attachSheetPoll),
-  PillNavItem(icon: Symbols.person, label: l10n.attachSheetContact),
+List<PillNavItem> _buildNavItems(BuildContext context, AppLocalizations l10n) => [
+  PillNavItem(icon: IosSymbols.photo(context), label: l10n.attachSheetGallery),
+  PillNavItem(icon: IosSymbols.doc(context), label: l10n.scheduledAttachFile),
+  PillNavItem(
+    icon: IosSymbols.location(context),
+    label: l10n.scheduledAttachLocation,
+  ),
+  PillNavItem(icon: IosSymbols.chart(context), label: l10n.attachSheetPoll),
+  PillNavItem(icon: IosSymbols.person(context), label: l10n.attachSheetContact),
 ];
 
 typedef PickedPhotosCallback =
@@ -66,9 +71,10 @@ Future<void> showAttachmentSheet(
   VoidCallback? onCreatePoll,
   ValueChanged<CachedContact>? onSendContact,
 }) {
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
+    detent: IosSheetDetent.large,
     requestFocus: false,
     backgroundColor: Colors.transparent,
     barrierColor: AppFrost.scrim(),
@@ -685,7 +691,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         _buildActionPage(
           cs,
           bottomReserve,
-          icon: Symbols.description,
+          icon: IosSymbols.doc(context),
           title: l10n.attachSheetSendFileTitle,
           subtitle: l10n.attachSheetSendFileSubtitle,
           buttonLabel: l10n.attachSheetChooseFileButton,
@@ -694,7 +700,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         _buildActionPage(
           cs,
           bottomReserve,
-          icon: Symbols.location_on,
+          icon: IosSymbols.location(context),
           title: l10n.attachSheetShareLocationTitle,
           subtitle: l10n.attachSheetShareLocationSubtitle,
           buttonLabel: l10n.attachSheetSendLocationButton,
@@ -703,7 +709,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         _buildActionPage(
           cs,
           bottomReserve,
-          icon: Symbols.bar_chart,
+          icon: IosSymbols.chart(context),
           title: l10n.attachSheetCreatePoll,
           subtitle: l10n.attachSheetCreatePollSubtitle,
           buttonLabel: l10n.attachSheetCreatePoll,
@@ -936,7 +942,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         color: cs.surfaceContainerHighest,
         child: Row(
           children: [
-            Icon(Symbols.info, size: 18, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.info(context), size: 18, color: cs.onSurfaceVariant),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -965,7 +971,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.construction, size: 48, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.construction(context), size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(
               AppLocalizations.of(context)!.attachSheetSectionInProgress,
@@ -991,7 +997,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.no_photography, size: 48, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.cameraOff(context), size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(
               l10n.attachSheetNoGalleryAccessTitle,
@@ -1040,7 +1046,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.broken_image, size: 48, color: cs.onSurfaceVariant),
+            Icon(IosSymbols.brokenImage(context), size: 48, color: cs.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(
               l10n.attachSheetGalleryFailedTitle,
@@ -1153,7 +1159,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         onTap: () => _sendSelection(),
         child: Padding(
           padding: const EdgeInsets.all(14),
-          child: Icon(Symbols.send, color: cs.onPrimary, size: 24, weight: 500),
+          child: Icon(IosSymbols.send(context), color: cs.onPrimary, size: 24, weight: 500),
         ),
       ),
     );
@@ -1218,7 +1224,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
   }
 
   Widget _buildPillNav() {
-    final navItems = _buildNavItems(AppLocalizations.of(context)!);
+    final navItems = _buildNavItems(context, AppLocalizations.of(context)!);
     return LayoutBuilder(
       key: const ValueKey('nav'),
       builder: (context, constraints) {
@@ -1338,8 +1344,7 @@ class _GalleryMenuButton extends StatelessWidget {
           onTap: () => onTap(context),
           child: Padding(
             padding: const EdgeInsets.all(5),
-            child: Icon(
-              Symbols.more_horiz,
+            child: Icon(IosSymbols.ellipsisHoriz(context),
               size: 20,
               color: cs.onSurfaceVariant,
             ),
@@ -1509,8 +1514,7 @@ class _CameraTileState extends State<_CameraTile> with WidgetsBindingObserver {
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: hasPreview
-                  ? const Icon(
-                      Symbols.photo_camera,
+                  ? Icon(IosSymbols.camera(context),
                       size: 22,
                       color: Colors.white,
                       weight: 500,
@@ -1520,8 +1524,8 @@ class _CameraTileState extends State<_CameraTile> with WidgetsBindingObserver {
                       children: [
                         Icon(
                           denied
-                              ? Symbols.no_photography
-                              : Symbols.photo_camera,
+                              ? IosSymbols.cameraOff(context)
+                              : IosSymbols.camera(context),
                           size: 34,
                           color: cs.onSurface,
                           weight: 400,
@@ -1634,8 +1638,7 @@ class _GalleryTileState extends State<_GalleryTile> {
               bottom: 6,
               child: Row(
                 children: [
-                  Icon(
-                    Symbols.play_arrow,
+                  Icon(IosSymbols.play(context),
                     size: 16,
                     color: Colors.white,
                     fill: 1,
@@ -1787,8 +1790,7 @@ class _ThumbnailState extends State<_Thumbnail> {
     color: widget.cs.surfaceContainerHighest,
     child: widget.item.isVideo
         ? Center(
-            child: Icon(
-              Symbols.movie,
+            child: Icon(IosSymbols.movie(context),
               size: 28,
               color: widget.cs.onSurfaceVariant,
             ),

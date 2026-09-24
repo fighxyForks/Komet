@@ -3,7 +3,10 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/confirm_dialog.dart';
+import '../../widgets/prompt_dialog.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -16,6 +19,8 @@ import '../../widgets/primary_loading_button.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class E2eeScreen extends StatefulWidget {
   final int accountId;
@@ -100,23 +105,12 @@ class _E2eeScreenState extends State<E2eeScreen> {
 
   Future<void> _reset() async {
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surfaceContainerHigh,
-        content: Text(l10n.e2eeResetConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.e2eeDecline),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.e2eeReset),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      message: l10n.e2eeResetConfirm,
+      confirmLabel: l10n.e2eeReset,
+      cancelLabel: l10n.e2eeDecline,
+      destructive: true,
     );
     if (confirmed != true) return;
     await _service.resetSession(
@@ -127,23 +121,12 @@ class _E2eeScreenState extends State<E2eeScreen> {
 
   Future<void> _rotate() async {
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surfaceContainerHigh,
-        content: Text(l10n.e2eeRotateConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.e2eeDecline),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.e2eeRotateIdentity),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      message: l10n.e2eeRotateConfirm,
+      confirmLabel: l10n.e2eeRotateIdentity,
+      cancelLabel: l10n.e2eeDecline,
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
     _busy.value = true;
@@ -158,33 +141,13 @@ class _E2eeScreenState extends State<E2eeScreen> {
 
   Future<String?> _askPassword() async {
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surfaceContainerHigh,
-        title: Text(l10n.e2eeTransferPassword),
-        content: TextField(
-          controller: controller,
-          obscureText: true,
-          autofocus: true,
-          enableSuggestions: false,
-          autocorrect: false,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.e2eeDecline),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+    final result = await showTextInputDialog(
+      context,
+      title: l10n.e2eeTransferPassword,
+      obscureText: true,
+      confirmLabel: 'OK',
+      cancelLabel: l10n.e2eeDecline,
     );
-    controller.dispose();
     if (result == null || result.isEmpty) return null;
     return result;
   }
@@ -292,7 +255,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
             l10n.e2eeFingerprint,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -372,7 +335,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
         backgroundColor: cs.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface, weight: 400),
+          icon: Icon(IosSymbols.back(context), color: cs.onSurface, weight: 400),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -406,7 +369,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
                             _statusText(l10n),
                             style: TextStyle(
                               color: cs.onSurface,
-                              fontSize: 16,
+                              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                               fontWeight: FontWeight.w600,
                               height: 1.3,
                             ),
@@ -424,7 +387,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
                     SettingsCard(
                       children: [
                         SettingsToggleTile(
-                          icon: Symbols.verified_user,
+                          icon: IosSymbols.verifiedUser(context),
                           label: l10n.e2eeVerified,
                           value: info?.verified ?? false,
                           onChanged: (value) => _service.setVerified(
@@ -441,7 +404,7 @@ class _E2eeScreenState extends State<E2eeScreen> {
                     l10n.e2eeTransferTitle,
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 16,
+                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

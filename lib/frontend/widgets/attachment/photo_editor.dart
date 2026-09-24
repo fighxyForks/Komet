@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import 'package:komet/core/media/raster.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
@@ -938,11 +939,11 @@ class _PhotoAdjustEditorState extends State<PhotoAdjustEditor> {
             ),
           ),
           const Spacer(),
-          _tabIcon(Symbols.tune, _Tab.adjust),
+          _tabIcon(IosSymbols.tune(context), _Tab.adjust),
           const SizedBox(width: 26),
           _tabIcon(Symbols.water_drop, _Tab.blur),
           const SizedBox(width: 26),
-          _tabIcon(Symbols.show_chart, _Tab.curves),
+          _tabIcon(IosSymbols.showChart(context), _Tab.curves),
           const Spacer(),
           TextButton(
             onPressed: _baking ? null : _done,

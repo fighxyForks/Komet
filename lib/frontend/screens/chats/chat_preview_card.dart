@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/config/app_shape.dart';
 import '../../../core/utils/haptics.dart';
@@ -134,7 +134,7 @@ class _ChatPreviewCardState extends State<_ChatPreviewCard> {
                         if (widget.hasUnread) ...[
                           Expanded(
                             child: _PreviewAction(
-                              icon: Symbols.done_all,
+                              icon: IosSymbols.doneAll(context),
                               label: l10n.chatPreviewMarkRead,
                               busy: _marking,
                               onTap: () => unawaited(_markRead()),
@@ -146,7 +146,7 @@ class _ChatPreviewCardState extends State<_ChatPreviewCard> {
                         ],
                         Expanded(
                           child: _PreviewAction(
-                            icon: Symbols.chat,
+                            icon: IosSymbols.chat(context),
                             label: l10n.chatPreviewOpen,
                             onTap: _open,
                             background: cs.primary,

@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/push/fkm_bridge.dart';
@@ -10,13 +11,16 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/config/build_profile.dart';
 import '../../../main.dart' show accountModule;
 import '../../widgets/confirm_dialog.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import 'web_push_screen.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -93,7 +97,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
   void _openWebPush() {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const WebPushScreen()),
+      iosPageRoute(context, builder: (context) => const WebPushScreen()),
     );
   }
 
@@ -153,12 +157,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.notificationsTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.notificationsTitle,
       body: SafeArea(
         top: false,
         child: _loading
@@ -184,7 +184,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     SectionHeader(
                       l10n.notificationsFkmSectionTitle,
                       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                      fontSize: 14,
+                      fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                     ),
                     SettingsCard(
                       children: [
@@ -192,7 +192,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                           valueListenable: FkmController.instance.enabled,
                           builder: (context, fkmEnabled, _) =>
                               SettingsToggleTile(
-                                icon: Symbols.notifications_active,
+                                icon: IosSymbols.notificationsActive(context),
                                 label: l10n.notificationsFkmEnableLabel,
                                 subtitle: l10n.notificationsFkmEnableSubtitle,
                                 value: fkmEnabled,
@@ -219,12 +219,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsMainSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   ),
                   SettingsCard(
                     children: [
                       SettingsToggleTile(
-                        icon: Symbols.notifications,
+                        icon: IosSymbols.notifications(context),
                         label: l10n.notificationsAllLabel,
                         value: _allNotifications,
                         onChanged: (v) => _apply(
@@ -239,12 +239,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsNewSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   ),
                   SettingsCard(
                     children: [
                       SettingsToggleTile(
-                        icon: Symbols.chat,
+                        icon: IosSymbols.chat(context),
                         label: l10n.notificationsPreviewLabel,
                         value: _messagePreview,
                         enabled: _allNotifications,
@@ -271,12 +271,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsAdditionalSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   ),
                   SettingsCard(
                     children: [
                       SettingsToggleTile(
-                        icon: Symbols.call,
+                        icon: IosSymbols.call(context),
                         label: l10n.notificationsCallsLabel,
                         value: _callNotifications,
                         onChanged: (v) => _apply(
@@ -286,7 +286,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         ),
                       ),
                       SettingsToggleTile(
-                        icon: Symbols.person_add,
+                        icon: IosSymbols.personAdd(context),
                         label: l10n.notificationsNewContactsLabel,
                         value: _newContacts,
                         onChanged: (v) => _apply(
@@ -301,7 +301,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsHapticsSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: 14,
+                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
                   ),
                   SettingsCard(
                     children: [

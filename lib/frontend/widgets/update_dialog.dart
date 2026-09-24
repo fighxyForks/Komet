@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'glass/ios_alert.dart';
 import 'glass/ios_glass.dart';
 import 'glass/ios_typography.dart';
 
@@ -7,106 +9,85 @@ import '../../core/utils/update_installer.dart';
 import '../../core/utils/link_opener.dart';
 import '../../l10n/app_localizations.dart';
 import 'custom_notification.dart';
-import '../../core/config/app_fonts.dart';
 import '../../core/config/app_shape.dart';
 
 Future<void> showUpdateDialog(BuildContext context, AppUpdateInfo info) async {
   final l10n = AppLocalizations.of(context)!;
-  await showDialog<void>(
+  final notes = info.notes;
+  final cs = Theme.of(context).colorScheme;
+  final ios = IosGlass.of(context);
+  final action = await showIosAlert<String>(
     context: context,
-    builder: (dialogContext) {
-      final cs = Theme.of(dialogContext).colorScheme;
-      final notes = info.notes;
-      return AlertDialog(
-        backgroundColor: cs.surfaceContainerHigh,
-        shape: AppShape.dialogBorder,
-        title: Text(
-          l10n.updateAvailableTitle,
+    title: l10n.updateAvailableTitle,
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.updateAvailableBody(info.version),
           style: TextStyle(
-            fontFamily: displayFontOf(context),
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-            color: cs.onSurface,
+            color: ios ? null : cs.onSurfaceVariant,
+            fontSize: ios ? 13 : 14,
+            height: 1.35,
           ),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.updateAvailableBody(info.version),
-              style: TextStyle(
-                color: cs.onSurfaceVariant,
-                fontSize: 14,
-                height: 1.35,
-              ),
-            ),
-            if (notes.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                IosGlass.of(dialogContext)
-                    ? IosTypography.sentenceCase(l10n.updateWhatsNew)
-                    : l10n.updateWhatsNew,
-                style: IosGlass.of(dialogContext)
-                    ? TextStyle(
-                        color: cs.onSurfaceVariant,
-                        fontSize: IosTypography.sectionHeader,
-                        fontWeight: IosTypography.regular,
-                      )
-                    : TextStyle(
-                        color: cs.onSurface,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.4,
-                      ),
-              ),
-              const SizedBox(height: 6),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 180),
-                child: SingleChildScrollView(
-                  child: Text(
-                    notes,
-                    style: TextStyle(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
+        if (notes.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            ios
+                ? IosTypography.sentenceCase(l10n.updateWhatsNew)
+                : l10n.updateWhatsNew,
+            style: ios
+                ? TextStyle(
+                    color: cs.onSurfaceVariant,
+                    fontSize: IosTypography.sectionHeader,
+                    fontWeight: IosTypography.regular,
+                  )
+                : TextStyle(
+                    color: cs.onSurface,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
                   ),
+          ),
+          const SizedBox(height: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 180),
+            child: SingleChildScrollView(
+              child: Text(
+                notes,
+                style: TextStyle(
+                  color: cs.onSurfaceVariant,
+                  fontSize: 13,
+                  height: 1.4,
                 ),
               ),
-            ],
-          ],
-        ),
-        actionsOverflowButtonSpacing: 4,
-        actions: [
-          TextButton(
-            onPressed: () {
-              UpdateChecker.skip(info.tag);
-              Navigator.pop(dialogContext);
-            },
-            child: Text(
-              l10n.updateSkip,
-              style: TextStyle(color: cs.onSurfaceVariant),
             ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              l10n.updateLater,
-              style: TextStyle(color: cs.onSurfaceVariant),
-            ),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              _startUpdate(context, info);
-            },
-            child: Text(l10n.updateAction),
           ),
         ],
-      );
-    },
+      ],
+    ),
+    actions: [
+      IosAlertAction(id: 'skip', label: l10n.updateSkip, result: 'skip'),
+      IosAlertAction(
+        id: 'later',
+        label: l10n.updateLater,
+        result: 'later',
+        isCancel: true,
+      ),
+      IosAlertAction(
+        id: 'update',
+        label: l10n.updateAction,
+        result: 'update',
+        isDefault: true,
+      ),
+    ],
   );
+  if (action == 'skip') {
+    UpdateChecker.skip(info.tag);
+  } else if (action == 'update') {
+    await _startUpdate(context, info);
+  }
 }
 
 Future<void> _startUpdate(BuildContext context, AppUpdateInfo info) async {
@@ -160,38 +141,42 @@ class _UpdateProgressDialogState extends State<_UpdateProgressDialog> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final percent = (_progress * 100).round();
+    final body = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.updateDownloading,
+          style: TextStyle(
+            color: cs.onSurface,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: LinearProgressIndicator(
+            value: _progress > 0 ? _progress : null,
+            minHeight: 6,
+            backgroundColor: cs.surfaceContainerHighest,
+            color: cs.primary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '$percent%',
+          style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+        ),
+      ],
+    );
+    if (IosGlass.of(context)) {
+      return CupertinoAlertDialog(content: body);
+    }
     return AlertDialog(
       backgroundColor: cs.surfaceContainerHigh,
       shape: AppShape.dialogBorder,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.updateDownloading,
-            style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: _progress > 0 ? _progress : null,
-              minHeight: 6,
-              backgroundColor: cs.surfaceContainerHighest,
-              color: cs.primary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            '$percent%',
-            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-          ),
-        ],
-      ),
+      content: body,
     );
   }
 }

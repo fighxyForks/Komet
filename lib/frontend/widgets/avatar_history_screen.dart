@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../backend/modules/contacts.dart';
 import '../../core/storage/app_database.dart';
@@ -8,6 +8,7 @@ import '../../main.dart';
 import 'avatar_photo_actions.dart';
 import 'custom_notification.dart';
 import 'small_spinner.dart';
+import './glass/ios_route.dart';
 
 class AvatarHistoryScreen extends StatefulWidget {
   final int contactId;
@@ -43,7 +44,7 @@ class AvatarHistoryScreen extends StatefulWidget {
     final url = currentAvatarUrl;
     if (url == null || url.isEmpty) return Future.value(null);
     return Navigator.of(context).push<ProfileData>(
-      MaterialPageRoute<ProfileData>(
+      iosPageRoute<ProfileData>(context, 
         fullscreenDialog: true,
         builder: (_) => AvatarHistoryScreen(
           contactId: contactId,
@@ -290,13 +291,13 @@ class _AvatarHistoryScreenState extends State<AvatarHistoryScreen> {
           if (_pages.length > 1 && _index > 0)
             _navButton(
               alignLeft: true,
-              icon: Symbols.chevron_left,
+              icon: IosSymbols.chevronLeft(context),
               onTap: _prev,
             ),
           if (_pages.length > 1 && _index < _pages.length - 1)
             _navButton(
               alignLeft: false,
-              icon: Symbols.chevron_right,
+              icon: IosSymbols.chevronRight(context),
               onTap: _next,
             ),
           Positioned(
@@ -324,7 +325,7 @@ class _AvatarHistoryScreenState extends State<AvatarHistoryScreen> {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Symbols.close, color: Colors.white),
+                  icon: Icon(IosSymbols.close(context), color: Colors.white),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 Expanded(child: _buildCounter()),
@@ -332,7 +333,7 @@ class _AvatarHistoryScreenState extends State<AvatarHistoryScreen> {
                   key: _menuKey,
                   icon: _busy
                       ? const SmallSpinner(size: 22, color: Colors.white)
-                      : const Icon(Symbols.more_vert, color: Colors.white),
+                      : Icon(IosSymbols.ellipsis(context), color: Colors.white),
                   onPressed: _pages.isEmpty || _busy ? null : _openMenu,
                 ),
               ],
@@ -409,7 +410,7 @@ class _AvatarHistoryScreenState extends State<AvatarHistoryScreen> {
           placeholder: (_, _) =>
               const Center(child: SmallSpinner(size: 36, color: Colors.white)),
           errorWidget: (_, _, _) =>
-              const Icon(Symbols.broken_image, color: Colors.white54, size: 64),
+              Icon(IosSymbols.brokenImage(context), color: Colors.white54, size: 64),
         ),
       ),
     );

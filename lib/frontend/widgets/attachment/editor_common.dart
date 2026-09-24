@@ -2,11 +2,12 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import '../prompt_dialog.dart';
 
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/config/app_colors.dart';
-import '../../../core/config/app_shape.dart';
 import '../../../l10n/app_localizations.dart';
 import '../custom_notification.dart';
 import '../small_spinner.dart';
@@ -507,8 +508,7 @@ class _CropWorkspaceState extends State<CropWorkspace>
           ),
           IconButton(
             onPressed: _rotate90,
-            icon: const Icon(
-              Symbols.rotate_90_degrees_ccw,
+            icon: Icon(IosSymbols.rotate(context),
               color: Colors.white,
             ),
             tooltip: l10n.photoEditorRotateTooltip,
@@ -1055,44 +1055,13 @@ class _MarkupEditorState extends State<MarkupEditor> {
 
   Future<void> _addText() async {
     final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
-    final String? text;
-    try {
-      text = await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          shape: AppShape.dialogBorder,
-          title: Text(
-            l10n.photoEditorTextDialogTitle,
-            style: const TextStyle(color: Colors.white),
-          ),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            cursorColor: Colors.white,
-            decoration: InputDecoration(
-              hintText: l10n.photoEditorTextDialogHint,
-              hintStyle: const TextStyle(color: Colors.white38),
-            ),
-            onSubmitted: (v) => Navigator.pop(ctx, v),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.spoofDialogCancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, controller.text),
-              child: Text(l10n.photoEditorOk),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      controller.dispose();
-    }
+    final text = await showTextInputDialog(
+      context,
+      title: l10n.photoEditorTextDialogTitle,
+      hint: l10n.photoEditorTextDialogHint,
+      confirmLabel: l10n.photoEditorOk,
+      cancelLabel: l10n.spoofDialogCancel,
+    );
     if (text == null || text.trim().isEmpty || !mounted) return;
     final ro = _boundaryKey.currentContext?.findRenderObject();
     final size = ro is RenderBox ? ro.size : const Size(300, 300);
@@ -1157,7 +1126,7 @@ class _MarkupEditorState extends State<MarkupEditor> {
           children: [
             IconButton(
               onPressed: _marks.isEmpty ? null : _undo,
-              icon: const Icon(Symbols.undo),
+              icon: Icon(IosSymbols.undo(context)),
               color: Colors.white,
               disabledColor: Colors.white24,
             ),
@@ -1320,8 +1289,7 @@ class _MarkupEditorState extends State<MarkupEditor> {
               _shapesOpen = !_shapesOpen;
               _paletteOpen = false;
             }),
-            icon: Icon(
-              Symbols.add,
+            icon: Icon(IosSymbols.add(context),
               color: _shapeMode != null ? _color : Colors.white,
             ),
           ),
@@ -1341,7 +1309,7 @@ class _MarkupEditorState extends State<MarkupEditor> {
           const SizedBox(width: 14),
           TextButton.icon(
             onPressed: _addText,
-            icon: const Icon(Symbols.add, color: Colors.white),
+            icon: Icon(IosSymbols.add(context), color: Colors.white),
             label: Text(
               AppLocalizations.of(context)!.photoEditorAddText,
               style: const TextStyle(color: Colors.white, fontSize: 15),
@@ -1451,7 +1419,7 @@ class _MarkupEditorState extends State<MarkupEditor> {
         children: [
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Symbols.close, color: Colors.white),
+            icon: Icon(IosSymbols.close(context), color: Colors.white),
           ),
           Expanded(
             child: Row(
@@ -1469,7 +1437,7 @@ class _MarkupEditorState extends State<MarkupEditor> {
           ),
           IconButton(
             onPressed: _baking ? null : _apply,
-            icon: const Icon(Symbols.check, color: Colors.white),
+            icon: Icon(IosSymbols.check(context), color: Colors.white),
           ),
         ],
       ),

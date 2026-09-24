@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/confirm_dialog.dart';
 
 import 'package:komet/backend/modules/contacts.dart';
 import 'package:komet/frontend/screens/contacts/contact_sheet_common.dart';
@@ -6,8 +7,10 @@ import 'package:komet/frontend/widgets/custom_notification.dart';
 import 'package:komet/frontend/widgets/komet_avatar.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart';
-import 'package:material_symbols_icons/symbols.dart';
-import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/ios_metrics.dart';
+import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 enum EditContactAction { updated, removed }
 
@@ -131,23 +134,13 @@ class _EditContactCardState extends State<_EditContactCard> {
   Future<void> _delete() async {
     if (_busy) return;
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: AppShape.dialogBorder,
-        title: Text(l10n.editContactDeleteConfirmTitle),
-        content: Text(l10n.editContactDeleteConfirmBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.editContactDeleteCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.editContactDelete),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.editContactDeleteConfirmTitle,
+      message: l10n.editContactDeleteConfirmBody,
+      confirmLabel: l10n.editContactDelete,
+      cancelLabel: l10n.editContactDeleteCancel,
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
 
@@ -267,8 +260,7 @@ class _EditContactCardState extends State<_EditContactCard> {
               borderRadius: BorderRadius.circular(20),
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: Icon(
-                  Symbols.close,
+                child: Icon(IosSymbols.close(context),
                   size: 18,
                   color: cs.onSurfaceVariant,
                 ),
@@ -280,55 +272,35 @@ class _EditContactCardState extends State<_EditContactCard> {
   }
 
   Widget _saveButton(ColorScheme cs, AppLocalizations l10n) {
+    if (_saving) {
+      return const SizedBox(
+        height: IosMetrics.minHitTarget,
+        child: Center(child: SmallSpinner(size: 20)),
+      );
+    }
     return SizedBox(
       width: double.infinity,
-      child: FilledButton(
+      child: IosSettingsButton(
         onPressed: _busy ? null : _save,
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
-        child: _saving
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(
-                l10n.editContactSave,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+        label: l10n.editContactSave,
       ),
     );
   }
 
   Widget _deleteButton(ColorScheme cs, AppLocalizations l10n) {
+    if (_deleting) {
+      return SizedBox(
+        height: IosMetrics.minHitTarget,
+        child: Center(child: SmallSpinner(size: 20, color: cs.error)),
+      );
+    }
     return SizedBox(
       width: double.infinity,
-      child: TextButton(
+      child: IosSettingsButton(
+        filled: false,
+        destructive: true,
         onPressed: _busy ? null : _delete,
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          foregroundColor: cs.error,
-        ),
-        child: _deleting
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: cs.error,
-                ),
-              )
-            : Text(
-                l10n.editContactDelete,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+        label: l10n.editContactDelete,
       ),
     );
   }

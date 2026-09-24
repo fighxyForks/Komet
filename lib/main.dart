@@ -113,6 +113,7 @@ import 'frontend/widgets/small_spinner.dart';
 import 'frontend/widgets/theme_reveal.dart';
 import 'frontend/widgets/floating_call_badge.dart';
 import 'frontend/widgets/floating_video_note.dart';
+import './frontend/widgets/glass/ios_route.dart';
 
 final api = Api();
 final accountModule = AccountModule(api);
@@ -515,7 +516,7 @@ class KometAppState extends State<KometApp>
         }
 
         await navState.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          iosPageRoute(context, builder: (_) => const LoginScreen()),
           (route) => false,
         );
       }
@@ -605,7 +606,7 @@ class KometAppState extends State<KometApp>
     _incomingRouteActive = true;
     navState
         .push(
-          MaterialPageRoute(
+          iosPageRoute(context,
             builder: (_) => CallScreen(
               name: ContactCache.get(call.callerId) ?? call.callerName ?? '',
               avatarUrl: ContactCache.getAvatar(call.callerId),
@@ -1298,7 +1299,7 @@ class _StartupScreenState extends State<_StartupScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const AdaptiveShell()),
+        iosPageRoute(context, builder: (_) => const AdaptiveShell()),
       );
       KometApp.stateOf(context)?.markShellReady();
       return;
@@ -1323,7 +1324,7 @@ class _StartupScreenState extends State<_StartupScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const AdaptiveShell()),
+      iosPageRoute(context, builder: (_) => const AdaptiveShell()),
     );
     KometApp.stateOf(context)?.markShellReady();
   }
@@ -1345,7 +1346,7 @@ class _StartupScreenState extends State<_StartupScreen> {
     if (mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        iosPageRoute(context, builder: (_) => const LoginScreen()),
       );
       KometApp.stateOf(context)?.markShellReady();
     }

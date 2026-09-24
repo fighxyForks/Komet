@@ -5,6 +5,7 @@ import '../../glass/ios_typography.dart';
 import '../../glass/ios_tracking.dart';
 import 'ios_bubble_metrics.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:komet/main.dart';
 
 import '../../../../backend/modules/messages.dart';
@@ -420,8 +421,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
         ],
         if (widget.deleted) ...[
           const SizedBox(width: 2),
-          Icon(
-            Symbols.delete,
+          Icon(IosSymbols.delete(context),
             size: 13,
             color: widget.textColor.withValues(alpha: 0.6),
           ),

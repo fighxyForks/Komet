@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/share_sender.dart';
 import '../../../core/media/share_thumbnail.dart';
@@ -13,6 +14,8 @@ import '../../widgets/emoji_panel.dart';
 import '../../widgets/rich_message_controller.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/springy_tap.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class ShareComposerBar extends StatefulWidget {
   const ShareComposerBar({
@@ -131,7 +134,7 @@ class _ShareComposerBarState extends State<ShareComposerBar> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
-          Icon(Symbols.forward, color: cs.primary, size: 22, weight: 500),
+          Icon(IosSymbols.forward(context), color: cs.primary, size: 22, weight: 500),
           const SizedBox(width: 12),
           _ShareThumbStack(files: widget.share.files),
           const SizedBox(width: 12),
@@ -200,7 +203,7 @@ class _ShareComposerBarState extends State<ShareComposerBar> {
                       : 'Добавить подпись...',
                   hintStyle: TextStyle(
                     color: cs.onSurfaceVariant,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
                   ),
                 ),
               ),
@@ -271,8 +274,8 @@ class _ShareThumb extends StatelessWidget {
           ? Image(image: provider, fit: BoxFit.cover)
           : Icon(
               file.kind == SharedFileKind.video
-                  ? Symbols.movie
-                  : Symbols.description,
+                  ? IosSymbols.movie(context)
+                  : IosSymbols.doc(context),
               size: 20,
               color: cs.onSurfaceVariant,
             ),
@@ -314,8 +317,7 @@ class _SendButton extends StatelessWidget {
                       padding: const EdgeInsets.all(14),
                       child: SmallSpinner(size: 24, color: cs.onPrimary),
                     )
-                  : Icon(
-                      Symbols.send,
+                  : Icon(IosSymbols.send(context),
                       color: enabled ? cs.onPrimary : cs.onSurfaceVariant,
                       size: 24,
                       fill: 1,

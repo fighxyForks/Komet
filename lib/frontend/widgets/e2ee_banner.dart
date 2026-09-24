@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/crypto/e2ee_service.dart';
 import '../../l10n/app_localizations.dart';
@@ -50,7 +50,7 @@ class E2eeBanner extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    keyChanged ? Symbols.warning : Symbols.lock,
+                    keyChanged ? IosSymbols.warning(context) : IosSymbols.lock(context),
                     size: 20,
                     color: keyChanged
                         ? cs.onErrorContainer

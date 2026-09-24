@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../core/utils/format.dart';
 import '../../main.dart' show stickersModule, messagesModule;
@@ -11,6 +10,10 @@ import 'small_spinner.dart';
 import 'lottie_image.dart';
 import 'sticker_peek.dart';
 import '../../core/config/app_shape.dart';
+import './glass/ios_sheet.dart';
+import 'chat_menu_overlay.dart';
+import 'glass/ios_glass.dart';
+import 'glass/ios_symbols.dart';
 
 enum _PackAction { forward, copyLink }
 
@@ -20,7 +23,7 @@ Future<void> showStickerPackSheet(
   int? knownSetId,
 }) {
   assert(stickerId != null || knownSetId != null);
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -220,8 +223,38 @@ class _StickerPackSheetState extends State<_StickerPackSheet> {
   }
 
   Widget _buildMenu(ColorScheme cs, StickerSet set) {
+    if (IosGlass.of(context)) {
+      return Builder(
+        builder: (btnContext) => IconButton(
+          icon: Icon(
+            IosSymbols.ellipsisHoriz(btnContext),
+            color: cs.onSurfaceVariant,
+          ),
+          onPressed: () {
+            final box = btnContext.findRenderObject() as RenderBox?;
+            if (box == null || !box.hasSize) return;
+            showChatMenu(
+              context: btnContext,
+              anchorRect: box.localToGlobal(Offset.zero) & box.size,
+              items: [
+                ChatMenuItem(
+                  icon: IosSymbols.forward(btnContext),
+                  label: 'Переслать',
+                  onTap: () => _forward(set),
+                ),
+                ChatMenuItem(
+                  icon: IosSymbols.link(btnContext),
+                  label: 'Скопировать ссылку',
+                  onTap: () => _copyLink(set),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    }
     return PopupMenuButton<_PackAction>(
-      icon: Icon(Symbols.more_horiz, color: cs.onSurfaceVariant),
+      icon: Icon(IosSymbols.ellipsisHoriz(context), color: cs.onSurfaceVariant),
       color: cs.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       onSelected: (action) {
@@ -237,7 +270,7 @@ class _StickerPackSheetState extends State<_StickerPackSheet> {
           value: _PackAction.forward,
           child: Row(
             children: [
-              Icon(Symbols.forward, size: 20, color: cs.onSurface),
+              Icon(IosSymbols.forward(context), size: 20, color: cs.onSurface),
               const SizedBox(width: 12),
               const Text('Переслать'),
             ],
@@ -247,7 +280,7 @@ class _StickerPackSheetState extends State<_StickerPackSheet> {
           value: _PackAction.copyLink,
           child: Row(
             children: [
-              Icon(Symbols.link, size: 20, color: cs.onSurface),
+              Icon(IosSymbols.link(context), size: 20, color: cs.onSurface),
               const SizedBox(width: 12),
               const Text('Скопировать ссылку'),
             ],

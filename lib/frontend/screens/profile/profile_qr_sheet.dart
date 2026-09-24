@@ -9,6 +9,7 @@ import '../../widgets/komet_avatar.dart';
 import '../../widgets/qr_code_view.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 const Color _cardColor = Color(0xFFFFFFFF);
 const Color _moduleColor = Color(0xFF101418);
@@ -40,7 +41,7 @@ Future<void> showLinkQrSheet(
   required Future<String?> Function() loadLink,
 }) {
   final cs = Theme.of(context).colorScheme;
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: cs.surfaceContainerHigh,

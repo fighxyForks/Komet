@@ -7,13 +7,14 @@ import 'package:komet/core/media/clipboard/pasted_attachment.dart';
 import 'package:komet/core/utils/format.dart';
 import 'package:komet/frontend/widgets/sheet_helpers.dart';
 import 'package:komet/l10n/app_localizations.dart';
+import '../glass/ios_sheet.dart';
 
 Future<String?> showPastePreviewSheet(
   BuildContext context, {
   required List<PastedAttachment> items,
 }) {
   final cs = Theme.of(context).colorScheme;
-  return showModalBottomSheet<String>(
+  return showIosSheet<String>(
     context: context,
     isScrollControlled: true,
     backgroundColor: cs.surfaceContainerHigh,

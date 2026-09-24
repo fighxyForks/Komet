@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/utils/format.dart';
 import '../widgets/small_spinner.dart';
@@ -40,8 +40,7 @@ class DebugCacheSection extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Symbols.data_usage,
+                    Icon(IosSymbols.chart(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -70,8 +69,7 @@ class DebugCacheSection extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Icon(
-                      Symbols.chevron_right,
+                    Icon(IosSymbols.chevronRight(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,
@@ -97,8 +95,7 @@ class DebugCacheSection extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Symbols.delete_sweep,
+                    Icon(IosSymbols.deleteSweep(context),
                       color: cs.onSurfaceVariant,
                       size: 22,
                       weight: 400,

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../main.dart';
 import '../../../backend/modules/chats.dart';
@@ -14,6 +13,11 @@ import '../../../l10n/app_localizations.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_tappable.dart';
+import '../../widgets/glass/ios_empty_state.dart';
+import '../../widgets/glass/ios_metrics.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/swipe_route.dart';
@@ -242,7 +246,7 @@ class _SearchScreenState extends State<SearchScreen> {
         scrolledUnderElevation: 0,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
+          icon: Icon(IosSymbols.back(context), color: cs.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: TextField(
@@ -261,7 +265,7 @@ class _SearchScreenState extends State<SearchScreen> {
         actions: [
           if (query.isNotEmpty)
             IconButton(
-              icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
+              icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
               onPressed: _clear,
             ),
         ],
@@ -291,14 +295,13 @@ class _SearchScreenState extends State<SearchScreen> {
                   Expanded(
                     child: GlassCapsule(
                       key: const ValueKey('ios-search-capsule'),
-                      height: 48,
+                      height: IosMetrics.searchBarHeight,
                       padding: const EdgeInsets.only(left: 14, right: 4),
                       child: Row(
                         children: [
                           Icon(
-                            Symbols.search,
-                            size: 20,
-                            weight: 500,
+                            IosSymbols.search(context),
+                            size: 18,
                             color: secondary,
                           ),
                           const SizedBox(width: 8),
@@ -310,13 +313,19 @@ class _SearchScreenState extends State<SearchScreen> {
                               textInputAction: TextInputAction.search,
                               style: TextStyle(
                                 color: IosPalette.label(cs),
-                                fontSize: 17,
+                                fontSize: IosTypography.composer,
+                                letterSpacing: IosTypography.letterSpacing(
+                                  IosTypography.composer,
+                                ),
                               ),
                               decoration: InputDecoration(
                                 hintText: 'Поиск',
                                 hintStyle: TextStyle(
                                   color: secondary,
-                                  fontSize: 17,
+                                  fontSize: IosTypography.composer,
+                                  letterSpacing: IosTypography.letterSpacing(
+                                    IosTypography.composer,
+                                  ),
                                 ),
                                 border: InputBorder.none,
                                 isDense: true,
@@ -329,8 +338,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 context,
                               ).deleteButtonTooltip,
                               icon: Icon(
-                                Symbols.cancel,
-                                fill: 1,
+                                IosSymbols.clearFill(context),
                                 size: 20,
                                 color: secondary,
                               ),
@@ -343,8 +351,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   const SizedBox(width: 8),
                   GlassIconButton(
                     key: const ValueKey('ios-search-close'),
-                    icon: Symbols.close,
-                    size: 48,
+                    icon: IosSymbols.close(context),
+                    size: IosMetrics.minHitTarget,
                     tooltip: MaterialLocalizations.of(
                       context,
                     ).closeButtonTooltip,
@@ -361,13 +369,13 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildBody(ColorScheme cs, String query, bool hasResults) {
     if (query.isEmpty) {
-      return _buildHint(cs, Symbols.search, 'Начните вводить запрос');
+      return _buildHint(cs, IosSymbols.search(context), 'Начните вводить запрос');
     }
     if (!hasResults) {
       if (_loading) {
         return const Center(child: SmallSpinner(size: 36));
       }
-      return _buildHint(cs, Symbols.search_off, 'Ничего не найдено');
+      return _buildHint(cs, IosSymbols.searchOff(context), 'Ничего не найдено');
     }
     final phoneResult = _phoneResult;
     return ListView(
@@ -450,28 +458,26 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _sectionHeader(ColorScheme cs, String title) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
-    child: Text(
-      title,
-      style: TextStyle(
-        color: cs.primary,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
+  Widget _sectionHeader(ColorScheme cs, String title) {
+    final ios = IosGlass.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 6),
+      child: Text(
+        ios ? IosTypography.sentenceCase(title) : title,
+        style: TextStyle(
+          color: ios ? IosPalette.secondaryLabel(cs) : cs.primary,
+          fontSize: ios ? IosTypography.sectionHeader : 13,
+          fontWeight: FontWeight.w600,
+          letterSpacing: ios
+              ? IosTypography.letterSpacing(IosTypography.sectionHeader)
+              : null,
+        ),
       ),
-    ),
-  );
+    );
+  }
 
-  Widget _buildHint(ColorScheme cs, IconData icon, String text) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 48, color: cs.outline),
-        const SizedBox(height: 12),
-        Text(text, style: TextStyle(color: cs.outline, fontSize: 15)),
-      ],
-    ),
-  );
+  Widget _buildHint(ColorScheme cs, IconData icon, String text) =>
+      IosEmptyState(icon: icon, message: text);
 }
 
 class _ResultTile extends StatelessWidget {
@@ -490,11 +496,12 @@ class _ResultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
     final sub = subtitle?.trim();
-    return InkWell(
+    return IosTappable(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Row(
           children: [
             KometAvatar(name: name, size: 48, imageUrl: imageUrl),
@@ -509,9 +516,12 @@ class _ResultTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: cs.onSurface,
-                      fontSize: 16,
+                      color: ios ? IosPalette.label(cs) : cs.onSurface,
+                      fontSize: ios ? IosTypography.listTitle : 16,
                       fontWeight: FontWeight.w500,
+                      letterSpacing: ios
+                          ? IosTypography.letterSpacing(IosTypography.listTitle)
+                          : null,
                     ),
                   ),
                   if (sub != null && sub.isNotEmpty) ...[
@@ -521,8 +531,15 @@ class _ResultTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: cs.onSurfaceVariant,
-                        fontSize: 14,
+                        color: ios
+                            ? IosPalette.secondaryLabel(cs)
+                            : cs.onSurfaceVariant,
+                        fontSize: ios ? IosTypography.listSubtitle : 14,
+                        letterSpacing: ios
+                            ? IosTypography.letterSpacing(
+                                IosTypography.listSubtitle,
+                              )
+                            : null,
                       ),
                     ),
                   ],

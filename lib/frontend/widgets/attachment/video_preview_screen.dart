@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:komet/core/media/gallery_source.dart';
@@ -484,7 +485,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Symbols.arrow_back),
+          icon: Icon(IosSymbols.back(context)),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: VideoHeaderTitle(
@@ -767,11 +768,11 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 PreviewToolIcon(
-                  icon: Symbols.crop_rotate,
+                  icon: IosSymbols.cropRotate(context),
                   onTap: ready ? _openCrop : () {},
                 ),
                 PreviewToolIcon(
-                  icon: Symbols.brush,
+                  icon: IosSymbols.brush(context),
                   onTap: ready ? _openDraw : () {},
                 ),
                 _QualityBadge(
@@ -779,7 +780,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
                   onTap: ready ? _openQuality : () {},
                 ),
                 PreviewToolIcon(
-                  icon: Symbols.tune,
+                  icon: IosSymbols.tune(context),
                   onTap: ready ? _openAdjust : () {},
                 ),
               ],
@@ -805,8 +806,7 @@ class _PlayBadge extends StatelessWidget {
         shape: BoxShape.circle,
         color: Colors.black.withValues(alpha: 0.45),
       ),
-      child: const Icon(
-        Symbols.play_arrow,
+      child: Icon(IosSymbols.play(context),
         color: Colors.white,
         size: 34,
         fill: 1,

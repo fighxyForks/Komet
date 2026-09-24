@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
-import '../../widgets/connection_status.dart';
 
 import '../../../core/config/app_amoled.dart';
 import '../../../core/config/app_theme_mode.dart';
@@ -20,21 +21,17 @@ import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
 import 'custom_gradient_editor_screen.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.themeSettingsTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.themeSettingsTitle,
       body: SafeArea(
         top: false,
         child: ListView(
@@ -109,7 +106,7 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
   Future<void> _openEditor() async {
     if (_accountId == 0) return;
     final result = await Navigator.of(context).push<CustomGradientResult>(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => CustomGradientEditorScreen(
           initialColors: _wallpaper?.gradientColors,
           initialAnimated: _wallpaper?.gradientAnimated ?? false,
@@ -196,7 +193,7 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
                       },
                     ),
                   _ModeTile(
-                    icon: Symbols.palette,
+                    icon: IosSymbols.palette(context),
                     label: l10n.themeSettingsCustomTitle,
                     selected: customSelected,
                     onTap: (_) {
@@ -223,8 +220,7 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
                                   )
                                 : ColoredBox(
                                     color: cs.surfaceContainerHighest,
-                                    child: Icon(
-                                      Symbols.palette,
+                                    child: Icon(IosSymbols.palette(context),
                                       color: cs.onSurface,
                                       size: 18,
                                     ),

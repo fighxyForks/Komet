@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/media/preview_image.dart';
 import '../../models/attachment.dart';
@@ -49,6 +50,7 @@ class ReplyPreview {
   }
 
   Widget thumbnail({
+    required BuildContext context,
     required Size size,
     required ColorScheme cs,
     double radius = 8,
@@ -63,7 +65,7 @@ class ReplyPreview {
       height: size.height,
       color: cs.surfaceContainerHighest,
       child: Icon(
-        icon ?? Symbols.image,
+        icon ?? IosSymbols.photo(context),
         size: size.shortestSide * 0.4,
         color: cs.onSurfaceVariant,
       ),
