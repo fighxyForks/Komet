@@ -34,7 +34,8 @@ mixin AnimatedOverlayPopup<T extends StatefulWidget>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || _overlayClosing) return;
         if (IosMotion.reduceMotionOf(context)) {
-          _overlayController.value = 1;
+          _overlayController.duration = IosMotion.pageCrossFade;
+          _overlayController.forward();
           return;
         }
         animateSpring(
@@ -59,7 +60,11 @@ mixin AnimatedOverlayPopup<T extends StatefulWidget>
     try {
       if (overlayUseSpring) {
         if (IosMotion.reduceMotionOf(context)) {
-          _overlayController.value = 0;
+          await _overlayController.animateTo(
+            0,
+            duration: IosMotion.pageCrossFade,
+            curve: Curves.linear,
+          );
         } else {
           await animateSpring(
             _overlayController,

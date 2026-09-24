@@ -1747,7 +1747,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     return [
       for (int i = 0; i < n; i++)
         Builder(
-          builder: (_) {
+          builder: (context) {
             final delay = (i / n) * 0.25;
             final localT = ((t - delay) / (1.0 - delay)).clamp(0.0, 1.0);
             final eased = IosGlass.of(context)
@@ -1755,7 +1755,9 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
                 : Curves.easeOutCubic.transform(localT);
             final isHovered = _hoveredIndex == i;
             final hoverScale = isHovered ? 1.18 : 1.0;
-            final entryScale = 0.4 + 0.6 * eased;
+            final reduce =
+                IosGlass.of(context) && IosMotion.reduceMotionOf(context);
+            final entryScale = reduce ? 1.0 : 0.4 + 0.6 * eased;
             final centerAtFull = _buttonCenters[i];
             final centerAtT = _anchor + (centerAtFull - _anchor) * eased;
 
