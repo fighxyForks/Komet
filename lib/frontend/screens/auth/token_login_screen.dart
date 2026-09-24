@@ -342,7 +342,7 @@ class _TokenLoginScreenState extends State<TokenLoginScreen> {
   InputDecoration _decoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon),
+      prefixIcon: Icon(IosSymbols.adapt(context, icon)),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
       filled: true,
       fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -364,7 +364,11 @@ class _TokenLoginScreenState extends State<TokenLoginScreen> {
           label: Text(opt.label),
           avatar: isSelected
               ? Icon(IosSymbols.check(context), size: 18, color: cs.onSecondaryContainer)
-              : Icon(opt.icon, size: 18, color: cs.onSurfaceVariant),
+              : Icon(
+                  IosSymbols.adapt(context, opt.icon),
+                  size: 18,
+                  color: cs.onSurfaceVariant,
+                ),
           selected: isSelected,
           showCheckmark: false,
           onSelected: (_) => onSelected(opt.value),

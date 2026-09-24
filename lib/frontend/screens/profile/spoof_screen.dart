@@ -508,7 +508,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
       child: Row(
         children: [
           Icon(
-            Symbols.touch_app,
+            IosSymbols.adapt(context, Symbols.touch_app),
             size: 20,
             weight: 400,
             color: cs.onSecondaryContainer,
@@ -772,7 +772,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon),
+      prefixIcon: Icon(IosSymbols.adapt(context, icon)),
       border: const OutlineInputBorder(borderRadius: AppShape.buttonRadius),
       filled: true,
       fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,

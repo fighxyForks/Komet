@@ -590,7 +590,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
     padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
     child: Row(
       children: [
-        Icon(icon, color: cs.onSurfaceVariant, size: 22),
+        Icon(IosSymbols.adapt(context, icon), color: cs.onSurfaceVariant, size: 22),
         const SizedBox(width: 16),
         Expanded(
           child: Text(
