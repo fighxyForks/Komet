@@ -57,11 +57,17 @@ class IosPalette {
     );
   }
 
-  static BoxDecoration servicePill(ColorScheme cs) => BoxDecoration(
-    color: _dark(cs)
-        ? Colors.black.withValues(alpha: 0.32)
-        : Colors.white.withValues(alpha: 0.55),
-    borderRadius: BorderRadius.circular(12),
+  static BoxDecoration servicePill(
+    ColorScheme cs, {
+    double radius = 12,
+    bool opaque = false,
+  }) => BoxDecoration(
+    color: opaque
+        ? (_dark(cs) ? const Color(0xF21C1C1E) : const Color(0xF5F2F2F7))
+        : (_dark(cs)
+              ? Colors.black.withValues(alpha: 0.32)
+              : Colors.white.withValues(alpha: 0.55)),
+    borderRadius: BorderRadius.circular(radius),
     border: Border.all(
       color: _dark(cs)
           ? Colors.white.withValues(alpha: 0.08)

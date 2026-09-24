@@ -546,8 +546,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool get _chromeVignette =>
-      AppIosGlass.active.value ||
-      (_effectiveChrome == ChatChromeStyle.none && _wallpaper == null);
+      _effectiveChrome == ChatChromeStyle.none && _wallpaper == null;
 
   final ValueNotifier<double> _composerHeight = ValueNotifier(96);
   final ValueNotifier<double> _pinnedBannerHeight = ValueNotifier(0);
@@ -4803,8 +4802,7 @@ class _ChatScreenState extends State<ChatScreen>
     final ios = AppIosGlass.active.value;
     final base = MediaQuery.paddingOf(context).top +
         ChatAppBar.headerHeight(glossy: glossy, ios: ios);
-    // Fade just below the floating header capsules.
-    return ios ? base + 12 : base;
+    return ios ? base + IosScrollEdgeFade.headerOverlap : base;
   }
 
   Widget _buildMessagesArea() {

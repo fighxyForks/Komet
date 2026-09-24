@@ -28,13 +28,15 @@ const List<Color> _colors = [
 
 BoxDecoration _datePill(WidgetTester tester) =>
     tester
-            .widget<Container>(
-              find.ancestor(
-                of: find.byType(Text),
-                matching: find.byType(Container),
-              ),
+            .widget<DecoratedBox>(
+              find
+                  .ancestor(
+                    of: find.byType(Text),
+                    matching: find.byType(DecoratedBox),
+                  )
+                  .first,
             )
-            .decoration!
+            .decoration
         as BoxDecoration;
 
 void main() {

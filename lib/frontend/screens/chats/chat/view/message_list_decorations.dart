@@ -5,9 +5,7 @@ import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 
-/// Sticky date-pill idle behaviour shared with [ChatScreen].
 abstract final class FloatingDateBehavior {
-  /// Fade the floating date out after this much scroll idle.
   static const Duration idleHideDelay = Duration(milliseconds: 1250);
 }
 
@@ -15,6 +13,8 @@ abstract final class FloatingDateBehavior {
 class DateSeparatorLabel extends StatelessWidget {
   final DateTime date;
   final bool floating;
+
+  static const double dateRadius = 999;
 
   const DateSeparatorLabel({
     super.key,
@@ -54,34 +54,23 @@ class DateSeparatorLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    if (floating && IosGlass.of(context)) {
-      // Opaque solid fill so message text does not bleed through the sticky
-      // pill. Avoid BackdropFilter here — it is an overlay, but a DecoratedBox
-      // is cheaper and reads more clearly while scrolling.
-      final fill = cs.brightness == Brightness.dark
-          ? const Color(0xF21C1C1E)
-          : const Color(0xF5F2F2F7);
+    if (IosGlass.of(context)) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
+        padding: EdgeInsets.symmetric(vertical: floating ? 2 : 8),
         child: Center(
           child: DecoratedBox(
-            key: const ValueKey('ios-floating-date'),
-            decoration: BoxDecoration(
-              color: fill,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: cs.brightness == Brightness.dark
-                    ? Colors.white.withValues(alpha: 0.14)
-                    : Colors.black.withValues(alpha: 0.06),
-                width: 0.6,
-              ),
+            key: floating ? const ValueKey('ios-floating-date') : null,
+            decoration: IosPalette.servicePill(
+              cs,
+              radius: dateRadius,
+              opaque: floating,
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               child: Text(
                 _formatDateLabel(date),
                 style: TextStyle(
-                  color: cs.onSurface,
+                  color: IosPalette.serviceText(cs),
                   fontSize: IosTypography.dateHeader,
                   fontWeight: IosTypography.medium,
                 ),
@@ -91,30 +80,18 @@ class DateSeparatorLabel extends StatelessWidget {
         ),
       );
     }
-    final ios = IosGlass.of(context);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: floating ? 2 : 8),
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: ios
-              ? IosPalette.servicePill(cs)
-              : BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                ),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Text(
             _formatDateLabel(date),
-            style: ios
-                ? TextStyle(
-                    color: IosPalette.serviceText(cs),
-                    fontSize: IosTypography.dateHeader,
-                    fontWeight: IosTypography.medium,
-                  )
-                : TextStyle(
-                    color: cs.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
           ),
         ),
       ),
@@ -203,6 +180,7 @@ class MessageListEdgeFade extends StatelessWidget {
 
 class IosScrollEdgeFade extends StatelessWidget {
   static const double extent = 16;
+  static const double headerOverlap = 12;
   static const double plainOpacity = 0.94;
   static const double wallpaperOpacity = 0.6;
 
@@ -257,39 +235,16 @@ class MessageListEdgeVignette extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final ios = IosGlass.of(context);
-    // Prefer an opaque chat-background color so content fading under the
-    // status bar / floating header stays readable over wallpapers and mesh
-    // gradients. Keep this a cheap DecoratedBox — no BackdropFilter.
-    var base = ios ? IosPalette.background(cs) : cs.surface;
-    if (base.a < 1.0) {
-      final fallback =
-          cs.brightness == Brightness.dark ? Colors.black : Colors.white;
-      base = Color.alphaBlend(base, fallback);
-    }
-    final colors = top
-        ? [
-            base,
-            base.withValues(alpha: 0.92),
-            base.withValues(alpha: 0.55),
-            base.withValues(alpha: 0.0),
-          ]
-        : [
-            base,
-            base.withValues(alpha: 0.0),
-          ];
-    final stops = top ? const [0.0, 0.35, 0.72, 1.0] : null;
     return IgnorePointer(
-      child: DecoratedBox(
+      child: Container(
+        height: height,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: top ? Alignment.topCenter : Alignment.bottomCenter,
             end: top ? Alignment.bottomCenter : Alignment.topCenter,
-            colors: colors,
-            stops: stops,
+            colors: [cs.surface, cs.surface.withValues(alpha: 0.0)],
           ),
         ),
-        child: SizedBox(height: height, width: double.infinity),
       ),
     );
   }

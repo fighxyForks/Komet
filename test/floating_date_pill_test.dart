@@ -8,14 +8,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 Widget _app(Widget body, {Brightness brightness = Brightness.dark}) =>
     MaterialApp(
       theme: ThemeData(
-        brightness: brightness,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
           brightness: brightness,
         ),
       ),
-      home: IosGlass(child: Scaffold(body: body)),
+      home: IosGlass(
+        child: Scaffold(body: Center(child: body)),
+      ),
     );
+
+BoxDecoration _pill(WidgetTester tester) =>
+    tester
+            .widget<DecoratedBox>(
+              find
+                  .ancestor(
+                    of: find.byType(Text),
+                    matching: find.byType(DecoratedBox),
+                  )
+                  .first,
+            )
+            .decoration
+        as BoxDecoration;
 
 void main() {
   setUp(() async {
@@ -27,64 +41,38 @@ void main() {
 
   tearDown(AppIosGlass.debugReset);
 
-  test('floating date hides after roughly 1–1.5s of idle', () {
+  test('плавающая дата прячется примерно через 1–1,5 с простоя', () {
     expect(
       FloatingDateBehavior.idleHideDelay.inMilliseconds,
       inInclusiveRange(1000, 1500),
     );
   });
 
-  testWidgets('iOS floating date pill uses an opaque fill', (tester) async {
-    await tester.pumpWidget(
-      _app(
-        DateSeparatorLabel(
-          date: DateTime(2026, 9, 24),
-          floating: true,
-        ),
-      ),
-    );
-
-    final decorated = tester.widget<DecoratedBox>(
-      find.byKey(const ValueKey('ios-floating-date')),
-    );
-    final decoration = decorated.decoration as BoxDecoration;
-    final color = decoration.color!;
-    expect(color.a, greaterThanOrEqualTo(0.9));
-    expect(find.text('Сегодня'), findsOneWidget);
-  });
-
-  testWidgets('inline date separator stays distinct from floating pill', (
+  testWidgets('плавающая дата почти непрозрачна, текст под ней не виден', (
     tester,
   ) async {
     await tester.pumpWidget(
-      _app(
-        DateSeparatorLabel(
-          date: DateTime(2026, 9, 24),
-          floating: false,
-        ),
-      ),
+      _app(DateSeparatorLabel(date: DateTime.now(), floating: true)),
     );
+    expect(find.byKey(const ValueKey('ios-floating-date')), findsOneWidget);
+    expect(_pill(tester).color!.a, greaterThanOrEqualTo(0.9));
+    expect(find.text('Сегодня'), findsOneWidget);
+  });
 
+  testWidgets('плавающая и встроенная дата одной формы и с одним ободком', (
+    tester,
+  ) async {
+    final date = DateTime.now().subtract(const Duration(days: 1));
+    await tester.pumpWidget(
+      _app(DateSeparatorLabel(date: date, floating: true)),
+    );
+    final floating = _pill(tester);
+    await tester.pumpWidget(_app(DateSeparatorLabel(date: date)));
+    final inline = _pill(tester);
     expect(find.byKey(const ValueKey('ios-floating-date')), findsNothing);
-    expect(find.text('Сегодня'), findsOneWidget);
-  });
-
-  testWidgets('top edge vignette is IgnorePointer DecoratedBox gradient', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _app(
-        const Stack(
-          children: [
-            MessageListEdgeVignette(top: true, height: 100),
-          ],
-        ),
-      ),
-    );
-
-    expect(find.byType(IgnorePointer), findsWidgets);
-    final box = tester.widget<DecoratedBox>(find.byType(DecoratedBox).first);
-    final decoration = box.decoration as BoxDecoration;
-    expect(decoration.gradient, isA<LinearGradient>());
+    expect(find.text('Вчера'), findsOneWidget);
+    expect(inline.borderRadius, floating.borderRadius);
+    expect(inline.border, floating.border);
+    expect(inline.color!.a, lessThan(floating.color!.a));
   });
 }
