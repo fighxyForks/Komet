@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../glass/ios_glass.dart';
 import '../../glass/ios_typography.dart';
+import '../../glass/ios_tracking.dart';
 import 'ios_bubble_metrics.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/main.dart';
@@ -15,6 +16,7 @@ import '../../../../core/utils/format.dart';
 import '../../../../core/utils/logger.dart';
 import '../../custom_notification.dart';
 import '../../small_spinner.dart';
+import '../../text_with_meta.dart';
 
 class VoiceMessageBubble extends StatefulWidget {
   final int duration;
@@ -65,7 +67,17 @@ class VoiceMessageBubble extends StatefulWidget {
   State<VoiceMessageBubble> createState() => _VoiceMessageBubbleState();
 }
 
-const double _transcriptionMaxHeight = 132;
+/// Play button diameter (~height of waveform + duration).
+const double _kPlaySize = 44;
+
+/// Transcription chip metrics.
+const double _kTranscribeChip = 32;
+const double _kTranscribeRadius = 8;
+
+/// Waveform bar metrics.
+const double _kWaveHeight = 22;
+const double _kWaveBarWidth = 2.5;
+const double _kWaveBarGap = 1.75;
 
 class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
   bool _transcriptionVisible = false;
@@ -217,20 +229,25 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
     return Icon(icon, size: 14, color: color);
   }
 
+  /// Accent tint for controls: contrasting on outgoing bubbles.
   Color get _accent =>
       widget.isMe ? widget.cs.onPrimaryContainer : widget.cs.primary;
+
+  Color get _playFill => _accent;
+
+  Color get _playIconColor =>
+      widget.isMe ? widget.cs.primaryContainer : widget.cs.onPrimary;
 
   Widget _buildPlayButton() {
     final uploading = widget.uploadProgress;
     return GestureDetector(
+      key: const ValueKey('voice-play'),
       onTap: uploading == null ? _toggle : null,
       child: Container(
-        width: 32,
-        height: 32,
+        width: _kPlaySize,
+        height: _kPlaySize,
         decoration: BoxDecoration(
-          color: widget.isMe
-              ? widget.cs.onPrimaryContainer.withValues(alpha: 0.12)
-              : widget.cs.primaryContainer,
+          color: _playFill,
           shape: BoxShape.circle,
         ),
         child: uploading != null
@@ -245,12 +262,12 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                   final progress = _audio.downloadProgress.value;
                   if (progress != null) {
                     return Padding(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(10),
                       child: CircularProgressIndicator(
-                        strokeWidth: 2,
+                        strokeWidth: 2.5,
                         value: progress > 0 ? progress : null,
-                        color: _accent,
-                        backgroundColor: _accent.withValues(alpha: 0.2),
+                        color: _playIconColor,
+                        backgroundColor: _playIconColor.withValues(alpha: 0.25),
                       ),
                     );
                   }
@@ -262,15 +279,22 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                   } else {
                     icon = Symbols.arrow_downward;
                   }
+                  // Play triangle sits optically a hair right of center.
+                  final opticalNudge =
+                      icon == Symbols.play_arrow ? 1.5 : 0.0;
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 160),
                     transitionBuilder: (child, animation) =>
                         ScaleTransition(scale: animation, child: child),
-                    child: Icon(
-                      icon,
+                    child: Transform.translate(
                       key: ValueKey(icon),
-                      color: _accent,
-                      size: 18,
+                      offset: Offset(opticalNudge, 0),
+                      child: Icon(
+                        icon,
+                        color: _playIconColor,
+                        size: 26,
+                        fill: 1,
+                      ),
                     ),
                   );
                 },
@@ -281,7 +305,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
 
   Widget _buildUploadIndicator(ValueListenable<List<double>> progress) {
     return Padding(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(10),
       child: ValueListenableBuilder<List<double>>(
         valueListenable: progress,
         builder: (context, values, _) {
@@ -293,10 +317,10 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOut,
             builder: (context, shown, _) => CircularProgressIndicator(
-              strokeWidth: 2,
+              strokeWidth: 2.5,
               value: shown >= 1.0 ? null : shown,
-              color: _accent,
-              backgroundColor: _accent.withValues(alpha: 0.2),
+              color: _playIconColor,
+              backgroundColor: _playIconColor.withValues(alpha: 0.25),
             ),
           );
         },
@@ -304,7 +328,8 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
     );
   }
 
-  Widget _buildTimeLabel() {
+  Widget _buildDurationLabel() {
+    final ios = IosGlass.of(context);
     return AnimatedBuilder(
       animation: Listenable.merge([
         _audio.position,
@@ -318,28 +343,122 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
         return Text(
           formatSecondsMmSs(seconds),
           style: TextStyle(
-            color: widget.textColor.withValues(alpha: 0.7),
-            fontSize: IosGlass.of(context)
-                ? IosBubbleMetrics.timeSize
-                : 11,
-            fontFeatures: IosGlass.of(context)
-                ? IosTypography.tabularDigits
-                : null,
+            color: widget.textColor.withValues(alpha: 0.55),
+            fontSize: ios ? IosBubbleMetrics.timeSize : 13,
+            height: 1.1,
+            fontFeatures: ios ? IosTypography.tabularDigits : null,
           ),
         );
       },
     );
   }
 
+  Widget _buildTranscribeChip() {
+    final accent = _accent;
+    Widget glyph;
+    if (_transcriptionLoading) {
+      glyph = SmallSpinner(size: 14, color: accent);
+    } else if (_transcriptionVisible) {
+      glyph = Icon(
+        Symbols.keyboard_arrow_up,
+        key: const ValueKey('voice-transcribe-expanded'),
+        size: 22,
+        color: accent,
+      );
+    } else {
+      // Collapsed glyph: arrow + Cyrillic Т.
+      glyph = Text(
+        '→Т',
+        key: const ValueKey('voice-transcribe-collapsed'),
+        style: TextStyle(
+          color: accent,
+          fontSize: 15,
+          fontWeight: FontWeight.w400,
+          height: 1,
+          letterSpacing: -0.5,
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: _requestTranscription,
+      child: Container(
+        width: _kTranscribeChip,
+        height: _kTranscribeChip,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(_kTranscribeRadius),
+        ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 150),
+          child: glyph,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetaRow() {
+    final ios = IosGlass.of(context);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          formatClock(
+            DateTime.fromMillisecondsSinceEpoch(widget.time),
+            withSeconds: KometSettings.fullTimestamp.value,
+          ),
+          style: TextStyle(
+            color: widget.textColor.withValues(alpha: 0.6),
+            fontSize: ios ? IosBubbleMetrics.timeSize : 10,
+            fontFeatures: ios ? IosTypography.tabularDigits : null,
+          ),
+        ),
+        if (widget.isMe) ...[
+          const SizedBox(width: 2),
+          _buildStatusIcon(),
+        ],
+        if (widget.deleted) ...[
+          const SizedBox(width: 2),
+          Icon(
+            Symbols.delete,
+            size: 13,
+            color: widget.textColor.withValues(alpha: 0.6),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildTranscriptionBody() {
+    final ios = IosGlass.of(context);
+    final fontSize = ios ? IosBubbleMetrics.textSize : 16.0;
+    final style = TextStyle(
+      color: widget.textColor,
+      fontSize: fontSize,
+      height: ios ? IosBubbleMetrics.textHeight : 1.3,
+      letterSpacing: ios ? iosLetterSpacing(fontSize: fontSize) : null,
+    );
+    final text = Text(_transcriptionText ?? '', style: style);
+
+    if (!widget.showMeta) return text;
+
+    return TextWithMeta(
+      text: text,
+      meta: Padding(
+        padding: const EdgeInsets.only(bottom: 1),
+        child: _buildMetaRow(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final waveInactiveColor = widget.textColor.withValues(alpha: 0.35);
-    final waveActiveColor = widget.isMe
-        ? widget.cs.onPrimaryContainer
-        : widget.cs.primary;
+    final waveActive = _accent;
+    final waveInactive = _accent.withValues(alpha: 0.38);
 
     return SizedBox(
-      width: 240,
+      width: 250,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,136 +469,48 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
               _buildPlayButton(),
               const SizedBox(width: 10),
               Expanded(
-                child: _SeekableWaveform(
-                  onClaim: _claimPlayback,
-                  onToggle: _toggle,
-                  audio: _audio,
-                  amps: _amps,
-                  active: waveActiveColor,
-                  inactive: waveInactiveColor,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _SeekableWaveform(
+                      onClaim: _claimPlayback,
+                      onToggle: _toggle,
+                      audio: _audio,
+                      amps: _amps,
+                      active: waveActive,
+                      inactive: waveInactive,
+                    ),
+                    const SizedBox(height: 2),
+                    _buildDurationLabel(),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: _requestTranscription,
-                child: SizedBox(
-                  width: 20,
-                  height: 32,
-                  child: Center(
-                    child: _transcriptionLoading
-                        ? SmallSpinner(
-                            size: 12,
-                            color: widget.textColor.withValues(alpha: 0.6),
-                          )
-                        : Text(
-                            'Т',
-                            style: TextStyle(
-                              color: widget.textColor.withValues(alpha: 0.6),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(width: 32, child: Center(child: _buildTimeLabel())),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOut,
-                  alignment: Alignment.topLeft,
-                  child: _transcriptionVisible
-                      ? ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxHeight: _transcriptionMaxHeight,
-                          ),
-                          child: SingleChildScrollView(
-                            physics: const ClampingScrollPhysics(),
-                            child: Text(
-                              _transcriptionText ?? '',
-                              style: TextStyle(
-                                color: widget.textColor.withValues(alpha: 0.8),
-                                fontSize: 12,
-                                height: 1.3,
-                              ),
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              ),
-              if (!_transcriptionVisible && widget.showMeta) ...[
-                Text(
-                  formatClock(
-                    DateTime.fromMillisecondsSinceEpoch(widget.time),
-                    withSeconds: KometSettings.fullTimestamp.value,
-                  ),
-                  style: TextStyle(
-                    color: widget.textColor.withValues(alpha: 0.6),
-                    fontSize: IosGlass.of(context)
-                        ? IosBubbleMetrics.timeSize
-                        : 10,
-                    fontFeatures: IosGlass.of(context)
-                        ? IosTypography.tabularDigits
-                        : null,
-                  ),
-                ),
-                if (widget.isMe) ...[
-                  const SizedBox(width: 2),
-                  _buildStatusIcon(),
-                ],
-                if (widget.deleted) ...[
-                  const SizedBox(width: 2),
-                  Icon(
-                    Symbols.delete,
-                    size: 13,
-                    color: widget.textColor.withValues(alpha: 0.6),
-                  ),
-                ],
+              if (widget.audioId != null) ...[
+                const SizedBox(width: 8),
+                _buildTranscribeChip(),
               ],
             ],
           ),
-          if (_transcriptionVisible && widget.showMeta) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  formatClock(
-                    DateTime.fromMillisecondsSinceEpoch(widget.time),
-                    withSeconds: KometSettings.fullTimestamp.value,
-                  ),
-                  style: TextStyle(
-                    color: widget.textColor.withValues(alpha: 0.6),
-                    fontSize: IosGlass.of(context)
-                        ? IosBubbleMetrics.timeSize
-                        : 10,
-                    fontFeatures: IosGlass.of(context)
-                        ? IosTypography.tabularDigits
-                        : null,
-                  ),
-                ),
-                if (widget.isMe) ...[
-                  const SizedBox(width: 2),
-                  _buildStatusIcon(),
-                ],
-                if (widget.deleted) ...[
-                  const SizedBox(width: 2),
-                  Icon(
-                    Symbols.delete,
-                    size: 13,
-                    color: widget.textColor.withValues(alpha: 0.6),
-                  ),
-                ],
-              ],
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            alignment: Alignment.topLeft,
+            child: _transcriptionVisible
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _buildTranscriptionBody(),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          if (!_transcriptionVisible && widget.showMeta)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: _buildMetaRow(),
+              ),
             ),
-          ],
         ],
       ),
     );
@@ -563,8 +594,7 @@ class _SeekableWaveform extends StatefulWidget {
 }
 
 class _SeekableWaveformState extends State<_SeekableWaveform> {
-  static const double _hitHeight = 32;
-  static const double _waveHeight = 26;
+  static const double _hitHeight = 28;
 
   double _width = 0;
 
@@ -619,7 +649,7 @@ class _SeekableWaveformState extends State<_SeekableWaveform> {
             height: _hitHeight,
             child: Center(
               child: SizedBox(
-                height: _waveHeight,
+                height: _kWaveHeight,
                 child: AnimatedBuilder(
                   animation: Listenable.merge([
                     _audio.position,
@@ -670,25 +700,26 @@ class _WaveformPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = size.height / 2;
+    final baseline = size.height;
 
     if (amps.isEmpty) {
       final track = Paint()
-        ..strokeWidth = 3
+        ..strokeWidth = _kWaveBarWidth
         ..strokeCap = StrokeCap.round;
+      final y = baseline - 1.5;
       canvas.drawLine(
-        Offset(0, center),
-        Offset(size.width, center),
+        Offset(0, y),
+        Offset(size.width, y),
         track..color = inactive,
       );
       if (progress > 0) {
         canvas.drawLine(
-          Offset(0, center),
-          Offset(size.width * progress.clamp(0.0, 1.0), center),
+          Offset(0, y),
+          Offset(size.width * progress.clamp(0.0, 1.0), y),
           track..color = active,
         );
       }
-      _paintKnob(canvas, size, center);
+      _paintKnob(canvas, size);
       return;
     }
 
@@ -697,27 +728,34 @@ class _WaveformPainter extends CustomPainter {
     for (final a in amps) {
       if (a > maxAmp) maxAmp = a;
     }
-    final slot = size.width / n;
-    final barW = (slot * 0.55).clamp(1.0, 3.0);
-    final paint = Paint();
+    final slot = _kWaveBarWidth + _kWaveBarGap;
+    // Fit as many bars as the available width allows; subsample amps if denser.
+    final maxBars = (size.width / slot).floor().clamp(1, n);
+    final paint = Paint()..style = PaintingStyle.fill;
+    final step = n / maxBars;
 
-    for (var i = 0; i < n; i++) {
-      final h = ((amps[i] / maxAmp) * size.height).clamp(2.0, size.height);
-      final x = i * slot + (slot - barW) / 2;
-      paint.color = ((i + 0.5) / n) <= progress ? active : inactive;
+    for (var i = 0; i < maxBars; i++) {
+      final ampIndex = (i * step).floor().clamp(0, n - 1);
+      final amp = amps[ampIndex];
+      // Silence → small dots (~3pt); louder → grow upward from baseline.
+      final h = amp <= 0
+          ? 3.0
+          : ((amp / maxAmp) * size.height).clamp(3.0, size.height);
+      final x = i * slot;
+      paint.color = ((i + 0.5) / maxBars) <= progress ? active : inactive;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(x, center - h / 2, barW, h),
-          Radius.circular(barW / 2),
+          Rect.fromLTWH(x, baseline - h, _kWaveBarWidth, h),
+          Radius.circular(_kWaveBarWidth / 2),
         ),
         paint,
       );
     }
 
-    _paintKnob(canvas, size, center);
+    _paintKnob(canvas, size);
   }
 
-  void _paintKnob(Canvas canvas, Size size, double center) {
+  void _paintKnob(Canvas canvas, Size size) {
     if (!knob) return;
     final x = (size.width * progress.clamp(0.0, 1.0)).clamp(
       1.5,
