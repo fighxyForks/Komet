@@ -32,8 +32,8 @@ class IosAlertAction<T> {
 /// [LiquidGlassAlert] has no text-field API, so prompts and custom [content]
 /// always use [CupertinoAlertDialog] (or Material when not in iOS mode).
 /// Native presentation is used only when [AppIosGlass.nativeViews] is true and
-/// there is no custom content — and always with a Cupertino fallback if the
-/// native channel returns null (e.g. tests on Linux).
+/// there is no custom content. A null native result is a dismiss. Cupertino is
+/// the fallback only when the native channel throws.
 Future<T?> showIosAlert<T>({
   required BuildContext context,
   String? title,
@@ -81,14 +81,14 @@ Future<T?> showIosAlert<T>({
         message: message,
         actions: nativeActions,
       );
-      if (selected != null) {
-        for (final a in actions) {
-          if (a.id == selected) return a.result;
-        }
-        return null;
+      if (!context.mounted) return null;
+      if (selected == null) return null;
+      for (final a in actions) {
+        if (a.id == selected) return a.result;
       }
+      return null;
     } catch (_) {
-      // Fall through to Cupertino.
+      if (!context.mounted) return null;
     }
   }
 

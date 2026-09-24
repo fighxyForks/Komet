@@ -17,62 +17,25 @@ Future<String?> showTextInputDialog(
   int maxLines = 1,
   TextInputType? keyboardType,
 }) async {
+  if (IosGlass.of(context)) {
+    return showCupertinoDialog<String>(
+      context: context,
+      builder: (dialogContext) => _IosTextPrompt(
+        title: title,
+        description: description,
+        hint: hint,
+        initialValue: initialValue,
+        confirmLabel: confirmLabel,
+        cancelLabel: cancelLabel,
+        obscureText: obscureText,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+      ),
+    );
+  }
+
   final tec = TextEditingController(text: initialValue);
   try {
-    if (IosGlass.of(context)) {
-      final submitted = await showCupertinoDialog<bool>(
-        context: context,
-        builder: (dialogContext) {
-          return CupertinoAlertDialog(
-            title: title == null ? null : Text(title),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (description != null) ...[
-                  Text(description),
-                  const SizedBox(height: 12),
-                ],
-                CupertinoTextField(
-                  controller: tec,
-                  autofocus: true,
-                  obscureText: obscureText,
-                  maxLines: obscureText ? 1 : maxLines,
-                  keyboardType: keyboardType,
-                  placeholder: hint,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  onSubmitted: (_) {
-                    final t = tec.text.trim();
-                    Navigator.pop(dialogContext, t.isNotEmpty);
-                  },
-                ),
-              ],
-            ),
-            actions: [
-              CupertinoDialogAction(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                isDefaultAction: false,
-                child: Text(cancelLabel),
-              ),
-              CupertinoDialogAction(
-                onPressed: () {
-                  final t = tec.text.trim();
-                  Navigator.pop(dialogContext, t.isNotEmpty);
-                },
-                isDefaultAction: true,
-                child: Text(confirmLabel),
-              ),
-            ],
-          );
-        },
-      );
-      if (submitted != true) return null;
-      final t = tec.text.trim();
-      return t.isEmpty ? null : t;
-    }
-
     return await showDialog<String>(
       context: context,
       builder: (dialogContext) {
@@ -141,5 +104,86 @@ Future<String?> showTextInputDialog(
     );
   } finally {
     tec.dispose();
+  }
+}
+
+class _IosTextPrompt extends StatefulWidget {
+  final String? title;
+  final String? description;
+  final String? hint;
+  final String? initialValue;
+  final String confirmLabel;
+  final String cancelLabel;
+  final bool obscureText;
+  final int maxLines;
+  final TextInputType? keyboardType;
+
+  const _IosTextPrompt({
+    required this.title,
+    required this.description,
+    required this.hint,
+    required this.initialValue,
+    required this.confirmLabel,
+    required this.cancelLabel,
+    required this.obscureText,
+    required this.maxLines,
+    required this.keyboardType,
+  });
+
+  @override
+  State<_IosTextPrompt> createState() => _IosTextPromptState();
+}
+
+class _IosTextPromptState extends State<_IosTextPrompt> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initialValue,
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final text = _controller.text.trim();
+    Navigator.pop(context, text.isEmpty ? null : text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoAlertDialog(
+      title: widget.title == null ? null : Text(widget.title!),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.description != null) ...[
+            Text(widget.description!),
+            const SizedBox(height: 12),
+          ],
+          CupertinoTextField(
+            controller: _controller,
+            autofocus: true,
+            obscureText: widget.obscureText,
+            maxLines: widget.obscureText ? 1 : widget.maxLines,
+            keyboardType: widget.keyboardType,
+            placeholder: widget.hint,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
+      ),
+      actions: [
+        CupertinoDialogAction(
+          onPressed: () => Navigator.pop(context),
+          child: Text(widget.cancelLabel),
+        ),
+        CupertinoDialogAction(
+          isDefaultAction: true,
+          onPressed: _submit,
+          child: Text(widget.confirmLabel),
+        ),
+      ],
+    );
   }
 }

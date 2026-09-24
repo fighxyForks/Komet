@@ -34,6 +34,29 @@ void main() {
       expect(find.byType(LiquidGlassContainer), findsNothing);
     });
 
+    testWidgets('непрозрачная капсула всё ещё принимает нажатие', (
+      tester,
+    ) async {
+      var taps = 0;
+      var longPresses = 0;
+      await tester.pumpWidget(
+        _host(
+          GlassCapsule(
+            forceOpaque: true,
+            onTap: () => taps++,
+            onLongPress: () => longPresses++,
+            child: const Text('send'),
+          ),
+        ),
+      );
+      await tester.tap(find.text('send'));
+      await tester.pump();
+      expect(taps, 1);
+      await tester.longPress(find.text('send'));
+      await tester.pump();
+      expect(longPresses, 1);
+    });
+
     testWidgets('кнопка вызывает колбэк и отдаёт свой прямоугольник', (
       tester,
     ) async {
