@@ -51,6 +51,7 @@ import 'glass/ios_typography.dart';
 import 'glass/ios_tracking.dart';
 import 'glass/ios_palette.dart';
 import 'glass/screen_gradient_bubble.dart';
+import 'sender_name_color.dart';
 
 final Expando<MessageType> _contentTypeCache = Expando<MessageType>();
 final Expando<List<MessageAttachment>> _contentAttachmentsCache =
@@ -1034,19 +1035,8 @@ class MessageBubble extends StatelessWidget {
 
   static const double _replyWidthShare = 0.75;
 
-  static const List<Color> _senderPalette = [
-    Color(0xFFE57373),
-    Color(0xFF64B5F6),
-    Color(0xFF81C784),
-    Color(0xFFFFB74D),
-    Color(0xFFBA68C8),
-    Color(0xFF4DD0E1),
-    Color(0xFFF06292),
-    Color(0xFFA1887F),
-  ];
-
-  Color _senderColor(int id) =>
-      _senderPalette[id.abs() % _senderPalette.length];
+  Color _senderColor(int id, Brightness brightness) =>
+      SenderNameColor.of(id, brightness);
 
   Widget _buildSenderHeader(
     ColorScheme cs,
@@ -1064,7 +1054,7 @@ class MessageBubble extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: _senderColor(message.senderId),
+          color: _senderColor(message.senderId, cs.brightness),
           fontSize: ios ? IosBubbleMetrics.senderNameSize : 13,
           fontWeight: FontWeight.w600,
         ),
@@ -2155,7 +2145,7 @@ class MessageBubble extends StatelessWidget {
     ReplyInfo reply,
     double maxBubbleWidth,
   ) {
-    final accent = _senderColor(reply.senderId);
+    final accent = _senderColor(reply.senderId, cs.brightness);
     final name = reply.senderId == myId
         ? 'Вы'
         : (ContactCache.get(reply.senderId) ?? 'Сообщение');
