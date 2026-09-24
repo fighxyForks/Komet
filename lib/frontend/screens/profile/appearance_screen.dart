@@ -25,6 +25,7 @@ import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/liquid_glass.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class AppearanceScreen extends StatefulWidget {
   const AppearanceScreen({super.key});
@@ -181,8 +182,10 @@ class _VisualStyleCard extends StatelessWidget {
             l10n.appearanceVisualStyleTitle,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+              fontWeight: IosGlass.of(context)
+                  ? IosTypography.semibold
+                  : FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
@@ -304,8 +307,10 @@ class _ChatChromeCard extends StatelessWidget {
             l10n.appearanceChatChromeTitle,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+              fontWeight: IosGlass.of(context)
+                  ? IosTypography.semibold
+                  : FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
@@ -322,41 +327,34 @@ class _ChatChromeCard extends StatelessWidget {
                       !LiquidGlass.isSupported
                   ? ChatChromeStyle.transparent
                   : current;
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SegmentedButton<ChatChromeStyle>(
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(
-                      value: ChatChromeStyle.color,
-                      label: Text(l10n.appearanceChatChromeColor),
+              return IosSegmentedControl<ChatChromeStyle>(
+                groupValue: selectable,
+                onValueChanged: (v) {
+                  if (v != null) AppChatChrome.save(v);
+                },
+                children: {
+                  ChatChromeStyle.color: Text(
+                    l10n.appearanceChatChromeColor,
+                    textAlign: TextAlign.center,
+                  ),
+                  ChatChromeStyle.blur: Text(
+                    l10n.appearanceChatChromeBlur,
+                    textAlign: TextAlign.center,
+                  ),
+                  ChatChromeStyle.none: Text(
+                    l10n.appearanceChatChromeNone,
+                    textAlign: TextAlign.center,
+                  ),
+                  ChatChromeStyle.transparent: Text(
+                    l10n.appearanceChatChromeTransparent,
+                    textAlign: TextAlign.center,
+                  ),
+                  if (LiquidGlass.isSupported)
+                    ChatChromeStyle.liquidGlass: Text(
+                      l10n.appearanceGlassMaterial,
+                      textAlign: TextAlign.center,
                     ),
-                    ButtonSegment(
-                      value: ChatChromeStyle.blur,
-                      label: Text(l10n.appearanceChatChromeBlur),
-                    ),
-                    ButtonSegment(
-                      value: ChatChromeStyle.none,
-                      label: Text(l10n.appearanceChatChromeNone),
-                    ),
-                    ButtonSegment(
-                      value: ChatChromeStyle.transparent,
-                      label: Text(l10n.appearanceChatChromeTransparent),
-                    ),
-                    if (LiquidGlass.isSupported)
-                      ButtonSegment(
-                        value: ChatChromeStyle.liquidGlass,
-                        label: Text(l10n.appearanceGlassMaterial),
-                      ),
-                  ],
-                  selected: {selectable},
-                  onSelectionChanged: (set) {
-                    if (set.isNotEmpty) {
-                      Haptics.selection();
-                      AppChatChrome.save(set.first);
-                    }
-                  },
-                ),
+                },
               );
             },
           ),
@@ -381,8 +379,10 @@ class _ComposerBarCard extends StatelessWidget {
             l10n.appearanceComposerTitle,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+              fontWeight: IosGlass.of(context)
+                  ? IosTypography.semibold
+                  : FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
@@ -394,32 +394,25 @@ class _ComposerBarCard extends StatelessWidget {
           ValueListenableBuilder<ComposerStyle>(
             valueListenable: AppComposerStyle.current,
             builder: (context, current, _) {
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SegmentedButton<ComposerStyle>(
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(
-                      value: ComposerStyle.auto,
-                      label: Text(l10n.appearanceStyleAuto),
-                    ),
-                    ButtonSegment(
-                      value: ComposerStyle.glossy,
-                      label: Text(l10n.appearanceVisualStyleGlossy),
-                    ),
-                    ButtonSegment(
-                      value: ComposerStyle.materialYou,
-                      label: Text(l10n.appearanceVisualStyleMaterialYou),
-                    ),
-                  ],
-                  selected: {current},
-                  onSelectionChanged: (set) {
-                    if (set.isNotEmpty) {
-                      Haptics.selection();
-                      AppComposerStyle.save(set.first);
-                    }
-                  },
-                ),
+              return IosSegmentedControl<ComposerStyle>(
+                groupValue: current,
+                onValueChanged: (v) {
+                  if (v != null) AppComposerStyle.save(v);
+                },
+                children: {
+                  ComposerStyle.auto: Text(
+                    l10n.appearanceStyleAuto,
+                    textAlign: TextAlign.center,
+                  ),
+                  ComposerStyle.glossy: Text(
+                    l10n.appearanceVisualStyleGlossy,
+                    textAlign: TextAlign.center,
+                  ),
+                  ComposerStyle.materialYou: Text(
+                    l10n.appearanceVisualStyleMaterialYou,
+                    textAlign: TextAlign.center,
+                  ),
+                },
               );
             },
           ),
@@ -432,29 +425,25 @@ class _ComposerBarCard extends StatelessWidget {
                       !LiquidGlass.isSupported
                   ? ComposerBackground.frostBlur
                   : current;
-              return SegmentedButton<ComposerBackground>(
-                showSelectedIcon: false,
-                segments: [
-                  ButtonSegment(
-                    value: ComposerBackground.standard,
-                    label: Text(l10n.appearanceComposerBackgroundStandard),
+              return IosSegmentedControl<ComposerBackground>(
+                groupValue: selectable,
+                onValueChanged: (v) {
+                  if (v != null) AppComposerBackground.save(v);
+                },
+                children: {
+                  ComposerBackground.standard: Text(
+                    l10n.appearanceComposerBackgroundStandard,
+                    textAlign: TextAlign.center,
                   ),
-                  ButtonSegment(
-                    value: ComposerBackground.frostBlur,
-                    label: Text(l10n.appearanceComposerBackgroundFrost),
+                  ComposerBackground.frostBlur: Text(
+                    l10n.appearanceComposerBackgroundFrost,
+                    textAlign: TextAlign.center,
                   ),
                   if (LiquidGlass.isSupported)
-                    ButtonSegment(
-                      value: ComposerBackground.liquidGlass,
-                      label: Text(l10n.appearanceGlassMaterial),
+                    ComposerBackground.liquidGlass: Text(
+                      l10n.appearanceGlassMaterial,
+                      textAlign: TextAlign.center,
                     ),
-                ],
-                selected: {selectable},
-                onSelectionChanged: (set) {
-                  if (set.isNotEmpty) {
-                    Haptics.selection();
-                    AppComposerBackground.save(set.first);
-                  }
                 },
               );
             },
@@ -480,8 +469,10 @@ class _NavPillStyleCard extends StatelessWidget {
             l10n.appearanceNavPillTitle,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+              fontWeight: IosGlass.of(context)
+                  ? IosTypography.semibold
+                  : FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
@@ -498,37 +489,30 @@ class _NavPillStyleCard extends StatelessWidget {
                       !LiquidGlass.isSupported
                   ? NavPillStyle.frostBlur
                   : current;
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SegmentedButton<NavPillStyle>(
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(
-                      value: NavPillStyle.auto,
-                      label: Text(l10n.appearanceStyleAuto),
+              return IosSegmentedControl<NavPillStyle>(
+                groupValue: selectable,
+                onValueChanged: (v) {
+                  if (v != null) AppNavPillStyle.save(v);
+                },
+                children: {
+                  NavPillStyle.auto: Text(
+                    l10n.appearanceStyleAuto,
+                    textAlign: TextAlign.center,
+                  ),
+                  NavPillStyle.glossy: Text(
+                    l10n.appearanceNavPillGlossy,
+                    textAlign: TextAlign.center,
+                  ),
+                  NavPillStyle.frostBlur: Text(
+                    l10n.appearanceNavPillFrost,
+                    textAlign: TextAlign.center,
+                  ),
+                  if (LiquidGlass.isSupported)
+                    NavPillStyle.liquidGlass: Text(
+                      l10n.appearanceGlassMaterial,
+                      textAlign: TextAlign.center,
                     ),
-                    ButtonSegment(
-                      value: NavPillStyle.glossy,
-                      label: Text(l10n.appearanceNavPillGlossy),
-                    ),
-                    ButtonSegment(
-                      value: NavPillStyle.frostBlur,
-                      label: Text(l10n.appearanceNavPillFrost),
-                    ),
-                    if (LiquidGlass.isSupported)
-                      ButtonSegment(
-                        value: NavPillStyle.liquidGlass,
-                        label: Text(l10n.appearanceGlassMaterial),
-                      ),
-                  ],
-                  selected: {selectable},
-                  onSelectionChanged: (set) {
-                    if (set.isNotEmpty) {
-                      Haptics.selection();
-                      AppNavPillStyle.save(set.first);
-                    }
-                  },
-                ),
+                },
               );
             },
           ),
@@ -953,8 +937,10 @@ class _BubbleShapeCard extends StatelessWidget {
             l10n.appearanceBubbleShapeTitle,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+              fontWeight: IosGlass.of(context)
+                  ? IosTypography.semibold
+                  : FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
@@ -1008,8 +994,10 @@ class _BubbleBehaviorCard extends StatelessWidget {
             l10n.appearanceBubbleBehaviorTitle,
             style: TextStyle(
               color: cs.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+              fontWeight: IosGlass.of(context)
+                  ? IosTypography.semibold
+                  : FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
