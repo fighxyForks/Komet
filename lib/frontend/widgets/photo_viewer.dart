@@ -29,6 +29,7 @@ import '../../models/attachment.dart';
 import 'attachment/photo_hero.dart';
 import 'media_scrubber.dart';
 import '../motion/gallery_dismiss.dart';
+import '../motion/ios_haptics.dart';
 import '../motion/ios_motion.dart';
 import '../motion/zoom_transform.dart';
 import 'animated_slash_icon.dart';
@@ -518,6 +519,10 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
   void _step(int delta) {
     final next = _index + delta;
     if (next < 0 || next >= _items.length) return;
+    if (IosMotion.reduceMotionOf(context)) {
+      _controller.jumpToPage(next);
+      return;
+    }
     _controller.animateToPage(
       next,
       duration: const Duration(milliseconds: 220),
@@ -827,12 +832,29 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     action();
   }
 
+  bool get _doubleTapZoomPossible {
+    if (_current.isVideo) return false;
+    if (IosMotion.reduceMotionOf(context)) return false;
+    return true;
+  }
+
+  bool _isEdgeTap(Offset pos) {
+    final size = MediaQuery.sizeOf(context);
+    final inset = IosMotion.doubleTapEdgeInset;
+    return pos.dx < inset ||
+        pos.dy < inset ||
+        pos.dx > size.width - inset ||
+        pos.dy > size.height - inset;
+  }
+
   void _onPageTapUp(TapUpDetails details) {
     final now = DateTime.now();
     final pos = details.localPosition;
     final lastAt = _lastTapAt;
     final lastPos = _tapLocal;
-    if (lastAt != null &&
+    final canDouble = _doubleTapZoomPossible;
+    if (canDouble &&
+        lastAt != null &&
         lastPos != null &&
         now.difference(lastAt) <= IosMotion.singleTapDelay &&
         (pos - lastPos).distance <= 48) {
@@ -842,9 +864,15 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
       _handleDoubleTapZoom(pos);
       return;
     }
+    _singleTapTimer?.cancel();
+    if (!canDouble || _isEdgeTap(pos)) {
+      _lastTapAt = null;
+      _tapLocal = null;
+      _toggleChrome();
+      return;
+    }
     _lastTapAt = now;
     _tapLocal = pos;
-    _singleTapTimer?.cancel();
     _singleTapTimer = Timer(IosMotion.singleTapDelay, () {
       _lastTapAt = null;
       _tapLocal = null;
@@ -874,6 +902,10 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
             focalViewport: focalViewport,
             targetScale: targetScale,
           );
+    if (IosMotion.reduceMotionOf(context)) {
+      transform.value = target;
+      return;
+    }
     animateMatrixSpring(
       controller: _zoomAnim,
       transform: transform,
@@ -916,12 +948,16 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     final sameTy =
         (target.storage[13] - transform.value.storage[13]).abs() < 0.5;
     if (!(sameScale && sameTx && sameTy)) {
-      animateMatrixSpring(
-        controller: _zoomAnim,
-        transform: transform,
-        target: target,
-        spring: IosMotion.dismissSnap,
-      );
+      if (IosMotion.reduceMotionOf(context)) {
+        transform.value = target;
+      } else {
+        animateMatrixSpring(
+          controller: _zoomAnim,
+          transform: transform,
+          target: target,
+          spring: IosMotion.dismissSnap,
+        );
+      }
     }
   }
 
@@ -934,18 +970,22 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
 
   Future<void> _commitDismiss() async {
     if (!mounted) return;
+    final reduce = IosMotion.reduceMotionOf(context);
+    final velocityY = _dismiss.gestureVelocityY;
     final hero = widget.hero;
     if (hero != null) {
       _syncHero();
       if (hero.originRect != null) {
         hero.dismissMediaOffset = Offset(0, _dismiss.offset);
         hero.dismissMediaScale = _dismiss.mediaScale;
-        hero.dismissVelocityY = _dismiss.animation.velocity;
+        hero.dismissVelocityY = velocityY;
         Navigator.of(context).pop();
         return;
       }
     }
     await _dismiss.flyOff(
+      velocityY: velocityY,
+      reduceMotion: reduce,
       onDone: () {
         if (mounted) Navigator.of(context).maybePop();
       },
@@ -974,10 +1014,28 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
                 (GalleryDismissDragRecognizer instance) {
                   instance.onStart = (_) => _dismiss.onDragStart();
                   instance.onUpdate = (details) {
-                    _dismiss.onDragUpdate(details.delta.dy);
+                    final crossed = _dismiss.onDragUpdate(details.delta.dy);
+                    if (crossed) IosHaptics.dismissThreshold();
                   };
-                  instance.onEnd = _onDismissDragEnd;
-                  instance.onCancel = _dismiss.onDragCancel;
+                  instance.onEnd = (details) {
+                    if (IosMotion.reduceMotionOf(context) &&
+                        !IosMotion.shouldCommitDismiss(
+                          offset: _dismiss.offset,
+                          velocityY: details.primaryVelocity ?? 0,
+                          viewportHeight: MediaQuery.sizeOf(context).height,
+                        )) {
+                      _dismiss.snapBackImmediate();
+                      return;
+                    }
+                    _onDismissDragEnd(details);
+                  };
+                  instance.onCancel = () {
+                    if (IosMotion.reduceMotionOf(context)) {
+                      _dismiss.snapBackImmediate();
+                    } else {
+                      _dismiss.onDragCancel();
+                    }
+                  };
                 },
               ),
         },

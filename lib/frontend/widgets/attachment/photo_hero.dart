@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 
 import '../../motion/ios_motion.dart';
 
@@ -97,6 +98,36 @@ class PhotoHeroRoute<T> extends PageRouteBuilder<T> {
       );
 
   final PhotoHeroController hero;
+
+  @override
+  Simulation? createSimulation({required bool forward}) {
+    final navContext = navigator?.context;
+    final reduce =
+        navContext != null && IosMotion.reduceMotionOf(navContext);
+    final target = forward ? 1.0 : 0.0;
+    final current = controller?.value ?? (forward ? 0.0 : 1.0);
+    if (reduce) {
+      return SnapSimulation(target);
+    }
+    var velocity = 0.0;
+    if (!forward && hero.dismissVelocityY != 0) {
+      final span = hero.areaRect?.height ??
+          (navContext != null
+              ? MediaQuery.sizeOf(navContext).height
+              : 800.0);
+      // Closing: animation 1→0. A dismiss fling should accelerate toward 0.
+      velocity = -springVelocityFromPixels(
+        pixelsPerSecond: hero.dismissVelocityY.abs(),
+        spanPixels: span,
+      );
+    }
+    return SpringSimulation(
+      IosMotion.hero,
+      current,
+      target,
+      velocity,
+    );
+  }
 
   @override
   void dispose() {
@@ -315,7 +346,8 @@ class _PhotoHeroTransitionState extends State<_PhotoHeroTransition> {
   @override
   Widget build(BuildContext context) {
     final provider = widget.controller.image.value;
-    if (!_flying || provider == null) {
+    final reduce = IosMotion.reduceMotionOf(context);
+    if (reduce || !_flying || provider == null) {
       return AnimatedBuilder(
         animation: widget.animation,
         child: widget.child,
@@ -342,9 +374,7 @@ class _PhotoHeroTransitionState extends State<_PhotoHeroTransition> {
     );
   }
 
-  /// Spring-like progress for open/close (easeOutCubic settles ~0.3–0.35s).
-  double get _flightT =>
-      Curves.easeOutCubic.transform(widget.animation.value.clamp(0.0, 1.0));
+  double get _flightT => widget.animation.value.clamp(0.0, 1.0);
 
   /// Background page dim: ~150ms in on open, ~100ms out on close.
   double get _dimOpacity {
