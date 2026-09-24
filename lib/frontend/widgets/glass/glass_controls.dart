@@ -20,9 +20,16 @@ class GlassSwitch extends StatelessWidget {
       return Switch(value: value, onChanged: onChanged);
     }
     final cs = Theme.of(context).colorScheme;
+    // Keep CupertinoSwitch — LiquidGlassToggle is a platform view and is not
+    // safe one-per-row in settings lists (glass budget ≤1–2 views/screen).
     return CupertinoSwitch(
       value: value,
-      onChanged: onChanged,
+      onChanged: onChanged == null
+          ? null
+          : (v) {
+              Haptics.selection();
+              onChanged!(v);
+            },
       activeTrackColor: cs.primary,
     );
   }
@@ -202,6 +209,96 @@ class GlassTabStrip extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Adaptive segmented control: Cupertino sliding in iOS mode, Material otherwise.
+class IosSegmentedControl<T extends Object> extends StatelessWidget {
+  final Map<T, Widget> children;
+  final T? groupValue;
+  final ValueChanged<T?> onValueChanged;
+  final bool proportional;
+
+  const IosSegmentedControl({
+    super.key,
+    required this.children,
+    required this.groupValue,
+    required this.onValueChanged,
+    this.proportional = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!IosGlass.of(context)) {
+      return SegmentedButton<T>(
+        showSelectedIcon: false,
+        segments: [
+          for (final e in children.entries)
+            ButtonSegment<T>(value: e.key, label: e.value),
+        ],
+        selected: {if (groupValue != null) groupValue as T},
+        onSelectionChanged: (set) {
+          if (set.isNotEmpty) onValueChanged(set.first);
+        },
+      );
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: CupertinoSlidingSegmentedControl<T>(
+        groupValue: groupValue,
+        children: children,
+        proportionalWidth: proportional,
+        onValueChanged: (v) {
+          if (v != null) Haptics.selection();
+          onValueChanged(v);
+        },
+      ),
+    );
+  }
+}
+
+/// Adaptive slider: Cupertino in iOS mode, Material otherwise.
+class IosSlider extends StatelessWidget {
+  final double value;
+  final ValueChanged<double>? onChanged;
+  final ValueChanged<double>? onChangeEnd;
+  final double min;
+  final double max;
+  final int? divisions;
+
+  const IosSlider({
+    super.key,
+    required this.value,
+    this.onChanged,
+    this.onChangeEnd,
+    this.min = 0,
+    this.max = 1,
+    this.divisions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!IosGlass.of(context)) {
+      return Slider(
+        value: value,
+        onChanged: onChanged,
+        onChangeEnd: onChangeEnd,
+        min: min,
+        max: max,
+        divisions: divisions,
+      );
+    }
+    return SizedBox(
+      width: double.infinity,
+      child: CupertinoSlider(
+        value: value.clamp(min, max),
+        onChanged: onChanged,
+        onChangeEnd: onChangeEnd,
+        min: min,
+        max: max,
+        divisions: divisions,
       ),
     );
   }
