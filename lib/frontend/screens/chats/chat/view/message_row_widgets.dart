@@ -14,6 +14,7 @@ import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/core/config/app_message_actions_style.dart';
 import 'package:komet/core/crypto/message_decryption_cache.dart';
 import 'package:komet/core/utils/haptics.dart';
+import 'package:komet/frontend/motion/ios_haptics.dart';
 import 'package:komet/frontend/motion/ios_motion.dart';
 import 'package:komet/core/utils/text_format.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
@@ -79,16 +80,26 @@ class _SwipeToReplyState extends State<SwipeToReply>
     if (_springBack.isAnimating) _springBack.stop();
     var next = _dragX + d.delta.dx;
     if (next > 0) next = 0;
-    next = IosMotion.rubberBand(
-      offset: next,
-      bandingStart: IosMotion.replyBandingStart,
-      range: IosMotion.replyMaxVisual - IosMotion.replyBandingStart,
-      coefficient: 0.45,
-    );
-    if (next < -IosMotion.replyMaxVisual) next = -IosMotion.replyMaxVisual;
+    if (IosMotion.reduceMotionOf(context)) {
+      if (next < -IosMotion.replyMaxVisual) next = -IosMotion.replyMaxVisual;
+    } else {
+      next = IosMotion.rubberBand(
+        offset: next,
+        bandingStart: IosMotion.replyBandingStart,
+        range: IosMotion.replyMaxVisual - IosMotion.replyBandingStart,
+        coefficient: 0.45,
+      );
+      if (next < -IosMotion.replyMaxVisual) next = -IosMotion.replyMaxVisual;
+    }
     final wasTriggered = _triggered;
     _triggered = next <= -_trigger;
-    if (_triggered && !wasTriggered) Haptics.heavy();
+    if (_triggered && !wasTriggered) {
+      if (IosGlass.of(context)) {
+        IosHaptics.swipeToReplyThreshold();
+      } else {
+        Haptics.heavy();
+      }
+    }
     setState(() => _dragX = next);
   }
 
@@ -101,6 +112,10 @@ class _SwipeToReplyState extends State<SwipeToReply>
 
   void _settle() {
     _triggered = false;
+    if (IosMotion.reduceMotionOf(context)) {
+      setState(() => _dragX = 0);
+      return;
+    }
     _springBack.value = _dragX;
     animateSpring(_springBack, target: 0, spring: IosMotion.dismissSnap);
   }
