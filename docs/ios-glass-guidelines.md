@@ -95,3 +95,7 @@ In iOS mode call buttons use Flutter-drawn glass (tint + rim + shadow) and `IosT
 ## Emoji panel
 
 See [emoji-panel.md](./emoji-panel.md) for Unicode data, licenses, regeneration, and the OS version filter.
+
+## Native prototypes
+
+See [ios-native-prototypes.md](./ios-native-prototypes.md) for experimental UISheet / tab-minimize prototypes (flags default off).
