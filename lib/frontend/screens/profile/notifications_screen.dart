@@ -7,6 +7,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../core/push/fkm_bridge.dart';
 import '../../../core/push/fkm_controller.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/config/build_profile.dart';
 import '../../../main.dart' show accountModule;
@@ -91,8 +92,15 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
   Future<void> _setHaptics(bool value) async {
     await Haptics.setEnabled(value);
-    if (value) Haptics.success();
-    if (mounted) setState(() => _hapticsEnabled = value);
+    if (!mounted) return;
+    if (value) {
+      if (IosGlass.of(context)) {
+        IosHaptics.success();
+      } else {
+        Haptics.success();
+      }
+    }
+    setState(() => _hapticsEnabled = value);
   }
 
   void _openWebPush() {

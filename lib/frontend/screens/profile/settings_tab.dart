@@ -10,6 +10,7 @@ import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_alert.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
+import '../../motion/ios_haptics.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../../core/cache/self_presence.dart';
@@ -175,7 +176,11 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         if (px < delta) {
           if (!_zoneHapticFired) {
             _zoneHapticFired = true;
-            HapticFeedback.lightImpact();
+            if (IosGlass.of(context)) {
+              IosHaptics.selectionChange();
+            } else {
+              HapticFeedback.lightImpact();
+            }
           }
         } else {
           _zoneHapticFired = false;
@@ -183,7 +188,11 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         final pastCommit = px < delta / 2;
         if (pastCommit != _pastCommitPoint) {
           _pastCommitPoint = pastCommit;
-          HapticFeedback.mediumImpact();
+          if (IosGlass.of(context)) {
+            IosHaptics.warning();
+          } else {
+            HapticFeedback.mediumImpact();
+          }
         }
       }
     } else if (n is ScrollEndNotification) {

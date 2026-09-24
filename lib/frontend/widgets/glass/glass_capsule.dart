@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:native_liquid_glass/native_liquid_glass.dart';
 
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../springy_tap.dart';
 import 'ios_glass.dart';
 
@@ -171,8 +172,12 @@ class GlassCapsule extends StatelessWidget {
     height ?? (constraints.hasTightHeight ? constraints.maxHeight : null),
   );
 
-  void _handleTap() {
-    Haptics.tap();
+  void _handleTap(BuildContext context) {
+    if (IosGlass.of(context)) {
+      IosHaptics.itemActivate();
+    } else {
+      Haptics.tap();
+    }
     onTap?.call();
   }
 
@@ -212,7 +217,7 @@ class GlassCapsule extends StatelessWidget {
                   tint: tint,
                   interactive: onTap != null,
                 ),
-                onTap: onTap == null ? null : _handleTap,
+                onTap: onTap == null ? null : () => _handleTap(context),
                 child: SizedBox(width: w, height: h, child: content),
               );
               if (onLongPress == null) return native;
@@ -231,7 +236,7 @@ class GlassCapsule extends StatelessWidget {
         if (onTap == null && onLongPress == null) return surface;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: onTap == null ? null : _handleTap,
+          onTap: onTap == null ? null : () => _handleTap(context),
           onLongPress: onLongPress,
           child: SpringyTap(pressedScale: 0.94, child: surface),
         );
@@ -356,7 +361,11 @@ class GlassButtonGroup extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   onTap: item.enabled
                       ? () {
-                          Haptics.tap();
+                          if (IosGlass.of(context)) {
+                            IosHaptics.itemActivate();
+                          } else {
+                            Haptics.tap();
+                          }
                           item.onPressed?.call();
                           item.onPressedAt?.call(globalRectOf(itemContext));
                         }

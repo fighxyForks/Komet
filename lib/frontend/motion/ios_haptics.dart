@@ -20,7 +20,11 @@ abstract final class IosHaptics {
 
   static void error() => Haptics.error();
 
+  static void warning() => Haptics.medium();
+
   static void toggle() => Haptics.selection();
+
+  static void vote() => Haptics.tap();
 
   static void itemActivate() => Haptics.tap();
 
