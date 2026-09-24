@@ -7,13 +7,15 @@ import '../../../core/utils/haptics.dart';
 import '../animated_overlay_popup.dart';
 import '../chat_menu_item.dart';
 import 'glass_capsule.dart';
+import 'ios_metrics.dart';
+import 'ios_tappable.dart';
 
 class GlassMenuStyle {
   static const double width = 240;
   static const double margin = 12;
   static const double gap = 8;
-  static const double radius = 22;
-  static const double rowHeight = 40;
+  static const double radius = IosMetrics.menuRadius;
+  static const double rowHeight = IosMetrics.minHitTarget;
   static const double fontSize = 15;
   static const double iconSize = 19;
 
@@ -298,7 +300,7 @@ class GlassMenuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final fg = item.destructive ? cs.error : cs.onSurface;
-    return InkWell(
+    return IosTappable(
       onTap: onTap,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: GlassMenuStyle.rowHeight),

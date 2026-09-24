@@ -6,6 +6,7 @@ import '../../../core/utils/haptics.dart';
 import 'glass_capsule.dart';
 import 'ios_palette.dart';
 import 'ios_glass.dart';
+import 'ios_metrics.dart';
 
 class GlassSwitch extends StatelessWidget {
   final bool value;
@@ -64,7 +65,7 @@ class IosFlatSearchBar extends StatelessWidget {
     super.key,
     required this.hint,
     this.onTap,
-    this.height = 42,
+    this.height = IosMetrics.searchBarHeight,
   });
 
   @override
@@ -137,7 +138,7 @@ class GlassTabStrip extends StatelessWidget {
     required this.selected,
     required this.onSelected,
     this.controller,
-    this.height = 42,
+    this.height = IosMetrics.searchBarHeight,
   });
 
   @override

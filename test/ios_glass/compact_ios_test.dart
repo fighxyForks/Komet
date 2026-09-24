@@ -153,7 +153,7 @@ void main() {
     );
     expect(
       tester.getSize(find.byKey(const ValueKey('chat-header-menu'))),
-      const Size(42, 46),
+      const Size(44, 46),
     );
     expect(tester.takeException(), isNull);
   });
