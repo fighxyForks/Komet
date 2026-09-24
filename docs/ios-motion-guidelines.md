@@ -2,20 +2,29 @@
 
 Companion to [ios-glass-guidelines.md](./ios-glass-guidelines.md). Shared springs,
 thresholds, and gesture arbitration for interactive UI. Values live in
-`lib/frontend/motion/ios_motion.dart`.
+`lib/frontend/motion/ios_motion.dart`. Semantic haptics: `ios_haptics.dart`.
 
 ## Spring presets (`IosMotion`)
 
 | Preset | Role |
 |--------|------|
-| `soft` | Overdamped underlay / push |
-| `standard` | Default interactive settle (hero-ish, zoom) |
+| `soft` | Overdamped underlay / push / fly-off |
+| `standard` | Default interactive settle (zoom) |
+| `hero` | Critically damped photo hero open/close |
+| `overlay` | Critically damped menu / message-actions appear |
 | `dismissSnap` | Gallery dismiss snap-back |
 | `bounce` | Light overshoot on lift |
 | `press` | List press (SpringyTap) |
-| `preview` | Overlay / preview grow |
+| `preview` | Chat preview grow |
 
-Use `animateSpring(controller, target: …)` or `animateMatrixSpring` for matrix zoom.
+Use `animateSpring(controller, target: …, velocity: …)` or `animateMatrixSpring`
+for matrix zoom. Re-calling `animateSpring` mid-flight with
+`velocity: controller.velocity` preserves momentum (no jump).
+
+Route transitions that opt into physics override `TransitionRoute.createSimulation`
+(Flutter 3.47+) so `PhotoHeroRoute` drives open/close with `SpringSimulation`
+instead of timed curves. Durations (`heroOpen` / `heroClose`) are upper-bound
+fallbacks when a simulation is not used.
 
 ## Gallery thresholds
 
@@ -27,19 +36,37 @@ Use `animateSpring(controller, target: …)` or `animateMatrixSpring` for matrix
 | `dismissChromePixels` | 50 | Chrome fade distance |
 | `zoomSoftMax` / `zoomHardMax` | 3.0 / 3.6 | Soft limit; rubber-band ceiling |
 | `doubleTapZoomScale` | 2.75 | Double-tap target scale |
-| `singleTapDelay` | 200 ms | Deferred chrome toggle so double-tap can win |
-| `doubleTapEdgeInset` | 44 | Edge taps toggle chrome only |
+| `singleTapDelay` | 200 ms | Deferred chrome toggle **only when** double-tap zoom is possible |
+| `doubleTapEdgeInset` | 44 | Edge taps toggle chrome immediately |
 | `galleryPageGap` | 20 | Visual gap between pages |
+
+### Single-tap delay rule
+
+Delay chrome toggle by `singleTapDelay` (200 ms) **only** when a double-tap zoom
+can claim the second tap: zoomable still image, Reduce Motion off, and tap not
+in the 44 pt edge inset. Otherwise toggle chrome immediately (videos already
+use an immediate surface tap).
 
 ## Gesture arbitration (media viewer)
 
 1. **Pinch / zoomed** (`scale > 1.01` or ≥2 pointers) wins over dismiss and paging.
 2. **Vertical drag** at fit scale → interactive dismiss (`GalleryDismissDragRecognizer`).
 3. **Horizontal drag** → page change (`PageView`).
-4. **Double-tap** (within `singleTapDelay`, away from edges) → spring zoom to point / back to fit.
-5. **Single tap** → chrome toggle after `singleTapDelay` (cancelled by double-tap).
+4. **Double-tap** (within `singleTapDelay`, away from edges, when zoomable) → spring zoom to point / back to fit.
+5. **Single tap** → chrome toggle (delayed only per rule above).
 
 During dismiss drag: update `Transform` / opacity via `AnimatedBuilder` — do not rebuild the pager subtree. No live blur over the drag (see glass budget).
+
+## Velocity handoff
+
+- `GalleryDismissController.gestureVelocityY` stores the drag-end velocity (px/s).
+  Do **not** read `animation.velocity` after a manual drag — it is typically ~0.
+- Commit with a thumbnail: write `dismissMediaOffset` / `dismissMediaScale` /
+  `dismissVelocityY` into `PhotoHeroController`, then pop. Reverse
+  `createSimulation` feeds that velocity into the closing spring
+  (toward animation value 0).
+- Commit without a thumbnail: `flyOff(velocityY: …)` continues off-screen with a
+  spring that starts at the gesture velocity.
 
 ## Swipe to reply
 
@@ -50,25 +77,66 @@ During dismiss drag: update `Transform` / opacity via `AnimatedBuilder` — do n
 | `replyBandingStart` | 60 |
 | `replyMaxVisual` | 120 |
 
-Axis-locked leftward recognizer; rubber-band past banding start; heavy haptic when crossing the trigger; spring snap-back.
+Axis-locked leftward recognizer; rubber-band past banding start; heavy haptic
+(`IosHaptics.swipeToReplyThreshold`) when crossing the trigger; spring snap-back.
 
 ## Hero transition
 
-- Open / close durations: `heroOpen` (340 ms) / `heroClose` (300 ms) with `Curves.easeOutCubic` flight progress.
-- Dim: `dimIn` 150 ms on open, `dimOut` 100 ms on close.
-- Interactive dismiss can hand off offset / scale / velocity into reverse flight via `PhotoHeroController`.
+- Open / close: `IosMotion.hero` critically damped `SpringSimulation` via
+  `PhotoHeroRoute.createSimulation`.
+- Dim: `dimIn` 150 ms on open, `dimOut` 100 ms on close (as fractions of progress).
+- Interactive dismiss hands offset / scale / velocity into reverse flight.
 
 ## Overlay appearance
 
-Message actions and glass menus use `Curves.easeOutCubic` (aligned with `IosMotion.preview` settle) instead of back-easing. Pair with a medium haptic on open.
+Message actions (iOS mode) and glass menus use `IosMotion.overlay` springs.
+Reversing mid-appear keeps `controller.velocity`. Scale morph is disabled under
+Reduce Motion (fade only). Pair open with `IosHaptics.menuOpen` /
+`IosHaptics.longPress`.
+
+## Reduce Motion
+
+Single helper: `IosMotion.reduceMotionOf(context)` →
+`MediaQuery.disableAnimationsOf(context)`.
+
+| Surface | Reduced behavior |
+|---------|------------------|
+| Hero | Cross-fade only (`SnapSimulation`); no zoom flight |
+| Gallery dismiss snap-back | Instant reset |
+| Gallery fly-off | Instant off-screen |
+| Zoom / double-tap | Set matrix immediately |
+| Overlays / menus | Fade only, no scale; instant if needed |
+| Swipe-to-reply | No rubber-band; snap settle without spring |
+| Page step (keyboard) | `jumpToPage` |
+
+Haptics stay enabled under Reduce Motion (animations are cut, not feedback).
+
+## Haptics map (`IosHaptics`)
+
+Use under `IosGlass` paths instead of ad-hoc `Haptics` / `HapticFeedback`:
+
+| Event | Feedback |
+|-------|----------|
+| `selectionChange` | selection click |
+| `swipeToReplyThreshold` | heavy |
+| `dismissThreshold` | medium (first cross of distance threshold) |
+| `menuOpen` / `longPress` | medium |
+| `toggle` | selection |
+| `itemActivate` | light |
+| `destructiveActivate` | medium |
+| `success` / `error` | composite patterns |
+
+Material / Android call sites keep using `Haptics` directly.
 
 ## Testing checklist
 
 - [ ] Gallery: dismiss commit vs snap-back; zoom blocks dismiss; double-tap zoom / unzoom
+- [ ] Gallery: velocity handoff into hero; fly-off continues with fling velocity
 - [ ] Gallery: page gap visible; neighbor images precache without spikes
-- [ ] Video: scrubber thickens while dragging; seek debounced; hides with chrome
+- [ ] Video: scrubber thickens while dragging; seek debounced; hides with chrome; chrome tap is immediate
 - [ ] Swipe-to-reply: incoming vs outgoing thresholds; vertical scroll not hijacked
-- [ ] Hero: open/close feel ~0.3–0.35 s; dismiss handoff into thumbnail
-- [ ] Overlays: appear/disappear without harsh overshoot; haptics fire once
+- [ ] Hero: spring open/close; dismiss velocity feeds reverse spring
+- [ ] Overlays: spring appear; reverse mid-flight keeps velocity; Reduce Motion = fade only
+- [ ] Reduce Motion: hero cross-fade, no zoom flights, menus fade-only, reply snaps
 - [ ] `flutter analyze lib test` and `flutter test` clean
 - [ ] Glass budget still respected on touched screens
