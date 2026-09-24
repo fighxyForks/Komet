@@ -168,13 +168,19 @@ class GlassMenuLayer extends StatefulWidget {
 class _GlassMenuLayerState extends State<GlassMenuLayer>
     with SingleTickerProviderStateMixin, AnimatedOverlayPopup<GlassMenuLayer> {
   @override
+  void initState() {
+    super.initState();
+    Haptics.medium();
+  }
+
+  @override
   Duration get overlayForwardDuration => const Duration(milliseconds: 380);
 
   @override
   Duration get overlayReverseDuration => const Duration(milliseconds: 200);
 
   @override
-  Curve get overlayForwardCurve => Curves.easeOutBack;
+  Curve get overlayForwardCurve => Curves.easeOutCubic;
 
   @override
   Curve get overlayReverseCurve => Curves.easeInCubic;
@@ -228,7 +234,7 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
                 child: Opacity(
                   opacity: t,
                   child: Transform.scale(
-                    scale: 0.82 + 0.18 * t,
+                    scale: 0.88 + 0.12 * t,
                     alignment: origin,
                     child: child,
                   ),
@@ -344,11 +350,7 @@ class GlassMenuRow extends StatelessWidget {
           child: Row(
             children: [
               if (item.icon != null) ...[
-                Icon(
-                  item.icon,
-                  size: GlassMenuStyle.iconSize,
-                  color: fg,
-                ),
+                Icon(item.icon, size: GlassMenuStyle.iconSize, color: fg),
                 const SizedBox(width: 12),
               ],
               Expanded(

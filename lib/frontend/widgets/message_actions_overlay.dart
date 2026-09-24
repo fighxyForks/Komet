@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter/services.dart';
 
 import '../../core/config/app_message_actions_style.dart';
@@ -332,12 +333,13 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     }
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 380),
+      duration: const Duration(milliseconds: 420),
       reverseDuration: const Duration(milliseconds: 220),
     );
+    // Drive appear with a spring-like curve aligned to IosMotion.preview.
     _animation = CurvedAnimation(
       parent: _animController,
-      curve: Curves.easeOutBack,
+      curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
     _expandController = AnimationController(
@@ -506,8 +508,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     final menuHeight = n * itemHeight + vPad * 2;
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     final bottomLimit =
-        screenSize.height -
-        math.max(keyboardInset, widget.bottomReservedSpace);
+        screenSize.height - math.max(keyboardInset, widget.bottomReservedSpace);
     final maxMenuY = math.max(8.0, bottomLimit - menuHeight - 8.0);
     late double menuX;
     late double menuY;
@@ -786,120 +787,115 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     return AnimatedBuilder(
       animation: Listenable.merge([_animation, _expandController]),
       builder: (ctx, _) {
-          final t = _animation.value.clamp(0.0, 1.0);
-          final e = showReactions ? _expandAnim.value.clamp(0.0, 1.0) : 0.0;
-          final bubbleScale = 1.0 + 0.045 * t;
-          final menuHidden = _panelOpen || _reactionsExpanded;
+        final t = _animation.value.clamp(0.0, 1.0);
+        final e = showReactions ? _expandAnim.value.clamp(0.0, 1.0) : 0.0;
+        final bubbleScale = 1.0 + 0.045 * t;
+        final menuHidden = _panelOpen || _reactionsExpanded;
 
-          return GestureDetector(
-            onTap: _close,
-            behavior: HitTestBehavior.opaque,
-            child: Stack(
-              children: [
-                if (!isClick) ...[
-                  // Static dim only — no BackdropFilter over the chat list.
-                  Positioned.fill(
-                    child: ColoredBox(
-                      color: Colors.black.withValues(
-                        alpha: 0.28 * t + 0.22 * e,
-                      ),
-                    ),
+        return GestureDetector(
+          onTap: _close,
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            children: [
+              if (!isClick) ...[
+                // Static dim only — no BackdropFilter over the chat list.
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: 0.28 * t + 0.22 * e),
                   ),
-                  if (widget.snapshot != null)
-                    Positioned(
-                      left: widget.originRect.left,
-                      top: widget.originRect.top,
-                      width: widget.originRect.width,
-                      height: widget.originRect.height,
-                      child: Opacity(
-                        opacity: 1.0 - 0.35 * e,
-                        child: Transform.scale(
-                          scale: bubbleScale,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                    alpha: 0.35 * t,
-                                  ),
-                                  blurRadius: 24 * t,
-                                  spreadRadius: 2 * t,
-                                  offset: Offset(0, 8 * t),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: RawImage(
-                                image: widget.snapshot,
-                                width: widget.originRect.width,
-                                height: widget.originRect.height,
-                                fit: BoxFit.fill,
+                ),
+                if (widget.snapshot != null)
+                  Positioned(
+                    left: widget.originRect.left,
+                    top: widget.originRect.top,
+                    width: widget.originRect.width,
+                    height: widget.originRect.height,
+                    child: Opacity(
+                      opacity: 1.0 - 0.35 * e,
+                      child: Transform.scale(
+                        scale: bubbleScale,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.35 * t),
+                                blurRadius: 24 * t,
+                                spreadRadius: 2 * t,
+                                offset: Offset(0, 8 * t),
                               ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(18),
+                            child: RawImage(
+                              image: widget.snapshot,
+                              width: widget.originRect.width,
+                              height: widget.originRect.height,
+                              fit: BoxFit.fill,
                             ),
                           ),
                         ),
                       ),
                     ),
-                ],
-                Positioned.fill(
-                  child: IgnorePointer(
-                    ignoring: menuHidden,
-                    child: AnimatedOpacity(
-                      opacity: menuHidden ? 0.0 : 1.0,
-                      duration: const Duration(milliseconds: 150),
-                      curve: Curves.easeOut,
-                      child: Stack(
-                        children: [
-                          if (_effectiveStyle ==
-                              MessageActionsStyle.radial) ...[
-                            ..._buildButtons(t),
-                            _buildLabelBanner(size, t),
-                          ] else
-                            _buildListMenu(t),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    ignoring: !_panelOpen,
-                    child: AnimatedOpacity(
-                      opacity: _panelOpen ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOut,
-                      child: Stack(
-                        children: [
-                          if (_showReport)
-                            _buildReportMenu()
-                          else if (_showHistory)
-                            _buildHistoryMenu()
-                          else if (_showInfo)
-                            _buildInfoMenu()
-                          else if (_showReadBy)
-                            _buildReadByMenu(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                if (showReactions)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      ignoring: _panelOpen,
-                      child: AnimatedOpacity(
-                        opacity: _panelOpen ? 0.0 : 1.0,
-                        duration: const Duration(milliseconds: 150),
-                        curve: Curves.easeOut,
-                        child: _buildReactionStrip(t, e),
-                      ),
-                    ),
                   ),
               ],
-            ),
-          );
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: menuHidden,
+                  child: AnimatedOpacity(
+                    opacity: menuHidden ? 0.0 : 1.0,
+                    duration: const Duration(milliseconds: 150),
+                    curve: Curves.easeOut,
+                    child: Stack(
+                      children: [
+                        if (_effectiveStyle == MessageActionsStyle.radial) ...[
+                          ..._buildButtons(t),
+                          _buildLabelBanner(size, t),
+                        ] else
+                          _buildListMenu(t),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: !_panelOpen,
+                  child: AnimatedOpacity(
+                    opacity: _panelOpen ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    child: Stack(
+                      children: [
+                        if (_showReport)
+                          _buildReportMenu()
+                        else if (_showHistory)
+                          _buildHistoryMenu()
+                        else if (_showInfo)
+                          _buildInfoMenu()
+                        else if (_showReadBy)
+                          _buildReadByMenu(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (showReactions)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: _panelOpen,
+                    child: AnimatedOpacity(
+                      opacity: _panelOpen ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 150),
+                      curve: Curves.easeOut,
+                      child: _buildReactionStrip(t, e),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
       },
     );
   }
@@ -1066,45 +1062,45 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
 
     final ios = IosGlass.of(context);
     final surface = GestureDetector(
-          onTap: () {},
-          behavior: HitTestBehavior.opaque,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (_reactionsPanelReady)
-                Positioned(
-                  left: 0,
-                  top: pillAbove ? 0 : null,
-                  bottom: pillAbove ? null : 0,
-                  width: expandedSize.width,
-                  height: expandedSize.height,
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0.0, end: 1.0),
-                    duration: const Duration(milliseconds: 140),
-                    curve: Curves.easeOut,
-                    child: _pickerCache,
-                    builder: (_, value, child) =>
-                        Opacity(opacity: value, child: child),
-                  ),
+      onTap: () {},
+      behavior: HitTestBehavior.opaque,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (_reactionsPanelReady)
+            Positioned(
+              left: 0,
+              top: pillAbove ? 0 : null,
+              bottom: pillAbove ? null : 0,
+              width: expandedSize.width,
+              height: expandedSize.height,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 140),
+                curve: Curves.easeOut,
+                child: _pickerCache,
+                builder: (_, value, child) =>
+                    Opacity(opacity: value, child: child),
+              ),
+            ),
+          if (!_reactionsPanelReady)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: pillAbove ? 0 : null,
+              bottom: pillAbove ? null : 0,
+              height: 46,
+              child: Opacity(
+                opacity: (1.0 - e).clamp(0.0, 1.0),
+                child: IgnorePointer(
+                  ignoring: e > 0.05,
+                  child: _buildQuickRow(cs, cell, quick),
                 ),
-              if (!_reactionsPanelReady)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: pillAbove ? 0 : null,
-                  bottom: pillAbove ? null : 0,
-                  height: 46,
-                  child: Opacity(
-                    opacity: (1.0 - e).clamp(0.0, 1.0),
-                    child: IgnorePointer(
-                      ignoring: e > 0.05,
-                      child: _buildQuickRow(cs, cell, quick),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
+              ),
+            ),
+        ],
+      ),
+    );
     if (ios) {
       return GlassBackground(
         key: const ValueKey('ios-reaction-strip'),
@@ -1130,11 +1126,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     );
   }
 
-  Widget _menuSurface(
-    ColorScheme cs, {
-    required Widget child,
-    Key? iosKey,
-  }) {
+  Widget _menuSurface(ColorScheme cs, {required Widget child, Key? iosKey}) {
     if (IosGlass.of(context)) {
       // Opaque frosted fill while the overlay is up — no live BackdropFilter
       // over the (non-scrolling) chat. GlassSuppression already held.
@@ -1222,7 +1214,8 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: _toggleReactionsExpanded,
-          child: Icon(IosSymbols.keyboardDown(context),
+          child: Icon(
+            IosSymbols.keyboardDown(context),
             color: cs.onSurfaceVariant,
             size: 24,
           ),
@@ -1631,7 +1624,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
 
   Widget _buildListMenu(double t) {
     final cs = Theme.of(context).colorScheme;
-    final spring = Curves.easeOutBack.transform(t.clamp(0.0, 1.0));
+    final spring = Curves.easeOutCubic.transform(t.clamp(0.0, 1.0));
     final eased = spring.clamp(0.0, 1.0);
     final scale = 0.86 + 0.14 * spring.clamp(0.0, 1.15);
     final tapAnchored =
@@ -1688,7 +1681,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
           builder: (_) {
             final delay = (i / n) * 0.25;
             final localT = ((t - delay) / (1.0 - delay)).clamp(0.0, 1.0);
-            final eased = Curves.easeOutBack.transform(localT);
+            final eased = Curves.easeOutCubic.transform(localT);
             final isHovered = _hoveredIndex == i;
             final hoverScale = isHovered ? 1.18 : 1.0;
             final entryScale = 0.4 + 0.6 * eased;
@@ -1917,7 +1910,11 @@ class _ReactionEmojiPickerState extends State<_ReactionEmojiPicker> {
         child: Row(
           children: [
             const SizedBox(width: 12),
-            Icon(IosSymbols.search(context), size: 22, color: cs.onSurfaceVariant),
+            Icon(
+              IosSymbols.search(context),
+              size: 22,
+              color: cs.onSurfaceVariant,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
@@ -1946,7 +1943,8 @@ class _ReactionEmojiPickerState extends State<_ReactionEmojiPicker> {
                 onTap: _clearSearch,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Icon(IosSymbols.close(context),
+                  child: Icon(
+                    IosSymbols.close(context),
                     size: 20,
                     color: cs.onSurfaceVariant,
                   ),
@@ -2016,9 +2014,7 @@ class _ListMenuItem extends StatelessWidget {
     final ios = IosGlass.of(context);
     final destructive = action.destructive;
     final iosRed = const Color(0xFFFF3B30);
-    final pillBg = destructive
-        ? (ios ? iosRed : cs.error)
-        : cs.primary;
+    final pillBg = destructive ? (ios ? iosRed : cs.error) : cs.primary;
     final onPill = destructive
         ? (ios ? Colors.white : cs.onError)
         : cs.onPrimary;
