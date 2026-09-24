@@ -10,7 +10,7 @@
 
 ## UI-конвенции
 
-- **iOS glass budget:** see [docs/ios-glass-guidelines.md](./docs/ios-glass-guidelines.md) (≤1–2 native views per screen, no live blur over scrolling content, use `IosSymbols` / `IosMetrics` / `IosTypography` / `showIosAlert` / `showIosSheet` / `iosPageRoute` / `IosSettingsScaffold` / `IosTappable`).
+- **iOS glass budget:** see [docs/ios-glass-guidelines.md](./docs/ios-glass-guidelines.md) / [docs/ios-motion-guidelines.md](./docs/ios-motion-guidelines.md) (≤1–2 native views per screen, no live blur over scrolling content, use `IosSymbols` / `IosMetrics` / `IosTypography` / `showIosAlert` / `showIosSheet` / `iosPageRoute` / `IosSettingsScaffold` / `IosTappable`).
 
 - **Уведомления только через `showCustomNotification(context, 'текст')`.** Никогда не используй `SnackBar` — в проекте единый кастомный компонент уведомлений.
 - **Кнопки с переключаемой перечёркнутой/неперечёркнутой иконкой** (вспышка, микрофон, звук, уведомления) **должны анимироваться Lottie-иконкой**, а не мгновенно подменять один `Icon` на другой:
