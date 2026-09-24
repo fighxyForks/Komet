@@ -32,6 +32,11 @@ abstract final class IosTypography {
   static const double composer = 17;
 
   static const double largeTitle = 34;
+  static const double title1 = 28;
+  static const double title2 = 22;
+  static const double title3 = 20;
+  static const double footnote = 13;
+  static const FontWeight bold = FontWeight.w700;
   static const double callout = 13;
   static const double callLabel = 12;
   static const double listTitle = 17;

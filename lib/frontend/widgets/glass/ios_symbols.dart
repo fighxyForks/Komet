@@ -313,4 +313,118 @@ abstract final class IosSymbols {
     material: Symbols.arrow_forward,
     cupertino: CupertinoIcons.arrow_right,
   );
+
+  static IconData language(BuildContext c) => resolve(
+    c,
+    material: Symbols.language,
+    cupertino: CupertinoIcons.globe,
+  );
+
+  static IconData settingsGear(BuildContext c) => resolve(
+    c,
+    material: Symbols.settings,
+    cupertino: CupertinoIcons.gear_alt,
+  );
+
+  static IconData admin(BuildContext c) => resolve(
+    c,
+    material: Symbols.admin_panel_settings,
+    cupertino: CupertinoIcons.shield,
+  );
+
+  static IconData fingerprint(BuildContext c) => resolve(
+    c,
+    material: Symbols.fingerprint,
+    cupertino: CupertinoIcons.hand_raised_fill,
+  );
+
+  static IconData backspace(BuildContext c) => resolve(
+    c,
+    material: Symbols.backspace,
+    cupertino: CupertinoIcons.delete_left,
+  );
+
+  static IconData refresh(BuildContext c) => resolve(
+    c,
+    material: Symbols.refresh,
+    cupertino: CupertinoIcons.refresh,
+  );
+
+  static IconData tune(BuildContext c) => resolve(
+    c,
+    material: Symbols.tune,
+    cupertino: CupertinoIcons.slider_horizontal_3,
+  );
+
+  static IconData grid(BuildContext c) => resolve(
+    c,
+    material: Symbols.grid_view,
+    cupertino: CupertinoIcons.square_grid_2x2,
+  );
+
+  static IconData photoLibrary(BuildContext c) => resolve(
+    c,
+    material: Symbols.photo_library,
+    cupertino: CupertinoIcons.photo_on_rectangle,
+  );
+
+  static IconData check(BuildContext c) => resolve(
+    c,
+    material: Symbols.check,
+    cupertino: CupertinoIcons.check_mark,
+  );
+
+  static IconData pause(BuildContext c) =>
+      resolve(c, material: Symbols.pause, cupertino: CupertinoIcons.pause_fill);
+
+  static IconData play(BuildContext c) => resolve(
+    c,
+    material: Symbols.play_arrow,
+    cupertino: CupertinoIcons.play_fill,
+  );
+
+  static IconData rotate(BuildContext c) => resolve(
+    c,
+    material: Symbols.rotate_90_degrees_ccw,
+    cupertino: CupertinoIcons.rotate_left,
+  );
+
+  static IconData chevronDown(BuildContext c) => resolve(
+    c,
+    material: Symbols.keyboard_arrow_down,
+    cupertino: CupertinoIcons.chevron_down,
+  );
+
+  static IconData volumeUp(BuildContext c) => speaker(c);
+
+  static IconData volumeOff(BuildContext c) => resolve(
+    c,
+    material: Symbols.volume_off,
+    cupertino: CupertinoIcons.speaker_slash_fill,
+  );
+
+  static IconData group(BuildContext c) => resolve(
+    c,
+    material: Symbols.group,
+    cupertino: CupertinoIcons.person_2,
+  );
+
+  static IconData public(BuildContext c) => resolve(
+    c,
+    material: Symbols.public,
+    cupertino: CupertinoIcons.globe,
+  );
+
+  static IconData addCircle(BuildContext c) => resolve(
+    c,
+    material: Symbols.add,
+    cupertino: CupertinoIcons.add,
+  );
+
+  static IconData chevronLeft(BuildContext c) => resolve(
+    c,
+    material: Symbols.chevron_left,
+    cupertino: CupertinoIcons.chevron_left,
+  );
+
 }

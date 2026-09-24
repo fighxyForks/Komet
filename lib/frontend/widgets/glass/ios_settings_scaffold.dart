@@ -158,6 +158,7 @@ class IosSettingsButton extends StatelessWidget {
   final bool filled;
   final bool destructive;
   final IconData? icon;
+  final double? minHeight;
 
   const IosSettingsButton({
     super.key,
@@ -166,6 +167,7 @@ class IosSettingsButton extends StatelessWidget {
     this.filled = true,
     this.destructive = false,
     this.icon,
+    this.minHeight,
   });
 
   @override
@@ -181,17 +183,23 @@ class IosSettingsButton extends StatelessWidget {
               foregroundColor: cs.onError,
             )
           : null;
+      ButtonStyle? sizeStyle = style;
+      if (minHeight != null) {
+        sizeStyle = (style ?? const ButtonStyle()).merge(
+          FilledButton.styleFrom(minimumSize: Size.fromHeight(minHeight!)),
+        );
+      }
       if (icon != null) {
         return FilledButton.icon(
           onPressed: onPressed,
-          style: style,
+          style: sizeStyle,
           icon: Icon(icon, size: 20),
           label: Text(label),
         );
       }
       return FilledButton(
         onPressed: onPressed,
-        style: style,
+        style: sizeStyle,
         child: Text(label),
       );
     }
@@ -206,12 +214,17 @@ class IosSettingsButton extends StatelessWidget {
       padding: EdgeInsets.zero,
       onPressed: onPressed,
       child: Container(
-        constraints: const BoxConstraints(minHeight: IosMetrics.minHitTarget),
+        constraints: BoxConstraints(
+          minHeight: minHeight ?? IosMetrics.minHitTarget,
+        ),
+        width: minHeight != null ? double.infinity : null,
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(IosMetrics.controlRadius),
+          borderRadius: BorderRadius.circular(
+            minHeight != null ? 14 : IosMetrics.controlRadius,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
