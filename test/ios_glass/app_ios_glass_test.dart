@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
+import 'package:komet/core/config/ios_reduce_transparency.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -112,6 +113,18 @@ void main() {
       AppIosGlass.debugSetSupported(true);
       expect(AppIosGlass.styleSupported, isTrue);
       expect(AppIosGlass.active.value, isTrue);
+    });
+  });
+
+  group('Reduce Transparency', () {
+    test('blocks nativeViews even on iOS 26', () async {
+      AppIosGlass.debugStyleSupported = true;
+      AppIosGlass.debugIosMajorVersion = 26;
+      AppIosGlass.debugNativeGlassSupported = true;
+      await AppIosGlass.load();
+      expect(AppIosGlass.nativeViews, isTrue);
+      IosReduceTransparency.debugOverride = true;
+      expect(AppIosGlass.nativeViews, isFalse);
     });
   });
 }

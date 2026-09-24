@@ -136,17 +136,18 @@ class _NativeGlassGateState extends State<NativeGlassGate> {
 
   @override
   Widget build(BuildContext context) {
-    if (!IosGlass.of(context) || !AppIosGlass.nativeViews) {
-      return widget.builder(context, false);
-    }
     final route = ModalRoute.of(context);
     return ListenableBuilder(
       listenable: Listenable.merge([
+        AppIosGlass.chromeListenable,
         GlassSuppression.count,
         if (route?.animation != null) route!.animation!,
         if (route?.secondaryAnimation != null) route!.secondaryAnimation!,
       ]),
       builder: (context, _) {
+        if (!IosGlass.of(context) || !AppIosGlass.nativeViews) {
+          return widget.builder(context, false);
+        }
         final reason = _fallbackReason(context, route);
         return _resolve(context, reason == null, reason);
       },

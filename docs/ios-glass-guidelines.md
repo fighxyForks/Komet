@@ -10,7 +10,7 @@ Rules for Flutter-drawn chrome when `IosGlass` is on. Goal: keep scroll jank low
 | `AppIosGlass.styleSupported` / `supported` | Device can use the Flutter iOS look | Any iOS (deployment target 13+) |
 | `AppIosGlass.active` / `IosGlass.of(context)` | User toggle on **and** style supported | Style tier: typography, SF symbols, metrics, Cupertino sheets/alerts, opaque chrome |
 | `AppIosGlass.nativeGlassSupported` | OS can host `native_liquid_glass` UiKitViews | iOS 26+ only |
-| `AppIosGlass.nativeViews` | Native platform views may be created | `active && nativeGlassSupported` |
+| `AppIosGlass.nativeViews` | Native platform views may be created | `active && nativeGlassSupported && !ReduceTransparency` |
 
 **Which flag to use**
 
@@ -77,7 +77,7 @@ In iOS mode call buttons use Flutter-drawn glass (tint + rim + shadow) and `IosT
 - **VoiceOver:** every icon-only control in chrome you touch needs a Russian label (`tooltip` on `IconButton`, or `Semantics(label: …)`). Prefer existing `AppLocalizations` strings when present.
 - **Reduce Motion:** `IosMotion.reduceMotionOf` / `MediaQuery.disableAnimationsOf` — see [ios-motion-guidelines.md](./ios-motion-guidelines.md).
 - **Increase Contrast:** `MediaQuery.highContrastOf` forces Flutter glass (`GlassBackground` and similar) into an opaque fill (no `BackdropFilter`).
-- **Reduce Transparency:** Flutter 3.47.0 `AccessibilityFeatures` / `MediaQuery` expose **no** `reduceTransparency` flag, and this repo has no existing platform channel for it. Documented limitation: opaque fallback is wired to **high contrast** (and explicit `forceOpaque` / scroll idle) until engine support or a dedicated channel exists. Do not invent a new channel for this.
+- **Reduce Transparency:** Flutter 3.47 `AccessibilityFeatures` / `MediaQuery` still expose **no** `reduceTransparency` flag. Komet reads `UIAccessibility.isReduceTransparencyEnabled` via `ru.komet.app/accessibility` (+ event channel) into `IosReduceTransparency.enabled`. When on: `AppIosGlass.nativeViews` is false, `GlassBackground` / style chrome use opaque `IosPalette` fills (no `BackdropFilter`, no UiKitViews). Override with `IosReduceTransparency.debugOverride` in tests.
 
 ## Checklist before merging glass UI
 
@@ -85,7 +85,7 @@ In iOS mode call buttons use Flutter-drawn glass (tint + rim + shadow) and `IosT
 - [ ] Scroll paths do not keep live blur over moving content
 - [ ] New icons go through `IosSymbols` / `adapt` when painted in iOS mode
 - [ ] Icon-only chrome has VoiceOver labels
-- [ ] High contrast forces opaque glass fallback
+- [ ] High contrast / Reduce Transparency force opaque glass fallback
 - [ ] `flutter analyze lib test` and `flutter test` are clean
 
 ## Related
