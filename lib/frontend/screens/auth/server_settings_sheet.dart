@@ -11,6 +11,9 @@ import '../../../main.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/labeled_settings_field.dart';
 import '../../widgets/sheet_helpers.dart';
+import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class ServerSettingsSheet extends StatefulWidget {
   const ServerSettingsSheet({super.key});
@@ -193,7 +196,7 @@ class _ServerSettingsSheetState extends State<ServerSettingsSheet> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Switch(
+                    GlassSwitch(
                       value: _trustMincifryCa,
                       onChanged: _busy
                           ? null
@@ -203,14 +206,16 @@ class _ServerSettingsSheetState extends State<ServerSettingsSheet> {
                 ),
               ),
               const SizedBox(height: 24),
-              FilledButton(
+              IosSettingsButton(
+                label: l10n.serverApply,
                 onPressed: _busy ? null : () => _apply(l10n),
-                child: Text(l10n.serverApply),
+                minHeight: kIosAuthPrimaryHeight,
               ),
               const SizedBox(height: 12),
-              OutlinedButton(
+              IosSettingsButton(
+                label: l10n.serverUseDefault,
                 onPressed: _busy ? null : () => _resetToDefault(l10n),
-                child: Text(l10n.serverUseDefault),
+                filled: false,
               ),
             ],
           ),

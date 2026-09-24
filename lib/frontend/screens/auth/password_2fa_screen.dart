@@ -10,6 +10,11 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/login_success_screen.dart';
 import '../../widgets/small_spinner.dart';
 import 'session_stale_recovery.dart';
+import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
 
 class Password2FAScreen extends StatefulWidget {
   final String trackId;
@@ -140,13 +145,17 @@ class _Password2FAScreenState extends State<Password2FAScreen>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosAuthBackground(context),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurfaceVariant),
+          icon: Icon(
+            IosSymbols.chevronBack(context),
+            color: cs.onSurfaceVariant,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -161,8 +170,8 @@ class _Password2FAScreenState extends State<Password2FAScreen>
                 'Двухфакторная аутентификация',
                 style: TextStyle(
                   color: cs.onSurface,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w500,
+                  fontSize: ios ? IosTypography.title2 : 22,
+                  fontWeight: ios ? IosTypography.semibold : FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 12),
@@ -192,14 +201,15 @@ class _Password2FAScreenState extends State<Password2FAScreen>
                 obscureText: !_isPasswordVisible,
                 autofocus: true,
                 enabled: !_isLoading,
-                decoration: InputDecoration(
+                style: iosAuthFieldStyle(context),
+                decoration: iosAuthFieldDecoration(
+                  context,
                   hintText: 'Пароль',
+                ).copyWith(
+                  fillColor: ios
+                      ? IosPalette.searchFill(cs)
+                      : cs.surfaceContainerHigh,
                   filled: true,
-                  fillColor: cs.surfaceContainerHigh,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
                   suffixIcon: IconButton(
                     icon: AnimatedSlashIcon(
                       icon: Symbols.visibility,
@@ -232,7 +242,7 @@ class _Password2FAScreenState extends State<Password2FAScreen>
                     child: _isLoading
                         ? SmallSpinner(size: 24, color: cs.onPrimaryContainer)
                         : Icon(
-                            Symbols.arrow_forward,
+                            IosSymbols.chevronRight(context),
                             color: _passwordController.text.isNotEmpty
                                 ? cs.onPrimaryContainer
                                 : cs.onSurfaceVariant,

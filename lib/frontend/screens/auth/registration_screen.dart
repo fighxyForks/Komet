@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:komet/l10n/app_localizations.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/account.dart';
 import '../../../main.dart';
@@ -9,6 +8,11 @@ import '../../widgets/auth_limits_sheet.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/login_success_screen.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
 
 class RegistrationScreen extends StatefulWidget {
   final String phoneNumber;
@@ -99,13 +103,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     final l10n = AppLocalizations.of(context)!;
     final firstName = _firstNameController.text.trim();
 
+    final ios = IosGlass.of(context);
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosAuthBackground(context),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurfaceVariant),
+          icon: Icon(
+            IosSymbols.chevronBack(context),
+            color: cs.onSurfaceVariant,
+          ),
           onPressed: _isSubmitting ? null : () => Navigator.pop(context),
         ),
       ),
@@ -119,7 +127,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         child: _isSubmitting
             ? SmallSpinner(size: 22, color: cs.onSurfaceVariant)
             : Icon(
-                Symbols.arrow_forward,
+                IosSymbols.chevronRight(context),
                 color: _canSubmit ? cs.onPrimaryContainer : cs.onSurfaceVariant,
               ),
       ),
@@ -131,8 +139,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               l10n.registrationTitle,
               style: TextStyle(
                 color: cs.onSurface,
-                fontSize: 26,
-                fontWeight: FontWeight.w600,
+                fontSize: ios ? IosTypography.title1 : 26,
+                fontWeight: ios ? IosTypography.bold : FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
@@ -235,18 +243,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           enabled: !_isSubmitting,
           textInputAction: textInputAction,
           onChanged: (_) => setState(() {}),
-          style: TextStyle(color: cs.onSurface, fontSize: 15),
-          decoration: InputDecoration(
+          style: iosAuthFieldStyle(context),
+          decoration: iosAuthFieldDecoration(context).copyWith(
+            fillColor: IosGlass.of(context)
+                ? IosPalette.searchFill(cs)
+                : cs.surfaceContainerHigh,
             filled: true,
-            fillColor: cs.surfaceContainerHigh,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
           ),
         ),
       ],

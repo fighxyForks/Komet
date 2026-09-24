@@ -11,6 +11,11 @@ import '../../widgets/section_header.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 
 class TokenLoginScreen extends StatefulWidget {
   final int? returnToAccountId;
@@ -121,8 +126,24 @@ class _TokenLoginScreenState extends State<TokenLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final ios = IosGlass.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.tokenLoginTitle), centerTitle: true),
+      backgroundColor: iosAuthBackground(context),
+      appBar: AppBar(
+        backgroundColor: iosAuthBackground(context),
+        title: Text(
+          l10n.tokenLoginTitle,
+          style: TextStyle(
+            fontSize: ios ? IosTypography.headerTitle : null,
+            fontWeight: ios ? IosTypography.semibold : null,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(IosSymbols.chevronBack(context)),
+          onPressed: () => Navigator.maybePop(context),
+        ),
+      ),
       body: AbsorbPointer(
         absorbing: _isLoading,
         child: SingleChildScrollView(
@@ -142,16 +163,24 @@ class _TokenLoginScreenState extends State<TokenLoginScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: FilledButton(
-          onPressed: _isLoading ? null : _login,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(52),
-            shape: AppShape.buttonBorder,
-          ),
-          child: _isLoading
-              ? const SmallSpinner(size: 22)
-              : Text(l10n.tokenLoginButton),
-        ),
+        child: ios
+            ? (_isLoading
+                ? const Center(child: SmallSpinner(size: 22))
+                : IosSettingsButton(
+                    label: l10n.tokenLoginButton,
+                    onPressed: _login,
+                    minHeight: kIosAuthPrimaryHeight,
+                  ))
+            : FilledButton(
+                onPressed: _isLoading ? null : _login,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  shape: AppShape.buttonBorder,
+                ),
+                child: _isLoading
+                    ? const SmallSpinner(size: 22)
+                    : Text(l10n.tokenLoginButton),
+              ),
       ),
     );
   }

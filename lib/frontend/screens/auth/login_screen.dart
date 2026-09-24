@@ -31,6 +31,11 @@ import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
 import '../../widgets/glass/ios_alert.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/glass_controls.dart';
 
 class LoginScreen extends StatefulWidget {
   final int? returnToAccountId;
@@ -562,9 +567,96 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _showPhoneConfirmationDialog(String formattedPhone) {
+  Future<void> _showPhoneConfirmationDialog(String formattedPhone) async {
     final screenContext = context;
     final l10n = AppLocalizations.of(screenContext)!;
+    final phoneLine = '${_selectedCountry.phoneCode} $formattedPhone';
+
+    Future<void> confirm() async {
+      final fullPhone =
+          '${_selectedCountry.phoneCode}${_phoneController.text}';
+
+      if (!_isOnline) {
+        _showPhoneError(
+          'Нет соединения с сервером. Подождите подключения.',
+        );
+        return;
+      }
+
+      if (ReviewAccess.matchesPhone(fullPhone)) {
+        Navigator.push(
+          screenContext,
+          iosPageRoute(
+            screenContext,
+            builder: (context) => CodeConfirmationScreen.review(
+              phoneNumber: phoneLine,
+              rawPhone: fullPhone,
+            ),
+          ),
+        );
+        return;
+      }
+
+      // #***! эксперим. SMS-вход: предупреждаем про сброс
+      // сессий, Отмена снимает галочку и не пускает дальше
+      if (_alwaysSendSms) {
+        final choice = await _showExperimentalSmsWarning();
+        if (choice == false) {
+          await _setAlwaysSendSms(false);
+          return;
+        }
+        if (choice != true) return;
+        if (!screenContext.mounted) return;
+      }
+
+      try {
+        final result = await accountModule.requestCode(fullPhone);
+
+        if (!screenContext.mounted) return;
+        Navigator.push(
+          screenContext,
+          iosPageRoute(
+            screenContext,
+            builder: (context) => CodeConfirmationScreen(
+              phoneNumber: phoneLine,
+              rawPhone: fullPhone,
+              token: result.token,
+            ),
+          ),
+        );
+      } catch (e) {
+        if (!screenContext.mounted) return;
+        _showPhoneError(
+          isSessionStateError(e)
+              ? 'Нет соединения с сервером. Попробуйте ещё раз.'
+              : e.toString(),
+        );
+      }
+    }
+
+    if (IosGlass.of(screenContext)) {
+      final ok = await showIosAlert<bool>(
+        context: screenContext,
+        title: l10n.loginConfirmPhoneTitle,
+        message: phoneLine,
+        actions: [
+          IosAlertAction(
+            id: 'edit',
+            label: l10n.loginEdit,
+            result: false,
+            isCancel: true,
+          ),
+          IosAlertAction(
+            id: 'ok',
+            label: l10n.loginDone,
+            result: true,
+            isDefault: true,
+          ),
+        ],
+      );
+      if (ok == true) await confirm();
+      return;
+    }
 
     showGeneralDialog(
       context: screenContext,
@@ -602,7 +694,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '${_selectedCountry.phoneCode} $formattedPhone',
+                      phoneLine,
                       style: TextStyle(
                         color: cs.onSurface,
                         fontSize: 18,
@@ -629,68 +721,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextButton(
                         onPressed: () async {
                           Navigator.pop(context);
-
-                          final fullPhone =
-                              '${_selectedCountry.phoneCode}${_phoneController.text}';
-
-                          if (!_isOnline) {
-                            _showPhoneError(
-                              'Нет соединения с сервером. Подождите подключения.',
-                            );
-                            return;
-                          }
-
-                          if (ReviewAccess.matchesPhone(fullPhone)) {
-                            Navigator.push(
-                              screenContext,
-                              iosPageRoute(screenContext,
-                                builder: (context) => CodeConfirmationScreen.review(
-                                  phoneNumber:
-                                      '${_selectedCountry.phoneCode} $formattedPhone',
-                                  rawPhone: fullPhone,
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          // #***! эксперим. SMS-вход: предупреждаем про сброс
-                          // сессий, Отмена снимает галочку и не пускает дальше
-                          if (_alwaysSendSms) {
-                            final choice = await _showExperimentalSmsWarning();
-                            if (choice == false) {
-                              await _setAlwaysSendSms(false);
-                              return;
-                            }
-                            if (choice != true) return;
-                            if (!screenContext.mounted) return;
-                          }
-
-                          try {
-                            final result = await accountModule.requestCode(
-                              fullPhone,
-                            );
-
-                            if (!screenContext.mounted) return;
-                            Navigator.push(
-                              screenContext,
-                              iosPageRoute(screenContext,
-                                builder: (context) => CodeConfirmationScreen(
-                                  phoneNumber:
-                                      '${_selectedCountry.phoneCode} $formattedPhone',
-                                  rawPhone: fullPhone,
-                                  token: result.token,
-                                ),
-                              ),
-                            );
-                          } catch (e) {
-                            if (!screenContext.mounted) return;
-                            _showPhoneError(
-                              isSessionStateError(e)
-                                  ? 'Нет соединения с сервером. Попробуйте ещё раз.'
-                                  : e.toString(),
-                            );
-                          }
+                          await confirm();
                         },
                         child: Text(
                           l10n.loginDone,
@@ -893,8 +924,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final ios = IosGlass.of(context);
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosAuthBackground(context),
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onVerticalDragEnd: (details) {
@@ -926,7 +958,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 IconButton(
                                   onPressed: _onBackPressed,
                                   icon: Icon(
-                                    Symbols.arrow_back,
+                                    IosSymbols.chevronBack(context),
                                     color: cs.onSurfaceVariant,
                                     weight: 400,
                                   ),
@@ -940,7 +972,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: () =>
                                         _showSecurityOptions(context),
                                     icon: Icon(
-                                      Symbols.admin_panel_settings,
+                                      IosSymbols.admin(context),
                                       color: cs.onSurfaceVariant,
                                       weight: 400,
                                     ),
@@ -948,7 +980,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   IconButton(
                                     onPressed: _showLanguagePicker,
                                     icon: Icon(
-                                      Symbols.language,
+                                      IosSymbols.language(context),
                                       color: cs.onSurfaceVariant,
                                       weight: 400,
                                     ),
@@ -975,8 +1007,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   l10n.loginTitle,
                                   style: TextStyle(
                                     color: cs.onSurface,
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w500,
+                                    fontSize: ios ? IosTypography.largeTitle : 32,
+                                    fontWeight: ios
+                                        ? IosTypography.bold
+                                        : FontWeight.w500,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -1003,15 +1037,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 children: [
                                   Text(
                                     _countryDisplayName(_selectedCountry),
-                                    style: TextStyle(
-                                      color: cs.onSurface,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                                    style: iosAuthFieldStyle(context),
                                   ),
                                   const Spacer(),
                                   Icon(
-                                    Symbols.keyboard_arrow_down,
+                                    IosSymbols.chevronDown(context),
                                     color: cs.onSurfaceVariant,
                                   ),
                                 ],
@@ -1025,11 +1055,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 Text(
                                   _selectedCountry.phoneCode,
-                                  style: TextStyle(
-                                    color: cs.onSurface,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                                  style: iosAuthFieldStyle(context),
                                 ),
                                 const SizedBox(width: 12),
                                 Container(
@@ -1047,18 +1073,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                       FilteringTextInputFormatter.digitsOnly,
                                       PhoneInputFormatter(_selectedCountry),
                                     ],
-                                    style: TextStyle(
-                                      color: cs.onSurface,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w400,
-                                    ),
+                                    style: iosAuthFieldStyle(context),
                                     decoration: InputDecoration(
                                       hintText: _phoneMaskHint(
                                         _selectedCountry,
                                       ),
                                       hintStyle: TextStyle(
-                                        color: cs.outline,
-                                        fontSize: 15,
+                                        color: ios
+                                            ? IosPalette.secondaryLabel(cs)
+                                            : cs.outline,
+                                        fontSize: ios
+                                            ? IosTypography.body
+                                            : 15,
                                         fontWeight: FontWeight.w400,
                                       ),
                                       border: InputBorder.none,
@@ -1124,7 +1150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 12),
-                                  Switch(
+                                  GlassSwitch(
                                     value: _alwaysSendSms,
                                     onChanged: _switchingSmsMode
                                         ? null
@@ -1209,7 +1235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           color: cs.onPrimaryContainer,
                                         )
                                       : Icon(
-                                          Symbols.arrow_forward,
+                                          IosSymbols.chevronRight(context),
                                           color: _isPhoneValid
                                               ? cs.onPrimaryContainer
                                               : cs.onSurfaceVariant,
@@ -1234,6 +1260,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildInputField({required String label, required Widget content}) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1242,25 +1269,29 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Container(
               width: double.infinity,
-              height: 54,
+              height: ios ? 52 : 54,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                border: Border.all(color: cs.primary, width: 1.5),
-                borderRadius: BorderRadius.circular(50),
+                color: ios ? IosPalette.searchFill(cs) : null,
+                border: ios
+                    ? null
+                    : Border.all(color: cs.primary, width: 1.5),
+                borderRadius: BorderRadius.circular(ios ? 12 : 50),
               ),
+              alignment: Alignment.centerLeft,
               child: content,
             ),
             Positioned(
               top: -10,
               left: 20,
               child: Container(
-                color: cs.surface,
+                color: ios ? iosAuthBackground(context) : cs.surface,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
                   label,
                   style: TextStyle(
-                    color: cs.primary,
-                    fontSize: 14,
+                    color: ios ? IosPalette.secondaryLabel(cs) : cs.primary,
+                    fontSize: ios ? IosTypography.footnote : 14,
                     fontWeight: FontWeight.w400,
                   ),
                 ),

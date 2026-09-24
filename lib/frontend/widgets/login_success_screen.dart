@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/utils/haptics.dart';
 import 'adaptive_shell.dart';
+import 'glass/ios_auth_chrome.dart';
+import 'glass/ios_glass.dart';
+import 'glass/ios_typography.dart';
 
 Future<ImageProvider?> precacheLoginAvatar(
   BuildContext context,
@@ -153,7 +156,7 @@ class _LoginSuccessScreenState extends State<LoginSuccessScreen>
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosAuthBackground(context),
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
@@ -302,7 +305,7 @@ class _LoginSuccessScreenState extends State<LoginSuccessScreen>
           'Готово!',
           style: TextStyle(
             color: cs.onSurface,
-            fontSize: 26,
+            fontSize: IosGlass.of(context) ? IosTypography.title1 : 26,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
           ),
@@ -323,7 +326,7 @@ class _LoginSuccessScreenState extends State<LoginSuccessScreen>
             textAlign: TextAlign.center,
             style: TextStyle(
               color: cs.onSurfaceVariant,
-              fontSize: 15,
+              fontSize: IosGlass.of(context) ? IosTypography.body : 15,
               fontWeight: FontWeight.w500,
               height: 1.3,
             ),
