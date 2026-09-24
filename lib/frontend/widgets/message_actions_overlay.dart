@@ -11,6 +11,8 @@ import '../../core/config/app_message_actions_style.dart';
 import '../../core/utils/emoji_keyword_index.dart';
 import '../../core/utils/format.dart';
 import '../../core/utils/haptics.dart';
+import '../motion/ios_haptics.dart';
+import '../motion/ios_motion.dart';
 import '../../l10n/app_localizations.dart';
 import 'custom_notification.dart';
 import 'glass/glass_capsule.dart';
@@ -331,30 +333,49 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     if (_reactionsEnabled) {
       EmojiKeywordIndex.instance.ensureLoaded();
     }
+    final ios = IosGlass.of(context);
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 420),
-      reverseDuration: const Duration(milliseconds: 220),
-    );
-    // Drive appear with a spring-like curve aligned to IosMotion.preview.
-    _animation = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
+      duration: ios ? IosMotion.overlayForward : const Duration(milliseconds: 420),
+      reverseDuration:
+          ios ? IosMotion.overlayReverse : const Duration(milliseconds: 220),
     );
     _expandController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 360),
       reverseDuration: const Duration(milliseconds: 260),
     );
-    _expandAnim = CurvedAnimation(
-      parent: _expandController,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    );
+    if (ios) {
+      _animation = _animController;
+      _expandAnim = _expandController;
+      IosHaptics.longPress();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _closing) return;
+        if (IosMotion.reduceMotionOf(context)) {
+          _animController.value = 1;
+          return;
+        }
+        animateSpring(
+          _animController,
+          target: 1,
+          spring: IosMotion.overlay,
+        );
+      });
+    } else {
+      _animation = CurvedAnimation(
+        parent: _animController,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      _expandAnim = CurvedAnimation(
+        parent: _expandController,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      Haptics.medium();
+      _animController.forward();
+    }
     _expandController.addStatusListener(_onExpandStatus);
-    Haptics.medium();
-    _animController.forward();
   }
 
   void _onExpandStatus(AnimationStatus status) {
@@ -687,7 +708,13 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     if (p != null) {
       final newHovered = _findButtonAt(p);
       if (newHovered != _hoveredIndex) {
-        if (newHovered != -1) Haptics.selection();
+        if (newHovered != -1) {
+          if (IosGlass.of(context)) {
+            IosHaptics.selectionChange();
+          } else {
+            Haptics.selection();
+          }
+        }
         setState(() => _hoveredIndex = newHovered);
       }
     }
@@ -707,7 +734,11 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
 
   void _onCommit() {
     if (_hoveredIndex != -1 && widget.controller.movedSignificantly) {
-      Haptics.medium();
+      if (IosGlass.of(context)) {
+        IosHaptics.itemActivate();
+      } else {
+        Haptics.medium();
+      }
       _actions[_hoveredIndex].onTap();
     } else if (widget.controller.movedSignificantly) {
       _close();
@@ -718,7 +749,20 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     if (!mounted || _closing) return;
     _closing = true;
     try {
-      await _animController.reverse();
+      if (IosGlass.of(context)) {
+        if (IosMotion.reduceMotionOf(context)) {
+          _animController.value = 0;
+        } else {
+          await animateSpring(
+            _animController,
+            target: 0,
+            spring: IosMotion.overlay,
+            velocity: _animController.velocity,
+          );
+        }
+      } else {
+        await _animController.reverse();
+      }
     } catch (_) {}
     if (!mounted) return;
     widget.onDismiss();
@@ -789,7 +833,9 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       builder: (ctx, _) {
         final t = _animation.value.clamp(0.0, 1.0);
         final e = showReactions ? _expandAnim.value.clamp(0.0, 1.0) : 0.0;
-        final bubbleScale = 1.0 + 0.045 * t;
+        final reduce =
+            IosGlass.of(context) && IosMotion.reduceMotionOf(context);
+        final bubbleScale = reduce ? 1.0 : (1.0 + 0.045 * t);
         final menuHidden = _panelOpen || _reactionsExpanded;
 
         return GestureDetector(
@@ -901,9 +947,25 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
   }
 
   void _toggleReactionsExpanded() {
-    Haptics.tap();
+    final ios = IosGlass.of(context);
+    if (ios) {
+      IosHaptics.itemActivate();
+    } else {
+      Haptics.tap();
+    }
     setState(() => _reactionsExpanded = !_reactionsExpanded);
-    if (_reactionsExpanded) {
+    if (ios) {
+      if (IosMotion.reduceMotionOf(context)) {
+        _expandController.value = _reactionsExpanded ? 1 : 0;
+      } else {
+        animateSpring(
+          _expandController,
+          target: _reactionsExpanded ? 1 : 0,
+          spring: IosMotion.overlay,
+          velocity: _expandController.velocity,
+        );
+      }
+    } else if (_reactionsExpanded) {
       _expandController.forward();
     } else {
       _expandController.reverse();
@@ -912,7 +974,11 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
 
   Future<void> _onReactionPicked(String emoji) async {
     final cb = widget.onReact;
-    Haptics.medium();
+    if (IosGlass.of(context)) {
+      IosHaptics.itemActivate();
+    } else {
+      Haptics.medium();
+    }
     await _close();
     cb?.call(emoji);
   }
@@ -1624,9 +1690,12 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
 
   Widget _buildListMenu(double t) {
     final cs = Theme.of(context).colorScheme;
-    final spring = Curves.easeOutCubic.transform(t.clamp(0.0, 1.0));
-    final eased = spring.clamp(0.0, 1.0);
-    final scale = 0.86 + 0.14 * spring.clamp(0.0, 1.15);
+    final ios = IosGlass.of(context);
+    final reduce = ios && IosMotion.reduceMotionOf(context);
+    final eased = ios
+        ? t.clamp(0.0, 1.0)
+        : Curves.easeOutCubic.transform(t.clamp(0.0, 1.0));
+    final scale = reduce ? 1.0 : (0.86 + 0.14 * eased);
     final tapAnchored =
         widget.interaction != MessageActionsInteraction.dragAndRelease;
     return Positioned(
@@ -1681,7 +1750,9 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
           builder: (_) {
             final delay = (i / n) * 0.25;
             final localT = ((t - delay) / (1.0 - delay)).clamp(0.0, 1.0);
-            final eased = Curves.easeOutCubic.transform(localT);
+            final eased = IosGlass.of(context)
+                ? localT
+                : Curves.easeOutCubic.transform(localT);
             final isHovered = _hoveredIndex == i;
             final hoverScale = isHovered ? 1.18 : 1.0;
             final entryScale = 0.4 + 0.6 * eased;
