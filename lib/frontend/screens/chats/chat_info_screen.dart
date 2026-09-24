@@ -42,6 +42,7 @@ import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_metrics.dart';
+import '../../widgets/glass/ios_typography.dart';
 import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/settings_card.dart';
@@ -1204,11 +1205,17 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   }
 
   Widget _buildNameRow(ColorScheme cs, Color textColor, double t) {
+    final ios = IosGlass.of(context);
     final nameStyle = TextStyle(
       color: textColor,
-      fontSize: lerpDouble(22, 25, t)!,
+      fontSize: ios
+          ? lerpDouble(IosTypography.headerTitle, 28, t)!
+          : lerpDouble(22, 25, t)!,
       fontWeight: FontWeight.w700,
       fontFamily: displayFontOf(context),
+      letterSpacing: ios
+          ? IosTypography.letterSpacing(IosTypography.headerTitle)
+          : null,
     );
     final custom = _customName;
     final real = _realName;
@@ -1895,7 +1902,14 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           children: [
             Text(
               label,
-              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(
+                color: IosGlass.of(context)
+                    ? IosPalette.secondaryLabel(cs)
+                    : cs.onSurfaceVariant,
+                fontSize: IosGlass.of(context)
+                    ? IosTypography.sectionHeader
+                    : 13,
+              ),
             ),
             const SizedBox(height: 4),
             FormattedMessageText(
@@ -1903,8 +1917,14 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
               ranges: const [],
               entityMode: TextEntityMode.copy,
               style: TextStyle(
-                color: isLink ? cs.primary : cs.onSurface,
-                fontSize: 16,
+                color: isLink
+                    ? cs.primary
+                    : (IosGlass.of(context)
+                        ? IosPalette.label(cs)
+                        : cs.onSurface),
+                fontSize: IosGlass.of(context)
+                    ? IosTypography.listTitle
+                    : 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -2336,7 +2356,17 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           children: [
             Icon(icon, color: cs.primary, size: 26),
             const SizedBox(width: 14),
-            Text(label, style: TextStyle(color: cs.onSurface, fontSize: 16)),
+            Text(
+              label,
+              style: TextStyle(
+                color: IosGlass.of(context)
+                    ? IosPalette.label(cs)
+                    : cs.onSurface,
+                fontSize: IosGlass.of(context)
+                    ? IosTypography.listTitle
+                    : 16,
+              ),
+            ),
           ],
         ),
       ),
@@ -2412,14 +2442,28 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
                   Text(
                     name,
                     style: TextStyle(
-                      color: cs.onSurface,
-                      fontSize: 15,
+                      color: IosGlass.of(context)
+                          ? IosPalette.label(cs)
+                          : cs.onSurface,
+                      fontSize: IosGlass.of(context)
+                          ? IosTypography.listTitle
+                          : 15,
                       fontWeight: FontWeight.w500,
+                      letterSpacing: IosGlass.of(context)
+                          ? IosTypography.letterSpacing(IosTypography.listTitle)
+                          : null,
                     ),
                   ),
                   Text(
                     sublabel,
-                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+                    style: TextStyle(
+                      color: IosGlass.of(context)
+                          ? IosPalette.secondaryLabel(cs)
+                          : cs.onSurfaceVariant,
+                      fontSize: IosGlass.of(context)
+                          ? IosTypography.listSubtitle
+                          : 13,
+                    ),
                   ),
                 ],
               ),

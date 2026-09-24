@@ -9,6 +9,11 @@ import 'package:komet/core/utils/format.dart';
 import 'package:komet/frontend/widgets/animated_lottie_icon.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_tappable.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_palette.dart';
+import 'package:komet/frontend/widgets/glass/ios_metrics.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/komet_avatar.dart';
 import 'package:komet/frontend/widgets/small_spinner.dart';
@@ -34,6 +39,8 @@ class SearchTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ios = IosGlass.of(context);
+    final fieldSize = ios ? IosTypography.composer : 16.0;
     final field = TextField(
       controller: search.searchController,
       focusNode: focusNode,
@@ -41,16 +48,18 @@ class SearchTopBar extends StatelessWidget {
       onSubmitted: search.submit,
       cursorColor: cs.primary,
       style: TextStyle(
-        color: cs.onSurface,
-        fontSize: 16,
+        color: ios ? IosPalette.label(cs) : cs.onSurface,
+        fontSize: fieldSize,
         fontFamily: displayFontOf(context),
+        letterSpacing: ios ? IosTypography.letterSpacing(fieldSize) : null,
       ),
       decoration: InputDecoration(
         hintText: 'Поиск…',
         hintStyle: TextStyle(
-          color: cs.onSurfaceVariant,
-          fontSize: 16,
+          color: ios ? IosPalette.secondaryLabel(cs) : cs.onSurfaceVariant,
+          fontSize: fieldSize,
           fontFamily: displayFontOf(context),
+          letterSpacing: ios ? IosTypography.letterSpacing(fieldSize) : null,
         ),
         border: InputBorder.none,
         isDense: true,
@@ -84,9 +93,9 @@ class SearchTopBar extends StatelessWidget {
           children: [
             GlassIconButton(
               key: const ValueKey('ios-search-back'),
-              icon: Symbols.arrow_back_ios_new,
+              icon: IosSymbols.back(context),
               iconSize: 20,
-              size: 46,
+              size: IosMetrics.minHitTarget,
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               onPressed: onClose,
             ),
@@ -94,15 +103,14 @@ class SearchTopBar extends StatelessWidget {
             Expanded(
               child: GlassCapsule(
                 key: const ValueKey('ios-search-field'),
-                height: 46,
+                height: IosMetrics.searchBarHeight,
                 padding: const EdgeInsets.only(left: 14, right: 2),
                 child: Row(
                   children: [
                     Icon(
-                      Symbols.search,
-                      size: 20,
-                      weight: 500,
-                      color: cs.onSurfaceVariant,
+                      IosSymbols.search(context),
+                      size: 18,
+                      color: IosPalette.secondaryLabel(cs),
                     ),
                     const SizedBox(width: 8),
                     Expanded(child: field),
@@ -115,8 +123,7 @@ class SearchTopBar extends StatelessWidget {
                                 context,
                               ).deleteButtonTooltip,
                               icon: Icon(
-                                Symbols.cancel,
-                                fill: 1,
+                                IosSymbols.clearFill(context),
                                 size: 20,
                                 color: cs.onSurfaceVariant,
                               ),
@@ -246,8 +253,12 @@ class SearchOverlay extends StatelessWidget {
                         'Поиск ничего не вернул…',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 16,
+                          color: IosGlass.of(context)
+                              ? IosPalette.secondaryLabel(cs)
+                              : cs.onSurfaceVariant,
+                          fontSize: IosGlass.of(context)
+                              ? IosTypography.listSubtitle
+                              : 16,
                         ),
                       ),
                     ),
@@ -262,7 +273,8 @@ class SearchOverlay extends StatelessWidget {
   Widget _tile(BuildContext context, MessageSearchResult r) {
     final name = senderName(r.senderId);
     final date = formatDateWords(DateTime.fromMillisecondsSinceEpoch(r.time));
-    return InkWell(
+    final ios = IosGlass.of(context);
+    return IosTappable(
       onTap: () => onOpenResult(r),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -289,9 +301,16 @@ class SearchOverlay extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: cs.primary,
-                            fontSize: 15,
+                            fontSize: ios
+                                ? IosTypography.listTitle
+                                : 15,
                             fontWeight: FontWeight.w600,
                             fontFamily: displayFontOf(context),
+                            letterSpacing: ios
+                                ? IosTypography.letterSpacing(
+                                    IosTypography.listTitle,
+                                  )
+                                : null,
                           ),
                         ),
                       ),
@@ -299,14 +318,16 @@ class SearchOverlay extends StatelessWidget {
                       Text(
                         date,
                         style: TextStyle(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 12,
+                          color: ios
+                              ? IosPalette.secondaryLabel(cs)
+                              : cs.onSurfaceVariant,
+                          fontSize: ios ? IosTypography.callLabel : 12,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 2),
-                  _highlighted(r.text, r.highlights),
+                  _highlighted(context, r.text, r.highlights),
                 ],
               ),
             ),
@@ -316,8 +337,19 @@ class SearchOverlay extends StatelessWidget {
     );
   }
 
-  Widget _highlighted(String text, List<String> highlights) {
-    final baseStyle = TextStyle(color: cs.onSurface, fontSize: 15);
+  Widget _highlighted(
+    BuildContext context,
+    String text,
+    List<String> highlights,
+  ) {
+    final ios = IosGlass.of(context);
+    final baseStyle = TextStyle(
+      color: ios ? IosPalette.label(cs) : cs.onSurface,
+      fontSize: ios ? IosTypography.listSubtitle : 15,
+      letterSpacing: ios
+          ? IosTypography.letterSpacing(IosTypography.listSubtitle)
+          : null,
+    );
     final terms = highlights
         .where((h) => h.trim().isNotEmpty)
         .map((h) => h.toLowerCase())

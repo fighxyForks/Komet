@@ -1051,9 +1051,20 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                         name,
                         style: TextStyle(
                           color: nameColor,
-                          fontSize: lerpDouble(20, 26, pt),
+                          fontSize: IosGlass.of(context)
+                              ? lerpDouble(
+                                  IosTypography.headerTitle,
+                                  28,
+                                  pt,
+                                )
+                              : lerpDouble(20, 26, pt),
                           fontWeight: FontWeight.w700,
                           fontFamily: displayFontOf(context),
+                          letterSpacing: IosGlass.of(context)
+                              ? IosTypography.letterSpacing(
+                                  IosTypography.headerTitle,
+                                )
+                              : null,
                         ),
                       ),
                     ),

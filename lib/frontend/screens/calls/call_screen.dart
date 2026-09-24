@@ -30,6 +30,10 @@ import 'call_participants_sheet.dart';
 import 'komet_hub.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_metrics.dart';
 
 class CallScreen extends StatefulWidget {
   final String name;
@@ -532,7 +536,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           systemNavigationBarIconBrightness: Brightness.light,
         ),
         child: Scaffold(
-          backgroundColor: cs.surface,
+          backgroundColor: IosGlass.of(context)
+              ? const Color(0xFF0B0B0F)
+              : cs.surface,
           body: Stack(
             children: [
               body,
@@ -574,7 +580,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
   Widget _localPreviewIcon(ColorScheme cs) => Center(
     child: Icon(
-      _session?.localScreen == true ? Symbols.screen_share : Symbols.videocam,
+      _session?.localScreen == true
+          ? IosSymbols.screenShare(context)
+          : IosSymbols.videocam(context),
       color: cs.onSurfaceVariant,
       size: 28,
     ),
@@ -646,7 +654,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   if (count > 0) ...[
                     const SizedBox(width: 4),
                     Icon(
-                      Symbols.chevron_right,
+                      IosSymbols.chevronRight(context),
                       size: 16,
                       color: cs.onSurfaceVariant,
                     ),
@@ -1261,14 +1269,15 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _CallButton(
-            icon: Symbols.call_end,
+            icon: IosSymbols.phoneDown(context),
             label: l10n.callDecline,
             background: kDangerRed,
             foreground: Colors.white,
+            destructive: true,
             onTap: _decline,
           ),
           _CallButton(
-            icon: Symbols.call,
+            icon: IosSymbols.phoneFill(context),
             label: l10n.callAccept,
             background: kSuccessGreen,
             foreground: Colors.white,
@@ -1289,15 +1298,17 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _CallButton(
-            icon: _isSpeaker ? Symbols.volume_up : Symbols.volume_down,
+            icon: _isSpeaker
+                ? IosSymbols.speaker(context)
+                : IosSymbols.speakerQuiet(context),
             label: l10n.callSpeaker,
             background: _isSpeaker ? cs.primary : cs.surfaceContainerHighest,
             foreground: _isSpeaker ? cs.onPrimary : cs.onSurface,
             onTap: _toggleSpeaker,
           ),
           _CallButton(
-            icon: Symbols.videocam,
-            slashedIcon: Symbols.videocam_off,
+            icon: IosSymbols.videocam(context),
+            slashedIcon: IosSymbols.videocamOff(context),
             slashed: !video,
             label: l10n.callVideoLabel,
             background: video ? cs.primary : cs.surfaceContainerHighest,
@@ -1306,7 +1317,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             onTap: _toggleVideo,
           ),
           _CallButton(
-            icon: Symbols.screen_share,
+            icon: IosSymbols.screenShare(context),
             label: l10n.callScreenLabel,
             background: screen ? cs.primary : cs.surfaceContainerHighest,
             foreground: screen ? cs.onPrimary : cs.onSurface,
@@ -1314,8 +1325,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             onTap: _toggleScreen,
           ),
           _CallButton(
-            icon: Symbols.mic,
-            slashedIcon: Symbols.mic_off,
+            icon: IosSymbols.mic(context),
+            slashedIcon: IosSymbols.micOff(context),
             slashed: _isMuted,
             label: _isMuted
                 ? (CallNoMute.enabled ? l10n.callMicStillLive : l10n.callUnmute)
@@ -1326,10 +1337,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             onLongPress: _showMicrophones,
           ),
           _CallButton(
-            icon: Symbols.call_end,
+            icon: IosSymbols.phoneDown(context),
             label: l10n.callEndButton,
             background: kDangerRed,
             foreground: Colors.white,
+            destructive: true,
             onTap: _hangup,
           ),
         ],
@@ -1391,6 +1403,7 @@ class _CallButton extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool busy;
+  final bool destructive;
 
   const _CallButton({
     required this.icon,
@@ -1402,12 +1415,13 @@ class _CallButton extends StatelessWidget {
     this.slashedIcon,
     this.slashed = false,
     this.busy = false,
+    this.destructive = false,
   });
 
   Widget _buildIcon() {
     final crossed = slashedIcon;
     if (crossed == null) {
-      return Icon(icon, color: foreground, size: 26, fill: 1);
+      return Icon(icon, color: foreground, size: 26);
     }
     return AnimatedSlashIcon(
       icon: icon,
@@ -1422,18 +1436,45 @@ class _CallButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 62,
-          height: 62,
-          child: GlossyPill(
-            color: background,
-            borderRadius: BorderRadius.circular(31),
-            onTap: busy ? null : onTap,
-            onLongPress: busy ? null : onLongPress,
-            depth: 9,
+    final ios = IosGlass.of(context);
+    final size = ios
+        ? IosMetrics.minHitTarget + 20
+        : 62.0; // 64pt glass circle on iOS
+
+    final Widget face;
+    if (ios) {
+      // Flutter glass look only — no BackdropFilter / platform view per button.
+      final glassBg = destructive
+          ? kDangerRed
+          : (background == cs.primary
+              ? cs.primary.withValues(alpha: 0.95)
+              : Colors.white.withValues(alpha: 0.18));
+      face = Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: busy ? null : onTap,
+          onLongPress: busy ? null : onLongPress,
+          child: Ink(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: glassBg,
+              border: Border.all(
+                color: Colors.white.withValues(
+                  alpha: destructive ? 0.12 : 0.28,
+                ),
+                width: 0.8,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Center(
               child: busy
                   ? SmallSpinner(size: 22, color: foreground)
@@ -1441,13 +1482,42 @@ class _CallButton extends StatelessWidget {
             ),
           ),
         ),
+      );
+    } else {
+      face = SizedBox(
+        width: size,
+        height: size,
+        child: GlossyPill(
+          color: background,
+          borderRadius: BorderRadius.circular(size / 2),
+          onTap: busy ? null : onTap,
+          onLongPress: busy ? null : onLongPress,
+          depth: 9,
+          child: Center(
+            child: busy
+                ? SmallSpinner(size: 22, color: foreground)
+                : _buildIcon(),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        face,
         const SizedBox(height: 8),
         Text(
           label,
           style: TextStyle(
-            color: cs.onSurfaceVariant,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+            color: ios
+                ? Colors.white.withValues(alpha: 0.72)
+                : cs.onSurfaceVariant,
+            fontSize: ios ? IosTypography.callLabel : 12,
+            fontWeight: ios ? IosTypography.medium : FontWeight.w500,
+            letterSpacing: ios
+                ? IosTypography.letterSpacing(IosTypography.callLabel)
+                : null,
           ),
         ),
       ],
