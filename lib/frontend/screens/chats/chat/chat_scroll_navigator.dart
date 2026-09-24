@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 
 import 'chat_controller.dart';
 import 'read_marker_gate.dart';
+import 'message_highlighter.dart';
 
 class ChatScrollNavigator {
   ChatScrollNavigator({
@@ -70,8 +71,11 @@ class ChatScrollNavigator {
   Timer? _goToMessageSettleTimer;
   final ValueNotifier<double?> jumpCacheExtent = ValueNotifier<double?>(null);
 
-  final ValueNotifier<String?> highlightMessageId = ValueNotifier(null);
-  Timer? _highlightTimer;
+  late final MessageHighlighter _highlighter = MessageHighlighter(
+    isMounted: isMounted,
+  );
+
+  ValueNotifier<String?> get highlightMessageId => _highlighter.id;
 
   int gestureEpoch = 0;
 
@@ -87,8 +91,7 @@ class ChatScrollNavigator {
   void dispose() {
     _goToMessageSettleTimer?.cancel();
     jumpCacheExtent.dispose();
-    _highlightTimer?.cancel();
-    highlightMessageId.dispose();
+    _highlighter.dispose();
     newMessageCount.dispose();
   }
 
@@ -156,7 +159,11 @@ class ChatScrollNavigator {
     await runGoToMessage(id, initialMessageTimeOf() ?? 0);
   }
 
-  Future<void> runGoToMessage(String id, int targetTime) async {
+  Future<void> runGoToMessage(
+    String id,
+    int targetTime, {
+    bool flash = false,
+  }) async {
     await WidgetsBinding.instance.endOfFrame;
     if (!isMounted()) return;
 
@@ -173,15 +180,29 @@ class ChatScrollNavigator {
       return;
     }
 
-    _highlightTimer?.cancel();
-    highlightMessageId.value = id;
-    _highlightTimer = Timer(const Duration(milliseconds: 2200), () {
-      if (!isMounted()) return;
-      if (highlightMessageId.value == id) highlightMessageId.value = null;
-    });
+    if (!flash) _highlighter.hold(id, const Duration(milliseconds: 2200));
 
     await scrollToMessagePrecise(id);
     finishTargetNavigation();
+    if (flash && isMounted()) flashMessage(id);
+  }
+
+  void flashMessage(String id) => _highlighter.flash(id);
+
+  void revealMessage(String id, int messageTime) {
+    if (chatController.containsId(id)) {
+      scrollToLoadedMessage(
+        id,
+        highlight: false,
+        notifyIfMissing: false,
+        onSettled: () {
+          if (isMounted()) flashMessage(id);
+        },
+      );
+      return;
+    }
+    notifyState(beginTargetNavigation);
+    unawaited(runGoToMessage(id, messageTime, flash: true));
   }
 
   ({int min, int max})? _laidOutMessageRange(List<Object> items) {
@@ -303,14 +324,7 @@ class ChatScrollNavigator {
     }
 
     if (highlight) {
-      _highlightTimer?.cancel();
-      highlightMessageId.value = messageId;
-      _highlightTimer = Timer(const Duration(milliseconds: 1600), () {
-        if (!isMounted()) return;
-        if (highlightMessageId.value == messageId) {
-          highlightMessageId.value = null;
-        }
-      });
+      _highlighter.hold(messageId, const Duration(milliseconds: 1600));
     }
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => alignLoadedMessage(messageId, alignment, 0, onSettled: settle),
@@ -470,14 +484,7 @@ class ChatScrollNavigator {
       unawaited(scrollToMessagePrecise(messageId, alignment: 0.4));
     }
 
-    _highlightTimer?.cancel();
-    highlightMessageId.value = messageId;
-    _highlightTimer = Timer(const Duration(milliseconds: 1400), () {
-      if (!isMounted()) return;
-      if (highlightMessageId.value == messageId) {
-        highlightMessageId.value = null;
-      }
-    });
+    _highlighter.hold(messageId, const Duration(milliseconds: 1400));
   }
 
   void scrollToBottom() {

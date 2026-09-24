@@ -93,11 +93,21 @@ void main() {
       expect(tabs[1].iosBadgeValue, isNull);
     });
 
-    test('долгое нажатие находит вкладку по горизонтали', () {
-      expect(IosNativeTabBar.indexAt(10, 400, 4), 0);
-      expect(IosNativeTabBar.indexAt(390, 400, 4), 3);
-      expect(IosNativeTabBar.indexAt(-5, 400, 4), 0);
-      expect(IosNativeTabBar.indexAt(900, 400, 4), 3);
+    testWidgets('поверх системной панели нет Flutter-жестов, глотающих тап', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: IosNativeTabBar(items: _items, currentIndex: 0, onTap: (_) {}),
+        ),
+      );
+      expect(
+        find.descendant(
+          of: find.byType(IosNativeTabBar),
+          matching: find.byType(GestureDetector),
+        ),
+        findsNothing,
+      );
     });
   });
 }

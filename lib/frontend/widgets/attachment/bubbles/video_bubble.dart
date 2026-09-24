@@ -9,9 +9,11 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../models/attachment.dart';
 import '../../custom_notification.dart';
 import '../../upload_progress_ring.dart';
+import '../../glass/ios_glass.dart';
 import '../../photo_viewer.dart';
 import '../../text_with_meta.dart';
 import 'bubble_context.dart';
+import 'progressive_media_image.dart';
 import 'video_note_bubble.dart';
 
 class VideoBubble extends StatelessWidget {
@@ -59,12 +61,22 @@ class VideoBubble extends StatelessWidget {
         ? video.baseUrl!
         : (video.previewData ?? '');
 
+    final ios = IosGlass.of(ctx.context);
     final h = video.height;
-    final width = layoutWidth(video, hasCaption: hasCaption);
-    final height = (h?.toDouble() ?? 150.0).clamp(
-      BubbleContext.photoMinSize,
-      BubbleContext.photoMaxSize,
-    );
+    final iosSize = ios
+        ? BubbleContext.mediaDisplaySize(
+            video.width,
+            video.height,
+            hasCaption: hasCaption,
+          )
+        : null;
+    final width = iosSize?.width ?? layoutWidth(video, hasCaption: hasCaption);
+    final height =
+        iosSize?.height ??
+        (h?.toDouble() ?? 150.0).clamp(
+          BubbleContext.photoMinSize,
+          BubbleContext.photoMaxSize,
+        );
     final dpr = MediaQuery.of(ctx.context).devicePixelRatio;
 
     Widget placeholder() => Container(
@@ -78,6 +90,16 @@ class VideoBubble extends StatelessWidget {
     final uploading = ctx.uploadProgress;
 
     Widget previewImage() {
+      if (ios && previewUrl.isNotEmpty && !previewUrl.startsWith('data:')) {
+        return ProgressiveMediaImage(
+          url: previewUrl,
+          preview: localThumb,
+          width: width,
+          height: height,
+          memCacheWidth: (width * dpr).round(),
+          fallback: (_) => placeholder(),
+        );
+      }
       if (previewUrl.isNotEmpty && !previewUrl.startsWith('data:')) {
         return CachedNetworkImage(
           imageUrl: previewUrl,

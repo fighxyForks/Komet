@@ -29,6 +29,7 @@ import 'core/crypto/e2ee_service.dart';
 import 'core/storage/chat_encryption_store.dart';
 import 'core/config/app_accent.dart';
 import 'core/config/app_amoled.dart';
+import 'core/config/app_perf_trace.dart';
 import 'core/config/app_show_extra_info.dart';
 import 'core/config/app_spectrum_background.dart';
 import 'core/config/app_bubble_behavior.dart';
@@ -256,6 +257,7 @@ void main(List<String> args) async {
   final videoNoteRearCameraFuture = AppVideoNoteRearCamera.load();
   final digitalIdNativeFuture = AppDigitalIdNative.load();
   final showExtraInfoFuture = AppShowExtraInfo.load();
+  final perfTraceFuture = AppPerfTrace.load();
   final spectrumBackgroundFuture = AppSpectrumBackground.load();
   final trafficCaptureFuture = TrafficMonitor.instance.load();
   final debugLogFuture = DebugSessionLog.instance.init();
@@ -326,6 +328,7 @@ void main(List<String> args) async {
     videoNoteRearCameraFuture,
     digitalIdNativeFuture,
     showExtraInfoFuture,
+    perfTraceFuture,
     spectrumBackgroundFuture,
   ]);
   await DeviceContactsService.loadFromStartup();

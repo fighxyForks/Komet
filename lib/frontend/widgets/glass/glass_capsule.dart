@@ -133,6 +133,7 @@ class GlassCapsule extends StatelessWidget {
   final double fallbackSigma;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final String? traceLabel;
 
   const GlassCapsule({
     super.key,
@@ -148,6 +149,7 @@ class GlassCapsule extends StatelessWidget {
     this.fallbackSigma = GlassStyle.sigma,
     this.onTap,
     this.onLongPress,
+    this.traceLabel,
   });
 
   static (double?, double?) nativeExtent(
@@ -164,10 +166,16 @@ class GlassCapsule extends StatelessWidget {
     onTap?.call();
   }
 
+  String? _traceLabel() => traceLabelOf(key) ?? traceLabel;
+
+  static String? traceLabelOf(Key? key) =>
+      key is ValueKey<String> ? key.value : null;
+
   @override
   Widget build(BuildContext context) {
     final content = Padding(padding: padding, child: child);
     return NativeGlassGate(
+      label: _traceLabel(),
       builder: (context, useNative) {
         if (useNative && allowNative) {
           return LayoutBuilder(
@@ -246,6 +254,7 @@ class GlassIconButton extends StatelessWidget {
       enabled: enabled,
       label: tooltip,
       child: GlassCapsule(
+        traceLabel: GlassCapsule.traceLabelOf(key) ?? tooltip ?? 'кнопка',
         width: size,
         height: size,
         tint: tint,
@@ -309,6 +318,7 @@ class GlassButtonGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return GlassCapsule(
+      traceLabel: GlassCapsule.traceLabelOf(key) ?? 'группа кнопок',
       height: height,
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Row(

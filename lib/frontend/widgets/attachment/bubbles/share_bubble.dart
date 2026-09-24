@@ -5,6 +5,7 @@ import '../../../../core/utils/haptics.dart';
 import '../../../../core/utils/link_opener.dart';
 import '../../../../models/attachment.dart';
 import '../../formatted_message_text.dart';
+import '../../glass/ios_glass.dart';
 import 'bubble_context.dart';
 
 class ShareBubble extends StatelessWidget {
@@ -53,7 +54,9 @@ class ShareBubble extends StatelessWidget {
                 fit: BoxFit.cover,
                 memCacheWidth: 560,
                 fadeInDuration: const Duration(milliseconds: 120),
-                errorWidget: (_, _, _) => const SizedBox.shrink(),
+                errorWidget: (_, _, _) => IosGlass.of(ctx.context)
+                    ? const SizedBox(width: 280, height: 140)
+                    : const SizedBox.shrink(),
               ),
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),

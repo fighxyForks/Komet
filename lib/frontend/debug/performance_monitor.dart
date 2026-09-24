@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../core/utils/perf_trace.dart';
+
 // #***! простое in-app APM — родной FrameTiming callback Flutter, без
 // внешних зависимостей и без похода в DevTools. Копится в кольцевом
 // буфере, чтобы можно было снять отчёт/скопировать лог из debug-меню.
@@ -223,15 +225,35 @@ class PerfRouteObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     PerformanceMonitor.instance.markRoute('route:${_nameOf(route)}');
+    PerfTrace.instance.routeShown('открыт', route, previousRoute);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     PerformanceMonitor.instance.markRoute('route:${_nameOf(previousRoute)}');
+    PerfTrace.instance.routeClosed(route, previousRoute);
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     PerformanceMonitor.instance.markRoute('route:${_nameOf(newRoute)}');
+    if (newRoute != null) {
+      PerfTrace.instance.routeShown('заменён', newRoute, oldRoute);
+    }
+  }
+
+  @override
+  void didStartUserGesture(
+    Route<dynamic> route,
+    Route<dynamic>? previousRoute,
+  ) {
+    PerfTrace.instance.beginSpan(
+      'свайп назад ${PerfTrace.describeRoute(route)}',
+    );
+  }
+
+  @override
+  void didStopUserGesture() {
+    PerfTrace.instance.endSpansStartingWith('свайп назад');
   }
 }

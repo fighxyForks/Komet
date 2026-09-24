@@ -18,6 +18,7 @@ import 'command_panel_view.dart';
 import 'measure_size.dart';
 import 'mention_panel_view.dart';
 import 'message_list_decorations.dart';
+import 'package:komet/frontend/widgets/media_playback_pill.dart';
 import 'pinned_banner_pill.dart';
 import 'search_view.dart';
 
@@ -30,6 +31,7 @@ class ChatBodyLayout extends StatelessWidget {
   final BackdropKey? pillBackdrop;
   final int myId;
   final VoidCallback onJumpToPinnedMessage;
+  final PlaybackRevealCallback onRevealPlayingMessage;
   final Future<void> Function() onUnpinCurrentMessage;
   final VoidCallback? onJoinCall;
   final bool composerFrosted;
@@ -61,6 +63,7 @@ class ChatBodyLayout extends StatelessWidget {
     required this.pillBackdrop,
     required this.myId,
     required this.onJumpToPinnedMessage,
+    required this.onRevealPlayingMessage,
     required this.onUnpinCurrentMessage,
     required this.onJoinCall,
     required this.composerFrosted,
@@ -238,6 +241,7 @@ class ChatBodyLayout extends StatelessWidget {
                   onTap: onJumpToPinnedMessage,
                   myId: myId,
                   onUnpinRequested: () => unawaited(onUnpinCurrentMessage()),
+                  onRevealPlaying: onRevealPlayingMessage,
                 ),
               ],
             ),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:native_liquid_glass/native_liquid_glass.dart';
 
 import '../../../core/config/app_ios_glass.dart';
+import '../../../core/utils/perf_trace.dart';
 
 class IosGlass extends InheritedNotifier<ValueNotifier<bool>> {
   IosGlass({super.key, required super.child})
@@ -27,6 +28,7 @@ class GlassSuppression {
 
   static VoidCallback hold() {
     count.value++;
+    PerfTrace.instance.event('glass', 'подавление вкл (${count.value})');
     if (count.value == 1 && NativeLiquidGlassUtils.supportsLiquidGlass) {
       unawaited(_invoke(NativeLiquidGlassLifecycle.suppressGlassEffects));
     }
@@ -35,6 +37,7 @@ class GlassSuppression {
       if (released) return;
       released = true;
       count.value--;
+      PerfTrace.instance.event('glass', 'подавление выкл (${count.value})');
       if (count.value == 0 && NativeLiquidGlassUtils.supportsLiquidGlass) {
         unawaited(_invoke(NativeLiquidGlassLifecycle.unsuppressGlassEffects));
       }
@@ -79,17 +82,57 @@ class NativeGlassScope extends InheritedWidget {
       oldWidget.enabled != enabled;
 }
 
-class NativeGlassGate extends StatelessWidget {
+class NativeGlassGate extends StatefulWidget {
   final Widget Function(BuildContext context, bool useNative) builder;
+  final String? label;
 
-  const NativeGlassGate({super.key, required this.builder});
+  const NativeGlassGate({super.key, required this.builder, this.label});
+
+  @override
+  State<NativeGlassGate> createState() => _NativeGlassGateState();
+}
+
+class _NativeGlassGateState extends State<NativeGlassGate> {
+  bool? _lastNative;
+
+  static bool routeSettled(ModalRoute<dynamic>? route) =>
+      (route?.isCurrent ?? true) &&
+      (route?.animation == null || route!.animation!.isCompleted) &&
+      (route?.secondaryAnimation?.value ?? 0) == 0;
+
+  String? _fallbackReason(BuildContext context, ModalRoute<dynamic>? route) {
+    if (_lastNative != true && !routeSettled(route)) {
+      return 'анимация перехода';
+    }
+    if (GlassSuppression.count.value > 0) return 'подавление';
+    if (!NativeGlassScope.of(context)) return 'движение панели';
+    if (MediaQuery.highContrastOf(context)) return 'повышенный контраст';
+    if (MediaQuery.disableAnimationsOf(context)) return 'уменьшение движения';
+    return null;
+  }
+
+  Widget _resolve(BuildContext context, bool useNative, String? reason) {
+    final trace = PerfTrace.instance;
+    if (trace.enabled) {
+      trace.count(useNative ? 'стекло.нативное' : 'стекло.flutter');
+      final last = _lastNative;
+      if (last != null && last != useNative) {
+        trace.event(
+          'glass',
+          '${widget.label ?? 'капсула'}: '
+              '${useNative ? 'Flutter → нативное' : 'нативное → Flutter'}'
+              '${reason == null ? '' : ' ($reason)'}',
+        );
+      }
+    }
+    _lastNative = useNative;
+    return widget.builder(context, useNative);
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (!IosGlass.of(context) ||
-        !AppIosGlass.nativeViews ||
-        !NativeGlassScope.of(context)) {
-      return builder(context, false);
+    if (!IosGlass.of(context) || !AppIosGlass.nativeViews) {
+      return widget.builder(context, false);
     }
     final route = ModalRoute.of(context);
     return ListenableBuilder(
@@ -99,17 +142,8 @@ class NativeGlassGate extends StatelessWidget {
         if (route?.secondaryAnimation != null) route!.secondaryAnimation!,
       ]),
       builder: (context, _) {
-        final settled =
-            (route?.isCurrent ?? true) &&
-            (route?.animation == null || route!.animation!.isCompleted) &&
-            (route?.secondaryAnimation?.value ?? 0) == 0;
-        return builder(
-          context,
-          settled &&
-              GlassSuppression.count.value == 0 &&
-              !MediaQuery.highContrastOf(context) &&
-              !MediaQuery.disableAnimationsOf(context),
-        );
+        final reason = _fallbackReason(context, route);
+        return _resolve(context, reason == null, reason);
       },
     );
   }

@@ -5,6 +5,7 @@ import '../../backend/modules/contacts.dart';
 import '../../core/config/app_commands.dart';
 import '../../core/config/app_digital_id_mode.dart';
 import '../../core/config/app_link_preview.dart';
+import '../../core/config/app_perf_trace.dart';
 import '../../core/config/app_phonebook_names.dart';
 import '../../core/config/app_pranks.dart';
 import '../../core/config/app_show_extra_info.dart';
@@ -337,6 +338,19 @@ class DebugFeatureTogglesSection extends StatelessWidget {
                 'технической информацией в профиле собеседника',
             valueListenable: AppShowExtraInfo.current,
             onChanged: AppShowExtraInfo.save,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: DebugToggleTile(
+            icon: Symbols.speed,
+            title: 'Трассировка производительности',
+            subtitle: (_) =>
+                'Кадры с рывками, переходы экранов и вкладок, подмена '
+                'стекла, скачки прокрутки — в файл perf.txt при '
+                'выгрузке лога',
+            valueListenable: AppPerfTrace.current,
+            onChanged: AppPerfTrace.save,
           ),
         ),
       ],

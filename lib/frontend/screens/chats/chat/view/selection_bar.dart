@@ -101,7 +101,12 @@ class SelectionTopBar extends StatelessWidget {
       VoidCallback? onTap,
       EdgeInsetsGeometry padding = EdgeInsets.zero,
     }) => ios
-        ? GlassCapsule(onTap: onTap, padding: padding, child: child)
+        ? GlassCapsule(
+            traceLabel: 'панель выбора',
+            onTap: onTap,
+            padding: padding,
+            child: child,
+          )
         : GlossyPill(onTap: onTap, padding: padding, child: child);
 
     final close = SizedBox(
