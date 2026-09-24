@@ -2210,6 +2210,19 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
+  static const double _pinnedDividerHeight = 1;
+
+  Widget _chatRowsSliver({
+    required SliverChildDelegate delegate,
+    double? Function(int index)? itemExtent,
+  }) {
+    if (itemExtent == null) return SliverList(delegate: delegate);
+    return SliverVariedExtentList(
+      delegate: delegate,
+      itemExtentBuilder: (index, _) => itemExtent(index),
+    );
+  }
+
   Widget _buildFolderChatPage(int pageIndex) {
     final pageChats = _chatsForPageIndex(pageIndex);
     final sc = _folderChatScrollControllers[pageIndex];
@@ -2267,7 +2280,14 @@ class _ChatListScreenState extends State<ChatListScreen>
                 ),
               )
             else
-              SliverList(
+              _chatRowsSliver(
+                itemExtent: IosGlass.of(context) && !_isInitialLoading
+                    ? (index) => index >= totalItems
+                          ? null
+                          : hasSeparator && index == pinnedCount
+                          ? _pinnedDividerHeight
+                          : IosChatRow.height
+                    : null,
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     if (_isInitialLoading) {
@@ -2279,7 +2299,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                         key: const ValueKey('pinned_divider'),
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Divider(
-                          height: 1,
+                          height: _pinnedDividerHeight,
                           thickness: 0.5,
                           color: cs.outlineVariant.withValues(alpha: 0.5),
                         ),
