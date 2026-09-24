@@ -1,12 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/utils/haptics.dart';
 import 'glass_capsule.dart';
 import 'ios_palette.dart';
 import 'ios_glass.dart';
 import 'ios_metrics.dart';
+import 'ios_symbols.dart';
+import 'ios_typography.dart';
 
 class GlassSwitch extends StatelessWidget {
   final bool value;
@@ -94,9 +95,22 @@ class IosFlatSearchBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Symbols.search, size: 20, weight: 500, color: color),
+              Icon(
+                IosSymbols.search(context),
+                size: 18,
+                color: color,
+              ),
               const SizedBox(width: 6),
-              Text(hint, style: TextStyle(color: color, fontSize: 17)),
+              Text(
+                hint,
+                style: TextStyle(
+                  color: color,
+                  fontSize: IosTypography.composer,
+                  letterSpacing: IosTypography.letterSpacing(
+                    IosTypography.composer,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
