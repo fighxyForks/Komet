@@ -7,6 +7,7 @@ class ChatMenuItem {
   final bool showChevron;
   final bool dividerAfter;
   final bool destructive;
+  final bool enabled;
 
   const ChatMenuItem({
     required this.icon,
@@ -15,5 +16,6 @@ class ChatMenuItem {
     this.showChevron = false,
     this.dividerAfter = false,
     this.destructive = false,
+    this.enabled = true,
   });
 }

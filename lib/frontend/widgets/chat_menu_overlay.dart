@@ -245,9 +245,10 @@ class _ChatMenuRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final fg = item.destructive ? cs.error : cs.onSurface;
+    final tint = item.destructive ? cs.error : cs.onSurface;
+    final fg = item.enabled ? tint : tint.withValues(alpha: 0.38);
     return InkWell(
-      onTap: onTap,
+      onTap: item.enabled ? onTap : null,
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: compact ? 14 : 18,

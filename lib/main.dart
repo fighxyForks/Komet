@@ -33,7 +33,9 @@ import 'core/config/app_perf_trace.dart';
 import 'core/config/app_show_extra_info.dart';
 import 'core/config/app_spectrum_background.dart';
 import 'core/config/app_bubble_behavior.dart';
+import 'core/config/app_camera.dart';
 import 'core/config/komet_settings.dart';
+import 'core/security/app_lock.dart';
 import 'core/config/call_no_mute.dart';
 import 'core/config/debug_test.dart';
 import 'core/config/app_bubble_shape.dart';
@@ -85,6 +87,7 @@ import 'core/calls/call_controller.dart';
 import 'core/media/audio_playback_controller.dart';
 import 'core/links/deep_link_service.dart';
 import 'frontend/screens/calls/call_screen.dart';
+import 'frontend/screens/lock/app_lock_layer.dart';
 import 'core/push/fkm_controller.dart';
 import 'core/push/notification_bridge.dart';
 import 'core/share/share_intent_bridge.dart';
@@ -246,6 +249,8 @@ void main(List<String> args) async {
   final messageActionsFuture = AppMessageActionsStyle.load();
   final swipeBackFuture = AppSwipeBackDesktop.load();
   final microphoneFuture = AppMicrophone.load();
+  final cameraFuture = AppCamera.load();
+  final videoNoteCameraFuture = AppVideoNoteCamera.load();
   final pranksFuture = AppPranks.load();
   final storiesFuture = AppStories.load();
   final commandsFuture = AppCommands.load();
@@ -275,6 +280,7 @@ void main(List<String> args) async {
   await ChatEncryptionStore.instance.load();
   E2eeService.instance.attach(messagesModule);
   await KometSettings.load();
+  await AppLock.instance.load();
   await PluginStore.instance.load();
   CommandRegistry.instance.initialize();
   if (KometSettings.ghostMode.value) SelfPresence.markOffline();
@@ -317,6 +323,8 @@ void main(List<String> args) async {
     messageActionsFuture,
     swipeBackFuture,
     microphoneFuture,
+    cameraFuture,
+    videoNoteCameraFuture,
     pranksFuture,
     storiesFuture,
     commandsFuture,
@@ -429,6 +437,7 @@ class KometAppState extends State<KometApp>
     _fontId = widget.initialFontId;
 
     WidgetsBinding.instance.addObserver(this);
+    HardwareKeyboard.instance.addHandler(_noteKeyInteraction);
     AudioPlaybackController.error.addListener(_onAudioPlaybackError);
     AppThemeModeConfig.current.addListener(_onThemeModeChanged);
     AppAmoled.current.addListener(_onAmoledChanged);
@@ -630,6 +639,7 @@ class KometAppState extends State<KometApp>
       _onWallpaperTintChanged,
     );
     WidgetsBinding.instance.removeObserver(this);
+    HardwareKeyboard.instance.removeHandler(_noteKeyInteraction);
     AudioPlaybackController.error.removeListener(_onAudioPlaybackError);
     _profileUpdateController.close();
     fpsOverlayEnabled.dispose();
@@ -654,8 +664,17 @@ class KometAppState extends State<KometApp>
     showCustomNotificationOnOverlay(overlay, text);
   }
 
+  bool _noteKeyInteraction(KeyEvent event) {
+    AppLock.instance.noteInteraction();
+    return false;
+  }
+
+  @override
+  Future<bool> didPopRoute() async => AppLock.instance.locked.value;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    AppLock.instance.onLifecycle(state);
     final background =
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden ||
@@ -1132,6 +1151,11 @@ class KometAppState extends State<KometApp>
                           ),
                           child: IosGlass(
                           child: IosGlassAppearance(
+                          child: Listener(
+                          behavior: HitTestBehavior.translucent,
+                          onPointerDown: (_) =>
+                              AppLock.instance.noteInteraction(),
+                          child: AppLockLayer(
                           child: Stack(
                           fit: StackFit.expand,
                           clipBehavior: Clip.none,
@@ -1167,6 +1191,8 @@ class KometAppState extends State<KometApp>
                             ),
                             if (fpsOn) const FpsOverlayLayer(),
                           ],
+                          ),
+                          ),
                           ),
                           ),
                           ),

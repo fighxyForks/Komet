@@ -117,6 +117,8 @@ dependencies:
   fjs: ^3.3.0
   cryptography: ^2.7.0
   native_liquid_glass: ^0.3.1
+  local_auth: ^3.0.2
+  visibility_detector: ^0.4.0+2
 
 dev_dependencies:
   flutter_test:
