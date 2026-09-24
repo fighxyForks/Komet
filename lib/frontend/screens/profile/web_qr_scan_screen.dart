@@ -126,10 +126,7 @@ class _WebQrScanScreenState extends State<WebQrScanScreen> {
                   );
                 },
               ),
-              _TelegramStyleFinderOverlay(
-                layoutSize: layoutSize,
-                controller: _controller,
-              ),
+              _QrFinderOverlay(layoutSize: layoutSize, controller: _controller),
               Positioned(
                 left: 0,
                 right: 0,
@@ -159,22 +156,17 @@ class _WebQrScanScreenState extends State<WebQrScanScreen> {
   }
 }
 
-class _TelegramStyleFinderOverlay extends StatefulWidget {
-  const _TelegramStyleFinderOverlay({
-    required this.layoutSize,
-    required this.controller,
-  });
+class _QrFinderOverlay extends StatefulWidget {
+  const _QrFinderOverlay({required this.layoutSize, required this.controller});
 
   final Size layoutSize;
   final MobileScannerController controller;
 
   @override
-  State<_TelegramStyleFinderOverlay> createState() =>
-      _TelegramStyleFinderOverlayState();
+  State<_QrFinderOverlay> createState() => _QrFinderOverlayState();
 }
 
-class _TelegramStyleFinderOverlayState
-    extends State<_TelegramStyleFinderOverlay>
+class _QrFinderOverlayState extends State<_QrFinderOverlay>
     with SingleTickerProviderStateMixin {
   static const _animDuration = Duration(milliseconds: 320);
   static const _snapPx = 14.0;
@@ -202,7 +194,7 @@ class _TelegramStyleFinderOverlayState
   }
 
   @override
-  void didUpdateWidget(covariant _TelegramStyleFinderOverlay oldWidget) {
+  void didUpdateWidget(covariant _QrFinderOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.layoutSize != widget.layoutSize) {
       final d = _defaultFinderRect(widget.layoutSize);

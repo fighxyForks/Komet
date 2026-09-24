@@ -1289,9 +1289,9 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   // #***! прогревает MessageSessionCache для верхних чатов списка, чтобы
   // открытие чата, который пользователь ещё не заходил в этой сессии, было
-  // таким же мгновенным, как повторное открытие — то же поведение, что и
-  // у Telegram/TDLib, где last_message и последние сообщения топовых чатов
-  // уже лежат в локальной БД до тапа, а не читаются с диска в момент клика.
+  // таким же мгновенным, как повторное открытие: last_message и последние
+  // сообщения топовых чатов уже лежат в локальной БД до тапа, а не читаются
+  // с диска в момент клика.
   static const int _messagePrefetchTopN = 20;
 
   Future<void> _prefetchMessagesForChats(List<CachedChat> chats) async {

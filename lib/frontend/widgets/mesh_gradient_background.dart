@@ -4,8 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-// #***! анимированный mesh-градиент, портировано с нативного generateGradient
-// Telegram (свёрл-дисторсия + радиальное смешение цветов по опорным точкам)
+// #***! анимированный mesh-градиент по алгоритму generateGradient
+// (свёрл-дисторсия + радиальное смешение цветов по опорным точкам)
 class MeshGradient {
   static const String _asset = 'shaders/mesh_gradient.frag';
 
