@@ -181,6 +181,16 @@ class GlassCapsule extends StatelessWidget {
   static String? traceLabelOf(Key? key) =>
       key is ValueKey<String> ? key.value : null;
 
+  Widget _tappable(Widget surface) {
+    if (onTap == null && onLongPress == null) return surface;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap == null ? null : _handleTap,
+      onLongPress: onLongPress,
+      child: SpringyTap(pressedScale: 0.94, child: surface),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final content = Padding(padding: padding, child: child);
@@ -188,13 +198,15 @@ class GlassCapsule extends StatelessWidget {
       label: _traceLabel(),
       builder: (context, useNative) {
         if (forceOpaque) {
-          return GlassBackground(
-            borderRadius: borderRadius ?? GlassStyle.capsule,
-            tint: fallbackTint ?? tint ?? Theme.of(context).colorScheme.surfaceContainerHigh,
-            sigma: 0,
-            shadow: shadow,
-            forceOpaque: true,
-            child: SizedBox(width: width, height: height, child: content),
+          return _tappable(
+            GlassBackground(
+              borderRadius: borderRadius ?? GlassStyle.capsule,
+              tint: fallbackTint ?? tint ?? Theme.of(context).colorScheme.surfaceContainerHigh,
+              sigma: 0,
+              shadow: shadow,
+              forceOpaque: true,
+              child: SizedBox(width: width, height: height, child: content),
+            ),
           );
         }
         if (useNative && allowNative) {
@@ -228,13 +240,7 @@ class GlassCapsule extends StatelessWidget {
           forceOpaque: forceOpaque,
           child: SizedBox(width: width, height: height, child: content),
         );
-        if (onTap == null && onLongPress == null) return surface;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap == null ? null : _handleTap,
-          onLongPress: onLongPress,
-          child: SpringyTap(pressedScale: 0.94, child: surface),
-        );
+        return _tappable(surface);
       },
     );
   }
