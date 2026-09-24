@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/confirm_dialog.dart';
+import '../../widgets/prompt_dialog.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -100,23 +102,12 @@ class _E2eeScreenState extends State<E2eeScreen> {
 
   Future<void> _reset() async {
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surfaceContainerHigh,
-        content: Text(l10n.e2eeResetConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.e2eeDecline),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.e2eeReset),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      message: l10n.e2eeResetConfirm,
+      confirmLabel: l10n.e2eeReset,
+      cancelLabel: l10n.e2eeDecline,
+      destructive: true,
     );
     if (confirmed != true) return;
     await _service.resetSession(
@@ -127,23 +118,12 @@ class _E2eeScreenState extends State<E2eeScreen> {
 
   Future<void> _rotate() async {
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surfaceContainerHigh,
-        content: Text(l10n.e2eeRotateConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.e2eeDecline),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.e2eeRotateIdentity),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      message: l10n.e2eeRotateConfirm,
+      confirmLabel: l10n.e2eeRotateIdentity,
+      cancelLabel: l10n.e2eeDecline,
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
     _busy.value = true;
@@ -158,33 +138,13 @@ class _E2eeScreenState extends State<E2eeScreen> {
 
   Future<String?> _askPassword() async {
     final l10n = AppLocalizations.of(context)!;
-    final cs = Theme.of(context).colorScheme;
-    final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: cs.surfaceContainerHigh,
-        title: Text(l10n.e2eeTransferPassword),
-        content: TextField(
-          controller: controller,
-          obscureText: true,
-          autofocus: true,
-          enableSuggestions: false,
-          autocorrect: false,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.e2eeDecline),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+    final result = await showTextInputDialog(
+      context,
+      title: l10n.e2eeTransferPassword,
+      obscureText: true,
+      confirmLabel: 'OK',
+      cancelLabel: l10n.e2eeDecline,
     );
-    controller.dispose();
     if (result == null || result.isEmpty) return null;
     return result;
   }

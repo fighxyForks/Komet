@@ -27,6 +27,10 @@ import '../../../core/config/app_frost.dart';
 import '../../../core/config/build_profile.dart';
 import '../../../core/config/review_access.dart';
 import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_alert.dart';
+import '../../widgets/glass/ios_glass.dart';
 
 class LoginScreen extends StatefulWidget {
   final int? returnToAccountId;
@@ -91,6 +95,46 @@ class _LoginScreenState extends State<LoginScreen> {
   // #***! предупреждение перед эксперим. SMS-входом: true=Принять, false=Отмена,
   // null=закрыли мимо (галочку не трогаем, но и дальше не идём)
   Future<bool?> _showExperimentalSmsWarning() {
+    if (IosGlass.of(context)) {
+      return showIosAlert<bool>(
+        context: context,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'ЕСЛИ НА ВАШЕМ АККАУНТЕ НЕТ 2FA ВСЕ СЕССИИ БУДУТ СБРОШЕНЫ',
+              style: TextStyle(
+                color: Color(0xFFFF3B30),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Способ экспериментальный, его использование на ваш '
+              'страх и риск.',
+              style: TextStyle(fontSize: 14, height: 1.4),
+            ),
+          ],
+        ),
+        actions: const [
+          IosAlertAction(
+            id: 'cancel',
+            label: 'Отмена',
+            result: false,
+            isCancel: true,
+          ),
+          IosAlertAction(
+            id: 'accept',
+            label: 'Принять',
+            result: true,
+            isDefault: true,
+          ),
+        ],
+      );
+    }
     return showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
@@ -189,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       if (!mounted) return;
       await Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const AdaptiveShell()),
+        iosPageRoute(context, builder: (_) => const AdaptiveShell()),
         (route) => false,
       );
       return;
@@ -236,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _logoTapCount = 0;
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const DebugMenuScreen()),
+        iosPageRoute(context, builder: (context) => const DebugMenuScreen()),
       );
     }
   }
@@ -254,7 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showCountryPicker() async {
     final result = await Navigator.push<CountryName>(
       context,
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (context) => SelectCountryScreen(
           selectedCountry: _selectedCountry,
           countries: api.registrationCountries,
@@ -283,7 +327,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final appContext = context;
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       shape: kSheetShape,
@@ -352,7 +396,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showTOS(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final termsLocale = Localizations.localeOf(context);
-    showModalBottomSheet(
+    showIosSheet(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       isScrollControlled: true,
@@ -599,7 +643,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (ReviewAccess.matchesPhone(fullPhone)) {
                             Navigator.push(
                               screenContext,
-                              MaterialPageRoute(
+                              iosPageRoute(screenContext,
                                 builder: (context) => CodeConfirmationScreen.review(
                                   phoneNumber:
                                       '${_selectedCountry.phoneCode} $formattedPhone',
@@ -630,7 +674,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (!screenContext.mounted) return;
                             Navigator.push(
                               screenContext,
-                              MaterialPageRoute(
+                              iosPageRoute(screenContext,
                                 builder: (context) => CodeConfirmationScreen(
                                   phoneNumber:
                                       '${_selectedCountry.phoneCode} $formattedPhone',
@@ -682,7 +726,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showServerSettingsSheet(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cs.surfaceContainerHigh,
@@ -695,7 +739,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showProxySettingsSheet(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cs.surfaceContainerHigh,
@@ -709,7 +753,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showSecurityOptions(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
+    showIosSheet(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       shape: kSheetShape,
@@ -738,7 +782,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.pop(sheetContext);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        iosPageRoute(context,
                           builder: (context) => const SpoofScreen(),
                         ),
                       );
@@ -785,7 +829,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showOtherLoginMethods(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    showModalBottomSheet(
+    showIosSheet(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       shape: kSheetShape,
@@ -829,7 +873,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        iosPageRoute(context,
                           builder: (_) => TokenLoginScreen(
                             returnToAccountId: widget.returnToAccountId,
                           ),

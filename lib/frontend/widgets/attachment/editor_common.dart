@@ -2,11 +2,11 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import '../prompt_dialog.dart';
 
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_colors.dart';
-import '../../../core/config/app_shape.dart';
 import '../../../l10n/app_localizations.dart';
 import '../custom_notification.dart';
 import '../small_spinner.dart';
@@ -1055,44 +1055,13 @@ class _MarkupEditorState extends State<MarkupEditor> {
 
   Future<void> _addText() async {
     final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
-    final String? text;
-    try {
-      text = await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          shape: AppShape.dialogBorder,
-          title: Text(
-            l10n.photoEditorTextDialogTitle,
-            style: const TextStyle(color: Colors.white),
-          ),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            cursorColor: Colors.white,
-            decoration: InputDecoration(
-              hintText: l10n.photoEditorTextDialogHint,
-              hintStyle: const TextStyle(color: Colors.white38),
-            ),
-            onSubmitted: (v) => Navigator.pop(ctx, v),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.spoofDialogCancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, controller.text),
-              child: Text(l10n.photoEditorOk),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      controller.dispose();
-    }
+    final text = await showTextInputDialog(
+      context,
+      title: l10n.photoEditorTextDialogTitle,
+      hint: l10n.photoEditorTextDialogHint,
+      confirmLabel: l10n.photoEditorOk,
+      cancelLabel: l10n.spoofDialogCancel,
+    );
     if (text == null || text.trim().isEmpty || !mounted) return;
     final ro = _boundaryKey.currentContext?.findRenderObject();
     final size = ro is RenderBox ? ro.size : const Size(300, 300);

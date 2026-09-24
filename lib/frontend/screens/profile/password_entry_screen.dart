@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/prompt_dialog.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../main.dart' show accountModule;
 import '../../../core/storage/app_database.dart';
@@ -11,6 +12,7 @@ import '../../widgets/small_spinner.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../backend/modules/account/account_models.dart';
+import '../../widgets/glass/ios_route.dart';
 
 
 String _passwordErrorText(Object error, AppLocalizations l10n) =>
@@ -78,37 +80,14 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
 
   Future<String?> _promptPassword() async {
     final l10n = AppLocalizations.of(context)!;
-    final controller = TextEditingController();
-    try {
-      return await showDialog<String>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          shape: AppShape.dialogBorder,
-          title: Text(l10n.passwordEntryConfirmTitle),
-          content: TextField(
-            controller: controller,
-            obscureText: true,
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: l10n.passwordEntryCurrentPasswordHint,
-            ),
-            onSubmitted: (v) => Navigator.of(ctx).pop(v),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(l10n.spoofDialogCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(controller.text),
-              child: Text(l10n.passwordEntryContinue),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      controller.dispose();
-    }
+    return showTextInputDialog(
+      context,
+      title: l10n.passwordEntryConfirmTitle,
+      hint: l10n.passwordEntryCurrentPasswordHint,
+      obscureText: true,
+      confirmLabel: l10n.passwordEntryContinue,
+      cancelLabel: l10n.spoofDialogCancel,
+    );
   }
 
   Future<void> _openWithPassword(
@@ -118,7 +97,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
     if (password == null || password.isEmpty || !mounted) return;
     await Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => builder(password)));
+    ).push(iosPageRoute(context, builder: (_) => builder(password)));
   }
 
   Future<void> _check2faStatus() async {
@@ -235,7 +214,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
             isLast: true,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
+              iosPageRoute(context,
                 builder: (context) => const TwoFactorSetupScreen(),
               ),
             ),

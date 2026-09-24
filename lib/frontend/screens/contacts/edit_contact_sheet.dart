@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/confirm_dialog.dart';
 
 import 'package:komet/backend/modules/contacts.dart';
 import 'package:komet/frontend/screens/contacts/contact_sheet_common.dart';
@@ -7,7 +8,6 @@ import 'package:komet/frontend/widgets/komet_avatar.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import '../../../core/config/app_shape.dart';
 
 enum EditContactAction { updated, removed }
 
@@ -131,23 +131,13 @@ class _EditContactCardState extends State<_EditContactCard> {
   Future<void> _delete() async {
     if (_busy) return;
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: AppShape.dialogBorder,
-        title: Text(l10n.editContactDeleteConfirmTitle),
-        content: Text(l10n.editContactDeleteConfirmBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.editContactDeleteCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.editContactDelete),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.editContactDeleteConfirmTitle,
+      message: l10n.editContactDeleteConfirmBody,
+      confirmLabel: l10n.editContactDelete,
+      cancelLabel: l10n.editContactDeleteCancel,
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
 

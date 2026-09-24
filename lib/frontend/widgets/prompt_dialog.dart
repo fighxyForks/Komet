@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import '../../core/config/app_fonts.dart';
 import '../../core/config/app_shape.dart';
+import 'glass/ios_glass.dart';
 
 Future<String?> showTextInputDialog(
   BuildContext context, {
@@ -16,6 +19,60 @@ Future<String?> showTextInputDialog(
 }) async {
   final tec = TextEditingController(text: initialValue);
   try {
+    if (IosGlass.of(context)) {
+      final submitted = await showCupertinoDialog<bool>(
+        context: context,
+        builder: (dialogContext) {
+          return CupertinoAlertDialog(
+            title: title == null ? null : Text(title),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (description != null) ...[
+                  Text(description),
+                  const SizedBox(height: 12),
+                ],
+                CupertinoTextField(
+                  controller: tec,
+                  autofocus: true,
+                  obscureText: obscureText,
+                  maxLines: obscureText ? 1 : maxLines,
+                  keyboardType: keyboardType,
+                  placeholder: hint,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  onSubmitted: (_) {
+                    final t = tec.text.trim();
+                    Navigator.pop(dialogContext, t.isNotEmpty);
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                isDefaultAction: false,
+                child: Text(cancelLabel),
+              ),
+              CupertinoDialogAction(
+                onPressed: () {
+                  final t = tec.text.trim();
+                  Navigator.pop(dialogContext, t.isNotEmpty);
+                },
+                isDefaultAction: true,
+                child: Text(confirmLabel),
+              ),
+            ],
+          );
+        },
+      );
+      if (submitted != true) return null;
+      final t = tec.text.trim();
+      return t.isEmpty ? null : t;
+    }
+
     return await showDialog<String>(
       context: context,
       builder: (dialogContext) {

@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_alert.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -25,6 +26,7 @@ import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../auth/login_screen.dart';
+import '../../widgets/glass/ios_route.dart';
 
 enum SpoofingMethod { partial, full }
 
@@ -315,41 +317,43 @@ class _SpoofScreenState extends State<SpoofScreen> {
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<String>(
+    final confirmed = await showIosAlert<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: AppShape.dialogBorder,
-        title: Text(l10n.spoofDialogApplyTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.spoofDialogApplyContent),
-            const SizedBox(height: 12),
-            Text(
-              l10n.spoofDialogApplyWarning,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                fontWeight: FontWeight.w500,
-              ),
+      title: l10n.spoofDialogApplyTitle,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.spoofDialogApplyContent),
+          const SizedBox(height: 12),
+          Text(
+            l10n.spoofDialogApplyWarning,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop('cancel'),
-            child: Text(l10n.spoofDialogApplyDeny),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop('relogin'),
-            child: Text(l10n.spoofDialogReloginConfirm),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop('apply'),
-            child: Text(l10n.spoofDialogApplyConfirm),
           ),
         ],
       ),
+      actions: [
+        IosAlertAction(
+          id: 'cancel',
+          label: l10n.spoofDialogApplyDeny,
+          result: 'cancel',
+          isCancel: true,
+        ),
+        IosAlertAction(
+          id: 'relogin',
+          label: l10n.spoofDialogReloginConfirm,
+          result: 'relogin',
+        ),
+        IosAlertAction(
+          id: 'apply',
+          label: l10n.spoofDialogApplyConfirm,
+          result: 'apply',
+          isDefault: true,
+        ),
+      ],
     );
 
     if (!mounted || confirmed == null) return;
@@ -367,7 +371,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
         final navState = KometApp.navigatorKey.currentState;
         if (navState != null) {
           await navState.pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            iosPageRoute(context, builder: (_) => const LoginScreen()),
             (route) => false,
           );
         }

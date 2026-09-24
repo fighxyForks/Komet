@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -87,6 +88,7 @@ import 'chat/view/composer_area.dart';
 import 'chat/view/chat_body_layout.dart';
 import 'chat/view/shimmer_loading.dart';
 import '../../../core/config/app_ios_glass.dart';
+import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/mesh_gradient_background.dart';
 import '../../../core/config/app_visual_style.dart';
 import '../../../core/config/app_chat_chrome.dart';
@@ -121,6 +123,8 @@ import 'profile_action_sheets.dart';
 import '../../../core/media/media_playback.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class _DateSeparatorItem {
   final DateTime date;
@@ -1191,7 +1195,7 @@ class _ChatScreenState extends State<ChatScreen>
     final navigator = Navigator.of(context);
     final chatRoute = ModalRoute.of(context);
     navigator.push(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => ChatInfoScreen(
           chatId: widget.chatId,
           name: _headerName(),
@@ -1994,7 +1998,7 @@ class _ChatScreenState extends State<ChatScreen>
   void _openComments(CachedMessage post) {
     Navigator.of(context)
         .push(
-          MaterialPageRoute(
+          iosPageRoute(context,
             builder: (_) => ChatScreen(
               chatId: widget.chatId,
               name: widget.name,
@@ -2767,7 +2771,7 @@ class _ChatScreenState extends State<ChatScreen>
     final cs = Theme.of(context).colorScheme;
 
     final content =
-        await showModalBottomSheet<
+        await showIosSheet<
           ({String text, List<Map<String, dynamic>> elements})
         >(
           context: context,
@@ -2903,6 +2907,66 @@ class _ChatScreenState extends State<ChatScreen>
   Future<bool?> _showDeleteMessageDialog(bool canForEveryone) {
     final cs = Theme.of(context).colorScheme;
     var alsoForEveryone = canForEveryone;
+    final ios = IosGlass.of(context);
+    if (ios) {
+      return showCupertinoDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          return StatefulBuilder(
+            builder: (ctx, setLocalState) {
+              return CupertinoAlertDialog(
+                title: const Text('Удалить сообщение'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Вы точно хотите удалить это сообщение?'),
+                    if (canForEveryone) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          CupertinoCheckbox(
+                            value: alsoForEveryone,
+                            onChanged: (v) => setLocalState(
+                              () => alsoForEveryone = v ?? false,
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setLocalState(
+                                () => alsoForEveryone = !alsoForEveryone,
+                              ),
+                              child: Text(
+                                'Также удалить для ${widget.name}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+                actions: [
+                  CupertinoDialogAction(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Отмена'),
+                  ),
+                  CupertinoDialogAction(
+                    isDestructiveAction: true,
+                    onPressed: () => Navigator.pop(
+                      ctx,
+                      canForEveryone && alsoForEveryone,
+                    ),
+                    child: const Text('Удалить'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    }
     return showDialog<bool>(
       context: context,
       builder: (ctx) {
@@ -3340,7 +3404,7 @@ class _ChatScreenState extends State<ChatScreen>
     final bytes = await pickWallpaperBytes(context);
     if (bytes == null || !mounted) return;
     final settings = await Navigator.of(context).push<WallpaperImageSettings>(
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => ChatWallpaperPreviewScreen(imageBytes: bytes),
       ),
     );
@@ -3437,7 +3501,7 @@ class _ChatScreenState extends State<ChatScreen>
     final active = CallController.instance.activeSession;
     if (active != null) {
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) => CallScreen(
             name: widget.name,
             avatarUrl: widget.imageUrl.isNotEmpty ? widget.imageUrl : null,
@@ -3454,7 +3518,7 @@ class _ChatScreenState extends State<ChatScreen>
       final session = await CallController.instance.startOutgoing(peerId);
       if (!mounted) return;
       await navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (_) => CallScreen(
             name: widget.name,
             avatarUrl: widget.imageUrl.isNotEmpty ? widget.imageUrl : null,
@@ -3968,7 +4032,7 @@ class _ChatScreenState extends State<ChatScreen>
   void _openScheduledMessages() {
     Navigator.of(context)
         .push(
-          MaterialPageRoute(
+          iosPageRoute(context,
             builder: (_) => ScheduledMessagesScreen(
               chatId: widget.chatId,
               accountId: _myId,
