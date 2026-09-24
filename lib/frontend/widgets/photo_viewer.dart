@@ -481,7 +481,37 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     _activateVideoSessions();
     _syncHero();
     _syncZoom();
+    _precacheNeighbors(index);
     if (index >= _items.length - _prefetchThreshold) unawaited(_loadMore());
+  }
+
+  void _precacheNeighbors(int index) {
+    if (!mounted) return;
+    final config = createLocalImageConfiguration(context);
+    for (final i in {index - 1, index + 1}) {
+      if (i < 0 || i >= _items.length) continue;
+      final photo = _items[i].photo;
+      if (photo == null) continue;
+      final url = photo.baseUrl ?? photo.previewData;
+      if (url == null || url.isEmpty) continue;
+      final provider = ResizeImage.resizeIfNeeded(
+        1200,
+        1200,
+        NetworkImage(url),
+      );
+      final stream = provider.resolve(config);
+      late final ImageStreamListener listener;
+      listener = ImageStreamListener(
+        (ImageInfo info, bool synchronousCall) {
+          info.dispose();
+          stream.removeListener(listener);
+        },
+        onError: (Object error, StackTrace? stackTrace) {
+          stream.removeListener(listener);
+        },
+      );
+      stream.addListener(listener);
+    }
   }
 
   void _step(int delta) {
@@ -1128,11 +1158,16 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     final item = _items[i];
     final video = item.video;
     if (video != null) {
-      return _VideoSurface(
-        key: ValueKey('video:${item.id}'),
-        session: _videoSessionFor(item),
-        quarterTurns: _quarterTurns[item.id] ?? 0,
-        onSurfaceTap: _toggleChrome,
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: IosMotion.galleryPageGap / 2,
+        ),
+        child: _VideoSurface(
+          key: ValueKey('video:${item.id}'),
+          session: _videoSessionFor(item),
+          quarterTurns: _quarterTurns[item.id] ?? 0,
+          onSurfaceTap: _toggleChrome,
+        ),
       );
     }
 
@@ -1158,7 +1193,13 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
         ),
       ),
     );
-    return isHero ? PhotoHeroTarget(child: page) : page;
+    final gapped = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: IosMotion.galleryPageGap / 2,
+      ),
+      child: page,
+    );
+    return isHero ? PhotoHeroTarget(child: gapped) : gapped;
   }
 
   Widget _arrow(IconData icon, VoidCallback onTap) {
@@ -1781,8 +1822,6 @@ class _VideoControlPanel extends StatelessWidget {
     final duration = value?.duration ?? fallbackDuration;
     final position = value?.position ?? Duration.zero;
     final maxMs = duration.inMilliseconds.toDouble();
-    final positionMs = position.inMilliseconds.toDouble().clamp(0, maxMs);
-    final sliderValue = dragValue ?? positionMs.toDouble();
     final isPlaying = value?.isPlaying ?? false;
 
     return Padding(
@@ -1861,7 +1900,10 @@ class _VideoControlPanel extends StatelessWidget {
                 child: _ViewerSlider(
                   value: maxMs <= 0
                       ? 0
-                      : sliderValue.clamp(0, maxMs).toDouble(),
+                      : (dragValue ??
+                            position.inMilliseconds.toDouble())
+                        .clamp(0, maxMs)
+                        .toDouble(),
                   max: maxMs <= 0 ? 1 : maxMs,
                   onChanged: maxMs <= 0 ? null : onSeekChanged,
                   onChangeEnd: maxMs <= 0 ? null : onSeekEnd,
@@ -1892,13 +1934,11 @@ class _ViewerSlider extends StatelessWidget {
   final double value;
   final double max;
   final ValueChanged<double>? onChanged;
-  final ValueChanged<double>? onChangeEnd;
 
   const _ViewerSlider({
     required this.value,
     required this.max,
     required this.onChanged,
-    this.onChangeEnd,
   });
 
   @override
@@ -1913,7 +1953,6 @@ class _ViewerSlider extends StatelessWidget {
           value: max <= 0 ? 0 : v,
           activeColor: Colors.white,
           onChanged: onChanged,
-          onChangeEnd: onChangeEnd,
         ),
       );
     }
@@ -1926,24 +1965,9 @@ class _ViewerSlider extends StatelessWidget {
         inactiveTrackColor: Colors.white30,
         thumbColor: Colors.white,
       ),
-      child: Slider(
-        min: 0,
-        max: max,
-        value: v,
-        onChanged: onChanged,
-        onChangeEnd: onChangeEnd,
-      ),
+      child: Slider(min: 0, max: max, value: v, onChanged: onChanged),
     );
   }
-}
-
-String _formatViewerDuration(Duration duration) {
-  final seconds = duration.inSeconds;
-  final minutes = seconds ~/ 60;
-  if (minutes >= 60) {
-    return '${minutes ~/ 60}:${pad2(minutes % 60)}:${pad2(seconds % 60)}';
-  }
-  return '${pad2(minutes)}:${pad2(seconds % 60)}';
 }
 
 class _VideoSettingsButton extends StatelessWidget {
