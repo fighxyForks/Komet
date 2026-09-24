@@ -71,6 +71,9 @@ abstract final class IosMotion {
   static const Duration overlayForward = Duration(milliseconds: 420);
   static const Duration overlayReverse = Duration(milliseconds: 280);
 
+  /// Short cross-fade for page / sheet transitions under Reduce Motion.
+  static const Duration pageCrossFade = Duration(milliseconds: 200);
+
   /// Soft max scale for media zoom (pinch / double-tap target band).
   static const double zoomSoftMax = 3.0;
 
