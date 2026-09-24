@@ -3307,6 +3307,39 @@ class AppLocalizationsRu extends AppLocalizations {
   String get emojiPanelAnimated => 'Анимированные';
 
   @override
+  String get emojiPanelSearchHint => 'Поиск эмодзи';
+
+  @override
+  String get emojiPanelSmileysPeople => 'Смайлы и люди';
+
+  @override
+  String get emojiPanelAnimalsNature => 'Животные и природа';
+
+  @override
+  String get emojiPanelFoodDrink => 'Еда и напитки';
+
+  @override
+  String get emojiPanelActivity => 'Активности';
+
+  @override
+  String get emojiPanelTravelPlaces => 'Путешествия';
+
+  @override
+  String get emojiPanelObjects => 'Предметы';
+
+  @override
+  String get emojiPanelSymbols => 'Символы';
+
+  @override
+  String get emojiPanelFlags => 'Флаги';
+
+  @override
+  String get emojiPanelNoResults => 'Ничего не найдено';
+
+  @override
+  String get emojiPanelSkinTone => 'Оттенок кожи';
+
+  @override
   String get attachmentFileFallback => 'Файл';
 
   @override

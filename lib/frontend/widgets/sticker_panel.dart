@@ -50,6 +50,7 @@ class StickerPanel extends StatefulWidget {
   final double height;
   final void Function(StickerItem sticker) onStickerTap;
   final void Function(Animoji animoji)? onEmojiTap;
+  final void Function(String emoji)? onPlainEmojiTap;
   final void Function(double delta)? onResize;
 
   const StickerPanel({
@@ -57,6 +58,7 @@ class StickerPanel extends StatefulWidget {
     required this.height,
     required this.onStickerTap,
     this.onEmojiTap,
+    this.onPlainEmojiTap,
     this.onResize,
   });
 
@@ -263,7 +265,10 @@ class _StickerPanelState extends State<StickerPanel>
               if (widget.onResize != null) _buildResizeHandle(cs),
               Expanded(
                 child: _mode == _modeEmoji && widget.onEmojiTap != null
-                    ? EmojiPanel(onEmojiTap: widget.onEmojiTap!)
+                    ? EmojiPanel(
+                        onEmojiTap: widget.onEmojiTap!,
+                        onPlainEmojiTap: widget.onPlainEmojiTap,
+                      )
                     : _buildStickerBody(cs),
               ),
               if (widget.onEmojiTap != null) _buildToggleBar(cs),
