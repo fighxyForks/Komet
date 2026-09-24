@@ -56,6 +56,23 @@ void main() {
     expect(find.byType(GlassBackground), findsOneWidget);
   });
 
+  testWidgets('Reduce Motion: iOS 26 capsule stays opaque', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: IosGlass(child: child!),
+        ),
+        home: const Scaffold(
+          body: GlassCapsule(width: 120, height: 44, child: Text('chrome')),
+        ),
+      ),
+    );
+    expect(AppIosGlass.nativeViews, isTrue);
+    expect(find.byType(LiquidGlassContainer), findsNothing);
+    expect(find.byType(BackdropFilter), findsNothing);
+  });
+
   testWidgets('style-tier SlidingPillNav has no BackdropFilter', (
     tester,
   ) async {

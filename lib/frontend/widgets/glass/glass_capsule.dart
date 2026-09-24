@@ -8,6 +8,7 @@ import '../../motion/ios_haptics.dart';
 import '../springy_tap.dart';
 import 'ios_glass.dart';
 import 'ios_palette.dart';
+import 'ios_symbols.dart';
 import '../../../core/config/app_ios_glass.dart';
 
 Rect globalRectOf(BuildContext context) {
@@ -96,7 +97,9 @@ class GlassBackground extends StatelessWidget {
         final ios = IosGlass.of(context);
         final opaque = forceOpaque ||
             MediaQuery.highContrastOf(context) ||
-            (ios && !AppIosGlass.nativeViews);
+            (ios &&
+                (MediaQuery.disableAnimationsOf(context) ||
+                    !AppIosGlass.nativeViews));
         final base = opaque && ios
             ? (tint ?? IosPalette.grouped(cs)).withValues(alpha: 1)
             : (tint ?? GlassStyle.tint(cs));
@@ -319,7 +322,7 @@ class GlassIconButton extends StatelessWidget {
           child:
               child ??
               Icon(
-                icon,
+                IosSymbols.adapt(context, icon!),
                 size: iconSize,
                 weight: 500,
                 color: color ?? cs.onSurface,
@@ -403,7 +406,7 @@ class GlassButtonGroup extends StatelessWidget {
                         child:
                             item.child ??
                             Icon(
-                              item.icon,
+                              IosSymbols.adapt(context, item.icon!),
                               size: iconSize,
                               weight: 500,
                               color: cs.onSurface,
