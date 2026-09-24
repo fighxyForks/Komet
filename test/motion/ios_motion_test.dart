@@ -44,6 +44,25 @@ void main() {
       );
     });
 
+    test('does not commit a fling back toward rest', () {
+      expect(
+        IosMotion.shouldCommitDismiss(
+          offset: 20,
+          velocityY: -(IosMotion.dismissFlingVelocity + 50),
+          viewportHeight: 800,
+        ),
+        isFalse,
+      );
+      expect(
+        IosMotion.shouldCommitDismiss(
+          offset: -20,
+          velocityY: -(IosMotion.dismissFlingVelocity + 50),
+          viewportHeight: 800,
+        ),
+        isTrue,
+      );
+    });
+
     test('works for upward and downward offsets', () {
       const h = 800.0;
       final past = h / IosMotion.dismissDistanceDivisor + 5;

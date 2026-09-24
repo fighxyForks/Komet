@@ -142,9 +142,10 @@ class GalleryDismissController extends ChangeNotifier {
     _committing = true;
     notifyListeners();
     final v = velocityY ?? _gestureVelocityY;
-    final direction = offset == 0
-        ? (v == 0 ? 1.0 : v.sign)
-        : offset.sign;
+    final flung = v.abs() > IosMotion.dismissFlingVelocity;
+    final direction = flung
+        ? v.sign
+        : (offset == 0 ? 1.0 : offset.sign);
     final target = direction * _viewportHeight * 1.15;
     if (reduceMotion) {
       _anim.value = target;
@@ -192,12 +193,16 @@ class GalleryDismissDragRecognizer extends VerticalDragGestureRecognizer {
   /// Called before accepting; return false to fail the gesture (e.g. zoomed).
   final ValueGetter<bool> canStart;
 
+  final Set<int> _pointers = {};
   Offset? _start;
   bool _validated = false;
 
   @override
   void addAllowedPointer(PointerDownEvent event) {
-    if (!canStart()) {
+    _pointers.add(event.pointer);
+    if (_pointers.length >= 2 || !canStart()) {
+      _pointers.remove(event.pointer);
+      resolve(GestureDisposition.rejected);
       return;
     }
     _start = event.position;
@@ -207,17 +212,23 @@ class GalleryDismissDragRecognizer extends VerticalDragGestureRecognizer {
 
   @override
   void handleEvent(PointerEvent event) {
+    if (event is PointerUpEvent || event is PointerCancelEvent) {
+      _pointers.remove(event.pointer);
+    }
     if (event is PointerMoveEvent && _start != null && !_validated) {
       final delta = event.position - _start!;
       final adx = delta.dx.abs();
       final ady = delta.dy.abs();
-      if (adx > kTouchSlop && adx > ady * IosMotion.dismissAxisRatio) {
+      final vertical =
+          ady > kTouchSlop && ady > adx * IosMotion.dismissAxisRatio;
+      if (vertical) {
+        _validated = true;
+      } else if (adx > kTouchSlop || ady > kTouchSlop) {
         resolve(GestureDisposition.rejected);
         stopTrackingPointer(event.pointer);
         return;
-      }
-      if (ady > kTouchSlop && ady > adx * IosMotion.dismissAxisRatio) {
-        _validated = true;
+      } else {
+        return;
       }
     }
     super.handleEvent(event);
@@ -225,6 +236,7 @@ class GalleryDismissDragRecognizer extends VerticalDragGestureRecognizer {
 
   @override
   void didStopTrackingLastPointer(int pointer) {
+    _pointers.remove(pointer);
     _start = null;
     _validated = false;
     super.didStopTrackingLastPointer(pointer);
@@ -232,6 +244,7 @@ class GalleryDismissDragRecognizer extends VerticalDragGestureRecognizer {
 
   @override
   void rejectGesture(int pointer) {
+    _pointers.remove(pointer);
     _start = null;
     _validated = false;
     super.rejectGesture(pointer);

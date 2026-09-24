@@ -157,8 +157,10 @@ abstract final class IosMotion {
     required double viewportHeight,
   }) {
     final distanceThreshold = viewportHeight / dismissDistanceDivisor;
-    return offset.abs() > distanceThreshold ||
-        velocityY.abs() > dismissFlingVelocity;
+    if (velocityY.abs() > dismissFlingVelocity) {
+      return offset == 0 || offset.sign == velocityY.sign;
+    }
+    return offset.abs() > distanceThreshold;
   }
 }
 
