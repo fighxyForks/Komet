@@ -6547,6 +6547,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Folder “{name}”'**
   String iosMenuFolderActions(String name);
+
+  /// No description provided for @chatActionPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get chatActionPin;
+
+  /// No description provided for @chatActionUnpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get chatActionUnpin;
+
+  /// No description provided for @chatActionMute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get chatActionMute;
+
+  /// No description provided for @chatActionUnmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get chatActionUnmute;
+
+  /// No description provided for @chatActionArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get chatActionArchive;
+
+  /// No description provided for @chatActionUnarchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get chatActionUnarchive;
+
+  /// No description provided for @chatActionSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get chatActionSelect;
+
+  /// No description provided for @chatActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get chatActionDelete;
 }
 
 class _AppLocalizationsDelegate

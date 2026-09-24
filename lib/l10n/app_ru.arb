@@ -1197,5 +1197,13 @@
   "iosChannelUnmute": "Включить звук",
   "iosChatSearch": "Поиск",
   "iosMenuSwitchAccount": "Сменить аккаунт",
-  "iosMenuFolderActions": "Папка «{name}»"
+  "iosMenuFolderActions": "Папка «{name}»",
+  "chatActionPin": "Закрепить",
+  "chatActionUnpin": "Открепить",
+  "chatActionMute": "Без звука",
+  "chatActionUnmute": "Включить звук",
+  "chatActionArchive": "В архив",
+  "chatActionUnarchive": "Из архива",
+  "chatActionSelect": "Выбрать",
+  "chatActionDelete": "Удалить"
 }

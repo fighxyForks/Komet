@@ -11,7 +11,10 @@ class SwipeRoute<T> extends PageRoute<T> {
     super.settings,
     super.fullscreenDialog,
     this.maintainState = true,
+    this.animateIn = true,
   });
+
+  final bool animateIn;
 
   final WidgetBuilder builder;
 
@@ -25,7 +28,8 @@ class SwipeRoute<T> extends PageRoute<T> {
   String? get barrierLabel => null;
 
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 400);
+  Duration get transitionDuration =>
+      animateIn ? const Duration(milliseconds: 400) : Duration.zero;
 
   @override
   Duration get reverseTransitionDuration => const Duration(milliseconds: 400);
@@ -103,10 +107,11 @@ Future<T?> pushSwipeable<T>(
   BuildContext context,
   WidgetBuilder builder, {
   RouteSettings? settings,
+  bool animateIn = true,
 }) {
-  return Navigator.of(
-    context,
-  ).push<T>(SwipeRoute<T>(builder: builder, settings: settings));
+  return Navigator.of(context).push<T>(
+    SwipeRoute<T>(builder: builder, settings: settings, animateIn: animateIn),
+  );
 }
 
 class _SwipeBackGestureDetector<T> extends StatefulWidget {

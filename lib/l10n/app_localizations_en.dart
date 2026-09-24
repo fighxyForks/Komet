@@ -3521,4 +3521,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String iosMenuFolderActions(String name) {
     return 'Folder “$name”';
   }
+
+  @override
+  String get chatActionPin => 'Pin';
+
+  @override
+  String get chatActionUnpin => 'Unpin';
+
+  @override
+  String get chatActionMute => 'Mute';
+
+  @override
+  String get chatActionUnmute => 'Unmute';
+
+  @override
+  String get chatActionArchive => 'Archive';
+
+  @override
+  String get chatActionUnarchive => 'Unarchive';
+
+  @override
+  String get chatActionSelect => 'Select';
+
+  @override
+  String get chatActionDelete => 'Delete';
 }

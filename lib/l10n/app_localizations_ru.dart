@@ -3536,4 +3536,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String iosMenuFolderActions(String name) {
     return 'Папка «$name»';
   }
+
+  @override
+  String get chatActionPin => 'Закрепить';
+
+  @override
+  String get chatActionUnpin => 'Открепить';
+
+  @override
+  String get chatActionMute => 'Без звука';
+
+  @override
+  String get chatActionUnmute => 'Включить звук';
+
+  @override
+  String get chatActionArchive => 'В архив';
+
+  @override
+  String get chatActionUnarchive => 'Из архива';
+
+  @override
+  String get chatActionSelect => 'Выбрать';
+
+  @override
+  String get chatActionDelete => 'Удалить';
 }

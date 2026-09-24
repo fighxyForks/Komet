@@ -10,6 +10,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'chat_preview_card.dart';
+import 'chat_preview_overlay.dart';
 import 'chat_screen.dart';
 import 'search_screen.dart';
 import 'create_channel_flow.dart';
@@ -545,8 +546,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     return cats.single;
   }
 
-  Future<void> _onPinTap() async {
-    final selected = _selectedChatObjects();
+  List<CachedChat> _chatObjectsFor(Set<int> ids) =>
+      _chats.where((c) => ids.contains(c.id)).toList();
+
+  Future<void> _onPinTap() => _pinChats(_selectedChatObjects());
+
+  Future<void> _pinChats(List<CachedChat> selected) async {
     if (selected.isEmpty) return;
     final anyPinned = selected.any((c) => (c.favIndex ?? 0) > 0);
     final err = await chats.togglePin(
@@ -559,8 +564,9 @@ class _ChatListScreenState extends State<ChatListScreen>
     _clearSelection();
   }
 
-  Future<void> _onMuteTap() async {
-    final selected = _selectedChatObjects();
+  Future<void> _onMuteTap() => _muteChats(_selectedChatObjects());
+
+  Future<void> _muteChats(List<CachedChat> selected) async {
     if (selected.isEmpty) return;
     final anyMuted = selected.any((c) => c.isMuted);
     final targetDDU = anyMuted ? ChatsModule.muteOff : ChatsModule.muteForever;
@@ -586,8 +592,9 @@ class _ChatListScreenState extends State<ChatListScreen>
     _clearSelection();
   }
 
-  Future<void> _onArchiveTap() async {
-    final selected = _selectedChatObjects();
+  Future<void> _onArchiveTap() => _archiveChats(_selectedChatObjects());
+
+  Future<void> _archiveChats(List<CachedChat> selected) async {
     if (selected.isEmpty) return;
     final p = _profile;
     if (p == null) return;
@@ -606,8 +613,11 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
-  Future<void> _onDeleteTap() async {
-    final selectedBefore = _selectedChatObjects();
+  Future<void> _onDeleteTap() =>
+      _deleteChats({for (final c in _selectedChatObjects()) c.id});
+
+  Future<void> _deleteChats(Set<int> ids) async {
+    final selectedBefore = _chatObjectsFor(ids);
     if (selectedBefore.isEmpty) return;
     final myId = _profile?.id;
     if (myId == null) return;
@@ -615,7 +625,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     await chats.refreshChats(api, selectedBefore.map((c) => c.id).toList());
     if (!mounted) return;
 
-    final selectedAfter = _selectedChatObjects();
+    final selectedAfter = _chatObjectsFor(ids);
     if (selectedAfter.isEmpty) return;
     final cats = selectedAfter.map((c) => _categorizeChat(c, myId)).toSet();
     if (cats.contains(_DeleteKind.blocked) || cats.length > 1) {
@@ -3563,8 +3573,9 @@ class _ChatListScreenState extends State<ChatListScreen>
     String id,
     String name,
     String imageUrl,
-    String chatType,
-  ) {
+    String chatType, {
+    bool animateIn = true,
+  }) {
     if (imageUrl.isNotEmpty) {
       unawaited(
         precacheImage(
@@ -3595,6 +3606,7 @@ class _ChatListScreenState extends State<ChatListScreen>
           imageUrl: imageUrl,
           chatType: chatType,
         ),
+        animateIn: animateIn,
       );
     }
   }
@@ -3606,10 +3618,38 @@ class _ChatListScreenState extends State<ChatListScreen>
     return null;
   }
 
-  void _previewChat(String id, String name, String imageUrl, String chatType) {
+  Rect? _globalRectOf(BuildContext context) {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  void _previewChat(
+    String id,
+    String name,
+    String imageUrl,
+    String chatType, {
+    Rect? sourceRect,
+  }) {
     final chatId = int.tryParse(id);
     if (chatId == null) return;
     final chat = _chatById(chatId);
+    if (sourceRect != null && AppIosGlass.active.value) {
+      unawaited(
+        showIosChatPreview(
+          context,
+          sourceRect: sourceRect,
+          chatId: chatId,
+          name: name,
+          imageUrl: imageUrl,
+          chatType: chatType,
+          actions: _previewActions(id, chat),
+          onOpen: () =>
+              _openChatFromList(id, name, imageUrl, chatType, animateIn: false),
+        ),
+      );
+      return;
+    }
     unawaited(
       showChatPreview(
         context,
@@ -3622,6 +3662,52 @@ class _ChatListScreenState extends State<ChatListScreen>
         onMarkRead: () => _markChatRead(chatId),
       ),
     );
+  }
+
+  List<ChatMenuItem> _previewActions(String id, CachedChat? chat) {
+    if (chat == null) return const [];
+    final l10n = AppLocalizations.of(context)!;
+    final pinned = (chat.favIndex ?? 0) > 0;
+    final hasUnread = chat.unreadCount > 0 && chat.lastMsgId != null;
+    final canDelete = _selectionDeleteCategoryFor([chat]) != null;
+    return [
+      if (hasUnread)
+        ChatMenuItem(
+          icon: Symbols.done_all,
+          label: l10n.chatPreviewMarkRead,
+          onTap: () => unawaited(_markChatRead(chat.id)),
+        ),
+      ChatMenuItem(
+        icon: pinned ? Symbols.keep_off : Symbols.keep,
+        label: pinned ? l10n.chatActionUnpin : l10n.chatActionPin,
+        onTap: () => unawaited(_pinChats([chat])),
+      ),
+      ChatMenuItem(
+        icon: chat.isMuted ? Symbols.notifications : Symbols.notifications_off,
+        label: chat.isMuted ? l10n.chatActionUnmute : l10n.chatActionMute,
+        onTap: () => unawaited(_muteChats([chat])),
+      ),
+      ChatMenuItem(
+        icon: widget.archiveMode ? Symbols.unarchive : Symbols.archive,
+        label: widget.archiveMode
+            ? l10n.chatActionUnarchive
+            : l10n.chatActionArchive,
+        onTap: () => unawaited(_archiveChats([chat])),
+      ),
+      ChatMenuItem(
+        icon: Symbols.check_circle,
+        label: l10n.chatActionSelect,
+        dividerAfter: canDelete,
+        onTap: () => _toggleSelection(id),
+      ),
+      if (canDelete)
+        ChatMenuItem(
+          icon: Symbols.delete,
+          label: l10n.chatActionDelete,
+          destructive: true,
+          onTap: () => unawaited(_deleteChats({chat.id})),
+        ),
+    ];
   }
 
   Future<void> _markChatRead(int chatId) async {
@@ -3813,7 +3899,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             ),
           );
     final Widget avatarStack = GestureDetector(
-      onLongPress: _canPreviewChats
+      onLongPress: _canPreviewChats && !ios
           ? () => _previewChat(id, name, imageUrl, chatType)
           : null,
       child: Stack(
@@ -3858,7 +3944,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
     return SpringyTap(
       key: ValueKey('chat_$id'),
-      child: InkWell(
+      child: Builder(
+        builder: (rowContext) => InkWell(
         onTap: () {
           if (widget.forwardMode) {
             Navigator.of(context).pop(
@@ -3883,6 +3970,14 @@ class _ChatListScreenState extends State<ChatListScreen>
         },
         onLongPress: (widget.forwardMode || _shareMode)
             ? null
+            : ios && _canPreviewChats
+            ? () => _previewChat(
+                id,
+                name,
+                imageUrl,
+                chatType,
+                sourceRect: _globalRectOf(rowContext),
+              )
             : () => _toggleSelection(id),
         child: ios
             ? IosChatRow(
@@ -4058,6 +4153,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                   ),
                 ),
               ),
+        ),
       ),
     );
   }

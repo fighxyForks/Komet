@@ -222,7 +222,7 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
           ],
         );
       },
-      child: _GlassMenuPanel(
+      child: GlassMenuPanel(
         items: widget.items,
         header: widget.header,
         footer: widget.footer,
@@ -232,13 +232,14 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
   }
 }
 
-class _GlassMenuPanel extends StatelessWidget {
+class GlassMenuPanel extends StatelessWidget {
   final List<ChatMenuItem> items;
   final Widget? header;
   final Widget? footer;
   final ValueChanged<ChatMenuItem> onItemTap;
 
-  const _GlassMenuPanel({
+  const GlassMenuPanel({
+    super.key,
     required this.items,
     required this.onItemTap,
     this.header,

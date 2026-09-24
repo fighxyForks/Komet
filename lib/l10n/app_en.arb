@@ -1526,5 +1526,13 @@
         "type": "String"
       }
     }
-  }
+  },
+  "chatActionPin": "Pin",
+  "chatActionUnpin": "Unpin",
+  "chatActionMute": "Mute",
+  "chatActionUnmute": "Unmute",
+  "chatActionArchive": "Archive",
+  "chatActionUnarchive": "Unarchive",
+  "chatActionSelect": "Select",
+  "chatActionDelete": "Delete"
 }
