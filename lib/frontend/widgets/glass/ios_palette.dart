@@ -57,6 +57,21 @@ class IosPalette {
     );
   }
 
+  static BoxDecoration servicePill(ColorScheme cs) => BoxDecoration(
+    color: _dark(cs)
+        ? Colors.black.withValues(alpha: 0.32)
+        : Colors.white.withValues(alpha: 0.55),
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(
+      color: _dark(cs)
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.white.withValues(alpha: 0.6),
+      width: 0.5,
+    ),
+  );
+
+  static Color serviceText(ColorScheme cs) => cs.onSurface;
+
   static Color bubbleRim(ColorScheme cs) => _dark(cs)
       ? Colors.white.withValues(alpha: 0.1)
       : Colors.black.withValues(alpha: 0.06);

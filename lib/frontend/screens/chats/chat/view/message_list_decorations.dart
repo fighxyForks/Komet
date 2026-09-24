@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../widgets/small_spinner.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 
 // #***! плашка с датой между группами сообщений
@@ -76,15 +77,17 @@ class DateSeparatorLabel extends StatelessWidget {
       child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: ios
+              ? IosPalette.servicePill(cs)
+              : BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
           child: Text(
             _formatDateLabel(date),
             style: ios
                 ? TextStyle(
-                    color: cs.onSurfaceVariant,
+                    color: IosPalette.serviceText(cs),
                     fontSize: IosTypography.dateHeader,
                     fontWeight: IosTypography.medium,
                   )
