@@ -14,6 +14,7 @@ import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/core/config/app_message_actions_style.dart';
 import 'package:komet/core/crypto/message_decryption_cache.dart';
 import 'package:komet/core/utils/haptics.dart';
+import 'package:komet/frontend/motion/ios_motion.dart';
 import 'package:komet/core/utils/text_format.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
 import 'package:komet/frontend/widgets/directional_drag_recognizer.dart';
@@ -53,25 +54,19 @@ class SwipeToReply extends StatefulWidget {
 
 class _SwipeToReplyState extends State<SwipeToReply>
     with SingleTickerProviderStateMixin {
-  static const double _maxDrag = 72.0;
-  static const double _triggerThreshold = 56.0;
-
   late final AnimationController _springBack;
   double _dragX = 0.0;
-  double _springFrom = 0.0;
   bool _triggered = false;
+
+  double get _trigger => widget.isMe
+      ? IosMotion.replyTriggerOutgoing
+      : IosMotion.replyTriggerIncoming;
 
   @override
   void initState() {
     super.initState();
-    _springBack =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 200),
-        )..addListener(() {
-          final t = Curves.easeOut.transform(_springBack.value);
-          setState(() => _dragX = _springFrom * (1 - t));
-        });
+    _springBack = AnimationController.unbounded(vsync: this);
+    _springBack.addListener(() => setState(() => _dragX = _springBack.value));
   }
 
   @override
@@ -84,10 +79,16 @@ class _SwipeToReplyState extends State<SwipeToReply>
     if (_springBack.isAnimating) _springBack.stop();
     var next = _dragX + d.delta.dx;
     if (next > 0) next = 0;
-    if (next < -_maxDrag) next = -_maxDrag;
+    next = IosMotion.rubberBand(
+      offset: next,
+      bandingStart: IosMotion.replyBandingStart,
+      range: IosMotion.replyMaxVisual - IosMotion.replyBandingStart,
+      coefficient: 0.45,
+    );
+    if (next < -IosMotion.replyMaxVisual) next = -IosMotion.replyMaxVisual;
     final wasTriggered = _triggered;
-    _triggered = next <= -_triggerThreshold;
-    if (_triggered && !wasTriggered) Haptics.medium();
+    _triggered = next <= -_trigger;
+    if (_triggered && !wasTriggered) Haptics.heavy();
     setState(() => _dragX = next);
   }
 
@@ -100,14 +101,14 @@ class _SwipeToReplyState extends State<SwipeToReply>
 
   void _settle() {
     _triggered = false;
-    _springFrom = _dragX;
-    _springBack.forward(from: 0);
+    _springBack.value = _dragX;
+    animateSpring(_springBack, target: 0, spring: IosMotion.dismissSnap);
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final progress = (-_dragX / _triggerThreshold).clamp(0.0, 1.0);
+    final progress = (-_dragX / _trigger).clamp(0.0, 1.0);
     return RawGestureDetector(
       behavior: HitTestBehavior.opaque,
       gestures: <Type, GestureRecognizerFactory>{
