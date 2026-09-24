@@ -46,6 +46,8 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       registerClipboard(messenger)
       registerAppearance(messenger)
       registerAccessibility(messenger)
+      registerNativeSheet(messenger)
+      registerNativeTabChrome(messenger)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -190,6 +192,27 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
     }
   }
 
+
+
+  private func registerNativeSheet(_ messenger: FlutterBinaryMessenger) {
+    method("ru.komet.app/native_sheet", messenger) { call, result in
+      KometNativeSheet.shared.handle(call, result: result)
+    }
+    events("ru.komet.app/native_sheet_events", messenger) { sink in
+      KometNativeSheet.shared.attach(sink)
+    }
+  }
+
+  private func registerNativeTabChrome(_ messenger: FlutterBinaryMessenger) {
+    method("ru.komet.app/native_tab_chrome", messenger) { call, result in
+      KometTabChrome.shared.handle(call, result: result)
+    }
+    KometTabChrome.shared.bindMessenger(messenger)
+    let factory = KometTabChromeViewFactory(messenger: messenger)
+    registrar(forPlugin: "KometTabChrome")?.register(
+      factory,
+      withId: "ru.komet.app/native_tab_chrome_view")
+  }
 
   private func registerAccessibility(_ messenger: FlutterBinaryMessenger) {
     method("ru.komet.app/accessibility", messenger) { call, result in

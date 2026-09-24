@@ -55,6 +55,8 @@ import 'core/config/app_media_cache.dart';
 import 'core/config/app_video_note_quality.dart';
 import 'core/config/app_pill_gradient.dart';
 import 'core/config/app_ios_glass.dart';
+import 'core/config/app_native_sheet_prototype.dart';
+import 'core/config/app_native_tab_minimize_prototype.dart';
 import 'core/config/app_visual_style.dart';
 import 'core/config/app_chat_chrome.dart';
 import 'core/config/app_composer_background.dart';
@@ -245,6 +247,8 @@ void main(List<String> args) async {
   final pillGradientFuture = AppPillGradient.load();
   final visualStyleFuture = AppVisualStyle.load();
   final iosGlassFuture = AppIosGlass.load();
+  final nativeSheetProtoFuture = AppNativeSheetPrototype.load();
+  final nativeTabProtoFuture = AppNativeTabMinimizePrototype.load();
   final liquidGlassFuture = LiquidGlass.load();
   final meshGradientFuture = MeshGradient.load();
   final chatChromeFuture = AppChatChrome.load();
@@ -319,6 +323,8 @@ void main(List<String> args) async {
     pillGradientFuture,
     visualStyleFuture,
     iosGlassFuture,
+    nativeSheetProtoFuture,
+    nativeTabProtoFuture,
     liquidGlassFuture,
     meshGradientFuture,
     chatChromeFuture,
