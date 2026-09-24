@@ -99,16 +99,16 @@ void main() {
     final effect = animatedGlyphs.singleWhere(
       (item) => item.lottieUrl == animoji.lottiePlayUrl,
     );
-    expect(body.size, 18);
+    expect(body.size, 22);
     expect(body.repeat, isFalse);
-    expect(effect.size, 36);
+    expect(effect.size, 44);
     expect(effect.repeat, isFalse);
     final effectFinder = find.byWidgetPredicate(
       (widget) =>
           widget is LottieImage &&
           widget.lottieUrl == animoji.lottiePlayUrl,
     );
-    expect(tester.getSize(effectFinder), const Size.square(36));
+    expect(tester.getSize(effectFinder), const Size.square(44));
     final players = tester
         .widgetList<LottiePlayer>(find.byType(LottiePlayer))
         .toList();

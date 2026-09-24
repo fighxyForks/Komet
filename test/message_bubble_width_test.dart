@@ -125,7 +125,7 @@ void main() {
         if (!sameLine) {
           final lineEnd = chips[i - 1].right;
           expect(
-            lineEnd + 60 > box.right,
+            lineEnd + 80 > box.right,
             isTrue,
             reason: 'chip $i wrapped early at width $width',
           );

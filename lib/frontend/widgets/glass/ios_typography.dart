@@ -24,7 +24,7 @@ abstract final class IosTypography {
   static const double forwarded = 14;
   static const double dateHeader = 13;
   static const double service = 13;
-  static const double reactionCount = 11;
+  static const double reactionCount = 15;
   static const double linkPreview = 14;
   static const double fileName = 16;
   static const double fileDetails = 13;

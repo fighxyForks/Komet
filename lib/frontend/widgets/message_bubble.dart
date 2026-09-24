@@ -44,7 +44,6 @@ import 'attachment/bubbles/video_bubble.dart';
 import 'attachment/bubbles/file_bubble.dart';
 import 'attachment/bubbles/forwarded_bubble.dart';
 import 'attachment/bubbles/ios_bubble_metrics.dart';
-import '../../core/config/app_ios_glass.dart';
 import 'lottie_image.dart';
 import 'text_with_meta.dart';
 import 'glass/ios_glass.dart';
@@ -488,6 +487,7 @@ class _ReactionAnimojiGlyph extends StatefulWidget {
   final String emoji;
   final Animoji animoji;
   final ValueListenable<ReactionAnimationEvent?>? animation;
+  final double size;
 
   const _ReactionAnimojiGlyph({
     super.key,
@@ -495,6 +495,7 @@ class _ReactionAnimojiGlyph extends StatefulWidget {
     required this.emoji,
     required this.animoji,
     this.animation,
+    this.size = MessageBubble._reactionEmojiSize,
   });
 
   @override
@@ -502,8 +503,8 @@ class _ReactionAnimojiGlyph extends StatefulWidget {
 }
 
 class _ReactionAnimojiGlyphState extends State<_ReactionAnimojiGlyph> {
-  static const double _size = 18;
-  static const double _effectSize = _size * 2;
+  double get _size => widget.size;
+  double get _effectSize => _size * 2;
 
   int? _playingToken;
   bool _bodyPlaying = false;
@@ -606,7 +607,7 @@ class _ReactionAnimojiGlyphState extends State<_ReactionAnimojiGlyph> {
         repeat: false,
       );
     } else {
-      body = Text(widget.emoji, style: const TextStyle(fontSize: 13));
+      body = Text(widget.emoji, style: TextStyle(fontSize: _size * 0.72, height: 1));
     }
 
     return SizedBox(
@@ -641,10 +642,13 @@ class _ReactionAnimojiGlyphState extends State<_ReactionAnimojiGlyph> {
 }
 
 class MessageBubble extends StatelessWidget {
-  static final Color _reactionChipBg = Colors.black.withValues(alpha: 0.18);
+  static final Color _reactionChipBg = Colors.white.withValues(alpha: 0.10);
   static const BorderRadius _reactionChipRadius = BorderRadius.all(
-    Radius.circular(10),
+    Radius.circular(16),
   );
+  static const double _reactionChipHeight = 30;
+  static const double _reactionEmojiSize = 22;
+  static const double _reactionAvatarSize = 20;
 
   static Color bubbleTextColor(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
@@ -1886,10 +1890,18 @@ class MessageBubble extends StatelessWidget {
               );
       }
 
+      final selectedFill = cs.primary;
+      final unselectedFill = ThemeData.estimateBrightnessForColor(cs.surface) ==
+              Brightness.dark
+          ? _reactionChipBg
+          : cs.primary.withValues(alpha: 0.12);
+      final countColor = isYours ? cs.onPrimary : cs.onSurfaceVariant;
       Widget chip = Container(
-        padding: EdgeInsets.fromLTRB(7, 2, avatar != null ? 3 : 7, 2),
+        key: ValueKey('reaction-chip-${c.reaction}'),
+        height: _reactionChipHeight,
+        padding: EdgeInsets.fromLTRB(8, 0, avatar != null ? 4 : 10, 0),
         decoration: BoxDecoration(
-          color: isYours ? cs.primary.withValues(alpha: 0.22) : _reactionChipBg,
+          color: isYours ? selectedFill : unselectedFill,
           borderRadius: _reactionChipRadius,
         ),
         child: Row(
@@ -1902,23 +1914,27 @@ class MessageBubble extends StatelessWidget {
                 emoji: c.reaction,
                 animoji: animoji,
                 animation: reactionAnimation,
+                size: _reactionEmojiSize,
               )
             else
-              Text(c.reaction, style: const TextStyle(fontSize: 13)),
+              Text(
+                c.reaction,
+                style: const TextStyle(fontSize: _reactionEmojiSize, height: 1),
+              ),
             if (c.count > 1) ...[
-              const SizedBox(width: 3),
+              const SizedBox(width: 4),
               Text(
                 c.count.toString(),
                 style: TextStyle(
-                  color: isYours ? cs.primary : cs.onSurfaceVariant,
+                  color: countColor,
                   fontSize: IosTypography.reactionCount,
-                  fontWeight: AppIosGlass.active.value
-                      ? IosTypography.medium
-                      : FontWeight.w600,
+                  fontWeight: IosTypography.regular,
+                  fontFeatures: IosTypography.tabularDigits,
+                  height: 1,
                 ),
               ),
             ],
-            if (avatar != null) ...[const SizedBox(width: 5), avatar],
+            if (avatar != null) ...[const SizedBox(width: 4), avatar],
           ],
         ),
       );
@@ -1941,7 +1957,7 @@ class MessageBubble extends StatelessWidget {
       reactionAnimojiResolver?.call(emoji) ?? animojiModule.findByEmoji(emoji);
 
   Widget _reactionAvatar(ColorScheme cs, String? url, String? name) {
-    const double diameter = 17;
+    const double diameter = _reactionAvatarSize;
     if (url != null && url.isNotEmpty) {
       return CircleAvatar(
         radius: diameter / 2,
@@ -1961,7 +1977,11 @@ class MessageBubble extends StatelessWidget {
       backgroundColor: cs.primaryContainer,
       child: Text(
         letter,
-        style: TextStyle(fontSize: 9, color: cs.onPrimaryContainer),
+        style: TextStyle(
+          fontSize: 11,
+          height: 1,
+          color: cs.onPrimaryContainer,
+        ),
       ),
     );
   }
