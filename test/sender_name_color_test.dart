@@ -1,74 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/sender_name_color.dart';
 
+List<Color> _incoming(Brightness brightness) => IosPalette.bubbleGradient(
+  ColorScheme.fromSeed(seedColor: Colors.blue, brightness: brightness),
+  isMe: false,
+).colors;
+
+void _expectReadable(Brightness brightness) {
+  for (final color in SenderNameColor.paletteFor(brightness, ios: true)) {
+    for (final bubble in _incoming(brightness)) {
+      final ratio = SenderNameColor.contrastRatio(color, bubble);
+      expect(ratio, greaterThanOrEqualTo(4.5), reason: '$color vs $bubble');
+    }
+  }
+}
+
 void main() {
-  test('dark palette clears WCAG AA against dark incoming bubbles', () {
-    for (final color in SenderNameColor.darkPalette) {
-      final top = SenderNameColor.contrastRatio(
-        color,
-        SenderNameColor.darkBubbleTop,
-      );
-      final bottom = SenderNameColor.contrastRatio(
-        color,
-        SenderNameColor.darkBubbleBottom,
-      );
-      expect(
-        top,
-        greaterThanOrEqualTo(4.5),
-        reason: '$color vs top ($top)',
-      );
-      expect(
-        bottom,
-        greaterThanOrEqualTo(4.5),
-        reason: '$color vs bottom ($bottom)',
-      );
-    }
+  test('в тёмной теме имена читаются на входящих баблах (AA)', () {
+    _expectReadable(Brightness.dark);
   });
 
-  test('light palette clears WCAG AA against light incoming bubbles', () {
-    for (final color in SenderNameColor.lightPalette) {
-      final top = SenderNameColor.contrastRatio(
-        color,
-        SenderNameColor.lightBubbleTop,
-      );
-      final bottom = SenderNameColor.contrastRatio(
-        color,
-        SenderNameColor.lightBubbleBottom,
-      );
-      expect(
-        top,
-        greaterThanOrEqualTo(4.5),
-        reason: '$color vs top ($top)',
-      );
-      expect(
-        bottom,
-        greaterThanOrEqualTo(4.5),
-        reason: '$color vs bottom ($bottom)',
-      );
-    }
+  test('в светлой теме имена читаются на входящих баблах (AA)', () {
+    _expectReadable(Brightness.light);
   });
 
-  test('of() is stable and brightness-aware', () {
-    final dark = SenderNameColor.of(42, Brightness.dark);
-    final light = SenderNameColor.of(42, Brightness.light);
+  test('цвет стабилен для отправителя и зависит от темы', () {
+    final dark = SenderNameColor.of(42, Brightness.dark, ios: true);
+    final light = SenderNameColor.of(42, Brightness.light, ios: true);
     expect(dark, isNot(light));
-    expect(SenderNameColor.of(42, Brightness.dark), dark);
-    expect(
-      SenderNameColor.of(-42, Brightness.dark),
-      SenderNameColor.of(42, Brightness.dark),
-    );
+    expect(SenderNameColor.of(-42, Brightness.dark, ios: true), dark);
   });
 
-  test('legacy brown swatch failed dark AA and is no longer used', () {
+  test('вне iOS-режима палитра прежняя', () {
+    for (final brightness in Brightness.values) {
+      expect(
+        SenderNameColor.paletteFor(brightness, ios: false),
+        SenderNameColor.legacyPalette,
+      );
+    }
+  });
+
+  test('светло-коричневый из старой палитры в iOS-режиме не используется', () {
     const legacyBrown = Color(0xFFA1887F);
     expect(
       SenderNameColor.contrastRatio(
         legacyBrown,
-        SenderNameColor.darkBubbleBottom,
+        _incoming(Brightness.dark).last,
       ),
       lessThan(4.5),
     );
-    expect(SenderNameColor.darkPalette, isNot(contains(legacyBrown)));
+    for (final brightness in Brightness.values) {
+      expect(
+        SenderNameColor.paletteFor(brightness, ios: true),
+        isNot(contains(legacyBrown)),
+      );
+    }
   });
 }

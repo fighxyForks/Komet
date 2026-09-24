@@ -1035,8 +1035,8 @@ class MessageBubble extends StatelessWidget {
 
   static const double _replyWidthShare = 0.75;
 
-  Color _senderColor(int id, Brightness brightness) =>
-      SenderNameColor.of(id, brightness);
+  Color _senderColor(int id, Brightness brightness, {required bool ios}) =>
+      SenderNameColor.of(id, brightness, ios: ios);
 
   Widget _buildSenderHeader(
     ColorScheme cs,
@@ -1054,7 +1054,7 @@ class MessageBubble extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: _senderColor(message.senderId, cs.brightness),
+          color: _senderColor(message.senderId, cs.brightness, ios: ios),
           fontSize: ios ? IosBubbleMetrics.senderNameSize : 13,
           fontWeight: FontWeight.w600,
         ),
@@ -2145,7 +2145,11 @@ class MessageBubble extends StatelessWidget {
     ReplyInfo reply,
     double maxBubbleWidth,
   ) {
-    final accent = _senderColor(reply.senderId, cs.brightness);
+    final accent = _senderColor(
+      reply.senderId,
+      cs.brightness,
+      ios: IosGlass.of(context),
+    );
     final name = reply.senderId == myId
         ? 'Вы'
         : (ContactCache.get(reply.senderId) ?? 'Сообщение');
