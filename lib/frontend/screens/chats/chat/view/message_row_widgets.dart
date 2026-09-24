@@ -57,6 +57,7 @@ class _SwipeToReplyState extends State<SwipeToReply>
     with SingleTickerProviderStateMixin {
   late final AnimationController _springBack;
   double _dragX = 0.0;
+  double _rawX = 0.0;
   bool _triggered = false;
 
   double get _trigger => widget.isMe
@@ -77,30 +78,37 @@ class _SwipeToReplyState extends State<SwipeToReply>
   }
 
   void _onDragUpdate(DragUpdateDetails d) {
-    if (_springBack.isAnimating) _springBack.stop();
-    var next = _dragX + d.delta.dx;
-    if (next > 0) next = 0;
+    if (_springBack.isAnimating) {
+      _springBack.stop();
+      _rawX = _dragX;
+    }
+    var raw = _rawX + d.delta.dx;
+    if (raw > 0) raw = 0;
+    _rawX = raw;
+    var visual = raw;
     if (IosMotion.reduceMotionOf(context)) {
-      if (next < -IosMotion.replyMaxVisual) next = -IosMotion.replyMaxVisual;
+      if (visual < -IosMotion.replyMaxVisual) visual = -IosMotion.replyMaxVisual;
     } else {
-      next = IosMotion.rubberBand(
-        offset: next,
+      visual = IosMotion.rubberBand(
+        offset: raw,
         bandingStart: IosMotion.replyBandingStart,
         range: IosMotion.replyMaxVisual - IosMotion.replyBandingStart,
         coefficient: 0.45,
       );
-      if (next < -IosMotion.replyMaxVisual) next = -IosMotion.replyMaxVisual;
+      if (visual < -IosMotion.replyMaxVisual) {
+        visual = -IosMotion.replyMaxVisual;
+      }
     }
     final wasTriggered = _triggered;
-    _triggered = next <= -_trigger;
+    _triggered = raw <= -_trigger;
     if (_triggered && !wasTriggered) {
       if (IosGlass.of(context)) {
         IosHaptics.swipeToReplyThreshold();
       } else {
-        Haptics.heavy();
+        Haptics.medium();
       }
     }
-    setState(() => _dragX = next);
+    setState(() => _dragX = visual);
   }
 
   void _onDragEnd(DragEndDetails d) {
@@ -112,6 +120,7 @@ class _SwipeToReplyState extends State<SwipeToReply>
 
   void _settle() {
     _triggered = false;
+    _rawX = 0;
     if (IosMotion.reduceMotionOf(context)) {
       setState(() => _dragX = 0);
       return;
