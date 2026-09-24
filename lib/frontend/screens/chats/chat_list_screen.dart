@@ -3351,7 +3351,7 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   Widget _buildNativeFolderStrip(double height) {
     return LiquidGlassSegmentedControl(
-      key: const ValueKey('ios-folder-strip'),
+      key: ValueKey(('ios-folder-strip', Theme.of(context).brightness)),
       labels: [for (final folder in _folders) _folderChipLabel(folder)],
       selectedIndex: _selectedFolderIndex,
       height: height,
