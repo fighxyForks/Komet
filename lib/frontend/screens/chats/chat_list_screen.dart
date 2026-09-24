@@ -2291,6 +2291,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                         : index;
                     final baseChat = pageChats[chatIndex];
                     return ValueListenableBuilder<CachedChat>(
+                      key: ValueKey('chat_${baseChat.id}'),
                       valueListenable: chats.chatListenable(baseChat.id),
                       builder: (context, chat, _) {
                         final isPinned = (chat.favIndex ?? 0) > 0;
@@ -3484,7 +3485,7 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   Widget _animateChatTile(String id, Widget child) {
     return AnimatedChatTile(
-      key: ValueKey('chat_$id'),
+      key: ValueKey('tile_$id'),
       id: id,
       revision: _chatListRevision,
       isNew: _enteringChatIds.contains(id),
@@ -3944,7 +3945,6 @@ class _ChatListScreenState extends State<ChatListScreen>
       ),
     );
     return SpringyTap(
-      key: ValueKey('chat_$id'),
       child: Builder(
         builder: (rowContext) => InkWell(
         onTap: () {
