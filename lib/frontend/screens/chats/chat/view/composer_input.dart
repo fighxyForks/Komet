@@ -17,6 +17,7 @@ import 'package:komet/frontend/screens/chats/chat/voice_record_controller.dart';
 import 'package:komet/frontend/widgets/composer_morph_icon.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';
 import 'package:komet/frontend/widgets/lottie_slash_icon.dart';
@@ -372,7 +373,9 @@ class ComposerInputBar extends StatelessWidget {
                                             readOnly: readOnly,
                                             style: TextStyle(
                                               color: cs.onSurface,
-                                              fontSize: 16,
+                                              fontSize: iosGlass
+                                                  ? IosTypography.composer
+                                                  : 16,
                                             ),
                                             maxLines: null,
                                             keyboardType:
@@ -395,7 +398,9 @@ class ComposerInputBar extends StatelessWidget {
                                                   )?.composerHintMessage,
                                               hintStyle: TextStyle(
                                                 color: cs.onSurfaceVariant,
-                                                fontSize: 16,
+                                                fontSize: iosGlass
+                                                    ? IosTypography.composer
+                                                    : 16,
                                               ),
                                               border: InputBorder.none,
                                               isDense: true,

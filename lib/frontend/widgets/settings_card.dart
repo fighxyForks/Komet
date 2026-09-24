@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../core/config/app_shape.dart';
 import 'glass/glass_controls.dart';
 import 'glass/ios_glass.dart';
+import 'glass/ios_typography.dart';
 import 'glossy_pill.dart';
 
 class SettingsPanel extends StatelessWidget {
@@ -199,7 +200,9 @@ class SettingsToggleTile extends StatelessWidget {
                           label,
                           style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: 16,
+                            fontSize: IosGlass.of(context)
+                                ? IosTypography.listTitle
+                                : 16,
                             fontWeight: IosGlass.of(context)
                                 ? IosType.body
                                 : FontWeight.w500,
@@ -211,7 +214,9 @@ class SettingsToggleTile extends StatelessWidget {
                             subtitle!,
                             style: TextStyle(
                               color: cs.onSurfaceVariant,
-                              fontSize: 13,
+                              fontSize: IosGlass.of(context)
+                                  ? IosTypography.listSubtitle
+                                  : 13,
                               height: 1.3,
                             ),
                           ),
@@ -280,7 +285,9 @@ class SettingsNavTile extends StatelessWidget {
                   label,
                   style: TextStyle(
                     color: tintColor ?? cs.onSurface,
-                    fontSize: 16,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.listTitle
+                        : 16,
                     fontWeight: IosGlass.of(context)
                         ? IosType.body
                         : FontWeight.w500,

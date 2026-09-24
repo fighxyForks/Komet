@@ -44,9 +44,11 @@ import 'attachment/bubbles/video_bubble.dart';
 import 'attachment/bubbles/file_bubble.dart';
 import 'attachment/bubbles/forwarded_bubble.dart';
 import 'attachment/bubbles/ios_bubble_metrics.dart';
+import '../../core/config/app_ios_glass.dart';
 import 'lottie_image.dart';
 import 'text_with_meta.dart';
 import 'glass/ios_glass.dart';
+import 'glass/ios_typography.dart';
 import 'glass/ios_palette.dart';
 
 final Expando<MessageType> _contentTypeCache = Expando<MessageType>();
@@ -1906,8 +1908,10 @@ class MessageBubble extends StatelessWidget {
                 c.count.toString(),
                 style: TextStyle(
                   color: isYours ? cs.primary : cs.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontSize: IosTypography.reactionCount,
+                  fontWeight: AppIosGlass.active.value
+                      ? IosTypography.medium
+                      : FontWeight.w600,
                 ),
               ),
             ],
@@ -2024,7 +2028,7 @@ class MessageBubble extends StatelessWidget {
       fontSize: ios ? IosBubbleMetrics.textSize : 16,
       height: ios ? IosBubbleMetrics.textHeight : 1.3,
       fontFamily: activeFontFamily,
-      fontVariations: activeFontFamily == 'Inter'
+      fontVariations: activeFontFamily == 'Inter' && !ios
           ? const [FontVariation('wght', 300)]
           : null,
     );

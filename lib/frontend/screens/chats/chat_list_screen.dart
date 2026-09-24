@@ -33,6 +33,7 @@ import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/glass_segment_track.dart';
 import '../../widgets/glass/ios_native_tab_bar.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_typography.dart';
 import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/sheet_helpers.dart';
@@ -3313,8 +3314,8 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   static const double _iosFolderChipPadding = 14;
   static const TextStyle _iosFolderLabelStyle = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
+    fontSize: IosTypography.folderLabel,
+    fontWeight: IosTypography.medium,
   );
 
   Widget _buildNativeFolderStrip(double height) {

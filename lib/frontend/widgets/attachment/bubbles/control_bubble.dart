@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../backend/modules/messages.dart';
 import '../../../../models/attachment.dart';
+import '../../glass/ios_glass.dart';
+import '../../glass/ios_typography.dart';
 
 class _ControlSegment {
   final String text;
@@ -127,6 +129,7 @@ class _ControlBubbleState extends State<ControlBubble> {
     final cs = widget.cs;
     final interactive = widget.onUserTap != null;
 
+    final ios = IosGlass.of(context);
     final bubble = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -140,7 +143,9 @@ class _ControlBubbleState extends State<ControlBubble> {
               TextSpan(
                 text: segment.text,
                 style: interactive && segment.userId != null
-                    ? const TextStyle(fontWeight: FontWeight.w600)
+                    ? TextStyle(
+                        fontWeight: ios ? FontWeight.w700 : FontWeight.w600,
+                      )
                     : null,
                 recognizer: interactive && segment.userId != null
                     ? _recognizerFor(segment.userId!)
@@ -150,8 +155,8 @@ class _ControlBubbleState extends State<ControlBubble> {
         ),
         style: TextStyle(
           color: cs.onSurfaceVariant,
-          fontSize: 12,
-          fontStyle: FontStyle.italic,
+          fontSize: ios ? IosTypography.service : 12,
+          fontStyle: ios ? FontStyle.normal : FontStyle.italic,
         ),
         textAlign: TextAlign.center,
       ),

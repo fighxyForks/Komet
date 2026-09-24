@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../widgets/small_spinner.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 
 // #***! плашка с датой между группами сообщений
 class DateSeparatorLabel extends StatelessWidget {
@@ -60,8 +61,8 @@ class DateSeparatorLabel extends StatelessWidget {
                 _formatDateLabel(date),
                 style: TextStyle(
                   color: cs.onSurface,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: IosTypography.dateHeader,
+                  fontWeight: IosTypography.medium,
                 ),
               ),
             ),
@@ -69,6 +70,7 @@ class DateSeparatorLabel extends StatelessWidget {
         ),
       );
     }
+    final ios = IosGlass.of(context);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: floating ? 2 : 8),
       child: Center(
@@ -80,11 +82,17 @@ class DateSeparatorLabel extends StatelessWidget {
           ),
           child: Text(
             _formatDateLabel(date),
-            style: TextStyle(
-              color: cs.onSurfaceVariant,
-              fontSize: 12,
-              fontStyle: floating ? FontStyle.normal : FontStyle.italic,
-            ),
+            style: ios
+                ? TextStyle(
+                    color: cs.onSurfaceVariant,
+                    fontSize: IosTypography.dateHeader,
+                    fontWeight: IosTypography.medium,
+                  )
+                : TextStyle(
+                    color: cs.onSurfaceVariant,
+                    fontSize: 12,
+                    fontStyle: floating ? FontStyle.normal : FontStyle.italic,
+                  ),
           ),
         ),
       ),

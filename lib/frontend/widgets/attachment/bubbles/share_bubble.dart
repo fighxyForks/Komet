@@ -6,7 +6,9 @@ import '../../../../core/utils/link_opener.dart';
 import '../../../../models/attachment.dart';
 import '../../formatted_message_text.dart';
 import '../../glass/ios_glass.dart';
+import '../../glass/ios_typography.dart';
 import 'bubble_context.dart';
+import 'ios_bubble_metrics.dart';
 
 class ShareBubble extends StatelessWidget {
   final BubbleContext ctx;
@@ -16,6 +18,7 @@ class ShareBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ios = IosGlass.of(context);
     final isMe = ctx.isMe;
     final text = ctx.contentText;
     final hasText = text?.isNotEmpty ?? false;
@@ -84,8 +87,10 @@ class ShareBubble extends StatelessWidget {
                       share.title!,
                       style: TextStyle(
                         color: ctx.text,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontSize: ios ? IosTypography.linkPreview : 14,
+                        fontWeight: ios
+                            ? IosTypography.semibold
+                            : FontWeight.w500,
                         height: 1.25,
                       ),
                       maxLines: 2,
@@ -97,8 +102,8 @@ class ShareBubble extends StatelessWidget {
                     Text(
                       share.description!,
                       style: TextStyle(
-                        color: ctx.dim,
-                        fontSize: 13,
+                        color: ios ? ctx.text : ctx.dim,
+                        fontSize: ios ? IosTypography.linkPreview : 13,
                         height: 1.25,
                       ),
                       maxLines: 3,
@@ -130,8 +135,8 @@ class ShareBubble extends StatelessWidget {
                     ranges: ctx.contentFormatRanges,
                     style: TextStyle(
                       color: ctx.text,
-                      fontSize: 16,
-                      height: 1.3,
+                      fontSize: ios ? IosTypography.body : 16,
+                      height: ios ? IosBubbleMetrics.textHeight : 1.3,
                     ),
                   ),
                 ),
