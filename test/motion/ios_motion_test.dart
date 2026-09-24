@@ -102,4 +102,20 @@ void main() {
     expect(controller.isAnimating, isFalse);
     expect(controller.value, closeTo(1, 0.02));
   });
+
+  test('SnapSimulation finishes immediately at value', () {
+    final sim = SnapSimulation(1);
+    expect(sim.x(0), 1);
+    expect(sim.dx(0), 0);
+    expect(sim.isDone(0), isTrue);
+  });
+
+  test('hero and overlay springs are critically damped', () {
+    for (final spring in [IosMotion.hero, IosMotion.overlay]) {
+      expect(
+        spring.damping * spring.damping,
+        closeTo(4 * spring.mass * spring.stiffness, 0.5),
+      );
+    }
+  });
 }

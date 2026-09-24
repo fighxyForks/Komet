@@ -1,5 +1,5 @@
-import 'package:flutter/animation.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter/widgets.dart';
 
 /// Shared spring presets and gesture thresholds for interactive motion.
 ///
@@ -13,11 +13,25 @@ abstract final class IosMotion {
     damping: 40,
   );
 
-  /// Default interactive spring (hero-ish settle, general UI).
+  /// Default interactive spring (zoom settle, general UI).
   static final SpringDescription standard = SpringDescription(
     mass: 1,
     stiffness: 380,
     damping: 32,
+  );
+
+  /// Critically damped hero open/close flight (~0.3–0.35s settle).
+  static final SpringDescription hero = SpringDescription.withDampingRatio(
+    mass: 1,
+    stiffness: 380,
+    ratio: 1.0,
+  );
+
+  /// Overlay / menu appear (critically damped, slightly softer than hero).
+  static final SpringDescription overlay = SpringDescription.withDampingRatio(
+    mass: 1,
+    stiffness: 280,
+    ratio: 1.0,
   );
 
   /// Snappier spring for dismiss snap-back to rest.
@@ -51,9 +65,11 @@ abstract final class IosMotion {
   static const Duration dimIn = Duration(milliseconds: 150);
   static const Duration dimOut = Duration(milliseconds: 100);
   static const Duration chrome = Duration(milliseconds: 200);
-  static const Duration heroOpen = Duration(milliseconds: 340);
-  static const Duration heroClose = Duration(milliseconds: 300);
+  static const Duration heroOpen = Duration(milliseconds: 400);
+  static const Duration heroClose = Duration(milliseconds: 400);
   static const Duration flyOff = Duration(milliseconds: 200);
+  static const Duration overlayForward = Duration(milliseconds: 420);
+  static const Duration overlayReverse = Duration(milliseconds: 280);
 
   /// Soft max scale for media zoom (pinch / double-tap target band).
   static const double zoomSoftMax = 3.0;
@@ -68,8 +84,8 @@ abstract final class IosMotion {
   static const double doubleTapEdgeInset = 44;
 
   /// Deferred single-tap window so a second tap can claim double-tap zoom
-  /// without waiting for Flutter's full double-tap timeout on a shared
-  /// GestureDetector. Keep short so chrome toggle stays snappy.
+  /// without waiting for Flutter's full double-tap timeout. Applied only when
+  /// double-tap zoom is possible (zoomable image, not Reduce Motion, not edge).
   static const Duration singleTapDelay = Duration(milliseconds: 200);
 
   /// Visual gap between gallery pages (logical pixels).
@@ -103,6 +119,10 @@ abstract final class IosMotion {
 
   /// Axis lock: vertical must dominate horizontal by this factor.
   static const double dismissAxisRatio = 1.5;
+
+  /// Whether the platform accessibility setting asks to reduce motion.
+  static bool reduceMotionOf(BuildContext context) =>
+      MediaQuery.disableAnimationsOf(context);
 
   /// Rubber-band after [bandingStart]; asymptotic range and strength.
   static double rubberBand({
@@ -143,6 +163,9 @@ abstract final class IosMotion {
 ///
 /// [velocity] is in units of the controller value per second (same space as
 /// the animation value). Returns the [TickerFuture] from [animateWith].
+/// Re-entrant: stopping a mid-flight spring and calling again preserves the
+/// controller's current value; pass [velocity] (often `controller.velocity`)
+/// to keep momentum when reversing.
 TickerFuture animateSpring(
   AnimationController controller, {
   required double target,
@@ -168,4 +191,20 @@ double springVelocityFromPixels({
 }) {
   if (spanPixels.abs() < 1e-6) return 0;
   return pixelsPerSecond / spanPixels;
+}
+
+/// Simulation that snaps to [value] immediately (Reduce Motion).
+final class SnapSimulation extends Simulation {
+  SnapSimulation(this._value);
+
+  final double _value;
+
+  @override
+  double x(double time) => _value;
+
+  @override
+  double dx(double time) => 0;
+
+  @override
+  bool isDone(double time) => true;
 }
