@@ -8,6 +8,8 @@ import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/main.dart';
 
 import '../../../../core/utils/download_progress.dart';
+import '../../glass/ios_glass.dart';
+import '../../glass/ios_typography.dart';
 import '../../../../core/utils/download_history.dart';
 import '../../../../core/utils/file_download.dart';
 import '../../../../core/utils/media_cache.dart';
@@ -44,6 +46,7 @@ class FileBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ios = IosGlass.of(context);
     final isMe = ctx.isMe;
     final name =
         file.name ?? AppLocalizations.of(context)!.attachmentFileFallback;
@@ -109,8 +112,10 @@ class FileBubble extends StatelessWidget {
                       name,
                       style: TextStyle(
                         color: ctx.text,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontSize: ios ? IosTypography.fileName : 14,
+                        fontWeight: ios
+                            ? IosTypography.regular
+                            : FontWeight.w500,
                         height: 1.2,
                       ),
                       maxLines: 2,
@@ -127,8 +132,11 @@ class FileBubble extends StatelessWidget {
                             : sizeStr,
                         style: TextStyle(
                           color: ctx.dim,
-                          fontSize: 12,
+                          fontSize: ios ? IosTypography.fileDetails : 12,
                           height: 1.2,
+                          fontFeatures: ios
+                              ? IosTypography.tabularDigits
+                              : null,
                         ),
                       ),
                     ),

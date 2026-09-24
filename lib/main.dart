@@ -983,7 +983,10 @@ class KometAppState extends State<KometApp>
     _themeCacheFontId = _fontId;
     _themeCacheLight = light;
     _themeCacheDark = dark;
-    final displayFont = AppDisplayFont(AppFonts.displayFamily(_fontId));
+    final displayFont = AppDisplayFont(
+      AppFonts.displayFamily(_fontId),
+      systemBody: AppFonts.resolve(_fontId).isSystem,
+    );
     _lightTheme = withM3ETheme(
       ThemeData(
         useMaterial3: true,

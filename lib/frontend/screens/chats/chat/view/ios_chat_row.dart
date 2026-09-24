@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-import '../../../../widgets/glass/ios_glass.dart';
+import '../../../../widgets/glass/ios_typography.dart';
 import '../../../../widgets/glass/ios_palette.dart';
 
 class IosChatRow extends StatelessWidget {
@@ -107,7 +107,8 @@ class IosChatRow extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           color: IosPalette.label(cs),
-                                          fontSize: 15,
+                                          fontSize: IosTypography.chatPreview,
+                                          fontWeight: IosTypography.regular,
                                           height: 1.25,
                                         ),
                                       ),
@@ -173,8 +174,8 @@ class IosChatRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: IosPalette.label(cs),
-                    fontSize: 17,
-                    fontWeight: IosType.title,
+                    fontSize: IosTypography.chatTitle,
+                    fontWeight: IosTypography.semibold,
                     height: 1.2,
                   ),
                 ),
@@ -205,7 +206,13 @@ class IosChatRow extends StatelessWidget {
         Text(
           time,
           key: const ValueKey('ios-chat-time'),
-          style: TextStyle(color: secondary, fontSize: 15, height: 1.2),
+          style: TextStyle(
+            color: secondary,
+            fontSize: IosTypography.chatTime,
+            fontWeight: IosTypography.regular,
+            height: 1.2,
+            fontFeatures: IosTypography.tabularDigits,
+          ),
         ),
       ],
     );
@@ -235,21 +242,26 @@ class IosChatRow extends StatelessWidget {
   Widget _badge(ColorScheme cs, String label) {
     return Container(
       key: ValueKey('ios-chat-badge-$label'),
-      height: 22,
-      constraints: const BoxConstraints(minWidth: 22),
-      padding: const EdgeInsets.symmetric(horizontal: 7),
+      height: IosTypography.chatBadgeDiameter,
+      constraints: const BoxConstraints(
+        minWidth: IosTypography.chatBadgeDiameter,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: isMuted ? IosPalette.mutedBadge(cs) : cs.primary,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(
+          IosTypography.chatBadgeDiameter / 2,
+        ),
       ),
       child: Text(
         label,
         style: TextStyle(
           color: isMuted ? Colors.white : cs.onPrimary,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontSize: IosTypography.chatBadge,
+          fontWeight: IosTypography.semibold,
           height: 1,
+          fontFeatures: IosTypography.tabularDigits,
         ),
       ),
     );

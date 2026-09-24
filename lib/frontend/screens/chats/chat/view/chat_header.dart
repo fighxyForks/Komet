@@ -14,6 +14,7 @@ import 'package:komet/frontend/screens/stories/story_viewer_screen.dart';
 import 'package:komet/frontend/widgets/encryption_lock_badge.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/online_dot.dart';
 import 'package:komet/frontend/widgets/profile_hero.dart';
@@ -145,7 +146,7 @@ class ChatHeaderRow extends StatelessWidget {
     final ios = IosGlass.of(context);
     final nameStyle = TextStyle(
       color: cs.onSurface,
-      fontSize: ios ? 16 : 17,
+      fontSize: ios ? IosTypography.headerTitle : 17,
       height: ios ? 1.15 : null,
       fontWeight: FontWeight.w600,
       fontFamily: displayFontOf(context),
@@ -270,7 +271,7 @@ class ChatHeaderRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: cs.onSurfaceVariant,
-                      fontSize: ios ? 12.5 : 13,
+                      fontSize: ios ? IosTypography.headerSubtitle : 13,
                       height: ios ? 1.15 : null,
                       fontWeight: FontWeight.w400,
                     ),

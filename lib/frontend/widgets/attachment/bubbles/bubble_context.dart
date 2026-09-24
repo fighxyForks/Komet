@@ -16,6 +16,8 @@ import '../../../../models/attachment.dart';
 import '../../formatted_message_text.dart';
 import '../../sending_clock_icon.dart';
 import '../../photo_viewer.dart';
+import '../../glass/ios_glass.dart';
+import '../../glass/ios_typography.dart';
 import 'ios_bubble_metrics.dart';
 
 enum MessageType { text, attachment, voice, control }
@@ -208,7 +210,12 @@ class BubbleContext {
   Color get systemTint => cs.onPrimaryContainer.withValues(alpha: 0.12);
 
   Widget caption() {
-    final style = TextStyle(color: text, fontSize: 16, height: 1.3);
+    final ios = IosGlass.of(context);
+    final style = TextStyle(
+      color: text,
+      fontSize: ios ? IosTypography.caption : 16,
+      height: ios ? IosBubbleMetrics.textHeight : 1.3,
+    );
     final captionText = contentText;
     final ranges = contentFormatRanges;
     final Widget body;

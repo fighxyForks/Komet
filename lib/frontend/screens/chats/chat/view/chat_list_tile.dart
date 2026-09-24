@@ -4,6 +4,8 @@ import 'package:flutter/rendering.dart';
 import 'package:komet/core/storage/chat_activity_store.dart';
 import 'package:komet/frontend/screens/chats/chat/typing_label.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 
 class AnimatedChatTile extends StatefulWidget {
   final Widget child;
@@ -158,12 +160,19 @@ class _ActivitySubtitleState extends State<ActivitySubtitle> {
           showAlternate: activity != null,
           alternate: Text(
             _lastLabel,
-            style: TextStyle(
-              color: cs.primary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              height: 1.2,
-            ),
+            style: IosGlass.of(context)
+                ? TextStyle(
+                    color: cs.primary,
+                    fontSize: IosTypography.chatPreview,
+                    fontWeight: IosTypography.regular,
+                    height: 1.25,
+                  )
+                : TextStyle(
+                    color: cs.primary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
+                  ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

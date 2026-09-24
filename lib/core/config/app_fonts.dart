@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_ios_glass.dart';
 import 'custom_font_service.dart';
 
 // #***! шрифт заголовков, отдельный от основного
@@ -9,20 +10,26 @@ const String kDisplayFontFamily = 'Outfit';
 @immutable
 class AppDisplayFont extends ThemeExtension<AppDisplayFont> {
   final String? family;
+  final bool systemBody;
 
-  const AppDisplayFont(this.family);
+  const AppDisplayFont(this.family, {this.systemBody = false});
 
   @override
-  AppDisplayFont copyWith({String? family}) =>
-      AppDisplayFont(family ?? this.family);
+  AppDisplayFont copyWith({String? family, bool? systemBody}) => AppDisplayFont(
+    family ?? this.family,
+    systemBody: systemBody ?? this.systemBody,
+  );
 
   @override
   AppDisplayFont lerp(ThemeExtension<AppDisplayFont>? other, double t) =>
       t < 0.5 ? this : (other as AppDisplayFont? ?? this);
 }
 
-String? displayFontOf(BuildContext context) =>
-    Theme.of(context).extension<AppDisplayFont>()?.family ?? kDisplayFontFamily;
+String? displayFontOf(BuildContext context) {
+  final font = Theme.of(context).extension<AppDisplayFont>();
+  if ((font?.systemBody ?? true) && AppIosGlass.active.value) return null;
+  return font?.family ?? kDisplayFontFamily;
+}
 
 // #***! шрифт в списке выбора, metricScale выравнивает размер разных гарнитур
 class AppFont {

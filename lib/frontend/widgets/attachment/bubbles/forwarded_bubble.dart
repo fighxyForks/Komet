@@ -5,6 +5,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../../backend/modules/chats.dart';
 import '../../../../backend/modules/messages.dart';
 import '../../../../models/attachment.dart';
+import '../../glass/ios_glass.dart';
+import '../../glass/ios_typography.dart';
 import 'bubble_context.dart';
 
 String _forwardedSourceName(ForwardedMessageAttachment forwarded) {
@@ -89,7 +91,7 @@ class ForwardedHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: headerColor,
-                fontSize: 12,
+                fontSize: IosGlass.of(context) ? IosTypography.forwarded : 12,
                 fontWeight: FontWeight.w500,
               ),
             ),
