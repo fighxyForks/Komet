@@ -19,26 +19,25 @@ void main() {
 
   tearDown(AppIosGlass.debugReset);
 
-  testWidgets('в iOS-режиме рисует CupertinoNavigationBar и grouped фон', (
+  testWidgets('в iOS-режиме рисует large title и grouped фон', (
     tester,
   ) async {
     AppIosGlass.debugSetSupported(true);
     await tester.pumpWidget(
       MaterialApp(
         builder: (context, child) => IosGlass(child: child!),
-        home: const IosSettingsScaffold(
+        home: IosSettingsScaffold(
           title: 'Устройства',
           useConnectionTitle: false,
-          body: Center(child: Text('body')),
+          body: ListView(children: const [Text('body')]),
         ),
       ),
     );
-    expect(find.byType(CupertinoNavigationBar), findsOneWidget);
-    expect(find.text('Устройства'), findsOneWidget);
+    expect(find.byType(CupertinoSliverNavigationBar), findsOneWidget);
+    expect(find.text('Устройства'), findsWidgets);
     expect(find.text('body'), findsOneWidget);
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
     final cs = ThemeData(brightness: Brightness.light).colorScheme;
-    // Grouped background for light mode
     expect(scaffold.backgroundColor, IosPalette.grouped(cs));
   });
 

@@ -8,9 +8,9 @@ import 'ios_metrics.dart';
 import 'ios_palette.dart';
 import 'ios_typography.dart';
 
-/// Nested-settings chrome for iOS mode: grouped background + Cupertino-style
-/// navigation bar. Off iOS mode keeps a Material [Scaffold] + [AppBar] /
-/// [ConnectionTitleBar].
+/// Nested-settings chrome for iOS mode: grouped background + collapsing large
+/// title with scroll-edge opacity. Off iOS mode keeps a Material [Scaffold] +
+/// [AppBar] / [ConnectionTitleBar].
 ///
 /// Native [LiquidGlassNavigationBar] is intentionally not used here: nested
 /// settings need arbitrary Flutter trailing actions, and one platform view per
@@ -106,46 +106,67 @@ class IosSettingsScaffold extends StatelessWidget {
       barTrailing = Row(mainAxisSize: MainAxisSize.min, children: actions!);
     }
 
+    final barLeading = leading ??
+        (automaticallyImplyLeading && Navigator.of(context).canPop()
+            ? CupertinoButton(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(
+                  IosMetrics.minHitTarget,
+                  IosMetrics.minHitTarget,
+                ),
+                onPressed: () => Navigator.of(context).maybePop(),
+                child: Icon(
+                  IosSymbols.chevronLeft(context),
+                  size: 28,
+                  weight: 400,
+                  color: cs.primary,
+                ),
+              )
+            : null);
+
     return Scaffold(
       backgroundColor: bg,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(
-          MediaQuery.paddingOf(context).top + IosMetrics.minHitTarget,
-        ),
-        child: CupertinoNavigationBar(
-          backgroundColor: bg.withValues(alpha: 0.94),
-          border: Border(
-            bottom: BorderSide(
-              color: IosPalette.separator(cs).withValues(alpha: 0.45),
-              width: 0.5,
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            CupertinoSliverNavigationBar(
+              largeTitle: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: IosPalette.label(cs),
+                  fontSize: IosTypography.largeTitle,
+                  fontWeight: IosType.largeTitle,
+                  letterSpacing: IosTypography.letterSpacing(
+                    IosTypography.largeTitle,
+                  ),
+                ),
+              ),
+              middle: middle,
+              alwaysShowMiddle: false,
+              backgroundColor: innerBoxIsScrolled
+                  ? bg.withValues(alpha: 0.94)
+                  : bg.withValues(alpha: 0),
+              border: Border(
+                bottom: BorderSide(
+                  color: innerBoxIsScrolled
+                      ? IosPalette.separator(cs).withValues(alpha: 0.45)
+                      : Colors.transparent,
+                  width: 0.5,
+                ),
+              ),
+              automaticallyImplyLeading: false,
+              leading: barLeading,
+              trailing: barTrailing,
             ),
-          ),
-          automaticallyImplyLeading: false,
-          leading:
-              leading ??
-              (automaticallyImplyLeading && Navigator.of(context).canPop()
-                  ? CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(
-                        IosMetrics.minHitTarget,
-                        IosMetrics.minHitTarget,
-                      ),
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      child: Icon(IosSymbols.chevronLeft(context),
-                        size: 28,
-                        weight: 400,
-                        color: cs.primary,
-                      ),
-                    )
-                  : null),
-          middle: middle,
-          trailing: barTrailing,
-        ),
+          ];
+        },
+        body: body,
       ),
-      body: body,
     );
   }
 }
@@ -192,7 +213,7 @@ class IosSettingsButton extends StatelessWidget {
         return FilledButton.icon(
           onPressed: onPressed,
           style: sizeStyle,
-          icon: Icon(icon, size: 20),
+          icon: Icon(IosSymbols.adapt(context, icon!), size: 20),
           label: Text(label),
         );
       }
@@ -230,7 +251,7 @@ class IosSettingsButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 18, color: fg, weight: 500),
+              Icon(IosSymbols.adapt(context, icon!), size: 18, color: fg, weight: 500),
               const SizedBox(width: 8),
             ],
             Text(
