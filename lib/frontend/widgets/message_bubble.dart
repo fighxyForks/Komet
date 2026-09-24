@@ -2588,6 +2588,7 @@ class MessageBubble extends StatelessWidget {
       textColor: ctx.text,
       isMe: isMe,
       deleted: message.deleted,
+      showMeta: !ctx.metaInFooter,
       status: overrideStatus ?? message.status,
       otherReadTime: otherReadTime,
       time: message.time,

@@ -22,6 +22,8 @@ class VoiceMessageBubble extends StatefulWidget {
   final Color textColor;
   final bool isMe;
   final bool deleted;
+  // #***! время и статус рисует футер с реакциями, тогда здесь не дублируем
+  final bool showMeta;
   final String? status;
   final ValueListenable<int>? otherReadTime;
   final int time;
@@ -43,6 +45,7 @@ class VoiceMessageBubble extends StatefulWidget {
     required this.textColor,
     required this.isMe,
     this.deleted = false,
+    this.showMeta = true,
     this.status,
     this.otherReadTime,
     required this.time,
@@ -412,7 +415,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
                       : const SizedBox.shrink(),
                 ),
               ),
-              if (!_transcriptionVisible) ...[
+              if (!_transcriptionVisible && widget.showMeta) ...[
                 Text(
                   formatClock(
                     DateTime.fromMillisecondsSinceEpoch(widget.time),
@@ -443,7 +446,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
               ],
             ],
           ),
-          if (_transcriptionVisible) ...[
+          if (_transcriptionVisible && widget.showMeta) ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
