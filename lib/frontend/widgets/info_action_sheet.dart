@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'sheet_helpers.dart';
 import '../../core/config/app_shape.dart';
+import './glass/ios_sheet.dart';
 
 class InfoActionSheetItem {
   final IconData icon;
@@ -48,7 +49,7 @@ Future<bool> showInfoActionSheet(
   if (!context.mounted) return false;
 
   final cs = Theme.of(context).colorScheme;
-  final confirmed = await showModalBottomSheet<bool>(
+  final confirmed = await showIosSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: cs.surfaceContainerHigh,

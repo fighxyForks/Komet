@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../widgets/custom_notification.dart';
 import '../../widgets/sheet_helpers.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 class PollDraft {
   final String title;
@@ -21,7 +22,7 @@ class PollDraft {
 
 Future<PollDraft?> showCreatePollSheet(BuildContext context) {
   final cs = Theme.of(context).colorScheme;
-  return showModalBottomSheet<PollDraft>(
+  return showIosSheet<PollDraft>(
     context: context,
     isScrollControlled: true,
     backgroundColor: cs.surfaceContainerHigh,

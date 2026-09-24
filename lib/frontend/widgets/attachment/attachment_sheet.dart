@@ -34,6 +34,7 @@ import 'package:komet/l10n/app_localizations.dart';
 
 import '../small_spinner.dart';
 import '../../../core/security/app_lock.dart';
+import '../glass/ios_sheet.dart';
 
 const int _navItemCount = 5;
 
@@ -66,7 +67,7 @@ Future<void> showAttachmentSheet(
   VoidCallback? onCreatePoll,
   ValueChanged<CachedContact>? onSendContact,
 }) {
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     requestFocus: false,

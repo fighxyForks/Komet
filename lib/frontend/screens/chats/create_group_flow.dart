@@ -17,10 +17,11 @@ import '../../widgets/small_spinner.dart';
 import '../../widgets/swipe_route.dart';
 import 'chat_screen.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 Future<void> showCreateGroupFlow(BuildContext context) async {
   final cs = Theme.of(context).colorScheme;
-  await showModalBottomSheet<void>(
+  await showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: cs.surfaceContainerHigh,

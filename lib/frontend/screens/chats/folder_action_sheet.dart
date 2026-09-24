@@ -11,6 +11,7 @@ import '../../widgets/confirm_dialog.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/sheet_helpers.dart';
 import 'folder_edit_sheet.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 enum _FolderAction { edit, create, delete }
 
@@ -23,7 +24,7 @@ Future<void> showFolderActionSheet(
   final canEdit = !isAllChats && (folder.canEditTitle || folder.canEditFilters);
   final canDelete = !isAllChats && folder.canDelete;
 
-  final action = await showModalBottomSheet<_FolderAction>(
+  final action = await showIosSheet<_FolderAction>(
     context: context,
     backgroundColor: cs.surfaceContainerHigh,
     shape: kSheetShape,

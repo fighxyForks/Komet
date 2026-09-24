@@ -29,6 +29,7 @@ import 'call_mic_sheet.dart';
 import 'call_participants_sheet.dart';
 import 'komet_hub.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 class CallScreen extends StatefulWidget {
   final String name;
@@ -485,7 +486,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
   void _showInfoSheet() {
     final cs = _darkScheme(context);
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

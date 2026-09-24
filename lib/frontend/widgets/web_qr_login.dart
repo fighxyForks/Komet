@@ -5,9 +5,10 @@ import 'custom_notification.dart';
 import 'sheet_helpers.dart';
 import 'small_spinner.dart';
 import '../../core/config/app_fonts.dart';
+import './glass/ios_sheet.dart';
 
 Future<bool> showWebQrLoginConfirmSheet(BuildContext context) async {
-  final agreed = await showModalBottomSheet<bool>(
+  final agreed = await showIosSheet<bool>(
     context: context,
     backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
     shape: kSheetShape,

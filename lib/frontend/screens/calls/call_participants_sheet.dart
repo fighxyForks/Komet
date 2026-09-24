@@ -11,6 +11,7 @@ import '../../widgets/komet_avatar.dart';
 import '../../widgets/prompt_dialog.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 class CallParticipantView {
   final String name;
@@ -28,7 +29,7 @@ Future<void> showCallParticipantsSheet(
   required ColorScheme scheme,
   required CallParticipantResolver resolve,
 }) {
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
@@ -101,7 +102,7 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
     final isAdmin = p.isAdmin;
     final isSpeaker = p.isSpeaker;
 
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       showDragHandle: true,
       backgroundColor: cs.surfaceContainerHigh,
@@ -197,7 +198,7 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
 
   void _showOptions() {
     final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -247,7 +248,7 @@ class _ParticipantsSheetState extends State<_ParticipantsSheet> {
 
   void _showFeatures() {
     final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

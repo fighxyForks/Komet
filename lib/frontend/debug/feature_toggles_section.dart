@@ -17,6 +17,7 @@ import '../screens/digital_id/digital_id_web_screen.dart';
 import '../widgets/custom_notification.dart';
 import '../widgets/sheet_helpers.dart';
 import 'debug_toggle_tile.dart';
+import '../widgets/glass/ios_sheet.dart';
 
 class DebugFeatureTogglesSection extends StatelessWidget {
   const DebugFeatureTogglesSection({super.key});
@@ -40,7 +41,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
 
   void _pickVideoNoteQuality(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       shape: kSheetShape,

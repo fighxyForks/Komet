@@ -34,6 +34,7 @@ import '../share_unopenable_file.dart';
 import '../small_spinner.dart';
 import '../swipe_route.dart';
 import '../sheet_helpers.dart';
+import '../glass/ios_sheet.dart';
 
 enum SharedContentKind { media, files, voice, links }
 
@@ -179,7 +180,7 @@ Future<void> _showItemMenu(BuildContext context, List<_MenuAction> actions) {
     );
     return Future<void>.value();
   }
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     backgroundColor: cs.surfaceContainerHigh,
     shape: kSheetShape,

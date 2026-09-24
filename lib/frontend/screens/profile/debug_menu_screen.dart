@@ -24,6 +24,7 @@ import '../../debug/sync_probe_section.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/connection_status.dart';
 import '../../widgets/sheet_helpers.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 class DebugMenuScreen extends StatefulWidget {
   const DebugMenuScreen({super.key});
@@ -79,7 +80,7 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
 
   void _pickCacheLimit() {
     final cs = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
+    showIosSheet<void>(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       shape: kSheetShape,

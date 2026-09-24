@@ -22,6 +22,7 @@ import '../widgets/glass/ios_glass.dart';
 import '../widgets/small_spinner.dart';
 import '../widgets/sheet_helpers.dart';
 import '../widgets/share_unopenable_file.dart';
+import '../widgets/glass/ios_sheet.dart';
 
 class DownloadsScreen extends StatefulWidget {
   const DownloadsScreen({super.key});
@@ -184,7 +185,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
 
   Future<void> _settings() async {
     final l10n = AppLocalizations.of(context)!;
-    final clear = await showModalBottomSheet<bool>(
+    final clear = await showIosSheet<bool>(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       shape: kSheetShape,

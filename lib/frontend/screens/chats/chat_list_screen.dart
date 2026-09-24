@@ -35,6 +35,7 @@ import '../../widgets/glass/ios_native_tab_bar.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
 import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_tappable.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/swipe_route.dart';
@@ -121,6 +122,8 @@ import '../../widgets/media_playback_pill.dart';
 import '../../../core/config/app_fonts.dart';
 import '../lock/lock_glyph.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
 
 const String _savedWelcomeKey = 'welcome.saved.dialog.message';
 
@@ -707,7 +710,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     final offerForAll =
         kind == _DeleteKind.personalLike && selected.any((c) => c.id != 0);
     var forAll = false;
-    return showModalBottomSheet<({bool forAll})>(
+    return showIosSheet<({bool forAll})>(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       shape: kSheetShape,
@@ -3975,7 +3978,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
     return SpringyTap(
       child: Builder(
-        builder: (rowContext) => InkWell(
+        builder: (rowContext) => IosTappable(
         onTap: () {
           if (widget.forwardMode) {
             Navigator.of(context).pop(
@@ -4250,7 +4253,7 @@ class _ChatListScreenState extends State<ChatListScreen>
           } catch (_) {}
           if (!mounted) return;
           await Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
+            iosPageRoute(context,
               builder: (_) => LoginScreen(returnToAccountId: previousId),
             ),
             (route) => false,
@@ -4267,7 +4270,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         }
         if (!mounted) return;
         await Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const AdaptiveShell()),
+          iosPageRoute(context, builder: (_) => const AdaptiveShell()),
           (route) => false,
         );
       },

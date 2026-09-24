@@ -14,6 +14,8 @@ import '../../widgets/settings_card.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../lock/lock_glyph.dart';
 import '../lock/passcode_setup_screen.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class PasscodeSettingsScreen extends StatefulWidget {
   const PasscodeSettingsScreen({super.key});
@@ -40,7 +42,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
   Future<void> _setUp({required bool changing}) async {
     final l10n = AppLocalizations.of(context)!;
     final done = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const PasscodeSetupScreen()),
+      iosPageRoute(context, builder: (_) => const PasscodeSetupScreen()),
     );
     if (done != true || !mounted) return;
     showCustomNotification(
@@ -62,7 +64,7 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
 
   Future<void> _pickIdle() async {
     final l10n = AppLocalizations.of(context)!;
-    final picked = await showModalBottomSheet<int>(
+    final picked = await showIosSheet<int>(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
       shape: kSheetShape,

@@ -22,6 +22,7 @@ import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 enum _EnvState { loading, notConfigured, ready }
 
@@ -319,7 +320,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
     final accountId = _accountId;
     if (chatId == null || accountId == null) return;
 
-    showModalBottomSheet(
+    showIosSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -347,7 +348,7 @@ class _CloudStorageScreenState extends State<CloudStorageScreen>
   }
 
   void _onCardTap(CloudFile file) {
-    showModalBottomSheet(
+    showIosSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

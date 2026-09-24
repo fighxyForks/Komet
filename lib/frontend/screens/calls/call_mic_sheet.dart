@@ -9,13 +9,14 @@ import '../../../core/config/call_no_mute.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/sheet_helpers.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 Future<void> showCallMicrophoneSheet(
   BuildContext context, {
   required CallSession session,
   required ColorScheme scheme,
 }) {
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,

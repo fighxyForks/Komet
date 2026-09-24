@@ -25,6 +25,8 @@ import '../../../core/config/app_frost.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
 
 enum _SearchMode { phone, id }
 
@@ -87,7 +89,7 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
 
   Future<void> _openSearchById() async {
     final cs = Theme.of(context).colorScheme;
-    await showModalBottomSheet<void>(
+    await showIosSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cs.surfaceContainerHigh,
@@ -371,7 +373,7 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
       if (!mounted) return;
       navigator.pop();
       navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (routeContext) => ChatInfoScreen(
             chatId: chatId,
             name:
@@ -432,7 +434,7 @@ class _SearchContactSheetState extends State<_SearchContactSheet> {
       if (!mounted) return;
       navigator.pop();
       navigator.push(
-        MaterialPageRoute(
+        iosPageRoute(context,
           builder: (routeContext) => ChatInfoScreen(
             chatId: chatId,
             name:

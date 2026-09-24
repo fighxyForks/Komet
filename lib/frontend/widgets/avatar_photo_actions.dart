@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import 'chat_menu_overlay.dart';
 import 'custom_notification.dart';
 import 'sheet_helpers.dart';
+import './glass/ios_sheet.dart';
 
 // #***! на телефоне аватарка едет в галерею, на десктопе в выбранную папку
 String avatarSaveLabel(BuildContext context) {
@@ -56,7 +57,7 @@ Future<void> saveAvatarPhoto(BuildContext context, String url) async {
 
 Future<bool> confirmAvatarDeletion(BuildContext context) async {
   final cs = Theme.of(context).colorScheme;
-  final confirmed = await showModalBottomSheet<bool>(
+  final confirmed = await showIosSheet<bool>(
     context: context,
     backgroundColor: cs.surfaceContainerHigh,
     shape: kSheetShape,

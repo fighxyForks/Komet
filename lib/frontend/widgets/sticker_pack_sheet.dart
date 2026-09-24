@@ -11,6 +11,7 @@ import 'small_spinner.dart';
 import 'lottie_image.dart';
 import 'sticker_peek.dart';
 import '../../core/config/app_shape.dart';
+import './glass/ios_sheet.dart';
 
 enum _PackAction { forward, copyLink }
 
@@ -20,7 +21,7 @@ Future<void> showStickerPackSheet(
   int? knownSetId,
 }) {
   assert(stickerId != null || knownSetId != null);
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

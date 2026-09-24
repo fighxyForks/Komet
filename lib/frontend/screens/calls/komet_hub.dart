@@ -8,13 +8,14 @@ import '../../../core/games/checkers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 Future<void> showKometHub(
   BuildContext context, {
   required CallSession session,
   required ColorScheme scheme,
 }) {
-  return showModalBottomSheet<void>(
+  return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,

@@ -20,6 +20,7 @@ import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 class ScheduledMessagesScreen extends StatefulWidget {
   final int chatId;
@@ -95,7 +96,7 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
     );
     final cs = Theme.of(context).colorScheme;
 
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showIosSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: cs.surfaceContainerHigh,

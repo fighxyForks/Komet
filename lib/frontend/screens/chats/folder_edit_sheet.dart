@@ -19,6 +19,7 @@ import '../../widgets/komet_avatar.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_sheet.dart';
 
 typedef _ChatType = ({int filter, IconData icon, String label});
 
@@ -49,7 +50,7 @@ Future<void> showFolderEditSheet(
   ChatFolder? folder,
 }) async {
   final cs = Theme.of(context).colorScheme;
-  await showModalBottomSheet<void>(
+  await showIosSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: cs.surfaceContainerHigh,

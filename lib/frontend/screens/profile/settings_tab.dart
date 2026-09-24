@@ -58,6 +58,8 @@ import 'spoof_screen.dart';
 import '../../widgets/media_playback_pill.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
 
 class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
@@ -441,13 +443,13 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     if (!ok || !context.mounted) return;
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CloudStorageScreen()),
+      iosPageRoute(context, builder: (_) => const CloudStorageScreen()),
     );
   }
 
   Future<void> _confirmLogout() async {
     final cs = Theme.of(context).colorScheme;
-    final confirmed = await showModalBottomSheet<bool>(
+    final confirmed = await showIosSheet<bool>(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
       shape: kSheetShape,
@@ -513,7 +515,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     } catch (_) {}
     if (navState != null) {
       await navState.pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        iosPageRoute(context, builder: (_) => const LoginScreen()),
         (route) => false,
       );
     }
@@ -592,7 +594,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(
+                                    iosPageRoute(context,
                                       builder: (context) =>
                                           AppDigitalIdNative.current.value ||
                                               !webViewSupported
@@ -608,7 +610,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
+                                  iosPageRoute(context,
                                     builder: (context) => WebAppScreen(
                                       title: 'Сферум',
                                       entryPoint: WebAppEntryPoint.settings,
@@ -625,7 +627,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(
+                                    iosPageRoute(context,
                                       builder: (context) => const InfoScreen(),
                                     ),
                                   );
@@ -655,7 +657,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) =>
                                     const NotificationsScreen(),
                               ),
@@ -668,7 +670,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) =>
                                     const MediaDevicesScreen(),
                               ),
@@ -685,7 +687,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           label: 'Прокси',
                           onTap: () {
                             final cs = Theme.of(context).colorScheme;
-                            showModalBottomSheet<void>(
+                            showIosSheet<void>(
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: cs.surfaceContainerHigh,
@@ -706,7 +708,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
+                                iosPageRoute(context,
                                   builder: (context) => const SpoofScreen(),
                                 ),
                               );
@@ -718,7 +720,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 settings: const RouteSettings(
                                   name: 'SecurityScreen',
                                 ),
@@ -733,7 +735,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) => const DevicesScreen(),
                               ),
                             );
@@ -781,7 +783,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                     onTap: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(
+                                        iosPageRoute(context,
                                           builder: (context) =>
                                               const DebugMenuScreen(),
                                         ),
@@ -824,7 +826,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) =>
                                     const KometSettingsScreen(),
                               ),
@@ -1050,7 +1052,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              iosPageRoute(context,
                                 builder: (context) => const EditProfileScreen(),
                               ),
                             );
@@ -1298,7 +1300,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       child: GestureDetector(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+          iosPageRoute(context, builder: (context) => const EditProfileScreen()),
         ),
         child: GlossyPill(
           color: cs.surfaceContainerHigh,

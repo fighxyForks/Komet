@@ -26,6 +26,8 @@ import '../../../core/security/app_lock.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_sheet.dart';
+import '../../widgets/glass/ios_route.dart';
 
 const bool _showFamilyProtection = false;
 
@@ -379,7 +381,7 @@ class _SecurityScreenState extends State<SecurityScreen>
       child: InkWell(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const PasscodeSettingsScreen()),
+          iosPageRoute(context, builder: (_) => const PasscodeSettingsScreen()),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
@@ -443,7 +445,7 @@ class _SecurityScreenState extends State<SecurityScreen>
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
+                iosPageRoute(context,
                   builder: (context) => const PasswordEntryScreen(),
                 ),
               );
@@ -715,7 +717,7 @@ class _SecurityScreenState extends State<SecurityScreen>
     required List<(String, String)> options,
     required void Function(String) onSelect,
   }) {
-    showModalBottomSheet(
+    showIosSheet(
       context: context,
       backgroundColor: cs.surface,
       shape: kSheetShape,
@@ -919,7 +921,7 @@ class _SecurityScreenState extends State<SecurityScreen>
   Future<void> _openBlacklist() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      iosPageRoute(context,
         builder: (_) => BlacklistScreen(initialContacts: _blockedContacts),
       ),
     );
