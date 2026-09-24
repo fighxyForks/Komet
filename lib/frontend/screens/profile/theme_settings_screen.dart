@@ -13,6 +13,8 @@ import '../../../core/config/app_wallpaper_tint.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/storage/chat_wallpaper_store.dart';
 import '../../../core/utils/haptics.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../motion/ios_haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../widgets/glossy_pill.dart';
@@ -91,7 +93,11 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
   }
 
   Future<void> _enableCustom() async {
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     if (_wallpaper == null && _accountId != 0) {
       final wallpaper = await ChatWallpaperStore.instance.setGradient(
         _accountId,
@@ -183,7 +189,11 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
                       selected: !customSelected && current == item.mode,
                       onTap: (position) {
                         if (!customSelected && current == item.mode) return;
-                        Haptics.selection();
+                        if (IosGlass.of(context)) {
+                          IosHaptics.selectionChange();
+                        } else {
+                          Haptics.selection();
+                        }
                         if (customSelected) {
                           unawaited(AppWallpaperTint.save(false));
                         }
@@ -322,7 +332,9 @@ class _AmoledCardState extends State<_AmoledCard> {
                 return GlassSwitch(
                   value: value,
                   onChanged: (v) {
-                    Haptics.selection();
+                    if (!IosGlass.of(context)) {
+                      Haptics.selection();
+                    }
                     KometApp.stateOf(
                       context,
                     )?.applyAmoledWithReveal(v, _lastPointerPosition);
@@ -471,7 +483,11 @@ class _TimeRow extends StatelessWidget {
   }
 
   Future<void> _pick(BuildContext context) async {
-    Haptics.tap();
+    if (IosGlass.of(context)) {
+      IosHaptics.itemActivate();
+    } else {
+      Haptics.tap();
+    }
     final picked = await showTimePicker(
       context: context,
       initialTime: time,

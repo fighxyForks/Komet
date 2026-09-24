@@ -9,6 +9,7 @@ import '../../../backend/modules/account.dart'
 import '../../../core/storage/app_database.dart';
 import '../../../core/config/app_colors.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../../core/utils/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/confirm_dialog.dart';
@@ -107,7 +108,11 @@ class _SecurityScreenState extends State<SecurityScreen>
     if (_isSaving) return;
     if (value && !await _confirmSafeMode()) return;
     if (!mounted) return;
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     setState(() => _isSaving = true);
     try {
       final newConfig = await accountModule.setSafeMode(value);

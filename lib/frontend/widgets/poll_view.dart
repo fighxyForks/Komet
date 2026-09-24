@@ -4,6 +4,8 @@ import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../main.dart';
 import '../../core/utils/format.dart';
 import '../../core/utils/haptics.dart';
+import 'glass/ios_glass.dart';
+import '../motion/ios_haptics.dart';
 import '../../models/poll.dart';
 import 'custom_notification.dart';
 import 'small_spinner.dart';
@@ -79,7 +81,11 @@ class _PollViewState extends State<PollView>
 
   Future<void> _vote(List<int> answersIds) async {
     if (_voting || answersIds.isEmpty) return;
-    Haptics.tap();
+    if (IosGlass.of(context)) {
+      IosHaptics.vote();
+    } else {
+      Haptics.tap();
+    }
     setState(() => _voting = true);
     final ok = await pollsModule.vote(
       widget.chatId,

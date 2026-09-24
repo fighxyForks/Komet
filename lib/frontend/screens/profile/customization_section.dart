@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/settings_card.dart';
 import 'app_icon_screen.dart';
@@ -71,12 +72,20 @@ class _CustomizationSectionState extends State<CustomizationSection> {
   ];
 
   void _toggle() {
-    Haptics.tap();
+    if (IosGlass.of(context)) {
+      IosHaptics.itemActivate();
+    } else {
+      Haptics.tap();
+    }
     setState(() => _expanded = !_expanded);
   }
 
   void _open(_CustomizationCategory category) {
-    Haptics.tap();
+    if (IosGlass.of(context)) {
+      IosHaptics.itemActivate();
+    } else {
+      Haptics.tap();
+    }
     Navigator.push(context, iosPageRoute(context, builder: category.builder));
   }
 

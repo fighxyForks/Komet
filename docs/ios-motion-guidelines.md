@@ -108,6 +108,8 @@ Single helper: `IosMotion.reduceMotionOf(context)` →
 | Overlays / menus | Fade only, no scale; instant if needed |
 | Swipe-to-reply | No rubber-band; snap settle without spring |
 | Page step (keyboard) | `jumpToPage` |
+| `iosPageRoute` | Short cross-fade (`IosMotion.pageCrossFade`, 200 ms); no parallax (`delegatedTransition` is identity). Edge back-swipe still drives the route controller (opacity follows the drag). |
+| `showIosSheet` | Same short duration via `sheetAnimationStyle` (Material sheet slide kept, no custom cross-fade). |
 
 Haptics stay enabled under Reduce Motion (animations are cut, not feedback).
 
@@ -122,11 +124,17 @@ Use under `IosGlass` paths instead of ad-hoc `Haptics` / `HapticFeedback`:
 | `dismissThreshold` | medium (first cross of distance threshold) |
 | `menuOpen` / `longPress` | medium |
 | `toggle` | selection |
+| `vote` | light |
+| `warning` | medium |
 | `itemActivate` | light |
 | `destructiveActivate` | medium |
 | `success` / `error` | composite patterns |
 
-Material / Android call sites keep using `Haptics` directly.
+Under `IosGlass`, settings / glass controls / polls / NFC (and other wired iOS paths) call `IosHaptics`. Material / Android call sites keep using `Haptics` or raw `HapticFeedback` exactly as before. Chat send / media controllers and similar shared paths may still call `Haptics` directly until wired.
+
+## Page routes
+
+`iosPageRoute` returns `IosCupertinoPageRoute` in iOS mode. When `IosMotion.reduceMotionOf(context)` is true at push time, the route uses `pageCrossFade` and a fade transition (no horizontal slide / parallax). When false, behavior matches stock `CupertinoPageRoute`. Material mode still returns `MaterialPageRoute` unchanged.
 
 ## Testing checklist
 
@@ -137,6 +145,6 @@ Material / Android call sites keep using `Haptics` directly.
 - [ ] Swipe-to-reply: incoming vs outgoing thresholds; vertical scroll not hijacked
 - [ ] Hero: spring open/close; dismiss velocity feeds reverse spring
 - [ ] Overlays: spring appear; reverse mid-flight keeps velocity; Reduce Motion = fade only
-- [ ] Reduce Motion: hero cross-fade, no zoom flights, menus fade-only, reply snaps
+- [ ] Reduce Motion: hero cross-fade, no zoom flights, menus fade-only, reply snaps, page routes cross-fade
 - [ ] `flutter analyze lib test` and `flutter test` clean
 - [ ] Glass budget still respected on touched screens

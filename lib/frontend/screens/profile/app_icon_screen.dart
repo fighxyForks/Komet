@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/config/app_icon.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
@@ -34,7 +35,11 @@ class _AppIconScreenState extends State<AppIconScreen> {
       return;
     }
     if (AppIconConfig.current.value == icon) return;
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     try {
       await AppIconConfig.apply(icon);
       if (!mounted) return;

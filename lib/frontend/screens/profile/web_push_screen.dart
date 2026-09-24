@@ -7,6 +7,7 @@ import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../../backend/api.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../../core/utils/link_opener.dart';
 import '../../../core/webpush/max_web_socket.dart';
 import '../../../core/webpush/web_push_service.dart';
@@ -271,7 +272,11 @@ class _WebPushScreenState extends State<WebPushScreen> {
       ],
       const SizedBox(height: 20),
       _primary(l10n.webPushOpenSite, () {
-        Haptics.tap();
+        if (IosGlass.of(context)) {
+          IosHaptics.itemActivate();
+        } else {
+          Haptics.tap();
+        }
         openExternalUrl(context, kWebPushSiteUrl);
       }),
       const SizedBox(height: 24),

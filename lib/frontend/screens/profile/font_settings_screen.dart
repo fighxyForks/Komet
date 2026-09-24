@@ -14,6 +14,7 @@ import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/config/custom_font_service.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../widgets/custom_notification.dart';
@@ -46,7 +47,11 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
   void _selectFont(String id) {
     final app = KometApp.stateOf(context);
     if (app == null || app.fontId == id) return;
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     app.applyAppFont(id);
   }
 
@@ -83,7 +88,11 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
     await _reloadCustom();
     if (!mounted) return;
     KometApp.stateOf(context)?.applyAppFont(AppFonts.customId(family));
-    Haptics.success();
+    if (IosGlass.of(context)) {
+      IosHaptics.success();
+    } else {
+      Haptics.success();
+    }
     showCustomNotification(
       context,
       AppLocalizations.of(context)!.fontSettingsFontAdded(family),
@@ -256,11 +265,19 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
                   scale: scale,
                   onChanged: (v) => app.applyFontScale(v, persist: false),
                   onChangeEnd: (v) {
-                    Haptics.selection();
+                    if (IosGlass.of(context)) {
+                      IosHaptics.selectionChange();
+                    } else {
+                      Haptics.selection();
+                    }
                     app.applyFontScale(v);
                   },
                   onReset: () {
-                    Haptics.selection();
+                    if (IosGlass.of(context)) {
+                      IosHaptics.selectionChange();
+                    } else {
+                      Haptics.selection();
+                    }
                     app.applyFontScale(AppFonts.defaultScale);
                   },
                 ),

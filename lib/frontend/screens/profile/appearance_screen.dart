@@ -19,6 +19,7 @@ import '../../../core/config/app_spectrum_background.dart';
 import '../../../core/utils/bubble_radius.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../widgets/glass/glass_controls.dart';
@@ -71,7 +72,11 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   }
 
   void _resetToSystem() {
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     _debounce.cancel();
     _isSystem.value = true;
     _color.value = _fallback;
@@ -79,17 +84,29 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   }
 
   void _toggleAccentExpanded() {
-    Haptics.tap();
+    if (IosGlass.of(context)) {
+      IosHaptics.itemActivate();
+    } else {
+      Haptics.tap();
+    }
     setState(() => _accentExpanded = !_accentExpanded);
   }
 
   void _onStyleChanged(BubbleStyle style) {
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     AppBubbleShape.save(style);
   }
 
   void _onBehaviorChanged(BubbleBehavior behavior) {
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     AppBubbleBehavior.save(behavior);
   }
 
@@ -246,7 +263,7 @@ class IosGlassToggleRow extends StatelessWidget {
       builder: (context, enabled, _) => MergeSemantics(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => _toggle(!enabled),
+          onTap: () => _toggle(context, !enabled),
           child: Row(
             children: [
               Expanded(
@@ -277,7 +294,7 @@ class IosGlassToggleRow extends StatelessWidget {
               GlassSwitch(
                 key: const ValueKey('ios-glass-switch'),
                 value: enabled,
-                onChanged: _toggle,
+                onChanged: (v) => _toggle(context, v),
               ),
             ],
           ),
@@ -286,8 +303,10 @@ class IosGlassToggleRow extends StatelessWidget {
     );
   }
 
-  void _toggle(bool value) {
-    Haptics.selection();
+  void _toggle(BuildContext context, bool value) {
+    if (!IosGlass.of(context)) {
+      Haptics.selection();
+    }
     unawaited(GlassSuppression.during(() => AppIosGlass.save(value)));
   }
 }
@@ -560,7 +579,9 @@ class _GradientToggleCard extends StatelessWidget {
             builder: (context, value, _) => GlassSwitch(
               value: value,
               onChanged: (v) {
-                Haptics.selection();
+                if (!IosGlass.of(context)) {
+                  Haptics.selection();
+                }
                 AppPillGradient.save(v);
               },
             ),
@@ -609,7 +630,9 @@ class _SpectrumToggleCard extends StatelessWidget {
             builder: (context, value, _) => GlassSwitch(
               value: value,
               onChanged: (v) {
-                Haptics.selection();
+                if (!IosGlass.of(context)) {
+                  Haptics.selection();
+                }
                 AppSpectrumBackground.save(v);
               },
             ),

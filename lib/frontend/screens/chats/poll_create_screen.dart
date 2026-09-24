@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../motion/ios_haptics.dart';
+import '../../widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../widgets/custom_notification.dart';
@@ -263,7 +265,11 @@ class _PollCreateSheetState extends State<_PollCreateSheet> {
       title: Text(label, style: TextStyle(color: cs.onSurface, fontSize: 15)),
       value: value,
       onChanged: (v) {
-        HapticFeedback.selectionClick();
+        if (IosGlass.of(context)) {
+          IosHaptics.toggle();
+        } else {
+          HapticFeedback.selectionClick();
+        }
         onChanged(v);
       },
     );

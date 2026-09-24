@@ -9,7 +9,11 @@ void main() {
     IosHaptics.menuOpen();
     IosHaptics.longPress();
     IosHaptics.toggle();
+    IosHaptics.vote();
+    IosHaptics.warning();
     IosHaptics.itemActivate();
     IosHaptics.destructiveActivate();
+    IosHaptics.success();
+    IosHaptics.error();
   });
 }

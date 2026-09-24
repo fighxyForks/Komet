@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/config/app_frost.dart';
 import '../sheet_helpers.dart';
+import '../../motion/ios_motion.dart';
 import 'ios_glass.dart';
 import 'ios_metrics.dart';
 import 'ios_palette.dart';
@@ -85,6 +86,16 @@ Future<T?> showIosSheet<T>({
   final iosBg = backgroundColor ?? IosPalette.grouped(cs);
   final iosBarrier = barrierColor ?? AppFrost.scrim();
 
+  final reduce = IosMotion.reduceMotionOf(context);
+  final AnimationStyle? reduceStyle = reduce
+      ? AnimationStyle(
+          duration: IosMotion.pageCrossFade,
+          reverseDuration: IosMotion.pageCrossFade,
+          curve: Curves.linear,
+          reverseCurve: Curves.linear,
+        )
+      : null;
+
   return GlassSuppression.during(
     () => showModalBottomSheet<T>(
       context: context,
@@ -102,6 +113,7 @@ Future<T?> showIosSheet<T>({
       constraints: constraints ?? _detentConstraints(context, effectiveDetent),
       elevation: elevation ?? 0,
       transitionAnimationController: transitionAnimationController,
+      sheetAnimationStyle: transitionAnimationController == null ? reduceStyle : null,
       routeSettings: routeSettings,
       anchorPoint: anchorPoint,
       showDragHandle: showDragHandle,

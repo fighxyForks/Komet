@@ -12,6 +12,7 @@ import '../../../core/config/app_camera.dart';
 import '../../../core/config/app_microphone.dart';
 import '../../../core/config/app_video_note_quality.dart';
 import '../../../core/utils/haptics.dart';
+import '../../motion/ios_haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
@@ -53,12 +54,20 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
   }
 
   void _pickMicrophone(String id) {
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     unawaited(AppMicrophone.save(id));
   }
 
   void _pickCamera(String id) {
-    Haptics.selection();
+    if (IosGlass.of(context)) {
+      IosHaptics.selectionChange();
+    } else {
+      Haptics.selection();
+    }
     unawaited(AppCamera.save(id));
   }
 
