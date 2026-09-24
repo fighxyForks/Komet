@@ -4,6 +4,7 @@ import 'package:native_liquid_glass/native_liquid_glass.dart';
 
 import '../../../core/config/app_ios_glass.dart';
 import '../../../core/config/app_shape.dart';
+import '../../../core/utils/haptics.dart';
 import 'ios_glass.dart';
 
 /// Action for [showIosAlert].
@@ -41,6 +42,9 @@ Future<T?> showIosAlert<T>({
   bool barrierDismissible = true,
 }) async {
   final ios = IosGlass.of(context);
+  if (actions.any((a) => a.isDestructive)) {
+    Haptics.medium();
+  }
 
   if (!ios) {
     return _showMaterialAlert<T>(

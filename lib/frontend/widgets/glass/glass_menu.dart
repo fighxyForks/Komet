@@ -183,7 +183,12 @@ class _GlassMenuLayerState extends State<GlassMenuLayer>
   VoidCallback get onOverlayDismiss => widget.onDismiss;
 
   void _onItemTap(ChatMenuItem item) {
-    Haptics.tap();
+    if (item.isSectionHeader || item.onTap == null) return;
+    if (item.destructive) {
+      Haptics.medium();
+    } else {
+      Haptics.tap();
+    }
     closeOverlay().then((_) => item.onTap?.call());
   }
 
@@ -309,23 +314,43 @@ class GlassMenuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final ios = IosGlass.of(context);
+    if (item.isSectionHeader) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+        child: Text(
+          item.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: ios ? IosPalette.secondaryLabel(cs) : cs.onSurfaceVariant,
+            fontSize: ios ? IosTypography.footnote : 12,
+            fontWeight: ios ? IosTypography.semibold : FontWeight.w600,
+            letterSpacing: ios
+                ? IosTypography.letterSpacing(IosTypography.footnote)
+                : null,
+          ),
+        ),
+      );
+    }
     final fg = item.destructive
         ? (ios ? const Color(0xFFFF3B30) : cs.error)
         : (ios ? IosPalette.label(cs) : cs.onSurface);
     return IosTappable(
-      onTap: onTap,
+      onTap: item.enabled ? onTap : null,
       child: SizedBox(
         height: GlassMenuStyle.rowHeight,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              Icon(
-                item.icon,
-                size: GlassMenuStyle.iconSize,
-                color: fg,
-              ),
-              const SizedBox(width: 12),
+              if (item.icon != null) ...[
+                Icon(
+                  item.icon,
+                  size: GlassMenuStyle.iconSize,
+                  color: fg,
+                ),
+                const SizedBox(width: 12),
+              ],
               Expanded(
                 child: Text(
                   item.label,

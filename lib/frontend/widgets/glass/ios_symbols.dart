@@ -427,4 +427,138 @@ abstract final class IosSymbols {
     cupertino: CupertinoIcons.chevron_left,
   );
 
+static IconData lock(BuildContext c) => resolve(
+    c,
+    material: Symbols.lock,
+    cupertino: CupertinoIcons.lock_fill,
+  );
+
+static IconData lockOpen(BuildContext c) => resolve(
+    c,
+    material: Symbols.lock_open,
+    cupertino: CupertinoIcons.lock_open,
+  );
+
+static IconData image(BuildContext c) => resolve(
+    c,
+    material: Symbols.image,
+    cupertino: CupertinoIcons.photo,
+  );
+
+static IconData movie(BuildContext c) => resolve(
+    c,
+    material: Symbols.movie,
+    cupertino: CupertinoIcons.film,
+  );
+
+static IconData warning(BuildContext c) => resolve(
+    c,
+    material: Symbols.warning,
+    cupertino: CupertinoIcons.exclamationmark_triangle,
+  );
+
+static IconData notifications(BuildContext c) => resolve(
+    c,
+    material: Symbols.notifications,
+    cupertino: CupertinoIcons.bell,
+  );
+
+static IconData chatBubble(BuildContext c) => resolve(
+    c,
+    material: Symbols.chat_bubble,
+    cupertino: CupertinoIcons.chat_bubble,
+  );
+
+static IconData checkCircle(BuildContext c) => resolve(
+    c,
+    material: Symbols.check_circle,
+    cupertino: CupertinoIcons.check_mark_circled_solid,
+  );
+
+static IconData doneAll(BuildContext c) => resolve(
+    c,
+    material: Symbols.done_all,
+    cupertino: CupertinoIcons.checkmark_alt,
+  );
+
+static IconData block(BuildContext c) => resolve(
+    c,
+    material: Symbols.block,
+    cupertino: CupertinoIcons.xmark_circle,
+  );
+
+static IconData palette(BuildContext c) => resolve(
+    c,
+    material: Symbols.palette,
+    cupertino: CupertinoIcons.paintbrush,
+  );
+
+static IconData camera(BuildContext c) => resolve(
+    c,
+    material: Symbols.photo_camera,
+    cupertino: CupertinoIcons.camera,
+  );
+
+static IconData cameraOff(BuildContext c) => resolve(
+    c,
+    material: Symbols.no_photography,
+    cupertino: CupertinoIcons.camera,
+  );
+
+static IconData archive(BuildContext c) => resolve(
+    c,
+    material: Symbols.archive,
+    cupertino: CupertinoIcons.archivebox,
+  );
+
+static IconData keep(BuildContext c) => resolve(
+    c,
+    material: Symbols.keep,
+    cupertino: CupertinoIcons.pin,
+  );
+
+static IconData brokenImage(BuildContext c) => resolve(
+    c,
+    material: Symbols.broken_image,
+    cupertino: CupertinoIcons.photo,
+  );
+
+static IconData settings(BuildContext c) => settingsGear(c);
+
+static IconData call(BuildContext c) => phone(c);
+
+static IconData contentCopy(BuildContext c) => copy(c);
+
+static IconData description(BuildContext c) => doc(c);
+
+static IconData moreVert(BuildContext c) => resolve(
+    c,
+    material: Symbols.more_vert,
+    cupertino: CupertinoIcons.ellipsis_vertical,
+  );
+
+static IconData visibilityOff(BuildContext c) => resolve(
+    c,
+    material: Symbols.visibility_off,
+    cupertino: CupertinoIcons.eye_slash,
+  );
+
+  static IconData folder(BuildContext c) => resolve(
+    c,
+    material: Symbols.folder,
+    cupertino: CupertinoIcons.folder,
+  );
+
+  static IconData switchAccount(BuildContext c) => resolve(
+    c,
+    material: Symbols.switch_account,
+    cupertino: CupertinoIcons.person_2,
+  );
+
+  static IconData downloadOffline(BuildContext c) => resolve(
+    c,
+    material: Symbols.download_for_offline,
+    cupertino: CupertinoIcons.arrow_down_circle,
+  );
+
 }

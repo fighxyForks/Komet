@@ -1746,17 +1746,15 @@ class _VideoSettingsButton extends StatelessWidget {
           onPressed: () {
             final box = btnContext.findRenderObject() as RenderBox?;
             if (box == null || !box.hasSize) return;
-            final blank = IosSymbols.settingsGear(btnContext);
             final check = IosSymbols.check(btnContext);
             final items = <ChatMenuItem>[
               ChatMenuItem(
-                icon: blank,
                 label: l10n.videoViewerSpeed,
-                enabled: false,
+                isSectionHeader: true,
               ),
               for (final value in speeds)
                 ChatMenuItem(
-                  icon: value == speed ? check : blank,
+                  icon: value == speed ? check : null,
                   label: value == 1
                       ? '1.0x'
                       : '${value.toStringAsFixed(value % 1 == 0 ? 0 : 1)}x',
@@ -1765,14 +1763,13 @@ class _VideoSettingsButton extends StatelessWidget {
                 ),
               if (qualities.length > 1)
                 ChatMenuItem(
-                  icon: blank,
                   label: l10n.videoViewerQuality,
-                  enabled: false,
+                  isSectionHeader: true,
                 ),
               if (qualities.length > 1)
                 for (final value in qualities)
                   ChatMenuItem(
-                    icon: value == quality ? check : blank,
+                    icon: value == quality ? check : null,
                     label: value,
                     onTap: () => onQualityChanged(value),
                   ),

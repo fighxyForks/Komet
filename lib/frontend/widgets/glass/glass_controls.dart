@@ -317,3 +317,87 @@ class IosSlider extends StatelessWidget {
     );
   }
 }
+
+/// Adaptive progress indicator: Cupertino in iOS mode, Material otherwise.
+class IosActivityIndicator extends StatelessWidget {
+  final double? radius;
+  final Color? color;
+  final double strokeWidth;
+
+  const IosActivityIndicator({
+    super.key,
+    this.radius,
+    this.color,
+    this.strokeWidth = 2,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (IosGlass.of(context)) {
+      return CupertinoActivityIndicator(
+        radius: radius ?? 10,
+        color: color,
+      );
+    }
+    final size = (radius ?? 10) * 2;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CircularProgressIndicator(
+        strokeWidth: strokeWidth,
+        color: color,
+      ),
+    );
+  }
+}
+
+/// Adaptive checkbox: Cupertino-style check in iOS mode.
+class IosCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool?>? onChanged;
+
+  const IosCheckbox({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!IosGlass.of(context)) {
+      return Checkbox(value: value, onChanged: onChanged);
+    }
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: IosMetrics.minHitTarget,
+      height: IosMetrics.minHitTarget,
+      child: Center(
+        child: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: onChanged == null
+              ? null
+              : () {
+                  Haptics.selection();
+                  onChanged!(!value);
+                },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: value ? cs.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: value ? cs.primary : IosPalette.secondaryLabel(cs),
+                width: 1.5,
+              ),
+            ),
+            child: value
+                ? const Icon(CupertinoIcons.check_mark, size: 14, color: Colors.white)
+                : null,
+          ),
+        ),
+      ),
+    );
+  }
+}
