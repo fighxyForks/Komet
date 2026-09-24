@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/utils/haptics.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_typography.dart';
 
 class PasscodeDots extends StatefulWidget {
@@ -182,9 +183,12 @@ class PasscodeKeypad extends StatelessWidget {
                       enabled: true,
                       onTap: onBiometric!,
                       child: Icon(
-                        biometricIcon == Symbols.fingerprint
-                            ? Symbols.fingerprint
-                            : biometricIcon,
+                        IosSymbols.adapt(
+                          context,
+                          biometricIcon == Symbols.fingerprint
+                              ? Symbols.fingerprint
+                              : biometricIcon,
+                        ),
                         size: 32 * scale,
                         color: cs.primary,
                       ),
@@ -195,7 +199,7 @@ class PasscodeKeypad extends StatelessWidget {
                 enabled: enabled && canErase,
                 onTap: onBackspace,
                 child: Icon(
-                  Symbols.backspace,
+                  IosSymbols.backspace(context),
                   size: 28 * scale,
                   color: cs.onSurfaceVariant,
                 ),

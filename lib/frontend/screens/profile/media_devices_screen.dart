@@ -17,6 +17,7 @@ import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_typography.dart';
 
 class MediaDevicesScreen extends StatefulWidget {
@@ -289,7 +290,7 @@ class _ChoiceTile extends StatelessWidget {
                 transitionBuilder: (child, animation) =>
                     ScaleTransition(scale: animation, child: child),
                 child: selected
-                    ? Icon(Symbols.check_circle,
+                    ? Icon(IosSymbols.checkCircle(context),
                         key: const ValueKey('on'),
                         color: cs.primary,
                         fill: 1,

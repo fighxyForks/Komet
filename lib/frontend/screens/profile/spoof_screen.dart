@@ -29,6 +29,7 @@ import '../../widgets/small_spinner.dart';
 import '../auth/login_screen.dart';
 import '../../widgets/glass/ios_route.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_typography.dart';
 
 enum SpoofingMethod { partial, full }
@@ -712,7 +713,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
             decoration: _inputDecoration(l10n.spoofFieldDeviceId, Symbols.tag)
                 .copyWith(
                   suffixIcon: IconButton(
-                    icon: Icon(Symbols.autorenew),
+                    icon: Icon(IosSymbols.autorenew(context)),
                     tooltip: l10n.spoofRegenerateIdTooltip,
                     onPressed: _generateNewDeviceId,
                   ),
@@ -793,7 +794,7 @@ class _SpoofScreenState extends State<SpoofScreen> {
           return ChoiceChip(
             label: Text(opt.label),
             avatar: isSelected
-                ? Icon(Symbols.check, size: 18, color: cs.onSecondaryContainer)
+                ? Icon(IosSymbols.check(context), size: 18, color: cs.onSecondaryContainer)
                 : (opt.icon != null
                       ? Icon(opt.icon, size: 18, color: cs.onSurfaceVariant)
                       : null),

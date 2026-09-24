@@ -983,7 +983,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: Icon(Symbols.qr_code_2,
+                      icon: Icon(IosSymbols.qrCode(context),
                         color: iconColor,
                         size: 26,
                         weight: 400,
@@ -1017,7 +1017,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                               : _openAvatarMenu,
                         ),
                         IconButton(
-                          icon: Icon(Symbols.edit,
+                          icon: Icon(IosSymbols.edit(context),
                             color: iconColor,
                             size: 22,
                             weight: 400,
@@ -1345,7 +1345,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               child: Padding(
                 padding: const EdgeInsets.all(6),
                 child: Icon(
-                  alignLeft ? Symbols.chevron_left : Symbols.chevron_right,
+                  alignLeft ? IosSymbols.chevronLeft(context) : IosSymbols.chevronRight(context),
                   color: Colors.white,
                   size: 24,
                 ),
@@ -1391,7 +1391,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Symbols.check_circle,
+                    Icon(IosSymbols.checkCircle(context),
                       fill: 1,
                       size: 15,
                       color: online ? kSuccessGreen : cs.mutedText,

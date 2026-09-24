@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'glass/ios_symbols.dart';
+
 class AnimatedSlashIcon extends StatefulWidget {
   const AnimatedSlashIcon({
     super.key,
@@ -66,8 +68,8 @@ class _AnimatedSlashIconState extends State<AnimatedSlashIcon>
     super.dispose();
   }
 
-  Icon _glyph(IconData data) => Icon(
-    data,
+  Icon _glyph(BuildContext context, IconData data) => Icon(
+    IosSymbols.adapt(context, data),
     size: widget.size,
     color: widget.color,
     fill: widget.fill,
@@ -83,18 +85,18 @@ class _AnimatedSlashIconState extends State<AnimatedSlashIcon>
       animation: _wipe,
       builder: (context, _) {
         final progress = _wipe.value;
-        if (progress <= 0.001) return _glyph(widget.icon);
-        if (progress >= 0.999) return _glyph(widget.slashedIcon);
+        if (progress <= 0.001) return _glyph(context, widget.icon);
+        if (progress >= 0.999) return _glyph(context, widget.slashedIcon);
         return Stack(
           alignment: Alignment.center,
           children: [
             ClipPath(
               clipper: _SlashWipeClipper(progress, slashedSide: false),
-              child: _glyph(widget.icon),
+              child: _glyph(context, widget.icon),
             ),
             ClipPath(
               clipper: _SlashWipeClipper(progress, slashedSide: true),
-              child: _glyph(widget.slashedIcon),
+              child: _glyph(context, widget.slashedIcon),
             ),
           ],
         );
