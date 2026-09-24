@@ -49,9 +49,39 @@ abstract final class IosMotion {
   );
 
   static const Duration dimIn = Duration(milliseconds: 150);
+  static const Duration dimOut = Duration(milliseconds: 100);
   static const Duration chrome = Duration(milliseconds: 200);
-  static const Duration heroOpen = Duration(milliseconds: 320);
-  static const Duration heroClose = Duration(milliseconds: 280);
+  static const Duration heroOpen = Duration(milliseconds: 340);
+  static const Duration heroClose = Duration(milliseconds: 300);
+  static const Duration flyOff = Duration(milliseconds: 200);
+
+  /// Soft max scale for media zoom (pinch / double-tap target band).
+  static const double zoomSoftMax = 3.0;
+
+  /// Hard max during pinch; rubber-bands back to [zoomSoftMax] on release.
+  static const double zoomHardMax = 3.6;
+
+  /// Double-tap zoom factor when currently at fit.
+  static const double doubleTapZoomScale = 2.75;
+
+  /// Edge inset where double-tap is ignored (chrome-only single tap).
+  static const double doubleTapEdgeInset = 44;
+
+  /// Deferred single-tap window so a second tap can claim double-tap zoom
+  /// without waiting for Flutter's full double-tap timeout on a shared
+  /// GestureDetector. Keep short so chrome toggle stays snappy.
+  static const Duration singleTapDelay = Duration(milliseconds: 200);
+
+  /// Visual gap between gallery pages (logical pixels).
+  static const double galleryPageGap = 20;
+
+  /// Swipe-to-reply trigger distances (incoming / outgoing).
+  static const double replyTriggerIncoming = 48;
+  static const double replyTriggerOutgoing = 60;
+
+  /// Visual drag cap for swipe-to-reply (before rubber-band).
+  static const double replyBandingStart = 60;
+  static const double replyMaxVisual = 120;
 
   /// Commit dismiss when |offset| exceeds height / this divisor.
   static const double dismissDistanceDivisor = 12;

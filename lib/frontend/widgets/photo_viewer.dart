@@ -28,6 +28,8 @@ import '../../main.dart';
 import '../../models/attachment.dart';
 import 'attachment/photo_hero.dart';
 import '../motion/gallery_dismiss.dart';
+import '../motion/ios_motion.dart';
+import '../motion/zoom_transform.dart';
 import 'animated_slash_icon.dart';
 import 'chat_menu_overlay.dart';
 import 'custom_notification.dart';
@@ -191,10 +193,16 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
   @visibleForTesting
   GalleryDismissController get debugDismissController => _dismiss;
 
+  late final AnimationController _zoomAnim;
+  Timer? _singleTapTimer;
+  Offset? _tapLocal;
+  DateTime? _lastTapAt;
+
   @override
   void initState() {
     super.initState();
     _dismiss = GalleryDismissController(vsync: this);
+    _zoomAnim = AnimationController.unbounded(vsync: this);
     _dismiss.addListener(_onDismissChanged);
     _heroTransform.addListener(_syncHero);
     _heroTransform.addListener(_syncZoom);
@@ -261,8 +269,10 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
 
   @override
   void dispose() {
+    _singleTapTimer?.cancel();
     _dismiss.removeListener(_onDismissChanged);
     _dismiss.dispose();
+    _zoomAnim.dispose();
     _controller.dispose();
     _heroTransform.dispose();
     for (final transform in _pageTransforms.values) {
@@ -786,6 +796,104 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     action();
   }
 
+  void _onPageTapUp(TapUpDetails details) {
+    final now = DateTime.now();
+    final pos = details.localPosition;
+    final lastAt = _lastTapAt;
+    final lastPos = _tapLocal;
+    if (lastAt != null &&
+        lastPos != null &&
+        now.difference(lastAt) <= IosMotion.singleTapDelay &&
+        (pos - lastPos).distance <= 48) {
+      _singleTapTimer?.cancel();
+      _lastTapAt = null;
+      _tapLocal = null;
+      _handleDoubleTapZoom(pos);
+      return;
+    }
+    _lastTapAt = now;
+    _tapLocal = pos;
+    _singleTapTimer?.cancel();
+    _singleTapTimer = Timer(IosMotion.singleTapDelay, () {
+      _lastTapAt = null;
+      _tapLocal = null;
+      if (mounted) _toggleChrome();
+    });
+  }
+
+  void _handleDoubleTapZoom(Offset focalViewport) {
+    final size = MediaQuery.sizeOf(context);
+    final inset = IosMotion.doubleTapEdgeInset;
+    if (focalViewport.dx < inset ||
+        focalViewport.dy < inset ||
+        focalViewport.dx > size.width - inset ||
+        focalViewport.dy > size.height - inset) {
+      _toggleChrome();
+      return;
+    }
+    final transform = _transformFor(_current.id);
+    final currentScale = transform.value.getMaxScaleOnAxis();
+    final targetScale = currentScale > 1.05
+        ? 1.0
+        : IosMotion.doubleTapZoomScale;
+    final target = targetScale <= 1.01
+        ? Matrix4.identity()
+        : matrixForZoomAt(
+            current: transform.value,
+            focalViewport: focalViewport,
+            targetScale: targetScale,
+          );
+    animateMatrixSpring(
+      controller: _zoomAnim,
+      transform: transform,
+      target: target,
+      spring: IosMotion.standard,
+    );
+  }
+
+  void _onZoomInteractionEnd(ScaleEndDetails details) {
+    final transform = _transformFor(_current.id);
+    final scale = transform.value.getMaxScaleOnAxis();
+    final soft = IosMotion.zoomSoftMax;
+    double targetScale = scale;
+    if (scale < 1.01) {
+      targetScale = 1.0;
+    } else if (scale > soft) {
+      targetScale = soft;
+    }
+    final viewport = MediaQuery.sizeOf(context);
+    Matrix4 target;
+    if (targetScale <= 1.01) {
+      target = Matrix4.identity();
+    } else if ((targetScale - scale).abs() > 0.01) {
+      final focal = Offset(viewport.width / 2, viewport.height / 2);
+      target = matrixForZoomAt(
+        current: transform.value,
+        focalViewport: focal,
+        targetScale: targetScale,
+      );
+    } else {
+      target = transform.value.clone();
+    }
+    target = clampPanToBounds(matrix: target, viewport: viewport);
+    final sameScale =
+        (target.getMaxScaleOnAxis() - transform.value.getMaxScaleOnAxis())
+            .abs() <
+        0.01;
+    final sameTx =
+        (target.storage[12] - transform.value.storage[12]).abs() < 0.5;
+    final sameTy =
+        (target.storage[13] - transform.value.storage[13]).abs() < 0.5;
+    if (!(sameScale && sameTx && sameTy)) {
+      animateMatrixSpring(
+        controller: _zoomAnim,
+        transform: transform,
+        target: target,
+        spring: IosMotion.dismissSnap,
+      );
+    }
+  }
+
   void _onDismissDragEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
     if (_dismiss.onDragEnd(velocity)) {
@@ -1028,12 +1136,17 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     final isHero = widget.hero != null && item.id == _heroId;
     final page = GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: _toggleChrome,
+      onTapUp: _onPageTapUp,
       child: InteractiveViewer(
-        minScale: 1,
-        maxScale: 5,
+        minScale: 0.8,
+        maxScale: IosMotion.zoomHardMax,
         panEnabled: _zoomed,
         transformationController: _transformFor(item.id),
+        onInteractionStart: (_) {
+          _singleTapTimer?.cancel();
+          _zoomAnim.stop();
+        },
+        onInteractionEnd: _onZoomInteractionEnd,
         child: Center(
           child: RotatedBox(
             quarterTurns: _quarterTurns[item.id] ?? 0,
