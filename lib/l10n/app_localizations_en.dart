@@ -3290,6 +3290,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emojiPanelAnimated => 'Animated';
 
   @override
+  String get emojiPanelSearchHint => 'Search emoji';
+
+  @override
+  String get emojiPanelSmileysPeople => 'Smileys & People';
+
+  @override
+  String get emojiPanelAnimalsNature => 'Animals & Nature';
+
+  @override
+  String get emojiPanelFoodDrink => 'Food & Drink';
+
+  @override
+  String get emojiPanelActivity => 'Activity';
+
+  @override
+  String get emojiPanelTravelPlaces => 'Travel & Places';
+
+  @override
+  String get emojiPanelObjects => 'Objects';
+
+  @override
+  String get emojiPanelSymbols => 'Symbols';
+
+  @override
+  String get emojiPanelFlags => 'Flags';
+
+  @override
+  String get emojiPanelNoResults => 'No emoji found';
+
+  @override
+  String get emojiPanelSkinTone => 'Skin tone';
+
+  @override
   String get attachmentFileFallback => 'File';
 
   @override

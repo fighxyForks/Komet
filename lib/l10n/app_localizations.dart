@@ -6140,6 +6140,72 @@ abstract class AppLocalizations {
   /// **'Animated'**
   String get emojiPanelAnimated;
 
+  /// No description provided for @emojiPanelSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search emoji'**
+  String get emojiPanelSearchHint;
+
+  /// No description provided for @emojiPanelSmileysPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Smileys & People'**
+  String get emojiPanelSmileysPeople;
+
+  /// No description provided for @emojiPanelAnimalsNature.
+  ///
+  /// In en, this message translates to:
+  /// **'Animals & Nature'**
+  String get emojiPanelAnimalsNature;
+
+  /// No description provided for @emojiPanelFoodDrink.
+  ///
+  /// In en, this message translates to:
+  /// **'Food & Drink'**
+  String get emojiPanelFoodDrink;
+
+  /// No description provided for @emojiPanelActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get emojiPanelActivity;
+
+  /// No description provided for @emojiPanelTravelPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel & Places'**
+  String get emojiPanelTravelPlaces;
+
+  /// No description provided for @emojiPanelObjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Objects'**
+  String get emojiPanelObjects;
+
+  /// No description provided for @emojiPanelSymbols.
+  ///
+  /// In en, this message translates to:
+  /// **'Symbols'**
+  String get emojiPanelSymbols;
+
+  /// No description provided for @emojiPanelFlags.
+  ///
+  /// In en, this message translates to:
+  /// **'Flags'**
+  String get emojiPanelFlags;
+
+  /// No description provided for @emojiPanelNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No emoji found'**
+  String get emojiPanelNoResults;
+
+  /// No description provided for @emojiPanelSkinTone.
+  ///
+  /// In en, this message translates to:
+  /// **'Skin tone'**
+  String get emojiPanelSkinTone;
+
   /// No description provided for @attachmentFileFallback.
   ///
   /// In en, this message translates to:
@@ -6509,13 +6575,13 @@ abstract class AppLocalizations {
   /// No description provided for @appearanceIosGlassTitle.
   ///
   /// In en, this message translates to:
-  /// **'iOS 26 interface'**
+  /// **'iOS interface'**
   String get appearanceIosGlassTitle;
 
   /// No description provided for @appearanceIosGlassSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Liquid Glass buttons, menus and bars. On by default on iOS 26 and later.'**
+  /// **'iOS typography, controls and layout. Liquid Glass materials on iOS 26 and later.'**
   String get appearanceIosGlassSubtitle;
 
   /// No description provided for @iosChannelMute.

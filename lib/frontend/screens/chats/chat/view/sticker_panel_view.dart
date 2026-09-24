@@ -12,11 +12,13 @@ class StickerPanelView extends StatelessWidget {
     required this.stickers,
     required this.onStickerTap,
     this.onEmojiTap,
+    this.onPlainEmojiTap,
   });
 
   final StickerPanelController stickers;
   final void Function(StickerItem sticker) onStickerTap;
   final void Function(Animoji animoji)? onEmojiTap;
+  final void Function(String emoji)? onPlainEmojiTap;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +36,7 @@ class StickerPanelView extends StatelessWidget {
             height: height,
             onStickerTap: onStickerTap,
             onEmojiTap: onEmojiTap,
+            onPlainEmojiTap: onPlainEmojiTap,
             onResize: stickers.resizeBy,
           ),
         ),

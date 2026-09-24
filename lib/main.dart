@@ -77,6 +77,7 @@ import 'backend/modules/outbox.dart';
 import 'backend/modules/polls.dart';
 import 'backend/modules/stickers.dart';
 import 'backend/modules/animoji.dart';
+import 'core/emoji/emoji_animoji_source.dart';
 import 'backend/modules/stories.dart';
 import 'backend/modules/self_check.dart';
 import 'backend/modules/shared_content.dart';
@@ -197,6 +198,11 @@ void _installLogCapture() {
 }
 
 void main(List<String> args) async {
+  EmojiAnimojiSource.loader = () async {
+    await animojiModule.ensureRecentsLoaded();
+    await animojiModule.ensureLoaded();
+    return animojiModule.animojis;
+  };
   WidgetsFlutterBinding.ensureInitialized();
   await initKolibri();
   DebugTest.parse(args);

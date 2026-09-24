@@ -52,6 +52,19 @@ class RichMessageController extends TextEditingController {
 
   RichMessageController({super.text});
 
+  void insertPlainText(String text) {
+    if (text.isEmpty) return;
+    final selection = value.selection;
+    final oldText = value.text;
+    final start = selection.isValid ? selection.start : oldText.length;
+    final end = selection.isValid ? selection.end : oldText.length;
+    final newText = oldText.replaceRange(start, end, text);
+    value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: start + text.length),
+    );
+  }
+
   void insertAnimoji(Animoji animoji) {
     final lottie = animoji.lottieUrl ?? animoji.lottiePlayUrl;
     if (lottie == null || lottie.isEmpty) return;

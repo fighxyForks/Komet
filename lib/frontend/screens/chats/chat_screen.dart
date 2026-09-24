@@ -2729,6 +2729,7 @@ class _ChatScreenState extends State<ChatScreen>
       onOpenSearch: _openSearch,
       onStickerTap: _mediaSend.sendSticker,
       onEmojiTap: _insertAnimoji,
+      onPlainEmojiTap: _insertPlainEmoji,
       selectedIds: _selectedIds,
       onReplySelected: _replySelected,
       onForwardSelected: _forwardSelected,
@@ -5183,6 +5184,10 @@ class _ChatScreenState extends State<ChatScreen>
     if (keyboard > 120) _stickers.setBaseHeight(keyboard);
     FocusManager.instance.primaryFocus?.unfocus();
     _stickers.showPanel.value = true;
+  }
+
+  void _insertPlainEmoji(String emoji) {
+    _messageController.insertPlainText(emoji);
   }
 
   void _insertAnimoji(Animoji animoji) {

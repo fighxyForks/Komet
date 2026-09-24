@@ -97,6 +97,7 @@ class ComposerArea extends StatelessWidget {
 
   final void Function(StickerItem sticker) onStickerTap;
   final void Function(Animoji animoji) onEmojiTap;
+  final void Function(String emoji)? onPlainEmojiTap;
 
   final ValueListenable<Set<String>> selectedIds;
   final VoidCallback onReplySelected;
@@ -162,6 +163,7 @@ class ComposerArea extends StatelessWidget {
     this.onOpenSearch,
     required this.onStickerTap,
     required this.onEmojiTap,
+    this.onPlainEmojiTap,
     required this.selectedIds,
     required this.onReplySelected,
     required this.onForwardSelected,
@@ -318,6 +320,7 @@ class ComposerArea extends StatelessWidget {
                 stickers: stickers,
                 onStickerTap: onStickerTap,
                 onEmojiTap: onEmojiTap,
+                onPlainEmojiTap: onPlainEmojiTap,
               ),
             ],
           ),

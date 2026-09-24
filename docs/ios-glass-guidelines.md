@@ -91,3 +91,7 @@ In iOS mode call buttons use Flutter-drawn glass (tint + rim + shadow) and `IosT
 ## Related
 
 - Gestures and motion: [ios-motion-guidelines.md](./ios-motion-guidelines.md)
+
+## Emoji panel
+
+See [emoji-panel.md](./emoji-panel.md) for Unicode data, licenses, regeneration, and the OS version filter.

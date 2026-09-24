@@ -71,6 +71,10 @@ class _ShareComposerBarState extends State<ShareComposerBar> {
     setState(() => _emojiOpen = true);
   }
 
+  void _insertPlainEmoji(String emoji) {
+    _controller.insertPlainText(emoji);
+  }
+
   void _insertAnimoji(Animoji animoji) {
     _controller.insertAnimoji(animoji);
     unawaited(animojiModule.noteUsed(animoji));
@@ -118,7 +122,10 @@ class _ShareComposerBarState extends State<ShareComposerBar> {
                     height: _emojiPanelHeight + safeBottom,
                     child: Padding(
                       padding: EdgeInsets.only(bottom: safeBottom),
-                      child: EmojiPanel(onEmojiTap: _insertAnimoji),
+                      child: EmojiPanel(
+                        onEmojiTap: _insertAnimoji,
+                        onPlainEmojiTap: _insertPlainEmoji,
+                      ),
                     ),
                   )
                 : SizedBox(height: bottomInset > 0 ? 0 : safeBottom),
