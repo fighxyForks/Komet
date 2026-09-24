@@ -41,6 +41,7 @@ import '../../widgets/chat_menu_overlay.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_metrics.dart';
 import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/settings_card.dart';
@@ -1714,7 +1715,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   }) {
     if (IosGlass.of(context)) {
       return IosGroupedSection(
-        radius: 18,
+        radius: IosMetrics.groupedRadius,
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
@@ -1736,7 +1737,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
 
   Widget _listSection(ColorScheme cs, Widget child) {
     if (IosGlass.of(context)) {
-      return IosGroupedSection(radius: 18, child: child);
+      return IosGroupedSection(radius: IosMetrics.groupedRadius, child: child);
     }
     return Container(
       decoration: BoxDecoration(

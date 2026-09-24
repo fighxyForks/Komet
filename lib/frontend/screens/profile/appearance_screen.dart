@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../widgets/color_wheel_picker.dart';
-import '../../widgets/connection_status.dart';
 
 import '../../../core/config/app_bubble_behavior.dart';
 import '../../../core/config/app_bubble_shape.dart';
@@ -25,7 +25,6 @@ import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/liquid_glass.dart';
 import '../../widgets/settings_card.dart';
-import '../../../core/config/app_shape.dart';
 
 class AppearanceScreen extends StatefulWidget {
   const AppearanceScreen({super.key});
@@ -95,15 +94,10 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.appearanceTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.appearanceTitle,
       body: SafeArea(
         top: false,
         child: Column(
@@ -204,29 +198,25 @@ class _VisualStyleCard extends StatelessWidget {
                   current == VisualStyle.liquidGlass && !LiquidGlass.isSupported
                   ? VisualStyle.glossy
                   : current;
-              return SegmentedButton<VisualStyle>(
-                showSelectedIcon: false,
-                segments: [
-                  ButtonSegment(
-                    value: VisualStyle.materialYou,
-                    label: Text(l10n.appearanceVisualStyleMaterialYou),
+              return IosSegmentedControl<VisualStyle>(
+                groupValue: selectable,
+                children: {
+                  VisualStyle.materialYou: Text(
+                    l10n.appearanceVisualStyleMaterialYou,
+                    textAlign: TextAlign.center,
                   ),
-                  ButtonSegment(
-                    value: VisualStyle.glossy,
-                    label: Text(l10n.appearanceVisualStyleGlossy),
+                  VisualStyle.glossy: Text(
+                    l10n.appearanceVisualStyleGlossy,
+                    textAlign: TextAlign.center,
                   ),
                   if (LiquidGlass.isSupported)
-                    ButtonSegment(
-                      value: VisualStyle.liquidGlass,
-                      label: Text(l10n.appearanceVisualStyleLiquidGlass),
+                    VisualStyle.liquidGlass: Text(
+                      l10n.appearanceVisualStyleLiquidGlass,
+                      textAlign: TextAlign.center,
                     ),
-                ],
-                selected: {selectable},
-                onSelectionChanged: (set) {
-                  if (set.isNotEmpty) {
-                    Haptics.selection();
-                    _applyVisualStyle(set.first);
-                  }
+                },
+                onValueChanged: (v) {
+                  if (v != null) _applyVisualStyle(v);
                 },
               );
             },
@@ -925,27 +915,13 @@ class _ColorPickerCard extends StatelessWidget {
                         const SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
-                          child: FilledButton.tonal(
+                          child: IosSettingsButton(
+                            filled: false,
                             onPressed: sys ? null : onReset,
-                            style: FilledButton.styleFrom(
-                              shape: AppShape.buttonBorder,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Symbols.auto_awesome,
-                                  size: 18,
-                                  weight: 500,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  sys
-                                      ? l10n.appearanceAccentColorSystemActive
-                                      : l10n.appearanceAccentColorReset,
-                                ),
-                              ],
-                            ),
+                            icon: Symbols.auto_awesome,
+                            label: sys
+                                ? l10n.appearanceAccentColorSystemActive
+                                : l10n.appearanceAccentColorReset,
                           ),
                         ),
                       ],
@@ -990,22 +966,20 @@ class _BubbleShapeCard extends StatelessWidget {
           ValueListenableBuilder<BubbleStyle>(
             valueListenable: AppBubbleShape.current,
             builder: (context, current, _) {
-              return SegmentedButton<BubbleStyle>(
-                segments: [
-                  ButtonSegment(
-                    value: BubbleStyle.mobile,
-                    label: Text(l10n.appearanceBubbleShapeMobile),
-                    icon: const Icon(Symbols.smartphone),
+              return IosSegmentedControl<BubbleStyle>(
+                groupValue: current,
+                children: {
+                  BubbleStyle.mobile: Text(
+                    l10n.appearanceBubbleShapeMobile,
+                    textAlign: TextAlign.center,
                   ),
-                  ButtonSegment(
-                    value: BubbleStyle.desktop,
-                    label: Text(l10n.appearanceBubbleShapeDesktop),
-                    icon: const Icon(Symbols.desktop_windows),
+                  BubbleStyle.desktop: Text(
+                    l10n.appearanceBubbleShapeDesktop,
+                    textAlign: TextAlign.center,
                   ),
-                ],
-                selected: {current},
-                onSelectionChanged: (set) {
-                  if (set.isNotEmpty) onChanged(set.first);
+                },
+                onValueChanged: (v) {
+                  if (v != null) onChanged(v);
                 },
               );
             },
@@ -1047,22 +1021,20 @@ class _BubbleBehaviorCard extends StatelessWidget {
           ValueListenableBuilder<BubbleBehavior>(
             valueListenable: AppBubbleBehavior.current,
             builder: (context, current, _) {
-              return SegmentedButton<BubbleBehavior>(
-                segments: [
-                  ButtonSegment(
-                    value: BubbleBehavior.mutable,
-                    label: Text(l10n.appearanceBubbleBehaviorMutable),
-                    icon: const Icon(Symbols.auto_fix),
+              return IosSegmentedControl<BubbleBehavior>(
+                groupValue: current,
+                children: {
+                  BubbleBehavior.mutable: Text(
+                    l10n.appearanceBubbleBehaviorMutable,
+                    textAlign: TextAlign.center,
                   ),
-                  ButtonSegment(
-                    value: BubbleBehavior.immutable,
-                    label: Text(l10n.appearanceBubbleBehaviorImmutable),
-                    icon: const Icon(Symbols.lock),
+                  BubbleBehavior.immutable: Text(
+                    l10n.appearanceBubbleBehaviorImmutable,
+                    textAlign: TextAlign.center,
                   ),
-                ],
-                selected: {current},
-                onSelectionChanged: (set) {
-                  if (set.isNotEmpty) onChanged(set.first);
+                },
+                onValueChanged: (v) {
+                  if (v != null) onChanged(v);
                 },
               );
             },

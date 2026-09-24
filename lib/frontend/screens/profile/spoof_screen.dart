@@ -5,6 +5,8 @@ import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_alert.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -17,7 +19,6 @@ import '../../../core/utils/device_locale.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/spoof_profile.dart';
 import '../../../main.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/info_action_sheet.dart';
 import '../../../core/config/app_colors.dart';
@@ -432,14 +433,9 @@ class _SpoofScreenState extends State<SpoofScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.spoofScreenTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.spoofScreenTitle,
       body: _isLoading
           ? const Center(child: SmallSpinner(size: 36))
           : SafeArea(
@@ -554,24 +550,20 @@ class _SpoofScreenState extends State<SpoofScreen> {
         children: [
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: SegmentedButton<SpoofingMethod>(
-              showSelectedIcon: false,
-              segments: [
-                ButtonSegment(
-                  value: SpoofingMethod.partial,
-                  label: Text(l10n.spoofMethodPartial),
-                  icon: const Icon(Symbols.security),
+            child: IosSegmentedControl<SpoofingMethod>(
+              groupValue: _selectedMethod,
+              children: {
+                SpoofingMethod.partial: Text(
+                  l10n.spoofMethodPartial,
+                  textAlign: TextAlign.center,
                 ),
-                ButtonSegment(
-                  value: SpoofingMethod.full,
-                  label: Text(l10n.spoofMethodFull),
-                  icon: const Icon(Symbols.public),
+                SpoofingMethod.full: Text(
+                  l10n.spoofMethodFull,
+                  textAlign: TextAlign.center,
                 ),
-              ],
-              selected: {_selectedMethod},
-              onSelectionChanged: (s) async {
-                final next = s.first;
-                if (next == _selectedMethod) return;
+              },
+              onValueChanged: (next) async {
+                if (next == null || next == _selectedMethod) return;
                 if (next == SpoofingMethod.full) {
                   final confirmed = await _confirmFullSpoofing();
                   if (!confirmed || !mounted) return;
@@ -835,39 +827,22 @@ class _SpoofScreenState extends State<SpoofScreen> {
         children: [
           Expanded(
             flex: 1,
-            child: FilledButton.tonal(
-              onPressed: _applyGeneratedData,
+            child: GestureDetector(
               onLongPress: _loadDeviceData,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 16,
-                ),
-                shape: AppShape.buttonBorder,
+              child: IosSettingsButton(
+                filled: false,
+                onPressed: _applyGeneratedData,
+                label: l10n.spoofButtonGenerate,
               ),
-              child: Text(l10n.spoofButtonGenerate),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 1,
-            child: FilledButton(
+            child: IosSettingsButton(
               onPressed: _saveSpoofingSettings,
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 16,
-                ),
-                shape: AppShape.buttonBorder,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Symbols.save_alt),
-                  const SizedBox(width: 8),
-                  Text(l10n.spoofButtonApply),
-                ],
-              ),
+              icon: Symbols.save_alt,
+              label: l10n.spoofButtonApply,
             ),
           ),
         ],

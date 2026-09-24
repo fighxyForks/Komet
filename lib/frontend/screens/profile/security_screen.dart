@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -13,7 +14,6 @@ import '../../../core/utils/format.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/custom_notification.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/info_action_sheet.dart';
@@ -23,7 +23,6 @@ import 'blacklist_screen.dart';
 import 'password_entry_screen.dart';
 import 'passcode_settings_screen.dart';
 import '../../../core/security/app_lock.dart';
-import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_sheet.dart';
@@ -200,7 +199,7 @@ class _SecurityScreenState extends State<SecurityScreen>
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       body: SafeArea(
         bottom: false,
         child: _isLoading
@@ -292,37 +291,15 @@ class _SecurityScreenState extends State<SecurityScreen>
   }
 
   Widget _buildAppBar(BuildContext context, ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(
-              Symbols.arrow_back,
-              color: cs.onSurface,
-              size: 24,
-              weight: 400,
-            ),
-            onPressed: () => Navigator.pop(context),
+    return IosSettingsInlineBar(
+      title: AppLocalizations.of(context)!.securityTitle,
+      trailing: [
+        if (_isSaving)
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: SmallSpinner(size: 20, color: cs.primary),
           ),
-          const SizedBox(width: 4),
-          ConnectionTitleText(
-            AppLocalizations.of(context)!.securityTitle,
-            style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              fontFamily: displayFontOf(context),
-            ),
-          ),
-          const Spacer(),
-          if (_isSaving)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: SmallSpinner(size: 20, color: cs.primary),
-            ),
-        ],
-      ),
+      ],
     );
   }
 

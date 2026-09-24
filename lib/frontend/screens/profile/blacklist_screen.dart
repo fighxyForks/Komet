@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/account.dart' show BlockedContact;
 import '../../../backend/modules/contacts.dart';
-import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/utils/names.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/komet_avatar.dart';
@@ -84,7 +83,7 @@ class _BlacklistScreenState extends State<BlacklistScreen>
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -98,31 +97,8 @@ class _BlacklistScreenState extends State<BlacklistScreen>
   }
 
   Widget _buildAppBar(ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(
-              Symbols.arrow_back,
-              color: cs.onSurface,
-              size: 24,
-              weight: 400,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          ConnectionTitleText(
-            AppLocalizations.of(context)!.securityBlacklistTitle,
-            style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              fontFamily: displayFontOf(context),
-            ),
-          ),
-        ],
-      ),
+    return IosSettingsInlineBar(
+      title: AppLocalizations.of(context)!.securityBlacklistTitle,
     );
   }
 
@@ -190,11 +166,10 @@ class _BlacklistScreenState extends State<BlacklistScreen>
                 const SizedBox(width: 8),
                 busy
                     ? SmallSpinner(size: 20, color: cs.primary)
-                    : TextButton(
+                    : IosSettingsButton(
+                        filled: false,
                         onPressed: () => _unblock(contact),
-                        child: Text(
-                          AppLocalizations.of(context)!.chatInfoMenuUnblock,
-                        ),
+                        label: AppLocalizations.of(context)!.chatInfoMenuUnblock,
                       ),
               ],
             ),

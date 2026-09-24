@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/calls/audio_devices.dart';
@@ -12,7 +13,6 @@ import '../../../core/config/app_microphone.dart';
 import '../../../core/config/app_video_note_quality.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
@@ -83,17 +83,12 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final microphones = _microphones;
     final cameras = _cameras;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.mediaDevicesTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.mediaDevicesTitle,
       body: SafeArea(
         top: false,
         child: ListView(

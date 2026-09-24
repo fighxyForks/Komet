@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/push/fkm_bridge.dart';
@@ -10,7 +11,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/config/build_profile.dart';
 import '../../../main.dart' show accountModule;
 import '../../widgets/confirm_dialog.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/section_header.dart';
@@ -154,12 +154,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.notificationsTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.notificationsTitle,
       body: SafeArea(
         top: false,
         child: _loading

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_fonts.dart';
@@ -8,7 +9,6 @@ import '../../../core/security/app_lock.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../widgets/confirm_dialog.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/sheet_helpers.dart';
@@ -141,12 +141,8 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.passcodeTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.passcodeTitle,
       body: SafeArea(
         top: false,
         child: ValueListenableBuilder<bool>(
@@ -161,10 +157,10 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 52,
-                  child: FilledButton.icon(
+                  child: IosSettingsButton(
                     onPressed: () => _setUp(changing: false),
-                    icon: const Icon(Symbols.lock),
-                    label: Text(l10n.passcodeEnable),
+                    icon: Symbols.lock,
+                    label: l10n.passcodeEnable,
                   ),
                 )
               else ...[

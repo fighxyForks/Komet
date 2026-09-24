@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/chat_menu_overlay.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/prompt_dialog.dart';
 import '../../widgets/glass/ios_alert.dart';
@@ -238,21 +240,36 @@ class _PluginsScreenState extends State<PluginsScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        title: const Text('Плагины'),
-        backgroundColor: cs.surface,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) =>
-                value == 'file' ? _installFile() : _installUrl(),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'file', child: Text('Установить .kinet')),
-              PopupMenuItem(value: 'url', child: Text('Установить по URL')),
-            ],
-          ),
-        ],
+    return IosSettingsScaffold(
+      title: 'Плагины',
+      useConnectionTitle: false,
+      trailing: Builder(
+        builder: (btnContext) => CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () {
+            final box = btnContext.findRenderObject() as RenderBox?;
+            final overlay = Overlay.of(btnContext).context.findRenderObject() as RenderBox?;
+            if (box == null || overlay == null) return;
+            final origin = box.localToGlobal(Offset.zero, ancestor: overlay);
+            showChatMenu(
+              context: btnContext,
+              anchorRect: origin & box.size,
+              items: [
+                ChatMenuItem(
+                  icon: Symbols.upload_file,
+                  label: 'Установить .kinet',
+                  onTap: _installFile,
+                ),
+                ChatMenuItem(
+                  icon: Symbols.link,
+                  label: 'Установить по URL',
+                  onTap: _installUrl,
+                ),
+              ],
+            );
+          },
+          child: Icon(Symbols.more_horiz, color: cs.primary),
+        ),
       ),
       body: ValueListenableBuilder<List<PluginDescriptor>>(
         valueListenable: PluginStore.instance.plugins,

@@ -2,7 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/prompt_dialog.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
 import 'package:m3e_collection/m3e_collection.dart';
@@ -14,7 +17,6 @@ import '../../../core/config/custom_font_service.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_card.dart';
 import '../../../core/security/app_lock.dart';
@@ -135,6 +137,45 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
   }
 
   Future<void> _showAddFontDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      final choice = await showCupertinoModalPopup<String>(
+        context: context,
+        builder: (ctx) => CupertinoActionSheet(
+          title: Text(l10n.fontSettingsAddFontTitle),
+          message: Text(l10n.fontSettingsAddFontDescription),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(ctx, 'name'),
+              child: Text(l10n.fontSettingsAddFontConfirm),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(ctx, 'file'),
+              child: Text(l10n.fontSettingsPickFile),
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.fontSettingsCancel),
+          ),
+        ),
+      );
+      if (!mounted) return;
+      if (choice == 'file') {
+        await _addFontFromFile();
+      } else if (choice == 'name') {
+        final input = await showTextInputDialog(
+          context,
+          title: l10n.fontSettingsAddFontTitle,
+          hint: 'fonts.google.com/specimen/Roboto',
+          confirmLabel: l10n.fontSettingsAddFontConfirm,
+          cancelLabel: l10n.fontSettingsCancel,
+        );
+        if (input != null && input.isNotEmpty) await _addFont(input);
+      }
+      return;
+    }
     final choice = await showDialog<_AddFontChoice>(
       context: context,
       builder: (_) => const _AddFontDialog(),
@@ -151,17 +192,12 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final app = KometApp.stateOf(context);
     final currentId = app?.fontId ?? AppFonts.fallback.id;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: l10n.fontSettingsTitle,
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.fontSettingsTitle,
       body: SafeArea(
         top: false,
         child: ListView(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_fonts.dart';
@@ -87,24 +88,9 @@ class _CustomGradientEditorScreenState
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Symbols.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Своя тема',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            fontFamily: displayFontOf(context),
-          ),
-        ),
-      ),
+    return IosSettingsScaffold(
+      title: 'Своя тема',
+      useConnectionTitle: false,
       body: SafeArea(
         top: false,
         child: Column(
@@ -201,7 +187,7 @@ class _CustomGradientEditorScreenState
                   children: [
                     Icon(Symbols.rotate_right, color: cs.onSurfaceVariant, size: 20),
                     Expanded(
-                      child: Slider(
+                      child: IosSlider(
                         value: _rotation % 8,
                         min: 0,
                         max: 8,

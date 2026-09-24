@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 
 import '../../../core/config/app_wallpaper_tint.dart';
 import '../../../core/storage/app_database.dart';
@@ -114,20 +115,9 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          'Фон чатов',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            fontFamily: displayFontOf(context),
-          ),
-        ),
-      ),
+    return IosSettingsScaffold(
+      title: 'Фон чатов',
+      useConnectionTitle: false,
       body: SafeArea(
         top: false,
         child: Column(

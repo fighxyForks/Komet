@@ -1,13 +1,14 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/utils/image_utils.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart' show accountModule, fileUploader, KometApp;
-import '../../widgets/connection_status.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/small_spinner.dart';
@@ -165,33 +166,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Symbols.arrow_back, color: cs.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: ConnectionTitleText(
-          l10n?.editProfileTitle ?? 'Edit Profile',
-          style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _isLoading || _isSaving ? null : _saveProfile,
-            child: _isSaving
-                ? const SmallSpinner(size: 16)
-                : Text(
-                    l10n?.editProfileSave ?? 'Save',
-                    style: TextStyle(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-          ),
-        ],
+    return IosSettingsScaffold(
+      title: l10n?.editProfileTitle ?? 'Edit Profile',
+      trailing: CupertinoButton(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        onPressed: _isLoading || _isSaving ? null : _saveProfile,
+        child: _isSaving
+            ? const SmallSpinner(size: 16)
+            : Text(
+                l10n?.editProfileSave ?? 'Save',
+                style: TextStyle(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
       ),
       body: _isLoading
           ? const Center(child: SmallSpinner(size: 36))
@@ -242,12 +230,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 if (_photoId != null) ...[
                   const SizedBox(height: 8),
                   Center(
-                    child: TextButton(
+                    child: IosSettingsButton(
+                      filled: false,
+                      destructive: true,
                       onPressed: _removeAvatar,
-                      child: Text(
-                        l10n?.editProfileRemovePhoto ?? 'Remove photo',
-                        style: TextStyle(color: cs.error),
-                      ),
+                      label: l10n?.editProfileRemovePhoto ?? 'Remove photo',
                     ),
                   ),
                 ],

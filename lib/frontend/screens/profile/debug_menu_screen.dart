@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../backend/modules/chats.dart';
 import '../../../core/calls/call_controller.dart';
@@ -202,11 +203,10 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final appState = KometApp.stateOf(context);
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: const ConnectionSpinner(),
       body: SafeArea(

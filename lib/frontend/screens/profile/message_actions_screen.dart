@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-import '../../widgets/connection_status.dart';
 
 import '../../../core/config/app_message_actions_style.dart';
 import '../../../core/utils/haptics.dart';
@@ -13,13 +13,8 @@ class MessageActionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: 'Меню действий',
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: 'Меню действий',
       body: SafeArea(
         top: false,
         child: ListView(

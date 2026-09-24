@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/config/app_colors.dart';
@@ -12,7 +13,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart' show accountModule;
 import '../../../backend/modules/account.dart' show SessionInfo;
 import '../../widgets/custom_notification.dart';
-import '../../widgets/connection_status.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/prompt_dialog.dart';
@@ -217,27 +217,8 @@ class _DevicesScreenState extends State<DevicesScreen>
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Symbols.chevron_left, size: 28),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: ConnectionTitleText(
-          l10n.devicesTitle,
-          style: TextStyle(
-            fontFamily: displayFontOf(context),
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: cs.onSurface,
-          ),
-        ),
-        centerTitle: true,
-      ),
+    return IosSettingsScaffold(
+      title: l10n.devicesTitle,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -299,23 +280,10 @@ class _DevicesScreenState extends State<DevicesScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              FilledButton.icon(
+              IosSettingsButton(
                 onPressed: _startWebQrAuth,
-                icon: const Icon(Symbols.qr_code_scanner, size: 22),
-                label: Text(
-                  l10n.devicesScanQrButton,
-                  style: TextStyle(
-                    fontFamily: displayFontOf(context),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 14,
-                  ),
-                ),
+                icon: Symbols.qr_code_scanner,
+                label: l10n.devicesScanQrButton,
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/prompt_dialog.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../../main.dart' show accountModule;
@@ -132,13 +133,13 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
 
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: cs.surface,
+        backgroundColor: iosSettingsBackground(context),
         body: Center(child: SmallSpinner(size: 36, color: cs.primary)),
       );
     }
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -642,9 +643,9 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: iosSettingsBackground(context),
         elevation: 0,
         leading: IconButton(
           icon: Icon(Symbols.arrow_back, color: cs.onSurface),
@@ -1022,9 +1023,9 @@ class _TwoFactorPasswordChangeScreenState
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: iosSettingsBackground(context),
         elevation: 0,
         leading: IconButton(
           icon: Icon(Symbols.arrow_back, color: cs.onSurface),
@@ -1200,9 +1201,9 @@ class _TwoFactorEmailChangeScreenState
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: iosSettingsBackground(context),
         elevation: 0,
         leading: IconButton(
           icon: Icon(Symbols.arrow_back, color: cs.onSurface),
@@ -1360,9 +1361,9 @@ class _TwoFactorRemoveScreenState extends State<TwoFactorRemoveScreen> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosSettingsBackground(context),
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: iosSettingsBackground(context),
         elevation: 0,
         leading: IconButton(
           icon: Icon(Symbols.arrow_back, color: cs.onSurface),

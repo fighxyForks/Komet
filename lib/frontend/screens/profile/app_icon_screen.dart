@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:flutter/services.dart';
 
-import '../../widgets/connection_status.dart';
 
 import '../../../core/config/app_icon.dart';
 import '../../../core/utils/haptics.dart';
@@ -47,12 +47,8 @@ class _AppIconScreenState extends State<AppIconScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: ConnectionTitleBar(
-        titleText: 'Иконка приложения',
-        backgroundColor: cs.surface,
-      ),
+    return IosSettingsScaffold(
+      title: 'Иконка приложения',
       body: SafeArea(
         top: false,
         child: ListView(

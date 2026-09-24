@@ -5,6 +5,10 @@ import 'dart:ui' show lerpDouble;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_alert.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -57,7 +61,6 @@ import 'security_screen.dart';
 import 'spoof_screen.dart';
 import '../../widgets/media_playback_pill.dart';
 import '../../../core/config/app_fonts.dart';
-import '../../../core/config/app_shape.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
 
@@ -448,53 +451,24 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
   }
 
   Future<void> _confirmLogout() async {
-    final cs = Theme.of(context).colorScheme;
-    final confirmed = await showIosSheet<bool>(
+    final confirmed = await showIosAlert<bool>(
       context: context,
-      backgroundColor: cs.surfaceContainerHigh,
-      shape: kSheetShape,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Выйти из аккаунта?',
-                  style: TextStyle(
-                    color: cs.onSurface,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Данные аккаунта будут удалены с этого устройства.',
-                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-                ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: cs.error,
-                    foregroundColor: cs.onError,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: AppShape.buttonBorder,
-                  ),
-                  child: const Text('Выйти'),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Отмена'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+      title: 'Выйти из аккаунта?',
+      message: 'Данные аккаунта будут удалены с этого устройства.',
+      actions: const [
+        IosAlertAction(
+          id: 'cancel',
+          label: 'Отмена',
+          result: false,
+          isCancel: true,
+        ),
+        IosAlertAction(
+          id: 'logout',
+          label: 'Выйти',
+          result: true,
+          isDestructive: true,
+        ),
+      ],
     );
     if (confirmed != true || !mounted) return;
     await _doLogout();
@@ -513,12 +487,11 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       // #***! вышли из аккаунта — дальше экран входа по телефону, прошлая версия
       await api.connect(authenticated: false);
     } catch (_) {}
-    if (navState != null) {
-      await navState.pushAndRemoveUntil(
-        iosPageRoute(context, builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
-    }
+    if (!mounted || navState == null || !navState.mounted) return;
+    await navState.pushAndRemoveUntil(
+      iosPageRoute(context, builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -550,7 +523,9 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         final delta = expandedH - collapsedH;
         _syncHeaderDelta(delta);
         return Scaffold(
-          backgroundColor: spectrumSurfaceColor(cs),
+          backgroundColor: IosGlass.of(context)
+              ? IosPalette.grouped(cs)
+              : spectrumSurfaceColor(cs),
           body: NotificationListener<ScrollNotification>(
             onNotification: (n) => _handleScrollNotification(n, delta),
             child: CustomScrollView(
@@ -1119,9 +1094,15 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                       isVisible: _isPhoneVisible,
                                       style: TextStyle(
                                         color: subColor,
-                                        fontSize: 14,
+                                        fontSize: IosGlass.of(context)
+                                            ? IosTypography.listSubtitle
+                                            : 14,
                                         fontWeight: FontWeight.w400,
-                                        letterSpacing: 0.5,
+                                        letterSpacing: IosGlass.of(context)
+                                            ? IosTypography.letterSpacing(
+                                                IosTypography.listSubtitle,
+                                              )
+                                            : null,
                                       ),
                                     ),
                                   ),
