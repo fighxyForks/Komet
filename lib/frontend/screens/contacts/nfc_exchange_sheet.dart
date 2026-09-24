@@ -17,7 +17,11 @@ import '../../../models/contact_info.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/small_spinner.dart';
-import '../../../core/config/app_shape.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_metrics.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
 
 enum _Stage {
   checking,
@@ -407,8 +411,8 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
             _peerName(),
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 20,
+              color: IosGlass.of(context) ? IosPalette.label(cs) : cs.onSurface,
+              fontSize: IosGlass.of(context) ? IosTypography.headerTitle : 20,
               fontWeight: FontWeight.w700,
             ),
             maxLines: 2,
@@ -418,26 +422,30 @@ class _NfcExchangeSheetState extends State<NfcExchangeSheet>
           Text(
             formatPhone(_peerPhone) ??
                 l10n.contactIdFallback('${_peerId ?? ''}'),
-            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: (_stage == _Stage.adding || loading) ? null : _add,
-              style: FilledButton.styleFrom(
-                shape: AppShape.buttonBorder,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: _stage == _Stage.adding
-                  ? const SmallSpinner(size: 20)
-                  : Text(
-                      _stage == _Stage.added
-                          ? l10n.nfcAdded
-                          : l10n.nfcAddContact,
-                    ),
+            style: TextStyle(
+              color: IosGlass.of(context)
+                  ? IosPalette.secondaryLabel(cs)
+                  : cs.onSurfaceVariant,
+              fontSize: IosGlass.of(context)
+                  ? IosTypography.callout
+                  : 13,
             ),
           ),
+          const SizedBox(height: 24),
+          _stage == _Stage.adding
+              ? const SizedBox(
+                  height: IosMetrics.minHitTarget,
+                  child: Center(child: SmallSpinner(size: 20)),
+                )
+              : SizedBox(
+                  width: double.infinity,
+                  child: IosSettingsButton(
+                    onPressed: loading ? null : _add,
+                    label: _stage == _Stage.added
+                        ? l10n.nfcAdded
+                        : l10n.nfcAddContact,
+                  ),
+                ),
         ],
       ),
     );

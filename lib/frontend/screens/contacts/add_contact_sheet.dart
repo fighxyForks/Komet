@@ -12,6 +12,7 @@ import 'package:komet/l10n/app_localizations.dart';
 import 'package:komet/main.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 
 Future<void> showAddContactSheet(BuildContext context) {
   return showBlurredCard<void>(
@@ -332,12 +333,10 @@ class _AddContactCardState extends State<_AddContactCard> {
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
-            child: FilledButton.tonal(
+            child: IosSettingsButton(
+              filled: false,
               onPressed: () => setState(() => _notFoundPhone = null),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: Text(l10n.addContactSearchOther),
+              label: l10n.addContactSearchOther,
             ),
           ),
         ],
