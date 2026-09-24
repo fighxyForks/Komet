@@ -8,8 +8,8 @@ import '../config/app_ios_glass.dart';
 const double kBubbleBigRadius = 20;
 const double kBubbleSmallRadius = 4;
 
-const double kIosBubbleRadius = 19;
-const double kIosBubbleJoinRadius = 7;
+const double kIosBubbleRadius = 16;
+const double kIosBubbleJoinRadius = 8;
 
 // #***! скругления зависят от места в группе и настроек
 BorderRadius computeBubbleRadius({

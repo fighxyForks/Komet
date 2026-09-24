@@ -43,6 +43,7 @@ import 'attachment/bubbles/photo_bubble.dart';
 import 'attachment/bubbles/video_bubble.dart';
 import 'attachment/bubbles/file_bubble.dart';
 import 'attachment/bubbles/forwarded_bubble.dart';
+import 'attachment/bubbles/ios_bubble_metrics.dart';
 import 'lottie_image.dart';
 import 'text_with_meta.dart';
 import 'glass/ios_glass.dart';
@@ -761,8 +762,17 @@ class MessageBubble extends StatelessWidget {
 
   bool get _stretchesTextRow => message.replyInfo != null || _showsSenderName;
 
-  BubbleShape _computeShape() {
+  bool _sameDay(int a, int b) {
+    final x = DateTime.fromMillisecondsSinceEpoch(a);
+    final y = DateTime.fromMillisecondsSinceEpoch(b);
+    return x.year == y.year && x.month == y.month && x.day == y.day;
+  }
+
+  BubbleShape _computeShape({bool ios = false}) {
     if (message.isControl) return BubbleShape.singleMiddle;
+    final window = ios
+        ? IosBubbleMetrics.mergeWindow.inMilliseconds
+        : 300000;
 
     final hasPrevFromMe =
         prevMessage?.senderId == message.senderId && !prevMessage!.isControl;
@@ -776,8 +786,14 @@ class MessageBubble extends StatelessWidget {
         ? nextMessage!.time - message.time
         : 999999999;
 
-    final groupedWithPrev = hasPrevFromMe && prevTimeDiff < 300000;
-    final groupedWithNext = hasNextFromMe && nextTimeDiff < 300000;
+    final groupedWithPrev =
+        hasPrevFromMe &&
+        prevTimeDiff < window &&
+        (!ios || _sameDay(prevMessage!.time, message.time));
+    final groupedWithNext =
+        hasNextFromMe &&
+        nextTimeDiff < window &&
+        (!ios || _sameDay(message.time, nextMessage!.time));
 
     if (!groupedWithPrev && !groupedWithNext) return BubbleShape.singleMiddle;
     if (!groupedWithPrev && groupedWithNext) return BubbleShape.singleTop;
@@ -865,9 +881,14 @@ class MessageBubble extends StatelessWidget {
     return MessageType.text;
   }
 
-  EdgeInsets _paddingFor(MessageType contentType, BubbleShape shape) {
+  EdgeInsets _paddingFor(
+    MessageType contentType,
+    BubbleShape shape, {
+    bool ios = false,
+  }) {
     switch (contentType) {
       case MessageType.text:
+        if (ios) return IosBubbleMetrics.textPadding;
         if (shape == BubbleShape.groupedMiddle) {
           return const EdgeInsets.symmetric(horizontal: 14, vertical: 6);
         }
@@ -885,7 +906,19 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  double _topMarginFor(MessageType contentType, BubbleShape shape) {
+  double _topMarginFor(
+    MessageType contentType,
+    BubbleShape shape, {
+    bool ios = false,
+  }) {
+    if (ios && contentType != MessageType.control) {
+      final mergedTop =
+          shape == BubbleShape.singleBottom ||
+          shape == BubbleShape.groupedMiddle;
+      return mergedTop
+          ? IosBubbleMetrics.mergedSpacing
+          : IosBubbleMetrics.groupSpacing;
+    }
     switch (contentType) {
       case MessageType.text:
         switch (shape) {
@@ -914,7 +947,18 @@ class MessageBubble extends StatelessWidget {
     }
   }
 
-  double _bottomMarginFor(MessageType contentType, BubbleShape shape) {
+  double _bottomMarginFor(
+    MessageType contentType,
+    BubbleShape shape, {
+    bool ios = false,
+  }) {
+    if (ios && contentType != MessageType.control) {
+      final mergedBottom =
+          shape == BubbleShape.singleTop || shape == BubbleShape.groupedMiddle;
+      return mergedBottom
+          ? IosBubbleMetrics.mergedSpacing
+          : IosBubbleMetrics.groupSpacing;
+    }
     switch (contentType) {
       case MessageType.text:
       case MessageType.attachment:
@@ -985,7 +1029,11 @@ class MessageBubble extends StatelessWidget {
   Color _senderColor(int id) =>
       _senderPalette[id.abs() % _senderPalette.length];
 
-  Widget _buildSenderHeader(ColorScheme cs, bool needsInset) {
+  Widget _buildSenderHeader(
+    ColorScheme cs,
+    bool needsInset, {
+    bool ios = false,
+  }) {
     final name = senderNameOverride ?? ContactCache.get(message.senderId);
     if (name == null || name.isEmpty) return const SizedBox.shrink();
     final header = Padding(
@@ -998,7 +1046,7 @@ class MessageBubble extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: _senderColor(message.senderId),
-          fontSize: 13,
+          fontSize: ios ? IosBubbleMetrics.senderNameSize : 13,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -1015,7 +1063,11 @@ class MessageBubble extends StatelessWidget {
 
   static const double _groupAvatarSize = 30;
 
-  Widget _buildLeadingAvatar(ColorScheme cs) {
+  static double _avatarSize(bool ios) =>
+      ios ? IosBubbleMetrics.avatarSize : _groupAvatarSize;
+
+  Widget _buildLeadingAvatar(ColorScheme cs, {bool ios = false}) {
+    final size = _avatarSize(ios);
     final senderAvatar =
         senderAvatarOverride ?? ContactCache.getAvatar(message.senderId);
     final displaySender =
@@ -1023,7 +1075,7 @@ class MessageBubble extends StatelessWidget {
     final Widget avatar;
     if (senderAvatar != null && senderAvatar.isNotEmpty) {
       avatar = CircleAvatar(
-        radius: _groupAvatarSize / 2,
+        radius: size / 2,
         backgroundImage: CachedNetworkImageProvider(
           senderAvatar,
           maxWidth: 96,
@@ -1033,7 +1085,7 @@ class MessageBubble extends StatelessWidget {
       );
     } else {
       avatar = CircleAvatar(
-        radius: _groupAvatarSize / 2,
+        radius: size / 2,
         backgroundColor: cs.primaryContainer,
         child: Text(
           displaySender != null && displaySender.isNotEmpty
@@ -1114,7 +1166,8 @@ class MessageBubble extends StatelessWidget {
     MessageType contentType,
     double availableWidth,
   ) {
-    final shape = _computeShape();
+    final ios = IosGlass.of(context);
+    final shape = _computeShape(ios: ios);
     final hasReactions = _hasReactions();
     final hasPhotoCap =
         _computeHasPhotoWithCaption() ||
@@ -1126,12 +1179,12 @@ class MessageBubble extends StatelessWidget {
     final hasMultiPhotos = _computeHasMultiplePhotosNoCaption();
     final textColor = bubbleTextColor(context);
 
-    final topMargin = _topMarginFor(contentType, shape);
-    final bottomMargin = _bottomMarginFor(contentType, shape);
+    final topMargin = _topMarginFor(contentType, shape, ios: ios);
+    final bottomMargin = _bottomMarginFor(contentType, shape, ios: ios);
     final jumboAnimoji = _jumboAnimojiUrls;
     final padding = jumboAnimoji != null
         ? EdgeInsets.zero
-        : _paddingFor(contentType, shape);
+        : _paddingFor(contentType, shape, ios: ios);
 
     final showAvatarSlot = !isMe;
     final showAvatar =
@@ -1145,13 +1198,17 @@ class MessageBubble extends StatelessWidget {
     final screenWidth = availableWidth;
     final maxBubbleWidth = isVideoNote
         ? math.min(screenWidth - 24, 560.0)
+        : ios
+        ? IosBubbleMetrics.maxBubbleWidth(
+            screenWidth,
+            avatarSlot: showAvatarSlot && chatType == "CHAT",
+          )
         : math.min(screenWidth * 0.75, 760.0);
     final noBubbleBackground =
         isVideoNote || _isSticker || jumboAnimoji != null;
     final bubbleColor = noBubbleBackground
         ? Colors.transparent
         : (isMe ? cs.primaryContainer : cs.surfaceContainerHighest);
-    final ios = IosGlass.of(context);
     final glassBubble = ios && !noBubbleBackground;
 
     BubbleContext makeCtx({bool metaInFooter = false}) => BubbleContext(
@@ -1204,7 +1261,7 @@ class MessageBubble extends StatelessWidget {
         : _buildContent(makeCtx());
 
     final Widget? senderHeader = showSenderName
-        ? _buildSenderHeader(cs, padding == EdgeInsets.zero)
+        ? _buildSenderHeader(cs, padding == EdgeInsets.zero, ios: ios)
         : null;
 
     final Widget? replyHeader = reply == null
@@ -1288,7 +1345,7 @@ class MessageBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: maxBubbleWidth,
           minHeight: showAvatarSlot && chatType == "CHAT"
-              ? _groupAvatarSize
+              ? _avatarSize(ios)
               : 0,
         ),
         decoration: BoxDecoration(
@@ -1324,8 +1381,8 @@ class MessageBubble extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 8,
-        right: 8,
+        left: ios ? IosBubbleMetrics.edgeInset : 8,
+        right: ios ? IosBubbleMetrics.edgeInset : 8,
         top: topMargin,
         bottom: bottomMargin,
       ),
@@ -1334,13 +1391,13 @@ class MessageBubble extends StatelessWidget {
           mainAxisAlignment: isMe
               ? MainAxisAlignment.end
               : MainAxisAlignment.start,
-          spacing: 8,
+          spacing: ios ? IosBubbleMetrics.avatarGap : 8,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (showAvatar)
-              _buildLeadingAvatar(cs)
+              _buildLeadingAvatar(cs, ios: ios)
             else if (showAvatarSlot && chatType == "CHAT")
-              const SizedBox(width: _groupAvatarSize),
+              SizedBox(width: _avatarSize(ios)),
             Column(
               crossAxisAlignment: isMe
                   ? CrossAxisAlignment.end
@@ -1949,10 +2006,11 @@ class MessageBubble extends StatelessWidget {
     final activeFontFamily = Theme.of(
       ctx.context,
     ).textTheme.bodyLarge?.fontFamily;
+    final ios = IosGlass.of(ctx.context);
     final textStyle = TextStyle(
       color: ctx.text,
-      fontSize: 16,
-      height: 1.3,
+      fontSize: ios ? IosBubbleMetrics.textSize : 16,
+      height: ios ? IosBubbleMetrics.textHeight : 1.3,
       fontFamily: activeFontFamily,
       fontVariations: activeFontFamily == 'Inter'
           ? const [FontVariation('wght', 300)]
@@ -1971,9 +2029,15 @@ class MessageBubble extends StatelessWidget {
         ],
         Text(
           message.status == 'EDITED' ? '${ctx.clockText} ред.' : ctx.clockText,
-          style: TextStyle(color: ctx.dim, fontSize: 10),
+          style: TextStyle(
+            color: ctx.dim,
+            fontSize: ios ? IosBubbleMetrics.timeSize : 10,
+          ),
         ),
-        if (isMe) ...[const SizedBox(width: 4), ctx.statusIcon()],
+        if (isMe) ...[
+          SizedBox(width: ios ? IosBubbleMetrics.statusGap : 4),
+          ctx.statusIcon(),
+        ],
         if (message.deleted) ...[const SizedBox(width: 4), ctx.deletedIcon()],
       ],
     );
@@ -2389,7 +2453,11 @@ class MessageBubble extends StatelessWidget {
         );
       default:
         return Padding(
-          padding: _paddingFor(MessageType.text, ctx.shape),
+          padding: _paddingFor(
+            MessageType.text,
+            ctx.shape,
+            ios: IosGlass.of(ctx.context),
+          ),
           child: _buildTextContent(ctx),
         );
     }
