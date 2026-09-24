@@ -16,6 +16,11 @@ import 'custom_notification.dart';
 import 'glass/glass_capsule.dart';
 import 'glass/glass_menu.dart';
 import 'glass/ios_glass.dart';
+import 'glass/ios_tappable.dart';
+import 'glass/ios_palette.dart';
+import 'glass/ios_metrics.dart';
+import 'glass/ios_typography.dart';
+import 'glass/ios_symbols.dart';
 import 'komet_avatar.dart';
 import 'lottie_image.dart';
 import 'small_spinner.dart';
@@ -328,12 +333,12 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     }
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: const Duration(milliseconds: 380),
       reverseDuration: const Duration(milliseconds: 220),
     );
     _animation = CurvedAnimation(
       parent: _animController,
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeOutBack,
       reverseCurve: Curves.easeInCubic,
     );
     _expandController = AnimationController(
@@ -347,6 +352,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       reverseCurve: Curves.easeInCubic,
     );
     _expandController.addStatusListener(_onExpandStatus);
+    Haptics.medium();
     _animController.forward();
   }
 
@@ -496,7 +502,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
   void _computeListGeometry(Size screenSize) {
     final n = _actions.length;
     const menuWidth = 220.0;
-    const itemHeight = 42.0;
+    const itemHeight = IosMetrics.minHitTarget;
     const vPad = 6.0;
     final menuHeight = n * itemHeight + vPad * 2;
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
@@ -557,42 +563,53 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     final canCopy = widget.allowCopy && copyText != null && copyText.isNotEmpty;
     return <_Action>[
       if (widget.onReply != null)
-        _Action(Symbols.reply, l10n.msgActionsReply, _reply),
+        _Action(IosSymbols.reply(context), l10n.msgActionsReply, _reply),
       if (widget.onForward != null)
-        _Action(Symbols.forward, l10n.msgActionsForward, _forward),
-      if (canCopy) _Action(Symbols.content_copy, l10n.msgActionsCopy, _copy),
+        _Action(IosSymbols.forward(context), l10n.msgActionsForward, _forward),
+      if (canCopy)
+        _Action(IosSymbols.copy(context), l10n.msgActionsCopy, _copy),
       if (widget.onCopyLink != null)
-        _Action(Symbols.link, l10n.msgActionsCopyLink, _copyLink),
+        _Action(IosSymbols.link(context), l10n.msgActionsCopyLink, _copyLink),
       if (widget.isMe && widget.onEdit != null)
-        _Action(Symbols.edit, l10n.msgActionsEdit, _edit),
+        _Action(IosSymbols.edit(context), l10n.msgActionsEdit, _edit),
       if (widget.onPin != null)
         _Action(
-          widget.isPinned ? Symbols.keep_off : Symbols.push_pin,
+          widget.isPinned
+              ? IosSymbols.pinOff(context)
+              : IosSymbols.pin(context),
           widget.isPinned ? l10n.msgActionsUnpin : l10n.msgActionsPin,
           _pin,
         ),
       if (widget.onMarkUnread != null)
         _Action(
-          Symbols.mark_chat_unread,
+          IosSymbols.markUnread(context),
           l10n.msgActionsMarkUnread,
           _markUnread,
         ),
       if (widget.editHistory != null && widget.editHistory!.isNotEmpty)
-        _Action(Symbols.history, l10n.msgActionsEditHistory, _showHistoryView),
+        _Action(
+          IosSymbols.history(context),
+          l10n.msgActionsEditHistory,
+          _showHistoryView,
+        ),
       if (widget.loadReadBy != null)
-        _Action(Symbols.visibility, l10n.msgActionsReadBy, _showReadByView),
+        _Action(
+          IosSymbols.visibility(context),
+          l10n.msgActionsReadBy,
+          _showReadByView,
+        ),
       if (widget.infoRows != null && widget.infoRows!.isNotEmpty)
-        _Action(Symbols.info, l10n.msgActionsInfo, _showInfoView),
+        _Action(IosSymbols.info(context), l10n.msgActionsInfo, _showInfoView),
       if (widget.onReport != null && widget.loadReportReasons != null)
         _Action(
-          Symbols.flag,
+          IosSymbols.flag(context),
           l10n.msgActionsReport,
           _showReportView,
           destructive: true,
         ),
       if (widget.allowDelete)
         _Action(
-          Symbols.delete,
+          IosSymbols.delete(context),
           l10n.msgActionsDelete,
           _delete,
           destructive: true,
@@ -772,7 +789,7 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
       builder: (ctx, _) {
           final t = _animation.value.clamp(0.0, 1.0);
           final e = showReactions ? _expandAnim.value.clamp(0.0, 1.0) : 0.0;
-          final bubbleScale = 1.0 + 0.02 * t;
+          final bubbleScale = 1.0 + 0.045 * t;
           final menuHidden = _panelOpen || _reactionsExpanded;
 
           return GestureDetector(
@@ -781,10 +798,11 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
             child: Stack(
               children: [
                 if (!isClick) ...[
+                  // Static dim only — no BackdropFilter over the chat list.
                   Positioned.fill(
                     child: ColoredBox(
                       color: Colors.black.withValues(
-                        alpha: 0.22 * t + 0.28 * e,
+                        alpha: 0.28 * t + 0.22 * e,
                       ),
                     ),
                   ),
@@ -798,11 +816,29 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
                         opacity: 1.0 - 0.35 * e,
                         child: Transform.scale(
                           scale: bubbleScale,
-                          child: RawImage(
-                            image: widget.snapshot,
-                            width: widget.originRect.width,
-                            height: widget.originRect.height,
-                            fit: BoxFit.fill,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: 0.35 * t,
+                                  ),
+                                  blurRadius: 24 * t,
+                                  spreadRadius: 2 * t,
+                                  offset: Offset(0, 8 * t),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: RawImage(
+                                image: widget.snapshot,
+                                width: widget.originRect.width,
+                                height: widget.originRect.height,
+                                fit: BoxFit.fill,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -1101,12 +1137,31 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
     Key? iosKey,
   }) {
     if (IosGlass.of(context)) {
-      return GlassBackground(
+      // Opaque frosted fill while the overlay is up — no live BackdropFilter
+      // over the (non-scrolling) chat. GlassSuppression already held.
+      return DecoratedBox(
         key: iosKey,
-        borderRadius: BorderRadius.circular(GlassMenuStyle.radius),
-        tint: GlassMenuStyle.tint(cs),
-        sigma: 30,
-        child: Material(type: MaterialType.transparency, child: child),
+        decoration: BoxDecoration(
+          color: GlassMenuStyle.tint(cs).withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(GlassMenuStyle.radius),
+          border: Border.all(
+            color: cs.onSurface.withValues(alpha: 0.08),
+            width: 0.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.28),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: BorderRadius.circular(GlassMenuStyle.radius),
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        ),
       );
     }
     return Material(
@@ -1578,8 +1633,9 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
 
   Widget _buildListMenu(double t) {
     final cs = Theme.of(context).colorScheme;
-    final eased = Curves.easeOutCubic.transform(t);
-    final scale = 0.88 + 0.12 * eased;
+    final spring = Curves.easeOutBack.transform(t.clamp(0.0, 1.0));
+    final eased = spring.clamp(0.0, 1.0);
+    final scale = 0.86 + 0.14 * spring.clamp(0.0, 1.15);
     final tapAnchored =
         widget.interaction != MessageActionsInteraction.dragAndRelease;
     return Positioned(
@@ -1597,10 +1653,11 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
           child: _menuSurface(
             cs,
             iosKey: const ValueKey('ios-message-actions'),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              shrinkWrap: true,
+              physics: const ClampingScrollPhysics(),
               children: [
-                const SizedBox(height: 6),
                 for (int i = 0; i < _actions.length; i++)
                   _ListMenuItem(
                     action: _actions[i],
@@ -1617,7 +1674,6 @@ class _MessageActionsLayerState extends State<_MessageActionsLayer>
                           }
                         : null,
                   ),
-                const SizedBox(height: 6),
               ],
             ),
           ),
@@ -1960,47 +2016,57 @@ class _ListMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final pillBg = action.destructive ? cs.error : cs.primary;
-    final onPill = action.destructive ? cs.onError : cs.onPrimary;
-    final restFg = action.destructive ? cs.error : cs.onSurface;
+    final ios = IosGlass.of(context);
+    final destructive = action.destructive;
+    final iosRed = const Color(0xFFFF3B30);
+    final pillBg = destructive
+        ? (ios ? iosRed : cs.error)
+        : cs.primary;
+    final onPill = destructive
+        ? (ios ? Colors.white : cs.onError)
+        : cs.onPrimary;
+    final restFg = destructive
+        ? (ios ? iosRed : cs.error)
+        : (ios ? IosPalette.label(cs) : cs.onSurface);
     final fg = highlighted ? onPill : restFg;
     final inner = SizedBox(
-      height: 42,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Haptics.tap();
-            action.onTap();
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              curve: Curves.easeOutCubic,
-              decoration: BoxDecoration(
-                color: highlighted ? pillBg : Colors.transparent,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  Icon(action.icon, color: fg, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      action.label,
-                      style: TextStyle(
-                        color: fg,
-                        fontSize: 14,
-                        fontWeight: highlighted
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                      ),
+      height: IosMetrics.minHitTarget,
+      child: IosTappable(
+        onTap: () {
+          Haptics.tap();
+          action.onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              color: highlighted ? pillBg : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                Icon(action.icon, color: fg, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    action.label,
+                    style: TextStyle(
+                      color: fg,
+                      fontSize: ios ? IosTypography.body : 14,
+                      fontWeight: highlighted
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      letterSpacing: ios
+                          ? IosTypography.letterSpacing(IosTypography.body)
+                          : null,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
