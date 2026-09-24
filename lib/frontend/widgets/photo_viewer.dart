@@ -907,6 +907,9 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen>
     if (hero != null) {
       _syncHero();
       if (hero.originRect != null) {
+        hero.dismissMediaOffset = Offset(0, _dismiss.offset);
+        hero.dismissMediaScale = _dismiss.mediaScale;
+        hero.dismissVelocityY = _dismiss.animation.velocity;
         Navigator.of(context).pop();
         return;
       }
