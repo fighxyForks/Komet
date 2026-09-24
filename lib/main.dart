@@ -1232,6 +1232,7 @@ class KometAppState extends State<KometApp>
                                   colors: gradientColors,
                                   animate: gradientWallpaper!.gradientAnimated,
                                   rotation: gradientWallpaper.gradientRotation,
+                                  stepOnPulse: AppIosGlass.active.value,
                                 ),
                               ),
                             RepaintBoundary(

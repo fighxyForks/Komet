@@ -27,6 +27,12 @@ class MeshGradient {
   static ui.FragmentShader? newShader() => _program?.fragmentShader();
 }
 
+abstract final class MeshGradientPulse {
+  static final ValueNotifier<int> events = ValueNotifier<int>(0);
+
+  static void pulse() => events.value++;
+}
+
 class MeshGradientBackground extends StatefulWidget {
   final List<Color> colors;
   final bool animate;
@@ -36,6 +42,9 @@ class MeshGradientBackground extends StatefulWidget {
   final double rotation;
   // #***! длительность одного шага смены опорных точек
   final Duration stepDuration;
+  final bool stepOnPulse;
+
+  static const Duration pulseStepDuration = Duration(milliseconds: 500);
 
   const MeshGradientBackground({
     super.key,
@@ -43,6 +52,7 @@ class MeshGradientBackground extends StatefulWidget {
     this.animate = true,
     this.rotation = 0,
     this.stepDuration = const Duration(milliseconds: 4200),
+    this.stepOnPulse = false,
   });
 
   @override
@@ -51,20 +61,52 @@ class MeshGradientBackground extends StatefulWidget {
 }
 
 class _MeshGradientBackgroundState extends State<MeshGradientBackground>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   ui.FragmentShader? _shader;
   Ticker? _ticker;
+  AnimationController? _pulse;
   int _phase = 0;
   double _progress = 0;
   Duration _lastTick = Duration.zero;
+
+  bool get _animates =>
+      _shader != null && widget.animate && widget.colors.length > 1;
 
   @override
   void initState() {
     super.initState();
     _shader = MeshGradient.newShader();
-    if (_shader != null && widget.animate && widget.colors.length > 1) {
+    if (widget.stepOnPulse) {
+      MeshGradientPulse.events.addListener(_onPulse);
+    } else if (_animates) {
       _startTicker();
     }
+  }
+
+  void _onPulse() {
+    if (!_animates) return;
+    final running = _pulse?.isAnimating ?? false;
+    if (running) {
+      _phase = (_phase + 1) % 8;
+      _progress = 0;
+    }
+    final controller = _pulse ??= AnimationController(
+      vsync: this,
+      duration: MeshGradientBackground.pulseStepDuration,
+    )..addListener(_onPulseTick);
+    controller.forward(from: 0);
+  }
+
+  void _onPulseTick() {
+    final controller = _pulse!;
+    final t = Curves.easeInOut.transform(controller.value);
+    if (controller.isCompleted) {
+      _phase = (_phase + 1) % 8;
+      _progress = 0;
+    } else {
+      _progress = t;
+    }
+    setState(() {});
   }
 
   void _startTicker() {
@@ -75,7 +117,15 @@ class _MeshGradientBackgroundState extends State<MeshGradientBackground>
   @override
   void didUpdateWidget(covariant MeshGradientBackground oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final shouldAnimate = widget.animate && widget.colors.length > 1;
+    if (widget.stepOnPulse != oldWidget.stepOnPulse) {
+      if (widget.stepOnPulse) {
+        MeshGradientPulse.events.addListener(_onPulse);
+      } else {
+        MeshGradientPulse.events.removeListener(_onPulse);
+      }
+    }
+    final shouldAnimate =
+        !widget.stepOnPulse && widget.animate && widget.colors.length > 1;
     if (shouldAnimate && _ticker == null) {
       _startTicker();
     } else if (!shouldAnimate && _ticker != null) {
@@ -101,6 +151,8 @@ class _MeshGradientBackgroundState extends State<MeshGradientBackground>
 
   @override
   void dispose() {
+    MeshGradientPulse.events.removeListener(_onPulse);
+    _pulse?.dispose();
     _ticker?.dispose();
     super.dispose();
   }
@@ -135,14 +187,16 @@ class _MeshGradientBackgroundState extends State<MeshGradientBackground>
       phase = normalized.floor();
       progress = normalized - phase;
     }
-    return CustomPaint(
-      painter: _MeshGradientPainter(
-        shader: shader,
-        colors: colors,
-        phase: phase,
-        progress: progress,
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: _MeshGradientPainter(
+          shader: shader,
+          colors: colors,
+          phase: phase,
+          progress: progress,
+        ),
+        size: Size.infinite,
       ),
-      size: Size.infinite,
     );
   }
 }

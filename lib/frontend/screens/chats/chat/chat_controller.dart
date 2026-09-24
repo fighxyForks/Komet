@@ -35,6 +35,7 @@ class ChatController extends ChangeNotifier {
   }
 
   final ValueNotifier<int> messagesRev = ValueNotifier(0);
+  final ValueNotifier<int> appendedCount = ValueNotifier(0);
 
   void _reindexAll() {
     _indexById.clear();
@@ -60,6 +61,7 @@ class ChatController extends ChangeNotifier {
   void addMessage(CachedMessage msg) {
     _indexById[msg.id] = _messages.length;
     _messages.add(msg);
+    appendedCount.value++;
   }
 
   void removeMessageAt(int index) {
@@ -550,6 +552,7 @@ class ChatController extends ChangeNotifier {
   @override
   void dispose() {
     messagesRev.dispose();
+    appendedCount.dispose();
     super.dispose();
   }
 }
