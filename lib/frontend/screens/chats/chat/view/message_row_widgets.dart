@@ -11,6 +11,7 @@ import 'package:komet/backend/modules/messages.dart' show CachedMessage;
 import 'package:komet/core/config/app_show_extra_info.dart';
 import 'package:komet/core/config/app_fonts.dart';
 import 'package:komet/core/config/app_frost.dart';
+import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/core/config/app_message_actions_style.dart';
 import 'package:komet/core/crypto/message_decryption_cache.dart';
 import 'package:komet/core/utils/haptics.dart';
@@ -723,25 +724,34 @@ class _DeletingMessageAnimationState extends State<DeletingMessageAnimation>
   late final Animation<double> _collapse;
   bool _fired = false;
 
+  static const Duration _duration = Duration(milliseconds: 280);
+  static const Duration _iosDuration = Duration(milliseconds: 260);
+
   @override
   void initState() {
     super.initState();
+    final ios = AppIosGlass.active.value;
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 280),
+      duration: ios ? _iosDuration : _duration,
     );
+    final vanish = ios
+        ? const Interval(0.0, 0.58, curve: Curves.easeInOut)
+        : const Interval(0.0, 0.6);
     _opacity = Tween<double>(
       begin: 1,
       end: 0,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.6)));
+    ).animate(CurvedAnimation(parent: _ctrl, curve: vanish));
     _scale = Tween<double>(
       begin: 1,
-      end: 0.82,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.6)));
+      end: ios ? 0.1 : 0.82,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: vanish));
     _collapse = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(
         parent: _ctrl,
-        curve: const Interval(0.35, 1.0, curve: Curves.easeInOut),
+        curve: ios
+            ? const Interval(0.45, 1.0, curve: Curves.easeInOut)
+            : const Interval(0.35, 1.0, curve: Curves.easeInOut),
       ),
     );
     _ctrl.forward().whenComplete(() {
@@ -797,13 +807,14 @@ class _SentMessageAnimationState extends State<SentMessageAnimation>
   @override
   void initState() {
     super.initState();
+    final ios = AppIosGlass.active.value;
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 220),
+      duration: Duration(milliseconds: ios ? 200 : 220),
     );
     _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     _slide = Tween<double>(
-      begin: 16,
+      begin: ios ? 0 : 16,
       end: 0,
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _ctrl.forward().whenComplete(widget.onComplete);
