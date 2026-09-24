@@ -186,6 +186,17 @@ Future<ForwardTarget?> openForwardScreen({
 }
 
 class ChatListScreen extends StatefulWidget {
+  static const double pinnedDividerHeight = 1;
+
+  static double? chatRowExtent(
+    int index, {
+    required int itemCount,
+    int? dividerIndex,
+  }) {
+    if (index < 0 || index >= itemCount) return null;
+    return index == dividerIndex ? pinnedDividerHeight : IosChatRow.height;
+  }
+
   final ValueChanged<DesktopChatSelection>? onChatSelected;
   final bool forwardMode;
   final int forwardMessageCount;
@@ -2210,6 +2221,18 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
+
+  Widget _chatRowsSliver({
+    required SliverChildDelegate delegate,
+    double? Function(int index)? itemExtent,
+  }) {
+    if (itemExtent == null) return SliverList(delegate: delegate);
+    return SliverVariedExtentList(
+      delegate: delegate,
+      itemExtentBuilder: (index, _) => itemExtent(index),
+    );
+  }
+
   Widget _buildFolderChatPage(int pageIndex) {
     final pageChats = _chatsForPageIndex(pageIndex);
     final sc = _folderChatScrollControllers[pageIndex];
@@ -2267,7 +2290,14 @@ class _ChatListScreenState extends State<ChatListScreen>
                 ),
               )
             else
-              SliverList(
+              _chatRowsSliver(
+                itemExtent: IosGlass.of(context) && !_isInitialLoading
+                    ? (index) => ChatListScreen.chatRowExtent(
+                        index,
+                        itemCount: totalItems,
+                        dividerIndex: hasSeparator ? pinnedCount : null,
+                      )
+                    : null,
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     if (_isInitialLoading) {
@@ -2279,7 +2309,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                         key: const ValueKey('pinned_divider'),
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Divider(
-                          height: 1,
+                          height: ChatListScreen.pinnedDividerHeight,
                           thickness: 0.5,
                           color: cs.outlineVariant.withValues(alpha: 0.5),
                         ),
@@ -2291,6 +2321,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                         : index;
                     final baseChat = pageChats[chatIndex];
                     return ValueListenableBuilder<CachedChat>(
+                      key: ValueKey('chat_${baseChat.id}'),
                       valueListenable: chats.chatListenable(baseChat.id),
                       builder: (context, chat, _) {
                         final isPinned = (chat.favIndex ?? 0) > 0;
@@ -3484,7 +3515,7 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   Widget _animateChatTile(String id, Widget child) {
     return AnimatedChatTile(
-      key: ValueKey('chat_$id'),
+      key: ValueKey('tile_$id'),
       id: id,
       revision: _chatListRevision,
       isNew: _enteringChatIds.contains(id),
@@ -3944,7 +3975,6 @@ class _ChatListScreenState extends State<ChatListScreen>
       ),
     );
     return SpringyTap(
-      key: ValueKey('chat_$id'),
       child: Builder(
         builder: (rowContext) => InkWell(
         onTap: () {
