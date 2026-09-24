@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:komet/main.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../contacts/edit_contact_sheet.dart';
 import '../../../backend/modules/complaints.dart';
 import '../../../backend/modules/contacts.dart';
@@ -1107,7 +1106,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       final pending = _chatInfo?.pendingJoinRequestsCount ?? 0;
       if (pending > 0) {
         entries.add((
-          icon: Symbols.how_to_reg,
+          icon: IosSymbols.howToReg(context),
           label: '${l10n.joinRequestsTitle} ($pending)',
           destructive: false,
           onTap: _openJoinRequests,
@@ -1126,7 +1125,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       }
       if (!_isBot && _otherId != null && _otherId != _myId) {
         entries.add((
-          icon: _blocked ? Symbols.lock_open : Symbols.block,
+          icon: _blocked ? IosSymbols.lockOpen(context) : IosSymbols.block(context),
           label: _blocked ? l10n.chatInfoMenuUnblock : l10n.chatInfoMenuBlock,
           destructive: !_blocked,
           onTap: _toggleBlock,
@@ -1141,7 +1140,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
     }
 
     entries.add((
-      icon: Symbols.mop,
+      icon: IosSymbols.mop(context),
       label: l10n.chatInfoMenuClearHistory,
       destructive: true,
       onTap: _clearHistory,
@@ -1325,7 +1324,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   Widget _buildActions(ColorScheme cs) {
     final muteBtn = (
       icon: IosSymbols.notifications(context),
-      slashedIcon: Symbols.notifications_off,
+      slashedIcon: IosSymbols.notificationsOff(context),
       slashed: _isMuted,
       label: _isMuted
           ? l10n.chatInfoActionMuted
@@ -1340,14 +1339,14 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       onTap: _openChat,
     );
     final leaveBtn = (
-      icon: Symbols.exit_to_app,
+      icon: IosSymbols.exitToApp(context),
       slashedIcon: null,
       slashed: false,
       label: l10n.chatInfoActionLeave,
       onTap: _leaveChat,
     );
     final joinBtn = (
-      icon: Symbols.add_circle_outline,
+      icon: IosSymbols.addCircleOutline(context),
       slashedIcon: null,
       slashed: false,
       label: widget.chatType == 'CHANNEL'
@@ -1408,7 +1407,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           const SizedBox(height: 8),
           _wideActionBtn(
             cs,
-            Symbols.person_add,
+            IosSymbols.personAdd(context),
             l10n.contactProfileActionAddContact,
             _addContactBusy ? null : _addToContacts,
           ),
@@ -2147,7 +2146,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         return _buildPlaceholder(
           cs,
           l10n.chatInfoEmptyGeneralChats,
-          Symbols.group,
+          IosSymbols.group(context),
         );
       }
       return CommonChatsTab(
@@ -2161,7 +2160,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         cs,
         SharedContentKind.media,
         l10n.chatInfoEmptyMedia,
-        Symbols.photo_library,
+        IosSymbols.photoLibrary(context),
       );
     }
     if (_selectedTab == l10n.chatInfoTabFiles) {
@@ -2169,7 +2168,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         cs,
         SharedContentKind.files,
         l10n.chatInfoEmptyFiles,
-        Symbols.description,
+        IosSymbols.doc(context),
       );
     }
     if (_selectedTab == l10n.chatInfoTabVoice) {
@@ -2177,7 +2176,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         cs,
         SharedContentKind.voice,
         l10n.chatInfoEmptyVoice,
-        Symbols.mic,
+        IosSymbols.mic(context),
       );
     }
     if (_selectedTab == l10n.chatInfoTabLinks) {
@@ -2185,7 +2184,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         cs,
         SharedContentKind.links,
         l10n.chatInfoEmptyLinks,
-        Symbols.link,
+        IosSymbols.link(context),
       );
     }
     return const SizedBox.shrink();
@@ -2283,7 +2282,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
         children: [
           _memberAction(
             cs,
-            Symbols.person_add,
+            IosSymbols.personAdd(context),
             l10n.chatInfoAddMember,
             _openAddMembers,
           ),
@@ -2291,7 +2290,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
             _listDivider(cs),
             _memberAction(
               cs,
-              Symbols.link,
+              IosSymbols.link(context),
               l10n.chatInfoInviteByLink,
               () => _openInviteLink(_inviteLink!),
             ),

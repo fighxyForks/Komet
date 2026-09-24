@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -53,7 +52,7 @@ Future<void> showAuthLimitsSheet(
     case AuthEntry.login:
       await showInfoActionSheet(
         context,
-        headerIcon: Symbols.lock_clock,
+        headerIcon: IosSymbols.lockClock(context),
         headerGlow: true,
         title: l10n.authLimitsLoginTitle,
         subtitle: l10n.authLimitsLoginSubtitle(liftsAt),
@@ -74,7 +73,7 @@ Future<void> showAuthLimitsSheet(
     case AuthEntry.registration:
       await showInfoActionSheet(
         context,
-        headerIcon: Symbols.hourglass_top,
+        headerIcon: IosSymbols.hourglass(context),
         headerGlow: true,
         title: l10n.authLimitsSignupTitle,
         subtitle: l10n.authLimitsSignupSubtitle,

@@ -116,6 +116,7 @@ class ChatPreviewLine extends StatelessWidget {
     if (forwarded) spans.add(TextSpan(text: _forwardMark, style: bodyStyle));
 
     final leading = _leading(
+      context,
       cs,
       preview,
       labelled: labelled,
@@ -146,6 +147,7 @@ class ChatPreviewLine extends StatelessWidget {
   }
 
   Widget? _leading(
+    BuildContext context,
     ColorScheme cs,
     ChatPreviewMedia? preview, {
     required bool labelled,
@@ -170,7 +172,7 @@ class ChatPreviewLine extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(right: gap),
       child: Icon(
-        previewKindIcon(preview.kind),
+        IosSymbols.adapt(context, previewKindIcon(preview.kind)),
         size: size,
         color: cs.outline,
         weight: 500,

@@ -315,7 +315,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
         ),
         IconButton(
           onPressed: _busy ? null : () => Navigator.pop(context),
-          icon: Icon(IosSymbols.close(context), color: cs.onSurfaceVariant),
+          icon: Icon(Symbols.close, color: cs.onSurfaceVariant),
         ),
       ],
     ),
@@ -392,7 +392,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
               decoration: InputDecoration(
                 hintText: 'Найти по имени',
                 hintStyle: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
-                prefixIcon: Icon(IosSymbols.search(context),
+                prefixIcon: Icon(Symbols.search,
                   color: cs.onSurfaceVariant,
                   size: 20,
                 ),
@@ -418,7 +418,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
                     color: cs.surfaceContainerHigh,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(type.icon, color: cs.onSurface, size: 20),
+                  child: Icon(IosSymbols.adapt(context, type.icon), color: cs.onSurface, size: 20),
                 ),
                 title: type.label,
                 selected: _types.contains(type.filter),
@@ -544,7 +544,7 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
                 color: cs.primary,
                 shape: BoxShape.circle,
               ),
-              child: Icon(IosSymbols.check(context), color: cs.onPrimary, size: 16),
+              child: Icon(Symbols.check, color: cs.onPrimary, size: 16),
             ),
           ),
         ],
@@ -562,14 +562,14 @@ class _FolderEditSheetState extends State<_FolderEditSheet> {
           children: [
             _buildToggle(
               cs,
-              icon: IosSymbols.notifications(context),
+              icon: Symbols.notifications,
               title: 'Чаты с уведомлениями',
               value: _onlyNotMuted,
               onChanged: (v) => setState(() => _onlyNotMuted = v),
             ),
             _buildToggle(
               cs,
-              icon: IosSymbols.markUnread(context),
+              icon: Symbols.mark_chat_unread,
               title: 'Непрочитанные чаты',
               value: _onlyUnread,
               onChanged: (v) => setState(() => _onlyUnread = v),

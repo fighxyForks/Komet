@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/glass/ios_metrics.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/chats.dart';
 import '../../../backend/modules/cloud_storage.dart';
@@ -853,19 +852,19 @@ class _CloudFileCard extends StatelessWidget {
 
   const _CloudFileCard({required this.file, required this.onTap});
 
-  static IconData _icon(String name) {
+  static IconData _icon(BuildContext context, String name) {
     final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
     return switch (ext) {
-      'pdf' => Symbols.picture_as_pdf,
-      'jpg' || 'jpeg' || 'png' || 'gif' || 'webp' || 'bmp' => Symbols.image,
-      'mp4' || 'mov' || 'avi' || 'mkv' => Symbols.video_file,
-      'mp3' || 'wav' || 'ogg' || 'flac' => Symbols.audio_file,
-      'zip' || 'rar' || '7z' || 'tar' || 'gz' => Symbols.folder_zip,
-      'doc' || 'docx' => Symbols.description,
-      'xls' || 'xlsx' => Symbols.table_chart,
-      'ppt' || 'pptx' => Symbols.slideshow,
-      'txt' => Symbols.text_snippet,
-      _ => Symbols.insert_drive_file,
+      'pdf' => IosSymbols.pictureAsPdf(context),
+      'jpg' || 'jpeg' || 'png' || 'gif' || 'webp' || 'bmp' => IosSymbols.photo(context),
+      'mp4' || 'mov' || 'avi' || 'mkv' => IosSymbols.videoFile(context),
+      'mp3' || 'wav' || 'ogg' || 'flac' => IosSymbols.audioFile(context),
+      'zip' || 'rar' || '7z' || 'tar' || 'gz' => IosSymbols.folderZip(context),
+      'doc' || 'docx' => IosSymbols.doc(context),
+      'xls' || 'xlsx' => IosSymbols.tableChart(context),
+      'ppt' || 'pptx' => IosSymbols.slideshow(context),
+      'txt' => IosSymbols.textSnippet(context),
+      _ => IosSymbols.insertDriveFile(context),
     };
   }
 
@@ -894,7 +893,7 @@ class _CloudFileCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Center(
-                  child: Icon(_icon(file.name), color: cs.primary, size: 34),
+                  child: Icon(_icon(context, file.name), color: cs.primary, size: 34),
                 ),
               ),
               Padding(

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/config/app_frost.dart';
 import '../../core/config/app_liquid_glass.dart';
@@ -340,7 +341,7 @@ class _PillNavCell extends StatelessWidget {
     required this.onLongPress,
   });
 
-  Widget _buildIcon() {
+  Widget _buildIcon(BuildContext context) {
     final color = selected ? cs.onPrimary : cs.onSurface;
     final asset = item.animationAsset;
     if (asset != null) {
@@ -351,7 +352,7 @@ class _PillNavCell extends StatelessWidget {
         active: selected,
       );
     }
-    return Icon(item.icon, color: color, size: iconSize, fill: 1);
+    return Icon(IosSymbols.adapt(context, item.icon), color: color, size: iconSize, fill: 1);
   }
 
   @override
@@ -367,14 +368,14 @@ class _PillNavCell extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Center(
         child: iconsOnly
-            ? _buildIcon()
+            ? _buildIcon(context)
             : FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildIcon(),
+                    _buildIcon(context),
                     AnimatedContainer(
                       duration: animationDuration,
                       curve: Curves.easeOutCubic,
@@ -424,11 +425,10 @@ class _IosTabCell extends StatelessWidget {
 
   static const double iconSize = 26;
 
-  Widget _icon(Color color) {
+  Widget _icon(BuildContext context, Color color) {
     final asset = item.animationAsset;
     if (asset == null) {
-      return Icon(
-        item.icon,
+      return Icon(IosSymbols.adapt(context, item.icon),
         size: iconSize,
         fill: 1,
         weight: 500,
@@ -469,7 +469,7 @@ class _IosTabCell extends StatelessWidget {
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
-                  _icon(color),
+                  _icon(context, color),
                   if (label != null && label.isNotEmpty)
                     Positioned(
                       left: 26,

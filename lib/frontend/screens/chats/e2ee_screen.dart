@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/prompt_dialog.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -210,11 +209,11 @@ class _E2eeScreenState extends State<E2eeScreen> {
   };
 
   IconData _statusIcon() => switch (_phase) {
-    E2eePhase.none => Symbols.lock_open,
-    E2eePhase.offered => Symbols.hourglass_top,
-    E2eePhase.pendingConsent => Symbols.lock_clock,
-    E2eePhase.established => Symbols.lock,
-    E2eePhase.keyChanged => Symbols.warning,
+    E2eePhase.none => IosSymbols.lockOpen(context),
+    E2eePhase.offered => IosSymbols.hourglass(context),
+    E2eePhase.pendingConsent => IosSymbols.lockClock(context),
+    E2eePhase.established => IosSymbols.lock(context),
+    E2eePhase.keyChanged => IosSymbols.warning(context),
   };
 
   Widget _fingerprintBlock(ColorScheme cs, AppLocalizations l10n) {

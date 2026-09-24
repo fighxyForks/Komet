@@ -9,7 +9,6 @@ import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
 import 'package:m3e_collection/m3e_collection.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
@@ -246,7 +245,7 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
             ),
             const SizedBox(height: 30),
             _SectionLabel(
-              icon: Symbols.format_size,
+              icon: IosSymbols.formatSize(context),
               text: l10n.fontSettingsSectionFontSize,
             ),
             const SizedBox(height: 6),

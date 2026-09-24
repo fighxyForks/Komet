@@ -4,7 +4,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/utils/image_utils.dart';
 import '../../../l10n/app_localizations.dart';
@@ -13,6 +12,7 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/small_spinner.dart';
 import '../../../core/security/app_lock.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -216,7 +216,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                           child: IconButton(
                             icon: Icon(
-                              Symbols.camera_alt,
+                              IosSymbols.cameraAlt(context),
                               color: cs.onPrimary,
                               size: 20,
                             ),

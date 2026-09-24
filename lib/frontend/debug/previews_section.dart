@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../core/storage/app_database.dart';
@@ -192,7 +191,7 @@ class DebugPreviewsSection extends StatelessWidget {
                     Expanded(
                       child: _DebugCallButton(
                         label: 'После входа',
-                        icon: Symbols.lock_clock,
+                        icon: IosSymbols.lockClock(context),
                         onTap: () =>
                             showAuthLimitsSheet(context, AuthEntry.login),
                       ),

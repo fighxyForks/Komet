@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../widgets/color_wheel_picker.dart';
@@ -534,7 +533,7 @@ class _GradientToggleCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
       child: Row(
         children: [
-          Icon(Symbols.blur_on, color: cs.onSurface, size: 24, weight: 500),
+          Icon(IosSymbols.blurOn(context), color: cs.onSurface, size: 24, weight: 500),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

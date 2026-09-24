@@ -16,7 +16,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/small_spinner.dart';
-import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
 
@@ -107,7 +106,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
               builder: (context, selected, _) => SettingsCard(
                 children: [
                   _ChoiceTile(
-                    icon: IosSymbols.settingsVoice(context),
+                    icon: Symbols.settings_voice,
                     label: l10n.mediaDevicesSystemMicrophone,
                     selected: selected.isEmpty,
                     onTap: () => _pickMicrophone(''),
@@ -117,7 +116,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
                   else
                     for (var i = 0; i < microphones.length; i++)
                       _ChoiceTile(
-                        icon: IosSymbols.mic(context),
+                        icon: Symbols.mic,
                         label: microphones[i].label.isNotEmpty
                             ? microphones[i].label
                             : l10n.callMicrophoneFallback(i + 1),
@@ -137,7 +136,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
               builder: (context, selected, _) => SettingsCard(
                 children: [
                   _ChoiceTile(
-                    icon: IosSymbols.camera(context),
+                    icon: Symbols.photo_camera,
                     label: l10n.mediaDevicesSystemCamera,
                     selected: selected.isEmpty,
                     onTap: () => _pickCamera(''),
@@ -165,7 +164,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
                     ValueListenableBuilder<String>(
                       valueListenable: AppCamera.current,
                       builder: (context, camera, _) => SettingsToggleTile(
-                        icon: IosSymbols.tune(context),
+                        icon: Symbols.tune,
                         label: l10n.mediaDevicesVideoNoteCustom,
                         subtitle: custom && camera.isEmpty
                             ? l10n.mediaDevicesVideoNoteCustomMissing
@@ -178,7 +177,7 @@ class _MediaDevicesScreenState extends State<MediaDevicesScreen> {
                       ValueListenableBuilder<bool>(
                         valueListenable: AppVideoNoteRearCamera.current,
                         builder: (context, rear, _) => SettingsToggleTile(
-                          icon: IosSymbols.flipCamera(context),
+                          icon: Symbols.flip_camera_android,
                           label: l10n.mediaDevicesVideoNoteRear,
                           subtitle: l10n.mediaDevicesVideoNoteRearHint,
                           value: rear,
@@ -290,7 +289,7 @@ class _ChoiceTile extends StatelessWidget {
                 transitionBuilder: (child, animation) =>
                     ScaleTransition(scale: animation, child: child),
                 child: selected
-                    ? Icon(IosSymbols.checkCircle(context),
+                    ? Icon(Symbols.check_circle,
                         key: const ValueKey('on'),
                         color: cs.primary,
                         fill: 1,

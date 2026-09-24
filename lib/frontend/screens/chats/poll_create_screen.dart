@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../widgets/custom_notification.dart';
@@ -234,7 +233,7 @@ class _PollCreateSheetState extends State<_PollCreateSheet> {
           ),
           if (_answers.length > 2)
             IconButton(
-              icon: Icon(Symbols.remove_circle, color: cs.onSurfaceVariant),
+              icon: Icon(IosSymbols.removeCircle(context), color: cs.onSurfaceVariant),
               onPressed: () => _removeAnswer(index),
             ),
         ],

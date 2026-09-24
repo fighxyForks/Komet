@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -105,7 +104,7 @@ class _EmojiPanelState extends State<EmojiPanel> {
       sections.add(
         _EmojiSection(
           title: l10n.emojiPanelAnimated,
-          icon: Symbols.animation,
+          icon: IosSymbols.animation(context),
           items: all,
         ),
       );

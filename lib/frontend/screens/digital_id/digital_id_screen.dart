@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:m3e_collection/m3e_collection.dart'
     show ExpressiveRefreshIndicator;
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../backend/modules/digital_id.dart';
@@ -278,7 +277,7 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _busy ? null : _loadDocsExplicit,
-                    icon: const Icon(Symbols.sync, size: 18),
+                    icon: Icon(IosSymbols.sync(context), size: 18),
                     label: Text(
                       l10n.digitalIdLoadDocuments,
                       textAlign: TextAlign.center,

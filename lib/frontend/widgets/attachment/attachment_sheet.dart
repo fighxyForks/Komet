@@ -6,7 +6,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -1134,13 +1133,13 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
       compact: true,
       items: [
         ChatMenuItem(
-          icon: Symbols.arrow_split,
+          icon: IosSymbols.arrowSplit(context),
           label: AppLocalizations.of(context)!.attachSheetSendSeparately,
           onTap: () => _sendSelection(separately: true),
         ),
         if (widget.videoNote case final note?)
           ChatMenuItem(
-            icon: Symbols.motion_photos_on,
+            icon: IosSymbols.motionPhotosOn(context),
             label: AppLocalizations.of(context)!.attachSheetSendAsVideoNote,
             enabled: _fitsVideoNote(note),
             onTap: () => unawaited(_sendAsVideoNote()),

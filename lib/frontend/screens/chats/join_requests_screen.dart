@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../backend/modules/chats.dart';
@@ -141,7 +140,7 @@ class _JoinRequestsScreenState extends State<JoinRequestsScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.how_to_reg, size: 48, color: cs.outline, weight: 400),
+            Icon(IosSymbols.howToReg(context), size: 48, color: cs.outline, weight: 400),
             const SizedBox(height: 12),
             Text(
               AppLocalizations.of(context)!.joinRequestsEmpty,

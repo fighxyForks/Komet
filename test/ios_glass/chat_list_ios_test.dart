@@ -273,7 +273,7 @@ void main() {
         ),
       );
       expect(find.byType(AnimatedLottieIcon), findsOneWidget);
-      expect(find.byIcon(Symbols.call), findsOneWidget);
+      expect(find.text('Звонки'), findsOneWidget);
     });
   });
 }

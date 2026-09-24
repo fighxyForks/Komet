@@ -565,7 +565,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           items: [
                             if (BuildProfile.digitalId)
                               _SettingsItem(
-                                icon: IosSymbols.badge(context),
+                                icon: Symbols.badge,
                                 label: 'Цифровой ID',
                                 onTap: () {
                                   Navigator.push(
@@ -581,7 +581,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 },
                               ),
                             _SettingsItem(
-                              icon: IosSymbols.language(context),
+                              icon: Symbols.language,
                               label: 'Войти в Сферум',
                               onTap: () {
                                 Navigator.push(
@@ -598,7 +598,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                             ),
                             if (showExtraInfo)
                               _SettingsItem(
-                                icon: IosSymbols.info(context),
+                                icon: Symbols.info,
                                 label: AppLocalizations.of(context)!.infoTitle,
                                 onTap: () {
                                   Navigator.push(
@@ -628,7 +628,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       context,
                       items: [
                         _SettingsItem(
-                          icon: IosSymbols.notificationsActive(context),
+                          icon: Symbols.notifications_active,
                           label: 'Уведомления',
                           onTap: () {
                             Navigator.push(
@@ -641,7 +641,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           },
                         ),
                         _SettingsItem(
-                          icon: IosSymbols.videocam(context),
+                          icon: Symbols.videocam,
                           label: 'Камера и микрофон',
                           onTap: () {
                             Navigator.push(
@@ -659,7 +659,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () => _openCloudStorage(context),
                         ),
                         _SettingsItem(
-                          icon: IosSymbols.vpnLock(context),
+                          icon: Symbols.vpn_lock,
                           label: 'Прокси',
                           onTap: () {
                             final cs = Theme.of(context).colorScheme;
@@ -691,7 +691,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                             },
                           ),
                         _SettingsItem(
-                          icon: IosSymbols.lock(context),
+                          icon: Symbols.lock,
                           label: 'Безопасность',
                           onTap: () {
                             Navigator.push(
@@ -706,7 +706,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           },
                         ),
                         _SettingsItem(
-                          icon: IosSymbols.devices(context),
+                          icon: Symbols.devices,
                           label: 'Устройства',
                           onTap: () {
                             Navigator.push(
@@ -754,7 +754,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 context,
                                 items: [
                                   _SettingsItem(
-                                    icon: IosSymbols.construction(context),
+                                    icon: Symbols.construction,
                                     label: 'Для разработчиков',
                                     onTap: () {
                                       Navigator.push(
@@ -810,7 +810,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           },
                         ),
                         _SettingsItem(
-                          icon: IosSymbols.logout(context),
+                          icon: Symbols.logout,
                           label: 'Выйти из аккаунта',
                           tintColor: cs.error,
                           onTap: _confirmLogout,
@@ -983,7 +983,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: Icon(IosSymbols.qrCode(context),
+                      icon: Icon(Symbols.qr_code_2,
                         color: iconColor,
                         size: 26,
                         weight: 400,
@@ -1017,7 +1017,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                               : _openAvatarMenu,
                         ),
                         IconButton(
-                          icon: Icon(IosSymbols.edit(context),
+                          icon: Icon(Symbols.edit,
                             color: iconColor,
                             size: 22,
                             weight: 400,
@@ -1118,8 +1118,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 ),
                                 const SizedBox(width: 4),
                                 AnimatedSlashIcon(
-                                  icon: IosSymbols.visibility(context),
-                                  slashedIcon: IosSymbols.visibilityOff(context),
+                                  icon: Symbols.visibility,
+                                  slashedIcon: Symbols.visibility_off,
                                   slashed: !_isPhoneVisible,
                                   size: 14,
                                   color: Color.lerp(
@@ -1345,7 +1345,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               child: Padding(
                 padding: const EdgeInsets.all(6),
                 child: Icon(
-                  alignLeft ? IosSymbols.chevronLeft(context) : IosSymbols.chevronRight(context),
+                  alignLeft ? Symbols.chevron_left : Symbols.chevron_right,
                   color: Colors.white,
                   size: 24,
                 ),
@@ -1391,7 +1391,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(IosSymbols.checkCircle(context),
+                    Icon(Symbols.check_circle,
                       fill: 1,
                       size: 15,
                       color: online ? kSuccessGreen : cs.mutedText,

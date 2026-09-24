@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:m3e_collection/m3e_collection.dart'
     show ExpressiveRefreshIndicator;
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/messages.dart';
 import '../../../core/protocol/opcode_map.dart';
@@ -306,19 +305,19 @@ class _ScheduledMessagesScreenState extends State<ScheduledMessagesScreen>
     final l10n = AppLocalizations.of(context)!;
     switch (attaches.first.type) {
       case AttachmentType.photo:
-        return (Symbols.image, l10n.scheduledAttachPhoto);
+        return (IosSymbols.photo(context), l10n.scheduledAttachPhoto);
       case AttachmentType.video:
-        return (Symbols.videocam, l10n.scheduledAttachVideo);
+        return (IosSymbols.videocam(context), l10n.scheduledAttachVideo);
       case AttachmentType.audio:
-        return (Symbols.mic, l10n.scheduledAttachVoice);
+        return (IosSymbols.mic(context), l10n.scheduledAttachVoice);
       case AttachmentType.file:
-        return (Symbols.description, l10n.scheduledAttachFile);
+        return (IosSymbols.doc(context), l10n.scheduledAttachFile);
       case AttachmentType.location:
-        return (Symbols.location_on, l10n.scheduledAttachLocation);
+        return (IosSymbols.location(context), l10n.scheduledAttachLocation);
       case AttachmentType.forward:
-        return (Symbols.forward, l10n.scheduledAttachForwarded);
+        return (IosSymbols.forward(context), l10n.scheduledAttachForwarded);
       default:
-        return (Symbols.attach_file, l10n.scheduledAttachGeneric);
+        return (IosSymbols.attachFile(context), l10n.scheduledAttachGeneric);
     }
   }
 

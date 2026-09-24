@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../../../core/storage/chat_encryption_store.dart';
@@ -119,7 +118,7 @@ class _ChatEncryptionScreenState extends State<ChatEncryptionScreen> {
                   SettingsCard(
                     children: [
                       SettingsToggleTile(
-                        icon: _enabled ? Symbols.lock : Symbols.lock_open,
+                        icon: _enabled ? IosSymbols.lock(context) : IosSymbols.lockOpen(context),
                         label: 'Шифровать сообщения',
                         subtitle:
                             'Текст сообщений в этом чате будет зашифрован '
@@ -163,7 +162,7 @@ class _ChatEncryptionScreenState extends State<ChatEncryptionScreen> {
                             suffixIcon: IconButton(
                               icon: AnimatedSlashIcon(
                                 icon: IosSymbols.visibility(context),
-                                slashedIcon: Symbols.visibility_off,
+                                slashedIcon: IosSymbols.visibilityOff(context),
                                 slashed: _keyVisible,
                                 color: cs.onSurfaceVariant,
                               ),

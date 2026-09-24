@@ -489,7 +489,7 @@ class _CropWorkspaceState extends State<CropWorkspace>
           IconButton(
             onPressed: _flip,
             icon: Icon(
-              Symbols.flip,
+              IosSymbols.flip(context),
               color: _flipH ? MediaAccent.of(context) : Colors.white,
             ),
             tooltip: l10n.photoEditorFlipTooltip,
@@ -1277,10 +1277,10 @@ class _MarkupEditorState extends State<MarkupEditor> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildToolButton(DrawTool.pen, Symbols.edit),
-                _buildToolButton(DrawTool.marker, Symbols.ink_highlighter),
-                _buildToolButton(DrawTool.neon, Symbols.auto_awesome),
-                _buildToolButton(DrawTool.eraser, Symbols.ink_eraser),
+                _buildToolButton(DrawTool.pen, IosSymbols.edit(context)),
+                _buildToolButton(DrawTool.marker, IosSymbols.inkHighlighter(context)),
+                _buildToolButton(DrawTool.neon, IosSymbols.autoAwesome(context)),
+                _buildToolButton(DrawTool.eraser, IosSymbols.inkEraser(context)),
               ],
             ),
           ),
@@ -1402,7 +1402,7 @@ class _MarkupEditorState extends State<MarkupEditor> {
                 _shapesOpen = false;
               }),
               icon: Icon(
-                icon,
+                IosSymbols.adapt(context, icon),
                 color: _shapeMode == kind ? _color : Colors.white,
               ),
             ),

@@ -65,7 +65,7 @@ class ReplyPreview {
       height: size.height,
       color: cs.surfaceContainerHighest,
       child: Icon(
-        icon ?? IosSymbols.photo(context),
+        icon == null ? IosSymbols.photo(context) : IosSymbols.adapt(context, icon!),
         size: size.shortestSide * 0.4,
         color: cs.onSurfaceVariant,
       ),

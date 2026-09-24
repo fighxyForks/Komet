@@ -66,7 +66,7 @@ void main() {
     );
     expect(find.byKey(const ValueKey('ios-tab-bar')), findsOneWidget);
     expect(find.byType(GlassCapsule), findsOneWidget);
-    await tester.tap(find.byIcon(Symbols.call));
+    await tester.tap(find.text('Звонки'));
     expect(taps, [2]);
   });
 }

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../backend/modules/messages.dart' show ContactCache;
 import '../../core/utils/link_opener.dart';
@@ -13,6 +12,7 @@ import '../screens/contacts/open_contact_profile.dart';
 import 'link_text.dart';
 import 'lottie_image.dart';
 import 'text_entity_actions.dart';
+import '../widgets/glass/ios_symbols.dart';
 
 Color mentionTextColor(ColorScheme cs) => cs.primary;
 
@@ -445,7 +445,7 @@ class _FormattedMessageTextState extends State<FormattedMessageText> {
             top: 0,
             right: 0,
             child: Icon(
-              Symbols.format_quote,
+              IosSymbols.formatQuote(context),
               size: glyphSize,
               fill: 1,
               color: baseColor.withValues(alpha: 0.55),

@@ -9,6 +9,7 @@ import '../../widgets/settings_radio_tile.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class MessageActionsScreen extends StatelessWidget {
   const MessageActionsScreen({super.key});
@@ -76,8 +77,7 @@ class _StyleCard extends StatelessWidget {
                 children: [
                   for (final item in _items)
                     SettingsRadioTile(
-                      leading: Icon(
-                        item.icon,
+                      leading: Icon(IosSymbols.adapt(context, item.icon),
                         color: cs.onSurface,
                         size: 22,
                         weight: 500,

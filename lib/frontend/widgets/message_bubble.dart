@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:komet/main.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../backend/modules/messages.dart';
 import '../screens/webapp/web_app_bridge.dart';
@@ -1454,7 +1453,7 @@ class MessageBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               child: Row(
                 children: [
-                  Icon(Symbols.mode_comment, size: 19, color: accent),
+                  Icon(IosSymbols.modeComment(context), size: 19, color: accent),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -1521,8 +1520,8 @@ class MessageBubble extends StatelessWidget {
     InlineKeyboardButton button,
   ) {
     final trailingIcon = switch (button.type) {
-      'LINK' => Symbols.open_in_new,
-      'OPEN_APP' => Symbols.chevron_right,
+      'LINK' => IosSymbols.openInNew(context),
+      'OPEN_APP' => IosSymbols.chevronRight(context),
       _ => null,
     };
     final isClipboard = button.type == 'CLIPBOARD';
