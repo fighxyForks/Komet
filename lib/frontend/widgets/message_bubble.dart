@@ -50,6 +50,7 @@ import 'glass/ios_glass.dart';
 import 'glass/ios_typography.dart';
 import 'glass/ios_tracking.dart';
 import 'glass/ios_palette.dart';
+import 'glass/screen_gradient_bubble.dart';
 
 final Expando<MessageType> _contentTypeCache = Expando<MessageType>();
 final Expando<List<MessageAttachment>> _contentAttachmentsCache =
@@ -1359,35 +1360,41 @@ class MessageBubble extends StatelessWidget {
         AppBubbleShape.current,
         AppBubbleBehavior.current,
       ]),
-      builder: (context, child) => Container(
-        constraints: BoxConstraints(
+      builder: (context, child) {
+        final constraints = BoxConstraints(
           maxWidth: maxBubbleWidth,
           minHeight: showAvatarSlot && chatType == "CHAT"
               ? _avatarSize(ios)
               : 0,
-        ),
-        decoration: BoxDecoration(
-          color: glassBubble ? null : bubbleColor,
-          gradient: glassBubble
-              ? IosPalette.bubbleGradient(cs, isMe: isMe)
-              : null,
-          border: glassBubble
-              ? Border.all(color: IosPalette.bubbleRim(cs), width: 0.5)
-              : null,
-          borderRadius: noBubbleBackground
-              ? null
-              : _bubbleRadius(
-                  AppBubbleShape.current.value,
-                  AppBubbleBehavior.current.value,
-                  shape,
-                  hasPhotoCap,
-                  hasMultiPhotos,
-                  roundBottom: ios && hasCommentsFooter,
-                ),
-        ),
-        padding: containerPadding,
-        child: child,
-      ),
+        );
+        final radius = noBubbleBackground
+            ? null
+            : _bubbleRadius(
+                AppBubbleShape.current.value,
+                AppBubbleBehavior.current.value,
+                shape,
+                hasPhotoCap,
+                hasMultiPhotos,
+                roundBottom: ios && hasCommentsFooter,
+              );
+        if (glassBubble && radius != null) {
+          return ConstrainedBox(
+            constraints: constraints,
+            child: ScreenGradientBubble(
+              colors: IosPalette.bubbleGradient(cs, isMe: isMe).colors,
+              borderRadius: radius,
+              rim: IosPalette.bubbleRim(cs),
+              child: Padding(padding: containerPadding, child: child),
+            ),
+          );
+        }
+        return Container(
+          constraints: constraints,
+          decoration: BoxDecoration(color: bubbleColor, borderRadius: radius),
+          padding: containerPadding,
+          child: child,
+        );
+      },
       child: hasCommentsFooter
           ? _StackMatchTopWidth(
               growForBottom: true,
