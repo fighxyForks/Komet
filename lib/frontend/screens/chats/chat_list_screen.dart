@@ -186,6 +186,17 @@ Future<ForwardTarget?> openForwardScreen({
 }
 
 class ChatListScreen extends StatefulWidget {
+  static const double pinnedDividerHeight = 1;
+
+  static double? chatRowExtent(
+    int index, {
+    required int itemCount,
+    int? dividerIndex,
+  }) {
+    if (index < 0 || index >= itemCount) return null;
+    return index == dividerIndex ? pinnedDividerHeight : IosChatRow.height;
+  }
+
   final ValueChanged<DesktopChatSelection>? onChatSelected;
   final bool forwardMode;
   final int forwardMessageCount;
@@ -2210,7 +2221,6 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
-  static const double _pinnedDividerHeight = 1;
 
   Widget _chatRowsSliver({
     required SliverChildDelegate delegate,
@@ -2282,11 +2292,11 @@ class _ChatListScreenState extends State<ChatListScreen>
             else
               _chatRowsSliver(
                 itemExtent: IosGlass.of(context) && !_isInitialLoading
-                    ? (index) => index >= totalItems
-                          ? null
-                          : hasSeparator && index == pinnedCount
-                          ? _pinnedDividerHeight
-                          : IosChatRow.height
+                    ? (index) => ChatListScreen.chatRowExtent(
+                        index,
+                        itemCount: totalItems,
+                        dividerIndex: hasSeparator ? pinnedCount : null,
+                      )
                     : null,
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
@@ -2299,7 +2309,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                         key: const ValueKey('pinned_divider'),
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Divider(
-                          height: _pinnedDividerHeight,
+                          height: ChatListScreen.pinnedDividerHeight,
                           thickness: 0.5,
                           color: cs.outlineVariant.withValues(alpha: 0.5),
                         ),
