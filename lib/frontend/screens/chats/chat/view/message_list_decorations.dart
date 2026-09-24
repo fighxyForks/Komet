@@ -178,6 +178,48 @@ class MessageListEdgeFade extends StatelessWidget {
   }
 }
 
+class IosScrollEdgeFade extends StatelessWidget {
+  static const double extent = 16;
+  static const double plainOpacity = 0.94;
+  static const double wallpaperOpacity = 0.6;
+
+  final bool top;
+  final double height;
+  final bool overWallpaper;
+
+  const IosScrollEdgeFade({
+    super.key,
+    required this.top,
+    required this.height,
+    required this.overWallpaper,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = Theme.of(context).colorScheme.surface;
+    final strength = overWallpaper ? wallpaperOpacity : plainOpacity;
+    return IgnorePointer(
+      child: SizedBox(
+        height: height + extent,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: top ? Alignment.topCenter : Alignment.bottomCenter,
+              end: top ? Alignment.bottomCenter : Alignment.topCenter,
+              colors: [
+                surface.withValues(alpha: strength),
+                surface.withValues(alpha: strength * 0.85),
+                surface.withValues(alpha: 0),
+              ],
+              stops: [0, height / (height + extent), 1],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // #***! виньетка у верхнего/нижнего края ленты под прозрачным chrome
 class MessageListEdgeVignette extends StatelessWidget {
   final bool top;

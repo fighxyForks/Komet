@@ -190,6 +190,33 @@ class ChatBodyLayout extends StatelessWidget {
           senderName: searchSenderName,
           senderAvatar: searchSenderAvatar,
         ),
+        if (!vignette && AppIosGlass.active.value) ...[
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: IosScrollEdgeFade(
+              key: const ValueKey('ios-edge-fade-top'),
+              top: true,
+              height: defaultEdgeVignetteHeight,
+              overWallpaper: wallpaper != null,
+            ),
+          ),
+          ValueListenableBuilder<double>(
+            valueListenable: composerHeight,
+            builder: (context, height, _) => Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: IosScrollEdgeFade(
+                key: const ValueKey('ios-edge-fade-bottom'),
+                top: false,
+                height: height,
+                overWallpaper: wallpaper != null,
+              ),
+            ),
+          ),
+        ],
         if (vignette) ...[
           if (AppVisualStyle.current.value.glossyChrome ||
               AppIosGlass.active.value)
