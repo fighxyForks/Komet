@@ -27,7 +27,7 @@ void main() {
 
   testWidgets('тумблер выключает и включает iOS-интерфейс', (tester) async {
     await tester.pumpWidget(_host());
-    expect(find.text('Интерфейс iOS 26'), findsOneWidget);
+    expect(find.text('Интерфейс iOS'), findsOneWidget);
     final toggle = find.byKey(const ValueKey('ios-glass-switch'));
     expect(
       tester
@@ -38,7 +38,7 @@ void main() {
       isTrue,
     );
 
-    await tester.tap(find.text('Интерфейс iOS 26'));
+    await tester.tap(find.text('Интерфейс iOS'));
     await tester.pumpAndSettle();
     expect(AppIosGlass.enabled.value, isFalse);
     expect(AppIosGlass.active.value, isFalse);

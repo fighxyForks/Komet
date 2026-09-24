@@ -29,7 +29,7 @@ class GlassSuppression {
   static VoidCallback hold() {
     count.value++;
     PerfTrace.instance.event('glass', 'подавление вкл (${count.value})');
-    if (count.value == 1 && NativeLiquidGlassUtils.supportsLiquidGlass) {
+    if (count.value == 1 && AppIosGlass.nativeGlassSupported) {
       unawaited(_invoke(NativeLiquidGlassLifecycle.suppressGlassEffects));
     }
     var released = false;
@@ -38,7 +38,7 @@ class GlassSuppression {
       released = true;
       count.value--;
       PerfTrace.instance.event('glass', 'подавление выкл (${count.value})');
-      if (count.value == 0 && NativeLiquidGlassUtils.supportsLiquidGlass) {
+      if (count.value == 0 && AppIosGlass.nativeGlassSupported) {
         unawaited(_invoke(NativeLiquidGlassLifecycle.unsuppressGlassEffects));
       }
     };
@@ -174,7 +174,7 @@ class _IosGlassAppearanceState extends State<IosGlassAppearance> {
   }
 
   void _sync() {
-    if (!NativeLiquidGlassUtils.supportsLiquidGlass) return;
+    if (!AppIosGlass.nativeGlassSupported) return;
     final appearance = IosGlass.of(context)
         ? Theme.of(context).brightness.name
         : 'system';

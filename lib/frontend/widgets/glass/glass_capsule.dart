@@ -6,6 +6,7 @@ import 'package:native_liquid_glass/native_liquid_glass.dart';
 import '../../../core/utils/haptics.dart';
 import '../springy_tap.dart';
 import 'ios_glass.dart';
+import '../../../core/config/app_ios_glass.dart';
 
 Rect globalRectOf(BuildContext context) {
   final box = context.findRenderObject() as RenderBox?;
@@ -88,7 +89,10 @@ class GlassBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final base = tint ?? GlassStyle.tint(cs);
-    final fill = forceOpaque
+    final opaque = forceOpaque ||
+        MediaQuery.highContrastOf(context) ||
+        (IosGlass.of(context) && !AppIosGlass.nativeViews);
+    final fill = opaque
         ? base.withValues(alpha: 1)
         : base;
     final painted = DecoratedBox(
@@ -114,7 +118,7 @@ class GlassBackground extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: borderRadius,
-        child: forceOpaque
+        child: opaque
             ? painted
             : BackdropFilter(
                 filter: ui.ImageFilter.compose(

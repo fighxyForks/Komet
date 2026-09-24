@@ -1489,8 +1489,8 @@
       }
     }
   },
-  "appearanceIosGlassTitle": "iOS 26 interface",
-  "appearanceIosGlassSubtitle": "Liquid Glass buttons, menus and bars. On by default on iOS 26 and later.",
+  "appearanceIosGlassTitle": "iOS interface",
+  "appearanceIosGlassSubtitle": "iOS typography, controls and layout. Liquid Glass materials on iOS 26 and later.",
   "iosChannelMute": "Mute",
   "iosChannelUnmute": "Unmute",
   "iosChatSearch": "Search",
