@@ -178,7 +178,7 @@ void main() {
     await tester.pump();
     expect(
       tester.getSize(find.byKey(const ValueKey('ios-reply-thumb'))),
-      const Size(32, 32),
+      const Size(34, 34),
     );
   });
 

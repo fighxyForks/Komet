@@ -30,7 +30,7 @@ BorderRadius computeBubbleRadius({
   final isSingle = isTop && isBottom;
 
   // #***! фото с подписью, низ срезан потому что снизу текст
-  if (hasPhotoWithCaption && (isTop || isBottom)) {
+  if (!iosShape && hasPhotoWithCaption && (isTop || isBottom)) {
     return BorderRadius.only(
       topLeft: big,
       topRight: big,
@@ -40,7 +40,7 @@ BorderRadius computeBubbleRadius({
   }
 
   // #***! альбом без подписи, срезаны углы на стыках
-  if (hasMultiplePhotosNoCaption && isBottom) {
+  if (!iosShape && hasMultiplePhotosNoCaption && isBottom) {
     return BorderRadius.only(
       topLeft: isMe ? big : small,
       topRight: small,

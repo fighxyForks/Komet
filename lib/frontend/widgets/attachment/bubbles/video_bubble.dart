@@ -13,6 +13,7 @@ import '../../glass/ios_glass.dart';
 import '../../photo_viewer.dart';
 import '../../text_with_meta.dart';
 import 'bubble_context.dart';
+import 'ios_bubble_metrics.dart';
 import 'progressive_media_image.dart';
 import 'video_note_bubble.dart';
 
@@ -64,10 +65,13 @@ class VideoBubble extends StatelessWidget {
     final ios = IosGlass.of(ctx.context);
     final h = video.height;
     final iosSize = ios
-        ? BubbleContext.mediaDisplaySize(
+        ? IosBubbleMetrics.mediaSize(
             video.width,
             video.height,
-            hasCaption: hasCaption,
+            maxWidth: IosBubbleMetrics.mediaWidthLimit(
+              MediaQuery.sizeOf(ctx.context).width,
+              avatarSlot: !ctx.isMe && ctx.chatType == 'CHAT',
+            ),
           )
         : null;
     final width = iosSize?.width ?? layoutWidth(video, hasCaption: hasCaption);
@@ -133,7 +137,9 @@ class VideoBubble extends StatelessWidget {
     }
 
     final preview = ClipRRect(
-      borderRadius: BorderRadius.circular(BubbleContext.photoBorderRadius),
+      borderRadius: ios
+          ? ctx.iosMediaRadius(flatBottom: hasCaption)
+          : BorderRadius.circular(BubbleContext.photoBorderRadius),
       child: Stack(
         children: [
           previewImage(),
@@ -195,6 +201,8 @@ class VideoBubble extends StatelessWidget {
       ),
     );
 
+    if (ios) return _iosLayout(preview, width, resolvedCaption);
+
     if (!hasCaption) {
       return Stack(
         children: [
@@ -224,6 +232,45 @@ class VideoBubble extends StatelessWidget {
             ),
             child: TextWithMeta(
               text: resolvedCaption,
+              meta: ctx.meta(),
+              fillWidth: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iosLayout(Widget preview, double width, Widget? caption) {
+    const inset = IosBubbleMetrics.mediaInset;
+    final hasCaption = caption != null;
+    final padded = Padding(
+      padding: EdgeInsets.fromLTRB(inset, inset, inset, hasCaption ? 0 : inset),
+      child: preview,
+    );
+    if (!hasCaption) {
+      return Stack(
+        children: [
+          padded,
+          Positioned(
+            bottom: inset + IosBubbleMetrics.mediaStatusInset,
+            right: inset + IosBubbleMetrics.mediaStatusInset,
+            child: ctx.compactTime(ios: true),
+          ),
+        ],
+      );
+    }
+    return SizedBox(
+      width: width + inset * 2,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          padded,
+          Padding(
+            padding: IosBubbleMetrics.captionPadding,
+            child: TextWithMeta(
+              text: caption,
               meta: ctx.meta(),
               fillWidth: true,
             ),

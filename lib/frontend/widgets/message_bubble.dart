@@ -279,22 +279,25 @@ class _RenderStackMatchTopWidth extends RenderBox
 }
 
 class _ReactionsFlow extends MultiChildRenderObjectWidget {
-  _ReactionsFlow({required List<Widget> chips, Widget? meta})
+  _ReactionsFlow({required List<Widget> chips, Widget? meta, this.gap = 4})
     : hasMeta = meta != null,
       super(children: [...chips, ?meta]);
 
   final bool hasMeta;
+  final double gap;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderReactionsFlow(hasMeta);
+      _RenderReactionsFlow(hasMeta, gap);
 
   @override
   void updateRenderObject(
     BuildContext context,
     _RenderReactionsFlow renderObject,
   ) {
-    renderObject.hasMeta = hasMeta;
+    renderObject
+      ..hasMeta = hasMeta
+      ..gap = gap;
   }
 }
 
@@ -304,11 +307,19 @@ class _RenderReactionsFlow extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _ReactionsFlowParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _ReactionsFlowParentData> {
-  _RenderReactionsFlow(this._hasMeta);
+  _RenderReactionsFlow(this._hasMeta, this._gap);
 
-  static const double _spacing = 4;
-  static const double _runSpacing = 4;
   static const double _metaGap = 8;
+
+  double _gap;
+  set gap(double value) {
+    if (value == _gap) return;
+    _gap = value;
+    markNeedsLayout();
+  }
+
+  double get _spacing => _gap;
+  double get _runSpacing => _gap;
 
   bool _hasMeta;
   set hasMeta(bool value) {
@@ -1270,7 +1281,7 @@ class MessageBubble extends StatelessWidget {
             padding: EdgeInsets.only(
               left: padding == EdgeInsets.zero ? 8 : 0,
               right: padding == EdgeInsets.zero ? 8 : 0,
-              bottom: 4,
+              bottom: ios ? IosBubbleMetrics.replyGap : 4,
             ),
             child: _buildReplyQuote(
               context,
@@ -1306,7 +1317,7 @@ class MessageBubble extends StatelessWidget {
                       maxBubbleWidth,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: ios ? IosBubbleMetrics.replyGap : 4),
                 ],
                 contentWithReactions,
               ],
@@ -1713,6 +1724,7 @@ class MessageBubble extends StatelessWidget {
       child: _ReactionsFlow(
         chips: chips,
         meta: carriesMeta ? ctx.footerMeta() : null,
+        gap: IosGlass.of(ctx.context) ? IosBubbleMetrics.reactionSpacing : 4,
       ),
     );
 
@@ -2081,6 +2093,7 @@ class MessageBubble extends StatelessWidget {
             const SizedBox(height: 6),
             _ReactionsFlow(
               chips: reactionChips,
+              gap: ios ? IosBubbleMetrics.reactionSpacing : 4,
               meta: Padding(
                 padding: const EdgeInsets.only(bottom: 2),
                 child: metaRow,
@@ -2134,42 +2147,22 @@ class MessageBubble extends StatelessWidget {
       attachments: reply.attachments,
     );
 
-    final Widget? body;
-    if (preview.hasMedia && IosGlass.of(context)) {
-      body = Padding(
-        padding: const EdgeInsets.only(top: 2, bottom: 1),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              key: const ValueKey('ios-reply-thumb'),
-              width: 32,
-              height: 32,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: preview.thumbnail(
-                  size: const Size(32, 32),
-                  cs: cs,
-                  radius: 5,
-                ),
-              ),
-            ),
-            if (rawPreview.isNotEmpty) ...[
-              const SizedBox(width: 8),
-              Flexible(
-                child: _replyQuoteText(
-                  cs,
-                  textColor,
-                  null,
-                  rawPreview,
-                  quotedId,
-                ),
-              ),
-            ],
-          ],
-        ),
+    final ios = IosGlass.of(context);
+    if (ios) {
+      return _iosReplyQuote(
+        cs,
+        textColor,
+        reply,
+        preview,
+        accent,
+        name,
+        rawPreview,
+        quotedId,
       );
-    } else if (preview.hasMedia) {
+    }
+
+    final Widget? body;
+    if (preview.hasMedia) {
       final maxSide = math.max(
         72.0,
         math.min(150.0, maxBubbleWidth * _replyWidthShare - 24),
@@ -2231,13 +2224,99 @@ class MessageBubble extends StatelessWidget {
     return quote;
   }
 
+  Widget _iosReplyQuote(
+    ColorScheme cs,
+    Color textColor,
+    ReplyInfo reply,
+    ReplyPreview preview,
+    Color accent,
+    String name,
+    String rawPreview,
+    String? quotedId,
+  ) {
+    const textSize = IosBubbleMetrics.replyTextSize;
+    final lineHeight = (textSize * 1.2).roundToDouble();
+    final thumbSide = lineHeight * 2;
+    final text = rawPreview.isEmpty && preview.hasMedia
+        ? null
+        : _replyQuoteText(
+            cs,
+            textColor,
+            preview.hasMedia ? null : preview.icon,
+            rawPreview,
+            quotedId,
+            fontSize: textSize,
+          );
+    final quote = Container(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        color: accent.withValues(alpha: 0.10),
+        border: Border(left: BorderSide(color: accent, width: 3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (preview.hasMedia) ...[
+            SizedBox(
+              key: const ValueKey('ios-reply-thumb'),
+              width: thumbSide,
+              height: thumbSide,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(
+                  IosBubbleMetrics.replyThumbRadius,
+                ),
+                child: preview.thumbnail(
+                  size: Size.square(thumbSide),
+                  cs: cs,
+                  radius: IosBubbleMetrics.replyThumbRadius,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: textSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                ?text,
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    final mid = reply.messageId;
+    final cb = onReplyTap;
+    if (mid != null && mid != '0' && cb != null) {
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => cb(mid),
+        child: quote,
+      );
+    }
+    return quote;
+  }
+
   Widget _replyQuoteText(
     ColorScheme cs,
     Color textColor,
     IconData? icon,
     String rawPreview,
-    String? quotedId,
-  ) {
+    String? quotedId, {
+    double fontSize = 13,
+  }) {
     return DecryptedContent(
       accountId: message.accountId,
       chatId: message.chatId,
@@ -2266,7 +2345,7 @@ class MessageBubble extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: color,
-                  fontSize: 13,
+                  fontSize: fontSize,
                   fontStyle: wrongKey ? FontStyle.italic : null,
                 ),
               ),
