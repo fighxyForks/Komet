@@ -27,6 +27,7 @@ import '../../core/config/app_colors.dart';
 import '../../main.dart';
 import '../../models/attachment.dart';
 import 'attachment/photo_hero.dart';
+import 'media_scrubber.dart';
 import '../motion/gallery_dismiss.dart';
 import '../motion/ios_motion.dart';
 import '../motion/zoom_transform.dart';
@@ -1882,47 +1883,20 @@ class _VideoControlPanel extends StatelessWidget {
               ],
             ),
           ),
-          Row(
-            children: [
-              SizedBox(
-                width: 42,
-                child: Text(
-                  _formatViewerDuration(position),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: IosGlass.of(context)
-                        ? IosTypography.callLabel
-                        : 11,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: _ViewerSlider(
-                  value: maxMs <= 0
-                      ? 0
-                      : (dragValue ??
-                            position.inMilliseconds.toDouble())
-                        .clamp(0, maxMs)
-                        .toDouble(),
-                  max: maxMs <= 0 ? 1 : maxMs,
-                  onChanged: maxMs <= 0 ? null : onSeekChanged,
-                  onChangeEnd: maxMs <= 0 ? null : onSeekEnd,
-                ),
-              ),
-              SizedBox(
-                width: 42,
-                child: Text(
-                  _formatViewerDuration(duration),
-                  textAlign: TextAlign.end,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: IosGlass.of(context)
-                        ? IosTypography.callLabel
-                        : 11,
-                  ),
-                ),
-              ),
-            ],
+          MediaScrubber(
+            position: dragValue == null
+                ? position
+                : Duration(milliseconds: dragValue!.round()),
+            duration: duration,
+            buffered: value?.buffered.isNotEmpty == true
+                ? value!.buffered.last.end
+                : null,
+            onSeek: maxMs <= 0
+                ? null
+                : (d) => onSeekChanged(d.inMilliseconds.toDouble()),
+            onSeekEnd: maxMs <= 0
+                ? null
+                : (d) => onSeekEnd(d.inMilliseconds.toDouble()),
           ),
         ],
       ),
