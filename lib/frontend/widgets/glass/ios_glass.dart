@@ -126,7 +126,12 @@ class _NativeGlassGateState extends State<NativeGlassGate> {
       }
     }
     _lastNative = useNative;
-    return widget.builder(context, useNative);
+    final child = widget.builder(context, useNative);
+    if (!useNative) return child;
+    return KeyedSubtree(
+      key: ValueKey(Theme.of(context).brightness),
+      child: child,
+    );
   }
 
   @override

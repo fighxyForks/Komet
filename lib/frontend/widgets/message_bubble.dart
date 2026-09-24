@@ -50,6 +50,7 @@ import 'glass/ios_glass.dart';
 import 'glass/ios_typography.dart';
 import 'glass/ios_tracking.dart';
 import 'glass/ios_palette.dart';
+import 'glass/screen_gradient_bubble.dart';
 import 'sender_name_color.dart';
 
 final Expando<MessageType> _contentTypeCache = Expando<MessageType>();
@@ -1034,8 +1035,8 @@ class MessageBubble extends StatelessWidget {
 
   static const double _replyWidthShare = 0.75;
 
-  Color _senderColor(int id, Brightness brightness) =>
-      SenderNameColor.of(id, brightness);
+  Color _senderColor(int id, Brightness brightness, {required bool ios}) =>
+      SenderNameColor.of(id, brightness, ios: ios);
 
   Widget _buildSenderHeader(
     ColorScheme cs,
@@ -1053,7 +1054,7 @@ class MessageBubble extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: _senderColor(message.senderId, cs.brightness),
+          color: _senderColor(message.senderId, cs.brightness, ios: ios),
           fontSize: ios ? IosBubbleMetrics.senderNameSize : 13,
           fontWeight: FontWeight.w600,
         ),
@@ -1349,35 +1350,41 @@ class MessageBubble extends StatelessWidget {
         AppBubbleShape.current,
         AppBubbleBehavior.current,
       ]),
-      builder: (context, child) => Container(
-        constraints: BoxConstraints(
+      builder: (context, child) {
+        final constraints = BoxConstraints(
           maxWidth: maxBubbleWidth,
           minHeight: showAvatarSlot && chatType == "CHAT"
               ? _avatarSize(ios)
               : 0,
-        ),
-        decoration: BoxDecoration(
-          color: glassBubble ? null : bubbleColor,
-          gradient: glassBubble
-              ? IosPalette.bubbleGradient(cs, isMe: isMe)
-              : null,
-          border: glassBubble
-              ? Border.all(color: IosPalette.bubbleRim(cs), width: 0.5)
-              : null,
-          borderRadius: noBubbleBackground
-              ? null
-              : _bubbleRadius(
-                  AppBubbleShape.current.value,
-                  AppBubbleBehavior.current.value,
-                  shape,
-                  hasPhotoCap,
-                  hasMultiPhotos,
-                  roundBottom: ios && hasCommentsFooter,
-                ),
-        ),
-        padding: containerPadding,
-        child: child,
-      ),
+        );
+        final radius = noBubbleBackground
+            ? null
+            : _bubbleRadius(
+                AppBubbleShape.current.value,
+                AppBubbleBehavior.current.value,
+                shape,
+                hasPhotoCap,
+                hasMultiPhotos,
+                roundBottom: ios && hasCommentsFooter,
+              );
+        if (glassBubble && radius != null) {
+          return ConstrainedBox(
+            constraints: constraints,
+            child: ScreenGradientBubble(
+              colors: IosPalette.bubbleGradient(cs, isMe: isMe).colors,
+              borderRadius: radius,
+              rim: IosPalette.bubbleRim(cs),
+              child: Padding(padding: containerPadding, child: child),
+            ),
+          );
+        }
+        return Container(
+          constraints: constraints,
+          decoration: BoxDecoration(color: bubbleColor, borderRadius: radius),
+          padding: containerPadding,
+          child: child,
+        );
+      },
       child: hasCommentsFooter
           ? _StackMatchTopWidth(
               growForBottom: true,
@@ -2138,7 +2145,11 @@ class MessageBubble extends StatelessWidget {
     ReplyInfo reply,
     double maxBubbleWidth,
   ) {
-    final accent = _senderColor(reply.senderId, cs.brightness);
+    final accent = _senderColor(
+      reply.senderId,
+      cs.brightness,
+      ios: IosGlass.of(context),
+    );
     final name = reply.senderId == myId
         ? 'Вы'
         : (ContactCache.get(reply.senderId) ?? 'Сообщение');

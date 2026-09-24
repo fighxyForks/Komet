@@ -87,6 +87,7 @@ import 'chat/view/composer_area.dart';
 import 'chat/view/chat_body_layout.dart';
 import 'chat/view/shimmer_loading.dart';
 import '../../../core/config/app_ios_glass.dart';
+import '../../widgets/mesh_gradient_background.dart';
 import '../../../core/config/app_visual_style.dart';
 import '../../../core/config/app_chat_chrome.dart';
 import 'package:komet/core/config/app_composer_background.dart';
@@ -545,8 +546,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool get _chromeVignette =>
-      AppIosGlass.active.value ||
-      (_effectiveChrome == ChatChromeStyle.none && _wallpaper == null);
+      _effectiveChrome == ChatChromeStyle.none && _wallpaper == null;
 
   final ValueNotifier<double> _composerHeight = ValueNotifier(96);
   final ValueNotifier<double> _pinnedBannerHeight = ValueNotifier(0);
@@ -593,6 +593,7 @@ class _ChatScreenState extends State<ChatScreen>
     _previewChat = widget.channelSubscribed == false;
     _chatController.chatId = widget.chatId;
     _chatController.isMounted = () => mounted;
+    _chatController.appendedCount.addListener(MeshGradientPulse.pulse);
     _mediaSend = ChatMediaSendController(
       chatController: _chatController,
       showAttachmentPanel: _showAttachmentPanel,
@@ -2225,6 +2226,7 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _headerStatusNotifier.dispose();
     _otherReadTime.dispose();
+    _chatController.appendedCount.removeListener(MeshGradientPulse.pulse);
     _chatController.dispose();
     _prank.dispose();
     _uploadStatus.dispose();
@@ -4800,8 +4802,7 @@ class _ChatScreenState extends State<ChatScreen>
     final ios = AppIosGlass.active.value;
     final base = MediaQuery.paddingOf(context).top +
         ChatAppBar.headerHeight(glossy: glossy, ios: ios);
-    // Fade just below the floating header capsules.
-    return ios ? base + 12 : base;
+    return ios ? base + IosScrollEdgeFade.headerOverlap : base;
   }
 
   Widget _buildMessagesArea() {

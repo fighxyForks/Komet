@@ -788,7 +788,13 @@ class KometAppState extends State<KometApp>
     _runThemeReveal(center, () => AppAmoled.save(value));
   }
 
+  static const Duration _iosThemeCrossfade = Duration(milliseconds: 300);
+
   void _runThemeReveal(Offset center, Future<void> Function() apply) {
+    if (AppIosGlass.active.value) {
+      unawaited(_runIosThemeCrossfade(apply));
+      return;
+    }
     final overlay = KometApp.navigatorKey.currentState?.overlay;
     final ctx = _captureBoundaryKey.currentContext;
     if (overlay == null || ctx == null) {
@@ -840,6 +846,58 @@ class KometAppState extends State<KometApp>
         _finishReveal();
       }, onError: (_) {});
     });
+  }
+
+  Future<void> _runIosThemeCrossfade(Future<void> Function() apply) async {
+    final releaseGlass = GlassSuppression.hold();
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      await WidgetsBinding.instance.endOfFrame;
+      final overlay = KometApp.navigatorKey.currentState?.overlay;
+      final ctx = _captureBoundaryKey.currentContext;
+      final boundary = ctx?.findRenderObject();
+      if (!mounted ||
+          overlay == null ||
+          ctx == null ||
+          !ctx.mounted ||
+          boundary is! RenderRepaintBoundary ||
+          MediaQuery.disableAnimationsOf(ctx)) {
+        await apply();
+        return;
+      }
+      final ui.Image snapshot;
+      try {
+        final dpr = math.min(MediaQuery.of(ctx).devicePixelRatio, 2.0);
+        snapshot = boundary.toImageSync(pixelRatio: dpr);
+      } catch (_) {
+        await apply();
+        return;
+      }
+      _finishReveal();
+      final controller = AnimationController(
+        vsync: this,
+        duration: _iosThemeCrossfade,
+      );
+      final entry = ThemeRevealOverlay.crossfade(
+        snapshot: snapshot,
+        animation: controller,
+      );
+      _revealController = controller;
+      _revealEntry = entry;
+      _revealImage = snapshot;
+      overlay.insert(entry);
+      await apply();
+      await WidgetsBinding.instance.endOfFrame;
+      if (_revealController != controller) return;
+      try {
+        await controller.forward().orCancel;
+      } on TickerCanceled {
+        return;
+      }
+      if (_revealController == controller) _finishReveal();
+    } finally {
+      releaseGlass();
+    }
   }
 
   void _finishReveal() {
@@ -1174,6 +1232,7 @@ class KometAppState extends State<KometApp>
                                   colors: gradientColors,
                                   animate: gradientWallpaper!.gradientAnimated,
                                   rotation: gradientWallpaper.gradientRotation,
+                                  stepOnPulse: AppIosGlass.active.value,
                                 ),
                               ),
                             RepaintBoundary(

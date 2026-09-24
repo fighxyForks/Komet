@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'glass/ios_glass.dart';
+
 class TextWithMeta extends MultiChildRenderObjectWidget {
   final bool fillWidth;
 
@@ -15,14 +17,16 @@ class TextWithMeta extends MultiChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      RenderTextWithMeta(fillWidth);
+      RenderTextWithMeta(fillWidth, alignBaseline: IosGlass.of(context));
 
   @override
   void updateRenderObject(
     BuildContext context,
     RenderTextWithMeta renderObject,
   ) {
-    renderObject.fillWidth = fillWidth;
+    renderObject
+      ..fillWidth = fillWidth
+      ..alignBaseline = IosGlass.of(context);
   }
 }
 
@@ -32,14 +36,23 @@ class RenderTextWithMeta extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, TextWithMetaParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, TextWithMetaParentData> {
-  RenderTextWithMeta(this._fillWidth);
+  RenderTextWithMeta(this._fillWidth, {bool alignBaseline = false})
+    : _alignBaseline = alignBaseline;
 
   static const double _gap = 8;
+  static const double _baselineNudge = 2;
 
   bool _fillWidth;
   set fillWidth(bool value) {
     if (value == _fillWidth) return;
     _fillWidth = value;
+    markNeedsLayout();
+  }
+
+  bool _alignBaseline;
+  set alignBaseline(bool value) {
+    if (value == _alignBaseline) return;
+    _alignBaseline = value;
     markNeedsLayout();
   }
 
@@ -142,35 +155,41 @@ class RenderTextWithMeta extends RenderBox
 
     (_text.parentData! as TextWithMetaParentData).offset = Offset.zero;
 
-    double metaDy;
-    if (metaOnOwnLine) {
-      metaDy = size.height - metaSize.height;
-    } else {
-      // Align the meta row's alphabetic baseline with the last line of body
-      // text (iOS messenger style). Falls back to bottom alignment when a
-      // baseline is unavailable.
-      final textBl = _text.getDistanceToBaseline(TextBaseline.alphabetic);
-      final metaBl = _meta.getDistanceToBaseline(TextBaseline.alphabetic);
-      if (paragraph != null && textBl != null && metaBl != null) {
-        final length = paragraph.text.toPlainText().length;
-        final caret = paragraph.getOffsetForCaret(
-          TextPosition(offset: length),
-          Rect.zero,
-        );
-        final lastLineBaseline = caret.dy + textBl;
-        metaDy = lastLineBaseline - metaBl;
-      } else {
-        metaDy = size.height - metaSize.height;
-      }
-    }
-
-    final maxDy = math.max(0.0, size.height - metaSize.height);
-    metaDy = metaDy.clamp(0.0, maxDy);
+    final bottom = size.height - metaSize.height;
+    final baselineDy = metaOnOwnLine || !_alignBaseline
+        ? null
+        : _lastLineBaselineDy(paragraph);
+    final metaDy = metaOnOwnLine
+        ? bottom
+        : baselineDy?.clamp(0.0, math.max(0.0, bottom)).toDouble() ??
+              bottom - _baselineNudge;
 
     (_meta.parentData! as TextWithMetaParentData).offset = Offset(
       math.max(0, size.width - metaSize.width),
       metaDy,
     );
+  }
+
+  double? _lastLineBaselineDy(RenderParagraph? paragraph) {
+    if (paragraph == null) return null;
+    final textBaseline = _text.getDistanceToBaseline(
+      TextBaseline.alphabetic,
+      onlyReal: true,
+    );
+    final metaBaseline = _meta.getDistanceToBaseline(
+      TextBaseline.alphabetic,
+      onlyReal: true,
+    );
+    if (textBaseline == null || metaBaseline == null) return null;
+    const first = TextPosition(offset: 0);
+    final last = TextPosition(offset: paragraph.text.toPlainText().length);
+    final firstBottom =
+        paragraph.getOffsetForCaret(first, Rect.zero).dy +
+        paragraph.getFullHeightForCaret(first);
+    final lastBottom =
+        paragraph.getOffsetForCaret(last, Rect.zero).dy +
+        paragraph.getFullHeightForCaret(last);
+    return textBaseline + lastBottom - firstBottom - metaBaseline;
   }
 
   @override

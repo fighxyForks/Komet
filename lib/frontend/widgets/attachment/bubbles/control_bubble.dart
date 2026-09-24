@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../backend/modules/messages.dart';
 import '../../../../models/attachment.dart';
 import '../../glass/ios_glass.dart';
+import '../../glass/ios_palette.dart';
 import '../../glass/ios_typography.dart';
 
 class _ControlSegment {
@@ -132,10 +133,12 @@ class _ControlBubbleState extends State<ControlBubble> {
     final ios = IosGlass.of(context);
     final bubble = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: ios
+          ? IosPalette.servicePill(cs)
+          : BoxDecoration(
+              color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(12),
+            ),
       child: Text.rich(
         TextSpan(
           children: [
@@ -156,7 +159,7 @@ class _ControlBubbleState extends State<ControlBubble> {
           ],
         ),
         style: TextStyle(
-          color: cs.onSurfaceVariant,
+          color: ios ? IosPalette.serviceText(cs) : cs.onSurfaceVariant,
           fontSize: ios ? IosTypography.service : 12,
         ),
         textAlign: TextAlign.center,

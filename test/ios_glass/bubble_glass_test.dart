@@ -4,6 +4,7 @@ import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_palette.dart';
+import 'package:komet/frontend/widgets/glass/screen_gradient_bubble.dart';
 import 'package:komet/frontend/widgets/message_bubble.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,11 +31,15 @@ Widget _app(Widget body, {Brightness brightness = Brightness.light}) =>
       ),
     );
 
-BoxDecoration _bubbleDecoration(WidgetTester tester) => tester
-    .widgetList<Container>(find.byType(Container))
-    .map((c) => c.decoration)
-    .whereType<BoxDecoration>()
-    .firstWhere((d) => d.gradient != null);
+ScreenGradientBox _bubbleBox(WidgetTester tester) =>
+    tester.widget<ScreenGradientBox>(find.byType(ScreenGradientBox));
+
+Widget _bubble() => MessageBubble(
+  message: _message('1', 1),
+  isMe: true,
+  myId: 1,
+  chatType: 'DIALOG',
+);
 
 void main() {
   setUp(() async {
@@ -91,9 +96,9 @@ void main() {
         ),
       ),
     );
-    final decoration = _bubbleDecoration(tester);
-    expect(decoration.color, isNull);
-    expect(decoration.border, isNotNull);
+    final box = _bubbleBox(tester);
+    expect(box.colors, hasLength(2));
+    expect(box.rim.a, greaterThan(0));
   });
 
   testWidgets('низ поста с комментариями скруглён как верх', (tester) async {
@@ -110,9 +115,68 @@ void main() {
         ),
       ),
     );
-    final radius = _bubbleDecoration(tester).borderRadius! as BorderRadius;
+    final radius = _bubbleBox(tester).borderRadius;
     expect(radius.bottomLeft, radius.topLeft);
     expect(radius.bottomRight, radius.topRight);
     expect(find.text('3 комментария'), findsOneWidget);
+  });
+
+  testWidgets('градиент привязан к экрану: срез зависит от положения бабла', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        Column(children: [_bubble(), const SizedBox(height: 300), _bubble()]),
+      ),
+    );
+    final boxes = tester
+        .renderObjectList<RenderScreenGradientBox>(
+          find.byType(ScreenGradientBox),
+        )
+        .toList();
+    expect(boxes, hasLength(2));
+    final upper = boxes[0].debugPaintedTop!;
+    final lower = boxes[1].debugPaintedTop!;
+    expect(lower - upper, greaterThan(300));
+    expect(
+      tester
+          .widget<ScreenGradientBox>(find.byType(ScreenGradientBox).first)
+          .viewportHeight,
+      600,
+    );
+  });
+
+  testWidgets('срез обновляется, когда бабл сдвигается без прокрутки', (
+    tester,
+  ) async {
+    final gap = ValueNotifier<double>(0);
+    addTearDown(gap.dispose);
+    await tester.pumpWidget(
+      _app(
+        ValueListenableBuilder<double>(
+          valueListenable: gap,
+          builder: (context, value, _) => Column(
+            children: [
+              SizedBox(height: value),
+              _bubble(),
+            ],
+          ),
+        ),
+      ),
+    );
+    final box = tester.renderObject<RenderScreenGradientBox>(
+      find.byType(ScreenGradientBox),
+    );
+    final before = box.debugPaintedTop!;
+    gap.value = 120;
+    await tester.pump();
+    await tester.pump();
+    expect(box.debugPaintedTop, closeTo(before + 120, 0.01));
+  });
+
+  testWidgets('вне iOS-режима бабл остаётся сплошным', (tester) async {
+    AppIosGlass.debugSetSupported(false);
+    await tester.pumpWidget(_app(_bubble()));
+    expect(find.byType(ScreenGradientBox), findsNothing);
   });
 }

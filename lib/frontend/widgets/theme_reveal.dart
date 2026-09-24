@@ -39,6 +39,28 @@ class ThemeRevealOverlay {
     );
   }
 
+  static OverlayEntry crossfade({
+    required ui.Image snapshot,
+    required Animation<double> animation,
+  }) {
+    return OverlayEntry(
+      builder: (ctx) {
+        final size = MediaQuery.sizeOf(ctx);
+        return IgnorePointer(
+          child: FadeTransition(
+            opacity: ReverseAnimation(animation),
+            child: RawImage(
+              image: snapshot,
+              width: size.width,
+              height: size.height,
+              fit: BoxFit.fill,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   static double _maxRadius(Offset center, Size size) {
     final dx = math.max(center.dx, size.width - center.dx);
     final dy = math.max(center.dy, size.height - center.dy);
