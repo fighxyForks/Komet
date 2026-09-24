@@ -23,6 +23,9 @@ import '../widgets/small_spinner.dart';
 import '../widgets/sheet_helpers.dart';
 import '../widgets/share_unopenable_file.dart';
 import '../widgets/glass/ios_sheet.dart';
+import '../widgets/glass/ios_symbols.dart';
+import '../widgets/glass/ios_typography.dart';
+import '../widgets/glass/ios_auth_chrome.dart';
 
 class DownloadsScreen extends StatefulWidget {
   const DownloadsScreen({super.key});
@@ -244,9 +247,9 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final ios = IosGlass.of(context);
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: ios ? iosAuthBackground(context) : cs.surface,
       appBar: AppBar(
-        backgroundColor: cs.surface,
+        backgroundColor: ios ? iosAuthBackground(context) : cs.surface,
         surfaceTintColor: Colors.transparent,
         titleSpacing: 4,
         leadingWidth: ios ? 64 : null,
@@ -254,7 +257,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             ? Center(
                 child: GlassIconButton(
                   key: const ValueKey('downloads-back'),
-                  icon: Symbols.arrow_back_ios_new,
+                  icon: IosSymbols.chevronBack(context),
                   iconSize: 20,
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                   onPressed: () => Navigator.of(context).maybePop(),
@@ -263,13 +266,16 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             : null,
         title: Text(
           l10n.downloadsTitle,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: ios ? IosTypography.headerTitle : 20,
+            fontWeight: ios ? IosTypography.semibold : FontWeight.w700,
+          ),
         ),
         actions: [
           if (ios)
             GlassIconButton(
               key: const ValueKey('downloads-settings'),
-              icon: Symbols.tune,
+              icon: IosSymbols.tune(context),
               iconSize: 21,
               tooltip: l10n.downloadsSettings,
               onPressedAt: _showIosSettingsMenu,
@@ -446,7 +452,9 @@ class _DownloadTile extends StatelessWidget {
                 key: ValueKey('download-more-${record.cacheName}'),
                 tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
                 icon: Icon(
-                  IosGlass.of(context) ? Symbols.more_horiz : Symbols.more_vert,
+                  IosGlass.of(context)
+                      ? IosSymbols.ellipsisHoriz(context)
+                      : Symbols.more_vert,
                   color: cs.onSurfaceVariant,
                 ),
                 onPressed: () => _openMenu(buttonContext),

@@ -14,6 +14,10 @@ import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/small_spinner.dart';
+import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 
 String _documentLabel(AppLocalizations l10n, String type) {
   return switch (type) {
@@ -182,7 +186,7 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: iosAuthBackground(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: const ConnectionSpinner(),
       appBar: AppBar(
@@ -190,12 +194,12 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
         surfaceTintColor: Colors.transparent,
         title: Text(l10n.digitalIdTitle),
         leading: IconButton(
-          icon: const Icon(Symbols.arrow_back),
+          icon: Icon(IosSymbols.chevronBack(context)),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Symbols.refresh),
+            icon: Icon(IosSymbols.refresh(context)),
             onPressed: _loading ? null : _load,
           ),
         ],
@@ -283,16 +287,25 @@ class _DigitalIdScreenState extends State<DigitalIdScreen>
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _busy ? null : _linkGosuslugi,
-                    icon: _busy
-                        ? const SmallSpinner(size: 18)
-                        : const Icon(Symbols.link, size: 18),
-                    label: Text(
-                      l10n.digitalIdLinkGosuslugiButton,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                  child: IosGlass.of(context)
+                      ? (_busy
+                          ? const Center(child: SmallSpinner(size: 18))
+                          : IosSettingsButton(
+                              label: l10n.digitalIdLinkGosuslugiButton,
+                              onPressed: _linkGosuslugi,
+                              icon: IosSymbols.link(context),
+                              minHeight: kIosAuthPrimaryHeight,
+                            ))
+                      : FilledButton.icon(
+                          onPressed: _busy ? null : _linkGosuslugi,
+                          icon: _busy
+                              ? const SmallSpinner(size: 18)
+                              : const Icon(Symbols.link, size: 18),
+                          label: Text(
+                            l10n.digitalIdLinkGosuslugiButton,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                 ),
               ],
             ),

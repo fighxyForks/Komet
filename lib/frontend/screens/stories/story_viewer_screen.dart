@@ -18,6 +18,7 @@ import '../../widgets/small_spinner.dart';
 import 'story_owner_info.dart';
 import '../../../core/config/app_frost.dart';
 import '../../../core/config/app_fonts.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 const Duration _photoDuration = Duration(seconds: 5);
 
@@ -567,7 +568,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
               ),
             ),
             _RoundIconButton(
-              icon: Symbols.close,
+              icon: IosSymbols.close(context),
               onTap: () => Navigator.of(context).maybePop(),
             ),
           ],
@@ -690,8 +691,9 @@ class _RoundIconButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        margin: const EdgeInsets.all(4),
-        padding: const EdgeInsets.all(8),
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white.withValues(alpha: 0.14),

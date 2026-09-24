@@ -2,12 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/utils/haptics.dart';
 import '../../../models/story.dart';
 import '../../widgets/komet_avatar.dart';
 import 'story_owner_info.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class StoryAvatarRing extends StatelessWidget {
   final double diameter;
@@ -363,7 +363,7 @@ class _StorySelfTileState extends State<StorySelfTile> {
                                 color: cs.primary,
                               ),
                               child: Icon(
-                                Symbols.add,
+                                IosSymbols.addCircle(context),
                                 size: 14,
                                 color: cs.onPrimary,
                               ),

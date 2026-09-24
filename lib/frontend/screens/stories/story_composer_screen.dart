@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../core/utils/haptics.dart';
@@ -10,6 +9,7 @@ import '../../../main.dart' show fileUploader, messagesModule, storiesModule;
 import '../../widgets/custom_notification.dart';
 import '../../widgets/primary_loading_button.dart';
 import '../../../core/config/app_frost.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 const int _storyExpiration = 86400000;
 
@@ -220,7 +220,7 @@ class _StoryComposerScreenState extends State<StoryComposerScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(6),
                 child: IconButton(
-                  icon: const Icon(Symbols.close, color: Colors.white),
+                  icon: Icon(IosSymbols.close(context), color: Colors.white),
                   onPressed: () => Navigator.of(context).maybePop(),
                 ),
               ),
@@ -293,8 +293,8 @@ class _AudienceToggle extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _segment(context, 1, Symbols.public, 'Все'),
-          _segment(context, 2, Symbols.group, 'Контакты'),
+          _segment(context, 1, IosSymbols.public(context), 'Все'),
+          _segment(context, 2, IosSymbols.group(context), 'Контакты'),
         ],
       ),
     );

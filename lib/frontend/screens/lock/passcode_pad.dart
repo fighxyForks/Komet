@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/utils/haptics.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_typography.dart';
 
 class PasscodeDots extends StatefulWidget {
   final int length;
@@ -109,7 +112,7 @@ class PasscodeKeypad extends StatelessWidget {
     required this.onDigit,
     required this.onBackspace,
     this.onBiometric,
-    this.biometricIcon = Symbols.fingerprint,
+    this.biometricIcon = Symbols.fingerprint, // resolved via IosSymbols at call sites when possible
     this.enabled = true,
     this.canErase = true,
     this.keySize = maxKeySize,
@@ -143,10 +146,18 @@ class PasscodeKeypad extends StatelessWidget {
       child: Text(
         '$value',
         style: TextStyle(
-          fontSize: 30 * scale,
-          fontWeight: FontWeight.w500,
+          fontSize: (IosGlass.of(context) ? 32 : 30) * scale,
+          fontWeight: IosGlass.of(context)
+              ? IosTypography.regular
+              : FontWeight.w500,
           color: cs.onSurface,
           height: 1,
+          letterSpacing: IosGlass.of(context)
+              ? IosTypography.letterSpacing(32)
+              : null,
+          fontFeatures: IosGlass.of(context)
+              ? IosTypography.tabularDigits
+              : null,
         ),
       ),
     );
@@ -172,7 +183,9 @@ class PasscodeKeypad extends StatelessWidget {
                       enabled: true,
                       onTap: onBiometric!,
                       child: Icon(
-                        biometricIcon,
+                        biometricIcon == Symbols.fingerprint
+                            ? IosSymbols.fingerprint(context)
+                            : biometricIcon,
                         size: 32 * scale,
                         color: cs.primary,
                       ),
@@ -183,7 +196,7 @@ class PasscodeKeypad extends StatelessWidget {
                 enabled: enabled && canErase,
                 onTap: onBackspace,
                 child: Icon(
-                  Symbols.backspace,
+                  IosSymbols.backspace(context),
                   size: 28 * scale,
                   color: cs.onSurfaceVariant,
                 ),

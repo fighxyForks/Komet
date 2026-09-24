@@ -2,7 +2,6 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../backend/modules/webapp.dart';
 import '../../../core/storage/spoofing_service.dart';
@@ -15,6 +14,7 @@ import '../../widgets/error_view.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/webview_permission_prompt.dart';
 import 'web_app_bridge.dart';
+import '../../widgets/glass/ios_symbols.dart';
 
 class WebAppScreen extends StatefulWidget {
   final String title;
@@ -225,12 +225,12 @@ class _WebAppScreenState extends State<WebAppScreen> {
           surfaceTintColor: Colors.transparent,
           title: Text(widget.title),
           leading: IconButton(
-            icon: const Icon(Symbols.close),
+            icon: Icon(IosSymbols.close(context)),
             onPressed: _closeByUser,
           ),
           actions: [
             IconButton(
-              icon: const Icon(Symbols.refresh),
+              icon: Icon(IosSymbols.refresh(context)),
               onPressed: _launch == null ? null : () => _controller?.reload(),
             ),
           ],
