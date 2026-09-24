@@ -28,6 +28,7 @@ import 'package:komet/frontend/widgets/attachment/video_preview_screen.dart';
 import 'package:komet/frontend/widgets/chat_menu_overlay.dart';
 import 'package:komet/frontend/widgets/custom_notification.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:komet/frontend/widgets/sheet_helpers.dart';
 import 'package:komet/frontend/widgets/sliding_pill_nav.dart';
 import 'package:komet/l10n/app_localizations.dart';
@@ -38,12 +39,15 @@ import '../glass/ios_sheet.dart';
 
 const int _navItemCount = 5;
 
-List<PillNavItem> _buildNavItems(AppLocalizations l10n) => [
-  PillNavItem(icon: Symbols.image, label: l10n.attachSheetGallery),
-  PillNavItem(icon: Symbols.description, label: l10n.scheduledAttachFile),
-  PillNavItem(icon: Symbols.location_on, label: l10n.scheduledAttachLocation),
-  PillNavItem(icon: Symbols.bar_chart, label: l10n.attachSheetPoll),
-  PillNavItem(icon: Symbols.person, label: l10n.attachSheetContact),
+List<PillNavItem> _buildNavItems(BuildContext context, AppLocalizations l10n) => [
+  PillNavItem(icon: IosSymbols.photo(context), label: l10n.attachSheetGallery),
+  PillNavItem(icon: IosSymbols.doc(context), label: l10n.scheduledAttachFile),
+  PillNavItem(
+    icon: IosSymbols.location(context),
+    label: l10n.scheduledAttachLocation,
+  ),
+  PillNavItem(icon: IosSymbols.chart(context), label: l10n.attachSheetPoll),
+  PillNavItem(icon: IosSymbols.person(context), label: l10n.attachSheetContact),
 ];
 
 typedef PickedPhotosCallback =
@@ -70,6 +74,7 @@ Future<void> showAttachmentSheet(
   return showIosSheet<void>(
     context: context,
     isScrollControlled: true,
+    detent: IosSheetDetent.large,
     requestFocus: false,
     backgroundColor: Colors.transparent,
     barrierColor: AppFrost.scrim(),
@@ -686,7 +691,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         _buildActionPage(
           cs,
           bottomReserve,
-          icon: Symbols.description,
+          icon: IosSymbols.doc(context),
           title: l10n.attachSheetSendFileTitle,
           subtitle: l10n.attachSheetSendFileSubtitle,
           buttonLabel: l10n.attachSheetChooseFileButton,
@@ -695,7 +700,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         _buildActionPage(
           cs,
           bottomReserve,
-          icon: Symbols.location_on,
+          icon: IosSymbols.location(context),
           title: l10n.attachSheetShareLocationTitle,
           subtitle: l10n.attachSheetShareLocationSubtitle,
           buttonLabel: l10n.attachSheetSendLocationButton,
@@ -704,7 +709,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
         _buildActionPage(
           cs,
           bottomReserve,
-          icon: Symbols.bar_chart,
+          icon: IosSymbols.chart(context),
           title: l10n.attachSheetCreatePoll,
           subtitle: l10n.attachSheetCreatePollSubtitle,
           buttonLabel: l10n.attachSheetCreatePoll,
@@ -1219,7 +1224,7 @@ class _AttachmentSheetState extends State<AttachmentSheet> {
   }
 
   Widget _buildPillNav() {
-    final navItems = _buildNavItems(AppLocalizations.of(context)!);
+    final navItems = _buildNavItems(context, AppLocalizations.of(context)!);
     return LayoutBuilder(
       key: const ValueKey('nav'),
       builder: (context, constraints) {

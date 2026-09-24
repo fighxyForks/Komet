@@ -17,6 +17,8 @@ import 'package:komet/frontend/screens/chats/chat/voice_record_controller.dart';
 import 'package:komet/frontend/widgets/composer_morph_icon.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';
@@ -274,7 +276,7 @@ class ComposerInputBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _messagePreview(cs, forwards),
+          _messagePreview(context, cs, forwards),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: _barSideInset,
@@ -782,8 +784,8 @@ class ComposerInputBar extends StatelessWidget {
     );
   }
 
-  Widget _replyIconButton(ColorScheme cs) {
-    final icon = Icon(Symbols.reply, size: 20, color: cs.primary);
+  Widget _replyIconButton(BuildContext context, ColorScheme cs) {
+    final icon = Icon(IosSymbols.reply(context), size: 20, color: cs.primary);
     if (onPickReplyChat == null) return icon;
     return InkWell(
       onTap: onPickReplyChat,
@@ -792,12 +794,12 @@ class ComposerInputBar extends StatelessWidget {
     );
   }
 
-  Widget _messagePreview(ColorScheme cs, List<CachedMessage> forwards) {
-    if (forwards.isNotEmpty) return _forwardPreview(cs, forwards);
-    return _replyPreview(cs);
+  Widget _messagePreview(BuildContext context, ColorScheme cs, List<CachedMessage> forwards) {
+    if (forwards.isNotEmpty) return _forwardPreview(context, cs, forwards);
+    return _replyPreview(context, cs);
   }
 
-  Widget _forwardPreview(ColorScheme cs, List<CachedMessage> messages) {
+  Widget _forwardPreview(BuildContext context, ColorScheme cs, List<CachedMessage> messages) {
     final first = messages.first;
     final senderName = ContactCache.get(first.senderId);
     final info = ReplyInfo(
@@ -821,7 +823,7 @@ class ComposerInputBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 6, 8, 2),
       child: Row(
         children: [
-          Icon(Symbols.forward, size: 20, color: cs.primary),
+          Icon(IosSymbols.forward(context), size: 20, color: cs.primary),
           const SizedBox(width: 10),
           Container(width: 2, height: 34, color: cs.primary),
           const SizedBox(width: 10),
@@ -837,16 +839,18 @@ class ComposerInputBar extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: cs.primary,
-                    fontSize: 13,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.callout
+                        : 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (preview.isNotEmpty) _previewLine(cs, visual, preview),
+                if (preview.isNotEmpty) _previewLine(context, cs, visual, preview),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Symbols.close, size: 20),
+            icon: Icon(IosSymbols.close(context), size: 20),
             color: cs.onSurfaceVariant,
             onPressed: onCancelForward,
           ),
@@ -866,7 +870,7 @@ class ComposerInputBar extends StatelessWidget {
     return '$count сообщений';
   }
 
-  Widget _replyPreview(ColorScheme cs) {
+  Widget _replyPreview(BuildContext context, ColorScheme cs) {
     return ValueListenableBuilder<CachedMessage?>(
       valueListenable: replyTo,
       builder: (context, reply, _) {
@@ -888,7 +892,7 @@ class ComposerInputBar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 6, 8, 2),
           child: Row(
             children: [
-              _replyIconButton(cs),
+              _replyIconButton(context, cs),
               const SizedBox(width: 10),
               Container(width: 2, height: 34, color: cs.primary),
               const SizedBox(width: 10),
@@ -904,16 +908,18 @@ class ComposerInputBar extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: cs.primary,
-                        fontSize: 13,
+                        fontSize: IosGlass.of(context)
+                            ? IosTypography.callout
+                            : 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (preview.isNotEmpty) _previewLine(cs, visual, preview),
+                    if (preview.isNotEmpty) _previewLine(context, cs, visual, preview),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Symbols.close, size: 20),
+                icon: Icon(IosSymbols.close(context), size: 20),
                 color: cs.onSurfaceVariant,
                 onPressed: onCancelReply,
               ),
@@ -936,9 +942,14 @@ class ComposerInputBar extends StatelessWidget {
     );
   }
 
-  Widget _previewLine(ColorScheme cs, ReplyPreview preview, String text) {
+  Widget _previewLine(BuildContext context, ColorScheme cs, ReplyPreview preview, String text) {
     final icon = preview.hasMedia ? null : preview.icon;
-    final style = TextStyle(color: cs.onSurfaceVariant, fontSize: 13);
+    final style = TextStyle(
+      color: IosGlass.of(context)
+          ? IosPalette.secondaryLabel(cs)
+          : cs.onSurfaceVariant,
+      fontSize: IosGlass.of(context) ? IosTypography.callout : 13,
+    );
     if (icon == null) {
       return Text(
         text,
@@ -1314,10 +1325,9 @@ class _AttachButton extends StatelessWidget {
                               ),
                             ),
                           Icon(
-                            Symbols.attachment,
+                            IosSymbols.attach(context),
                             color: iconColor,
                             size: 22,
-                            weight: 400,
                           ),
                         ],
                       ),

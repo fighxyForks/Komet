@@ -142,7 +142,11 @@ void main() {
           findsNothing,
           reason: 'переход в $action должен завершаться статикой',
         );
-        expect(find.byIcon(composerActionIcon(action)), findsOneWidget);
+        final ctx = tester.element(find.byType(ComposerMorphIcon));
+        expect(
+          find.byIcon(composerActionIcon(ctx, action)),
+          findsOneWidget,
+        );
       }
     });
 

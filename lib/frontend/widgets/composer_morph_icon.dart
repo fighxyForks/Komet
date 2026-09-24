@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:material_symbols_icons/symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 enum ComposerAction { mic, videocam, send }
 
@@ -19,11 +19,12 @@ const Map<(ComposerAction, ComposerAction), String> _morphs = {
       'assets/lottie/ic_send_to_videocam.json',
 };
 
-IconData composerActionIcon(ComposerAction action) => switch (action) {
-  ComposerAction.mic => Symbols.mic,
-  ComposerAction.videocam => Symbols.videocam,
-  ComposerAction.send => Symbols.send,
-};
+IconData composerActionIcon(BuildContext context, ComposerAction action) =>
+    switch (action) {
+      ComposerAction.mic => IosSymbols.mic(context),
+      ComposerAction.videocam => IosSymbols.videocam(context),
+      ComposerAction.send => IosSymbols.send(context),
+    };
 
 class ComposerMorphIcon extends StatefulWidget {
   const ComposerMorphIcon({
@@ -105,10 +106,9 @@ class _ComposerMorphIconState extends State<ComposerMorphIcon>
     final asset = _playing;
     if (asset == null) {
       return Icon(
-        composerActionIcon(widget.action),
+        composerActionIcon(context, widget.action),
         color: widget.color,
         size: widget.size,
-        weight: 400,
       );
     }
     return SizedBox.square(

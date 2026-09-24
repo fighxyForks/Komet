@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/core/config/app_frost.dart';
 import 'package:komet/frontend/widgets/animated_text_swap.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 
@@ -112,7 +112,7 @@ class ScrollDownButton extends StatelessWidget {
         },
         child: Center(
           child: Icon(
-            Symbols.keyboard_arrow_down,
+            IosSymbols.keyboardDown(context),
             color: cs.onSurface,
             weight: 500,
             size: 26,

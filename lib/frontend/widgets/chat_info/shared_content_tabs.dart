@@ -26,6 +26,7 @@ import '../custom_notification.dart';
 import '../glass/glass_capsule.dart';
 import '../glass/ios_glass.dart';
 import '../glass/ios_typography.dart';
+import '../glass/ios_symbols.dart';
 import '../komet_avatar.dart';
 import '../photo_viewer.dart';
 import '../reload_on_reconnect.dart';
@@ -217,7 +218,12 @@ Future<void> _showItemMenu(BuildContext context, List<_MenuAction> actions) {
   );
 }
 
-Widget _moreButton(ColorScheme cs, VoidCallback onTap, {bool overlay = false}) {
+Widget _moreButton(
+  BuildContext context,
+  ColorScheme cs,
+  VoidCallback onTap, {
+  bool overlay = false,
+}) {
   if (overlay) {
     return GestureDetector(
       onTap: onTap,
@@ -228,13 +234,21 @@ Widget _moreButton(ColorScheme cs, VoidCallback onTap, {bool overlay = false}) {
           color: Colors.black.withValues(alpha: 0.45),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(Symbols.more_horiz, color: Colors.white, size: 18),
+        child: Icon(
+          IosSymbols.ellipsisHoriz(context),
+          color: Colors.white,
+          size: 18,
+        ),
       ),
     );
   }
   return IconButton(
     onPressed: onTap,
-    icon: Icon(Symbols.more_vert, color: cs.onSurfaceVariant, size: 22),
+    icon: Icon(
+      IosSymbols.ellipsis(context),
+      color: cs.onSurfaceVariant,
+      size: 22,
+    ),
     padding: EdgeInsets.zero,
     constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
   );
@@ -763,10 +777,10 @@ class _MediaTile extends StatelessWidget {
   void _menu(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     _showItemMenu(context, [
-      _MenuAction(Symbols.arrow_forward, l10n.sharedGoToMessage, () async {
+      _MenuAction(IosSymbols.goToMessage(context), l10n.sharedGoToMessage, () async {
         onGoTo();
       }),
-      _MenuAction(Symbols.download, l10n.sharedDownload, () async {
+      _MenuAction(IosSymbols.download(context), l10n.sharedDownload, () async {
         await _downloadAttachment(context, item, sourceName);
       }),
     ]);
@@ -829,7 +843,7 @@ class _MediaTile extends StatelessWidget {
             Positioned(
               top: 4,
               right: 4,
-              child: _moreButton(cs, () => _menu(context), overlay: true),
+              child: _moreButton(context, cs, () => _menu(context), overlay: true),
             ),
           ],
         ),
@@ -913,10 +927,10 @@ class _FileRow extends StatelessWidget {
   void _menu(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     _showItemMenu(context, [
-      _MenuAction(Symbols.arrow_forward, l10n.sharedGoToMessage, () async {
+      _MenuAction(IosSymbols.goToMessage(context), l10n.sharedGoToMessage, () async {
         onGoTo();
       }),
-      _MenuAction(Symbols.download, l10n.sharedDownload, () async {
+      _MenuAction(IosSymbols.download(context), l10n.sharedDownload, () async {
         await _downloadAttachment(context, item, sourceName);
       }),
     ]);
@@ -954,7 +968,9 @@ class _FileRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: cs.onSurface,
-                      fontSize: 15,
+                      fontSize: IosGlass.of(context)
+                          ? IosTypography.listTitle
+                          : 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -968,7 +984,7 @@ class _FileRow extends StatelessWidget {
                 ],
               ),
             ),
-            _moreButton(cs, () => _menu(context)),
+            _moreButton(context, cs, () => _menu(context)),
           ],
         ),
       ),
@@ -1002,7 +1018,7 @@ class _FileRow extends StatelessWidget {
                     alignment: Alignment.center,
                     children: [
                       Icon(
-                        Symbols.download,
+                        IosSymbols.download(context),
                         color: cs.onSurfaceVariant.withValues(alpha: 0.5),
                         size: 26,
                       ),
@@ -1079,11 +1095,11 @@ class _LinkRow extends StatelessWidget {
   void _menu(BuildContext context, String url) {
     final l10n = AppLocalizations.of(context)!;
     _showItemMenu(context, [
-      _MenuAction(Symbols.arrow_forward, l10n.sharedGoToMessage, () async {
+      _MenuAction(IosSymbols.goToMessage(context), l10n.sharedGoToMessage, () async {
         onGoTo();
       }),
       if (url.isNotEmpty)
-        _MenuAction(Symbols.content_copy, l10n.sharedCopyLink, () async {
+        _MenuAction(IosSymbols.copy(context), l10n.sharedCopyLink, () async {
           await Clipboard.setData(ClipboardData(text: url));
           if (context.mounted) {
             showCustomNotification(context, l10n.sharedLinkCopied);
@@ -1125,12 +1141,12 @@ class _LinkRow extends StatelessWidget {
                         fit: BoxFit.cover,
                         memCacheWidth: 120,
                         errorWidget: (_, _, _) => Icon(
-                          Symbols.link,
+                          IosSymbols.link(context),
                           color: cs.onSurfaceVariant.withValues(alpha: 0.5),
                         ),
                       )
                     : Icon(
-                        Symbols.link,
+                        IosSymbols.link(context),
                         color: cs.onSurfaceVariant.withValues(alpha: 0.5),
                       ),
               ),
@@ -1157,7 +1173,9 @@ class _LinkRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: cs.onSurface,
-                        fontSize: 15,
+                        fontSize: IosGlass.of(context)
+                          ? IosTypography.listTitle
+                          : 15,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1187,7 +1205,7 @@ class _LinkRow extends StatelessWidget {
                 ],
               ),
             ),
-            _moreButton(cs, () => _menu(context, url)),
+            _moreButton(context, cs, () => _menu(context, url)),
           ],
         ),
       ),
@@ -1345,7 +1363,7 @@ class _ProfileVoiceTileState extends State<_ProfileVoiceTile> {
               ],
             ),
           ),
-          _moreButton(cs, () => _menu(context)),
+          _moreButton(context, cs, () => _menu(context)),
         ],
       ),
     );
@@ -1354,10 +1372,10 @@ class _ProfileVoiceTileState extends State<_ProfileVoiceTile> {
   void _menu(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     _showItemMenu(context, [
-      _MenuAction(Symbols.arrow_forward, l10n.sharedGoToMessage, () async {
+      _MenuAction(IosSymbols.goToMessage(context), l10n.sharedGoToMessage, () async {
         widget.onGoTo();
       }),
-      _MenuAction(Symbols.download, l10n.sharedDownload, () async {
+      _MenuAction(IosSymbols.download(context), l10n.sharedDownload, () async {
         await _downloadAttachment(context, widget.item, widget.sourceName);
       }),
     ]);
