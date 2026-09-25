@@ -12,6 +12,7 @@ class NativeChatListView extends StatefulWidget {
   final NativeChatListCommands? commands;
   final NativeStories stories;
   final NativeArchiveEntry? archive;
+  final NativeFolders folders;
 
   const NativeChatListView({
     super.key,
@@ -21,6 +22,7 @@ class NativeChatListView extends StatefulWidget {
     this.commands,
     this.stories = const NativeStories(),
     this.archive,
+    this.folders = const NativeFolders(),
   });
 
   @override
@@ -33,6 +35,7 @@ class _NativeChatListViewState extends State<NativeChatListView> {
   late final Map<String, Object?> _createdChrome = widget.chrome;
   late final NativeStories _createdStories = widget.stories;
   late final NativeArchiveEntry? _createdArchive = widget.archive;
+  late final NativeFolders _createdFolders = widget.folders;
 
   void _onCreated(int viewId) {
     final controller = NativeChatListController(viewId, widget.callbacks)
@@ -48,6 +51,9 @@ class _NativeChatListViewState extends State<NativeChatListView> {
     }
     if (_createdArchive != widget.archive) {
       controller.setArchive(widget.archive);
+    }
+    if (_createdFolders != widget.folders) {
+      controller.setFolders(widget.folders);
     }
   }
 
@@ -71,6 +77,9 @@ class _NativeChatListViewState extends State<NativeChatListView> {
     if (oldWidget.archive != widget.archive) {
       controller.setArchive(widget.archive);
     }
+    if (oldWidget.folders != widget.folders) {
+      controller.setFolders(widget.folders);
+    }
   }
 
   @override
@@ -92,6 +101,7 @@ class _NativeChatListViewState extends State<NativeChatListView> {
         'chrome': _createdChrome,
         'stories': _createdStories.toMap(),
         'archive': _createdArchive?.toMap(),
+        'folders': _createdFolders.toMap(),
       },
       creationParamsCodec: const StandardMessageCodec(),
       onPlatformViewCreated: _onCreated,

@@ -19,14 +19,42 @@ struct KometStoryItem: Equatable {
   }
 }
 
+struct KometFolderItem: Equatable {
+  let id: String
+  let title: String
+
+  init?(_ map: [String: Any]) {
+    guard let id = map["id"] as? String else { return nil }
+    self.id = id
+    title = map["title"] as? String ?? ""
+  }
+}
+
 final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectionViewDelegate,
   UISearchBarDelegate {
   static let storiesHeight: CGFloat = 100
   static let searchHeight: CGFloat = 52
+  static let foldersHeight: CGFloat = 46
+  private static let folderCapsuleHeight: CGFloat = 36
+  private static let folderInset: CGFloat = 3
+  private static let folderChipPadding: CGFloat = 14
+  private static let folderFont = UIFont.systemFont(ofSize: 15, weight: .medium)
+  private static let folderSelectedFont = UIFont.systemFont(ofSize: 15, weight: .semibold)
 
   var onStory: ((KometStoryItem, CGRect) -> Void)?
   var onAddStory: (() -> Void)?
   var onQuery: ((String) -> Void)?
+  var onFolder: ((String) -> Void)?
+  var onFolderMenu: ((String, CGRect) -> Void)?
+
+  private let folderSegments = UISegmentedControl()
+  private let folderCapsule = UIView()
+  private let folderScroll = UIScrollView()
+  private let folderThumb = UIView()
+  private var folderButtons: [UIButton] = []
+  private var folders: [KometFolderItem] = []
+  private var selectedFolder: String?
+  private var usesSegments = true
 
   let searchBar = UISearchBar()
   private let storiesLayout: UICollectionViewFlowLayout = {
@@ -44,8 +72,11 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
     didSet { storiesView.reloadData() }
   }
 
+  var showsFolders: Bool { folders.count > 1 }
+
   var preferredHeight: CGFloat {
     (showsStories ? KometChatListHeader.storiesHeight : 0) + KometChatListHeader.searchHeight
+      + (showsFolders ? KometChatListHeader.foldersHeight : 0)
   }
 
   override init(frame: CGRect) {
@@ -63,6 +94,28 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
     searchBar.delegate = self
     searchBar.autocapitalizationType = .none
     addSubview(searchBar)
+
+    folderSegments.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
+    folderSegments.addGestureRecognizer(
+      UILongPressGestureRecognizer(target: self, action: #selector(segmentLongPress(_:))))
+    folderCapsule.backgroundColor = .tertiarySystemFill
+    folderCapsule.layer.cornerRadius = KometChatListHeader.folderCapsuleHeight / 2
+    folderCapsule.clipsToBounds = true
+    folderScroll.showsHorizontalScrollIndicator = false
+    folderScroll.alwaysBounceHorizontal = true
+    folderThumb.backgroundColor = .systemBackground
+    folderThumb.layer.cornerRadius =
+      (KometChatListHeader.folderCapsuleHeight - KometChatListHeader.folderInset * 2) / 2
+    folderThumb.layer.shadowColor = UIColor.black.cgColor
+    folderThumb.layer.shadowOpacity = 0.08
+    folderThumb.layer.shadowRadius = 4
+    folderThumb.layer.shadowOffset = CGSize(width: 0, height: 1)
+    folderScroll.addSubview(folderThumb)
+    folderCapsule.addSubview(folderScroll)
+    [folderSegments, folderCapsule].forEach {
+      $0.isHidden = true
+      addSubview($0)
+    }
   }
 
   required init?(coder: NSCoder) {
@@ -75,6 +128,7 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
     storiesView.frame = CGRect(x: 0, y: 0, width: bounds.width, height: storiesHeight)
     searchBar.frame = CGRect(x: 8, y: storiesHeight, width: bounds.width - 16,
                              height: KometChatListHeader.searchHeight)
+    layoutFolders(top: storiesHeight + KometChatListHeader.searchHeight)
   }
 
   func setStories(_ next: [KometStoryItem], visible: Bool) {
@@ -86,6 +140,144 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
       storiesView.reloadData()
     }
     if visibilityChanged { setNeedsLayout() }
+  }
+
+  func setFolders(_ next: [KometFolderItem], selected: String?) {
+    let changed = next != folders
+    folders = next
+    selectedFolder = selected
+    if changed {
+      rebuildFolders()
+      setNeedsLayout()
+    } else {
+      applyFolderSelection(animated: true)
+    }
+  }
+
+  private func rebuildFolders() {
+    folderSegments.removeAllSegments()
+    for (index, folder) in folders.enumerated() {
+      folderSegments.insertSegment(withTitle: folder.title, at: index, animated: false)
+    }
+    folderButtons.forEach { $0.removeFromSuperview() }
+    folderButtons = folders.enumerated().map { index, folder in
+      let button = UIButton(type: .custom)
+      button.tag = index
+      button.setTitle(folder.title, for: .normal)
+      button.titleLabel?.lineBreakMode = .byTruncatingTail
+      button.addTarget(self, action: #selector(folderTapped(_:)), for: .touchUpInside)
+      button.addGestureRecognizer(
+        UILongPressGestureRecognizer(target: self, action: #selector(folderLongPress(_:))))
+      folderScroll.addSubview(button)
+      return button
+    }
+    applyFolderSelection(animated: false)
+  }
+
+  private func naturalFolderWidths() -> [CGFloat] {
+    folders.map {
+      let width = ($0.title as NSString).size(
+        withAttributes: [.font: KometChatListHeader.folderSelectedFont]).width
+      return ceil(width) + KometChatListHeader.folderChipPadding * 2
+    }
+  }
+
+  private func layoutFolders(top: CGFloat) {
+    guard showsFolders else {
+      folderSegments.isHidden = true
+      folderCapsule.isHidden = true
+      return
+    }
+    let height = KometChatListHeader.folderCapsuleHeight
+    let frame = CGRect(x: 16, y: top + (KometChatListHeader.foldersHeight - height) / 2 - 2,
+                       width: bounds.width - 32, height: height)
+    let widths = naturalFolderWidths()
+    let inset = KometChatListHeader.folderInset
+    usesSegments = widths.reduce(0, +) <= frame.width - inset * 2
+    folderSegments.isHidden = !usesSegments
+    folderCapsule.isHidden = usesSegments
+    if usesSegments {
+      folderSegments.frame = frame
+      return
+    }
+    folderCapsule.frame = frame
+    folderScroll.frame = folderCapsule.bounds
+    var x = inset
+    for (index, button) in folderButtons.enumerated() {
+      let width = index < widths.count ? widths[index] : 0
+      button.frame = CGRect(x: x, y: inset, width: width, height: height - inset * 2)
+      x += width
+    }
+    folderScroll.contentSize = CGSize(width: x + inset, height: height)
+    applyFolderSelection(animated: false)
+  }
+
+  private var selectedFolderIndex: Int? {
+    folders.firstIndex { $0.id == selectedFolder }
+  }
+
+  private func applyFolderSelection(animated: Bool) {
+    let index = selectedFolderIndex
+    folderSegments.selectedSegmentIndex = index ?? UISegmentedControl.noSegment
+    for (position, button) in folderButtons.enumerated() {
+      let selected = position == index
+      button.titleLabel?.font = selected
+        ? KometChatListHeader.folderSelectedFont : KometChatListHeader.folderFont
+      button.setTitleColor(selected ? .label : .secondaryLabel, for: .normal)
+    }
+    guard let index = index, index < folderButtons.count, !usesSegments else {
+      folderThumb.isHidden = true
+      return
+    }
+    let target = folderButtons[index].frame
+    folderThumb.isHidden = target.isEmpty
+    let move = {
+      self.folderThumb.frame = target
+      let visible = target.insetBy(dx: -24, dy: 0)
+      self.folderScroll.scrollRectToVisible(visible, animated: false)
+    }
+    if animated, window != nil {
+      UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.85,
+                     initialSpringVelocity: 0, options: [.beginFromCurrentState], animations: move)
+    } else {
+      move()
+    }
+  }
+
+  private func selectFolder(at index: Int) {
+    guard index >= 0, index < folders.count else { return }
+    UISelectionFeedbackGenerator().selectionChanged()
+    selectedFolder = folders[index].id
+    applyFolderSelection(animated: true)
+    onFolder?(folders[index].id)
+  }
+
+  @objc private func segmentChanged() {
+    selectFolder(at: folderSegments.selectedSegmentIndex)
+  }
+
+  @objc private func folderTapped(_ sender: UIButton) {
+    selectFolder(at: sender.tag)
+  }
+
+  @objc private func segmentLongPress(_ gesture: UILongPressGestureRecognizer) {
+    guard gesture.state == .began, !folders.isEmpty else { return }
+    let width = folderSegments.bounds.width / CGFloat(folders.count)
+    let index = min(max(Int(gesture.location(in: folderSegments).x / width), 0), folders.count - 1)
+    let rect = CGRect(x: CGFloat(index) * width, y: 0, width: width,
+                      height: folderSegments.bounds.height)
+    openFolderMenu(at: index, rect: folderSegments.convert(rect, to: nil))
+  }
+
+  @objc private func folderLongPress(_ gesture: UILongPressGestureRecognizer) {
+    guard gesture.state == .began, let button = gesture.view as? UIButton else { return }
+    openFolderMenu(at: button.tag, rect: button.convert(button.bounds, to: nil))
+  }
+
+  private func openFolderMenu(at index: Int, rect: CGRect) {
+    guard index < folders.count else { return }
+    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    onFolderMenu?(folders[index].id, rect)
   }
 
   func setPlaceholder(_ text: String) {

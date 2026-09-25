@@ -27,6 +27,8 @@ NativeChatListCallbacks _callbacks(List<Object> log) => NativeChatListCallbacks(
   onStory: (ownerId, rect) => log.add('story $ownerId $rect'),
   onAddStory: () => log.add('storyAdd'),
   onArchive: () => log.add('archive'),
+  onFolder: (id) => log.add('folder $id'),
+  onFolderMenu: (id, rect) => log.add('folderMenu $id $rect'),
 );
 
 void main() {
@@ -244,10 +246,20 @@ void main() {
       });
       await send('storyAdd', null);
       await send('archive', null);
+      await send('folder', {'id': 'work'});
+      await send('folderMenu', {
+        'id': 'work',
+        'x': 10,
+        'y': 20,
+        'width': 80,
+        'height': 36,
+      });
       expect(log, [
         'story 7 ${const Rect.fromLTWH(1, 2, 60, 60)}',
         'storyAdd',
         'archive',
+        'folder work',
+        'folderMenu work ${const Rect.fromLTWH(10, 20, 80, 36)}',
       ]);
 
       const stories = NativeStories(
@@ -262,11 +274,28 @@ void main() {
         const NativeArchiveEntry(title: 'Архив', count: 4, unread: 2),
       );
       await controller.setArchive(null);
+      await controller.setFolders(
+        const NativeFolders(
+          items: [
+            NativeFolderItem(id: 'all', title: 'Все'),
+            NativeFolderItem(id: 'work', title: '💼 Работа'),
+          ],
+          selected: 'work',
+        ),
+      );
       expect(calls.map((c) => c.method), [
         'setStories',
         'setArchive',
         'setArchive',
+        'setFolders',
       ]);
+      expect(calls.last.arguments, {
+        'items': [
+          {'id': 'all', 'title': 'Все'},
+          {'id': 'work', 'title': '💼 Работа'},
+        ],
+        'selected': 'work',
+      });
       final storiesArgs = calls[0].arguments as Map;
       expect(storiesArgs['visible'], isTrue);
       expect((storiesArgs['items'] as List).last, {

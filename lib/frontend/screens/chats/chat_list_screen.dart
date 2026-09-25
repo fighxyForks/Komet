@@ -3706,6 +3706,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         commands: _nativeCommands,
         stories: _nativeStories(),
         archive: _nativeArchive(),
+        folders: _nativeFolders(),
         callbacks: NativeChatListCallbacks(
           onOpen: _openNativeChat,
           onAction: _onNativeChatAction,
@@ -3726,6 +3727,15 @@ class _ChatListScreenState extends State<ChatListScreen>
             context,
             (_) => const ChatListScreen(archiveMode: true),
           ),
+          onFolder: (id) => _selectFolder(id),
+          onFolderMenu: (id, _) {
+            for (final folder in _folders) {
+              if (folder.id == id) {
+                showFolderActionSheet(context, folder: folder);
+                return;
+              }
+            }
+          },
         ),
       ),
     );
@@ -3783,6 +3793,19 @@ class _ChatListScreenState extends State<ChatListScreen>
         .catchError((Object _) {})
         .whenComplete(() => _nativeStoryOwnersPending.remove(owner.ownerId));
     return null;
+  }
+
+  NativeFolders _nativeFolders() {
+    if (_folders.length < 2 || _showFoldersShimmer) {
+      return const NativeFolders();
+    }
+    return NativeFolders(
+      items: [
+        for (final folder in _folders)
+          NativeFolderItem(id: folder.id, title: _folderChipLabel(folder)),
+      ],
+      selected: _selectedFolderId,
+    );
   }
 
   NativeArchiveEntry? _nativeArchive() {
