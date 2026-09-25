@@ -3592,5 +3592,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatActionSelect => 'Выбрать';
 
   @override
+  String get chatListYesterday => 'Вчера';
+
+  @override
+  String get chatListDatePattern => 'dd.MM.yy';
+
+  @override
   String get chatActionDelete => 'Удалить';
 }

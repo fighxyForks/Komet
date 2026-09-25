@@ -1216,5 +1216,7 @@
   "chatActionArchive": "В архив",
   "chatActionUnarchive": "Из архива",
   "chatActionSelect": "Выбрать",
+  "chatListYesterday": "Вчера",
+  "chatListDatePattern": "dd.MM.yy",
   "chatActionDelete": "Удалить"
 }

@@ -1545,5 +1545,7 @@
   "chatActionArchive": "Archive",
   "chatActionUnarchive": "Unarchive",
   "chatActionSelect": "Select",
+  "chatListYesterday": "Yesterday",
+  "chatListDatePattern": "M/d/yy",
   "chatActionDelete": "Delete"
 }
