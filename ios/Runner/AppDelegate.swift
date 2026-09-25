@@ -50,6 +50,7 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       registerNativeTabChrome(messenger)
       registerNativeChatList(messenger, host: controller)
       registerNativeList(messenger, host: controller)
+      registerMenuButton(messenger)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -232,6 +233,12 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
     registrar(forPlugin: "KometNativeList")?.register(
       KometNativeListViewFactory(messenger: messenger, host: host),
       withId: "ru.komet.app/native_list")
+  }
+
+  private func registerMenuButton(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometMenuButton")?.register(
+      KometMenuButtonViewFactory(messenger: messenger),
+      withId: "ru.komet.app/menu_button")
   }
 
   private func registerAccessibility(_ messenger: FlutterBinaryMessenger) {
