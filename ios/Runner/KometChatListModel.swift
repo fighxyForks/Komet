@@ -254,25 +254,18 @@ final class KometAvatarCache {
 
   func placeholder(for row: KometChatRow, side: CGFloat, scale: CGFloat,
                    accent: UIColor) -> UIImage {
-    let cacheKey = "placeholder|\(row.saved)|\(row.id)|\(row.title.prefix(1))|\(side)" as NSString
-    if !row.saved, let image = images.object(forKey: cacheKey) { return image }
-    let format = UIGraphicsImageRendererFormat()
-    format.scale = scale
+    row.saved
+      ? symbolAvatar("bookmark.fill", side: side, scale: scale, fill: accent, tint: .white)
+      : letterAvatar(seed: row.id, title: row.title, side: side, scale: scale)
+  }
+
+  func letterAvatar(seed: Int, title: String, side: CGFloat, scale: CGFloat) -> UIImage {
+    let cacheKey = "letter|\(seed)|\(title.prefix(1))|\(side)" as NSString
+    if let image = images.object(forKey: cacheKey) { return image }
     let rect = CGRect(x: 0, y: 0, width: side, height: side)
-    let image = UIGraphicsImageRenderer(size: rect.size, format: format).image { context in
-      let path = UIBezierPath(ovalIn: rect)
-      path.addClip()
-      if row.saved {
-        accent.setFill()
-        path.fill()
-        if let glyph = KometChatListStyle.symbol("bookmark.fill", size: side * 0.4, weight: .semibold)?
-          .withTintColor(.white, renderingMode: .alwaysOriginal) {
-          glyph.draw(at: CGPoint(x: (side - glyph.size.width) / 2,
-                                 y: (side - glyph.size.height) / 2))
-        }
-        return
-      }
-      let pair = KometAvatarCache.palette[abs(row.id) % KometAvatarCache.palette.count]
+    let image = KometAvatarCache.renderer(side: side, scale: scale).image { context in
+      UIBezierPath(ovalIn: rect).addClip()
+      let pair = KometAvatarCache.palette[abs(seed % KometAvatarCache.palette.count)]
       let colors = [KometAvatarCache.color(pair.0).cgColor, KometAvatarCache.color(pair.1).cgColor]
       if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
                                    colors: colors as CFArray, locations: [0, 1]) {
@@ -280,15 +273,37 @@ final class KometAvatarCache {
           gradient, start: CGPoint(x: side / 2, y: 0), end: CGPoint(x: side / 2, y: side),
           options: [])
       }
-      let letter = String(row.title.prefix(1)).uppercased() as NSString
+      let letter = String(title.prefix(1)).uppercased() as NSString
       let font = UIFont.systemFont(ofSize: side * 0.4, weight: .semibold)
       let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor.white]
       let size = letter.size(withAttributes: attributes)
       letter.draw(at: CGPoint(x: (side - size.width) / 2, y: (side - size.height) / 2),
                   withAttributes: attributes)
     }
-    if !row.saved { images.setObject(image, forKey: cacheKey) }
+    images.setObject(image, forKey: cacheKey)
     return image
+  }
+
+  func symbolAvatar(_ symbol: String, side: CGFloat, scale: CGFloat, fill: UIColor,
+                    tint: UIColor) -> UIImage {
+    let rect = CGRect(x: 0, y: 0, width: side, height: side)
+    return KometAvatarCache.renderer(side: side, scale: scale).image { _ in
+      let path = UIBezierPath(ovalIn: rect)
+      fill.setFill()
+      path.fill()
+      if let glyph = KometChatListStyle.symbol(symbol, size: side * 0.4, weight: .semibold)?
+        .withTintColor(tint, renderingMode: .alwaysOriginal) {
+        glyph.draw(at: CGPoint(x: (side - glyph.size.width) / 2,
+                               y: (side - glyph.size.height) / 2))
+      }
+    }
+  }
+
+  private static func renderer(side: CGFloat, scale: CGFloat) -> UIGraphicsImageRenderer {
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = scale
+    format.opaque = false
+    return UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format)
   }
 
   private func key(_ url: String, _ side: CGFloat) -> NSString {
