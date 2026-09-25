@@ -33,6 +33,7 @@ import '../../widgets/glass/ios_alert.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_auth_chrome.dart';
 import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_tappable.dart';
 import '../../widgets/glass/ios_typography.dart';
 import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glass/glass_controls.dart';
@@ -332,6 +333,26 @@ class _LoginScreenState extends State<LoginScreen> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final appContext = context;
+    if (IosGlass.of(context)) {
+      showIosActionSheet(
+        context: context,
+        title: l10n.loginLanguage,
+        cancelLabel: l10n.spoofDialogCancel,
+        actions: [
+          for (final (code, label) in [
+            ('ru', l10n.languageNameRu),
+            ('en', l10n.languageNameEn),
+          ])
+            IosSheetAction(
+              id: code,
+              label: label,
+              onSelected: () =>
+                  KometApp.stateOf(appContext)?.applyLocale(Locale(code)),
+            ),
+        ],
+      );
+      return;
+    }
     showIosSheet<void>(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
@@ -783,6 +804,37 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showSecurityOptions(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      showIosActionSheet(
+        context: context,
+        cancelLabel: l10n.spoofDialogCancel,
+        actions: [
+          if (BuildProfile.spoofUi)
+            IosSheetAction(
+              id: 'spoof',
+              label: l10n.loginSpoofRedacted,
+              sfSymbol: 'shield',
+              onSelected: () => Navigator.push(
+                context,
+                iosPageRoute(context, builder: (_) => const SpoofScreen()),
+              ),
+            ),
+          IosSheetAction(
+            id: 'proxy',
+            label: l10n.loginProxy,
+            sfSymbol: 'network.badge.shield.half.filled',
+            onSelected: () => _showProxySettingsSheet(context),
+          ),
+          IosSheetAction(
+            id: 'server',
+            label: l10n.loginChangeServer,
+            sfSymbol: 'server.rack',
+            onSelected: () => _showServerSettingsSheet(context),
+          ),
+        ],
+      );
+      return;
+    }
     showIosSheet(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
@@ -859,6 +911,36 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showOtherLoginMethods(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      showIosActionSheet(
+        context: context,
+        cancelLabel: l10n.spoofDialogCancel,
+        actions: [
+          if (BuildProfile.qrLogin)
+            IosSheetAction(
+              id: 'qr',
+              label: l10n.loginSignInWithQr,
+              sfSymbol: 'qrcode',
+              onSelected: () {},
+            ),
+          if (BuildProfile.tokenLogin)
+            IosSheetAction(
+              id: 'token',
+              label: l10n.loginSignInWithToken,
+              sfSymbol: 'key',
+              onSelected: () => Navigator.push(
+                context,
+                iosPageRoute(context,
+                  builder: (_) => TokenLoginScreen(
+                    returnToAccountId: widget.returnToAccountId,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+      return;
+    }
     showIosSheet(
       context: context,
       backgroundColor: cs.surfaceContainerHigh,
@@ -919,6 +1001,47 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _topButton(ColorScheme cs, IconData icon, VoidCallback onPressed) {
+    final glyph = Icon(icon, color: cs.onSurfaceVariant, weight: 400);
+    if (!IosGlass.of(context)) {
+      return IconButton(onPressed: onPressed, icon: glyph);
+    }
+    return CupertinoButton(
+      padding: EdgeInsets.zero,
+      minimumSize: const Size(44, 44),
+      onPressed: onPressed,
+      child: glyph,
+    );
+  }
+
+  Widget _tappable({
+    required VoidCallback? onTap,
+    required BorderRadius borderRadius,
+    required Widget child,
+  }) {
+    if (!IosGlass.of(context)) {
+      return InkWell(onTap: onTap, borderRadius: borderRadius, child: child);
+    }
+    return IosTappable(
+      onTap: onTap,
+      enabled: onTap != null,
+      borderRadius: borderRadius,
+      child: child,
+    );
+  }
+
+  Widget _textButton({required VoidCallback onPressed, required Widget child}) {
+    if (!IosGlass.of(context)) {
+      return TextButton(onPressed: onPressed, child: child);
+    }
+    return CupertinoButton(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      minimumSize: const Size(44, 44),
+      onPressed: onPressed,
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -954,35 +1077,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               if (Navigator.canPop(context) ||
                                   widget.returnToAccountId != null)
-                                IconButton(
-                                  onPressed: _onBackPressed,
-                                  icon: Icon(
-                                    IosSymbols.chevronBack(context),
-                                    color: cs.onSurfaceVariant,
-                                    weight: 400,
-                                  ),
+                                _topButton(
+                                  cs,
+                                  IosSymbols.chevronBack(context),
+                                  _onBackPressed,
                                 )
                               else
                                 const SizedBox.shrink(),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  IconButton(
-                                    onPressed: () =>
-                                        _showSecurityOptions(context),
-                                    icon: Icon(
-                                      IosSymbols.admin(context),
-                                      color: cs.onSurfaceVariant,
-                                      weight: 400,
-                                    ),
+                                  _topButton(
+                                    cs,
+                                    IosSymbols.admin(context),
+                                    () => _showSecurityOptions(context),
                                   ),
-                                  IconButton(
-                                    onPressed: _showLanguagePicker,
-                                    icon: Icon(
-                                      IosSymbols.language(context),
-                                      color: cs.onSurfaceVariant,
-                                      weight: 400,
-                                    ),
+                                  _topButton(
+                                    cs,
+                                    IosSymbols.language(context),
+                                    _showLanguagePicker,
                                   ),
                                 ],
                               ),
@@ -1027,7 +1140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 48),
-                          InkWell(
+                          _tappable(
                             onTap: _showCountryPicker,
                             borderRadius: BorderRadius.circular(50),
                             child: _buildInputField(
@@ -1128,7 +1241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : const SizedBox.shrink(),
                           ),
                           const SizedBox(height: 4),
-                          InkWell(
+                          _tappable(
                             onTap: _switchingSmsMode
                                 ? null
                                 : () => _setAlwaysSendSms(!_alwaysSendSms),
@@ -1161,7 +1274,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 12),
                           if (BuildProfile.qrLogin || BuildProfile.tokenLogin)
-                            TextButton(
+                            _textButton(
                               onPressed: () => _showOtherLoginMethods(context),
                               child: Text(
                                 l10n.loginOtherSignInMethods,

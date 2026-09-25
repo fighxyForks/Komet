@@ -1,8 +1,16 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:komet/core/config/countries.dart';
 import 'package:komet/l10n/app_localizations.dart';
 import '../../widgets/glass/ios_auth_chrome.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_settings_scaffold.dart';
 import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_tappable.dart';
+import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/settings_card.dart';
+import '../contacts/contact_sheet_common.dart';
 
 class SelectCountryScreen extends StatefulWidget {
   final CountryName selectedCountry;
@@ -95,6 +103,8 @@ class _SelectCountryScreenState extends State<SelectCountryScreen> {
     final l10n = AppLocalizations.of(context)!;
     final lang = Localizations.localeOf(context).languageCode;
 
+    if (IosGlass.of(context)) return _buildIos(context, cs, l10n, lang);
+
     return Scaffold(
       backgroundColor: iosAuthBackground(context),
       appBar: AppBar(
@@ -182,6 +192,139 @@ class _SelectCountryScreenState extends State<SelectCountryScreen> {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildIos(
+    BuildContext context,
+    ColorScheme cs,
+    AppLocalizations l10n,
+    String lang,
+  ) {
+    final countries = _filteredCountries;
+    return IosSettingsScaffold(
+      title: l10n.selectCountryTitle,
+      useConnectionTitle: false,
+      body: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        itemCount: countries.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: CupertinoSearchTextField(
+                controller: _searchController,
+                placeholder: l10n.selectCountrySearchHint,
+                onChanged: _filterCountries,
+              ),
+            );
+          }
+          final country = countries[index - 1];
+          return _IosCountryRow(
+            key: ValueKey(country.code),
+            name: country.displayName(lang),
+            flag: contactFlagEmoji(country.code),
+            phoneCode: country.phoneCode,
+            selected: country.code == widget.selectedCountry.code,
+            isFirst: index == 1,
+            isLast: index == countries.length,
+            onTap: () => Navigator.pop(context, country),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _IosCountryRow extends StatelessWidget {
+  final String name;
+  final String flag;
+  final String phoneCode;
+  final bool selected;
+  final bool isFirst;
+  final bool isLast;
+  final VoidCallback onTap;
+
+  const _IosCountryRow({
+    super.key,
+    required this.name,
+    required this.flag,
+    required this.phoneCode,
+    required this.selected,
+    required this.isFirst,
+    required this.isLast,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    const radius = Radius.circular(IosGroupedSection.defaultRadius);
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(
+        top: isFirst ? radius : Radius.zero,
+        bottom: isLast ? radius : Radius.zero,
+      ),
+      child: ColoredBox(
+        color: IosGroupedSection.background(cs),
+        child: IosTappable(
+          onTap: onTap,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Text(flag, style: const TextStyle(fontSize: 22)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: IosPalette.label(cs),
+                          fontSize: IosTypography.listTitle,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      phoneCode,
+                      style: TextStyle(
+                        color: IosPalette.secondaryLabel(cs),
+                        fontSize: IosTypography.listTitle,
+                      ),
+                    ),
+                    if (selected) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        IosSymbols.check(context),
+                        color: cs.primary,
+                        size: 20,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (!isLast)
+                Padding(
+                  padding: const EdgeInsets.only(left: 50),
+                  child: Divider(
+                    height: 0.5,
+                    thickness: 0.5,
+                    color: IosPalette.separator(cs),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

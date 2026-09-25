@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../contacts/contact_sheet_common.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/glass_controls.dart';
+import '../../widgets/glass/ios_alert.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
 
@@ -25,6 +26,18 @@ Future<ConfirmChoice> showBlurredConfirm(
   String? checkboxLabel,
   bool checkboxInitial = false,
 }) async {
+  if (IosGlass.of(context)) {
+    return _showIosConfirm(
+      context,
+      title: title,
+      message: message,
+      confirmLabel: confirmLabel,
+      cancelLabel: cancelLabel,
+      destructive: destructive,
+      checkboxLabel: checkboxLabel,
+      checkboxInitial: checkboxInitial,
+    );
+  }
   final result = await showBlurredCard<ConfirmChoice>(
     context,
     (_) => _ConfirmCard(
@@ -38,6 +51,93 @@ Future<ConfirmChoice> showBlurredConfirm(
     ),
   );
   return result ?? ConfirmChoice.cancelled;
+}
+
+Future<ConfirmChoice> _showIosConfirm(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+  required String cancelLabel,
+  required bool destructive,
+  required String? checkboxLabel,
+  required bool checkboxInitial,
+}) async {
+  var checked = checkboxInitial;
+  final confirmed = await showIosAlert<bool>(
+    context: context,
+    title: title,
+    message: checkboxLabel == null ? message : null,
+    content: checkboxLabel == null
+        ? null
+        : StatefulBuilder(
+            builder: (context, setState) => _IosConfirmCheckbox(
+              message: message,
+              label: checkboxLabel,
+              checked: checked,
+              onChanged: (value) => setState(() => checked = value),
+            ),
+          ),
+    actions: [
+      IosAlertAction(
+        id: 'cancel',
+        label: cancelLabel,
+        result: false,
+        isCancel: true,
+      ),
+      IosAlertAction(
+        id: 'confirm',
+        label: confirmLabel,
+        result: true,
+        isDestructive: destructive,
+        isDefault: !destructive,
+      ),
+    ],
+  );
+  if (confirmed != true) return ConfirmChoice.cancelled;
+  return ConfirmChoice(
+    confirmed: true,
+    checked: checkboxLabel != null && checked,
+  );
+}
+
+class _IosConfirmCheckbox extends StatelessWidget {
+  final String message;
+  final String label;
+  final bool checked;
+  final ValueChanged<bool> onChanged;
+
+  const _IosConfirmCheckbox({
+    required this.message,
+    required this.label,
+    required this.checked,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(padding: const EdgeInsets.only(top: 4), child: Text(message)),
+        const SizedBox(height: 8),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => onChanged(!checked),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IosCheckbox(
+                value: checked,
+                onChanged: (value) => onChanged(value ?? false),
+              ),
+              Flexible(child: Text(label, textAlign: TextAlign.start)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 Future<void> showComplaintCard(

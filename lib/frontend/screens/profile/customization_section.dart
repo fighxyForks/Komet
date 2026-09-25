@@ -92,6 +92,19 @@ class _CustomizationSectionState extends State<CustomizationSection> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    if (IosGlass.of(context)) {
+      return SettingsCard(
+        children: [
+          for (var i = 0; i < _categories.length; i++)
+            SettingsNavTile(
+              icon: IosSymbols.adapt(context, _categories[i].icon),
+              label: _categories[i].title,
+              onTap: () => _open(_categories[i]),
+              isLast: i == _categories.length - 1,
+            ),
+        ],
+      );
+    }
     return GlossyPill(
       color: cs.surfaceContainerHigh,
       borderRadius: BorderRadius.circular(20),
