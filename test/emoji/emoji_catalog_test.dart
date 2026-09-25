@@ -28,14 +28,16 @@ void main() {
       EmojiCatalog.instance.byCategory(EmojiCategory.smileysPeople),
       isNotEmpty,
     );
-    expect(EmojiCatalog.instance.byCategory(EmojiCategory.flags), isNotEmpty);
+    expect(
+      EmojiCatalog.instance.byCategory(EmojiCategory.flags),
+      isNotEmpty,
+    );
   });
 
   test('category mapping keeps smileys and people together', () async {
     await EmojiCatalog.instance.ensureLoaded();
-    final smileys = EmojiCatalog.instance.byCategory(
-      EmojiCategory.smileysPeople,
-    );
+    final smileys =
+        EmojiCatalog.instance.byCategory(EmojiCategory.smileysPeople);
     expect(smileys.any((e) => e.glyph == '😀'), isTrue);
     expect(smileys.any((e) => e.glyph == '👋'), isTrue);
   });
@@ -48,12 +50,7 @@ void main() {
     final heart = EmojiCatalog.instance.search('сердце', platform);
     expect(heart, isNotEmpty);
     expect(
-      heart
-          .take(8)
-          .any(
-            (h) =>
-                h.entry.glyph.contains('❤') || h.entry.name.contains('heart'),
-          ),
+      heart.take(8).any((h) => h.entry.glyph.contains('❤') || h.entry.name.contains('heart')),
       isTrue,
     );
 

@@ -80,15 +80,24 @@ void main() {
 
   test('desktop caps at Emoji 15.0', () {
     expect(
-      EmojiVersionFilter.isSupported(150, platform: TargetPlatform.macOS),
+      EmojiVersionFilter.isSupported(
+        150,
+        platform: TargetPlatform.macOS,
+      ),
       isTrue,
     );
     expect(
-      EmojiVersionFilter.isSupported(151, platform: TargetPlatform.macOS),
+      EmojiVersionFilter.isSupported(
+        151,
+        platform: TargetPlatform.macOS,
+      ),
       isFalse,
     );
     expect(
-      EmojiVersionFilter.isSupported(160, platform: TargetPlatform.linux),
+      EmojiVersionFilter.isSupported(
+        160,
+        platform: TargetPlatform.linux,
+      ),
       isFalse,
     );
   });
