@@ -164,6 +164,45 @@ class NativeStories {
 }
 
 @immutable
+class NativeFolderItem {
+  final String id;
+  final String title;
+
+  const NativeFolderItem({required this.id, required this.title});
+
+  Map<String, Object?> toMap() => {'id': id, 'title': title};
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeFolderItem && other.id == id && other.title == title;
+
+  @override
+  int get hashCode => Object.hash(id, title);
+}
+
+@immutable
+class NativeFolders {
+  final List<NativeFolderItem> items;
+  final String? selected;
+
+  const NativeFolders({this.items = const [], this.selected});
+
+  Map<String, Object?> toMap() => {
+    'items': [for (final item in items) item.toMap()],
+    'selected': selected,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeFolders &&
+      other.selected == selected &&
+      listEquals(other.items, items);
+
+  @override
+  int get hashCode => Object.hash(selected, Object.hashAll(items));
+}
+
+@immutable
 class NativeArchiveEntry {
   final String title;
   final String text;
@@ -241,6 +280,8 @@ class NativeChatListCallbacks {
   final void Function(int ownerId, Rect avatar) onStory;
   final VoidCallback onAddStory;
   final VoidCallback onArchive;
+  final ValueChanged<String> onFolder;
+  final void Function(String id, Rect anchor) onFolderMenu;
 
   const NativeChatListCallbacks({
     required this.onOpen,
@@ -255,6 +296,8 @@ class NativeChatListCallbacks {
     required this.onStory,
     required this.onAddStory,
     required this.onArchive,
+    required this.onFolder,
+    required this.onFolderMenu,
   });
 }
 
@@ -309,6 +352,9 @@ class NativeChatListController {
 
   Future<void> setStories(NativeStories stories) =>
       _invoke('setStories', stories.toMap());
+
+  Future<void> setFolders(NativeFolders folders) =>
+      _invoke('setFolders', folders.toMap());
 
   Future<void> setArchive(NativeArchiveEntry? archive) =>
       _invoke('setArchive', {'archive': archive?.toMap()});
@@ -377,6 +423,12 @@ class NativeChatListController {
         callbacks.onAddStory();
       case 'archive':
         callbacks.onArchive();
+      case 'folder':
+        final id = args['id'];
+        if (id is String) callbacks.onFolder(id);
+      case 'folderMenu':
+        final id = args['id'];
+        if (id is String) callbacks.onFolderMenu(id, _rectOf(args));
     }
     return null;
   }

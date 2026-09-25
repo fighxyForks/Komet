@@ -51,6 +51,9 @@ final class KometChatListPlatformView: NSObject, FlutterPlatformView {
       list.applyStories(stories)
     }
     list.applyArchive(map["archive"] as? [String: Any])
+    if let folders = map["folders"] as? [String: Any] {
+      list.applyFolders(folders)
+    }
     let rows = map["rows"] as? [[String: Any]] ?? []
     list.applyRows(
       order: rows.compactMap { ($0["id"] as? NSNumber)?.intValue }, rows: rows)
@@ -91,6 +94,9 @@ final class KometChatListPlatformView: NSObject, FlutterPlatformView {
       result(nil)
     case "setArchive":
       list.applyArchive(arguments["archive"] as? [String: Any])
+      result(nil)
+    case "setFolders":
+      list.applyFolders(arguments)
       result(nil)
     default:
       result(FlutterMethodNotImplemented)
@@ -144,6 +150,8 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   private var archiveRevealed = false
   private var archiveArmed = false
   private var stories: [KometStoryItem] = []
+  private var folders: [KometFolderItem] = []
+  private var selectedFolder: String?
   private var storiesVisible = false
 
   override func viewDidLoad() {
@@ -175,6 +183,14 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
                                "width": rect.width, "height": rect.height])
     }
     header.onAddStory = { [weak self] in self?.onEvent?("storyAdd", nil) }
+    header.setFolders(folders, selected: selectedFolder)
+    header.onFolder = { [weak self] id in
+      self?.onEvent?("folder", ["id": id])
+    }
+    header.onFolderMenu = { [weak self] id, rect in
+      self?.onEvent?("folderMenu", ["id": id, "x": rect.minX, "y": rect.minY,
+                                    "width": rect.width, "height": rect.height])
+    }
     collectionView.addSubview(header)
     layoutHeader()
 
@@ -305,6 +321,14 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     storiesVisible = (payload["visible"] as? NSNumber)?.boolValue ?? false
     guard isViewLoaded else { return }
     header.setStories(stories, visible: storiesVisible)
+    layoutHeader()
+  }
+
+  func applyFolders(_ payload: [String: Any]) {
+    folders = (payload["items"] as? [[String: Any]] ?? []).compactMap(KometFolderItem.init)
+    selectedFolder = payload["selected"] as? String
+    guard isViewLoaded else { return }
+    header.setFolders(folders, selected: selectedFolder)
     layoutHeader()
   }
 
