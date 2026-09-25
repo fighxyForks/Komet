@@ -6680,6 +6680,36 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get chatListSearch;
 
+  /// No description provided for @chatListEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get chatListEdit;
+
+  /// No description provided for @chatListEditDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get chatListEditDone;
+
+  /// No description provided for @chatListReadAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Read All'**
+  String get chatListReadAll;
+
+  /// No description provided for @chatListReadSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get chatListReadSelected;
+
+  /// No description provided for @chatListCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get chatListCancel;
+
   /// No description provided for @chatListDraft.
   ///
   /// In en, this message translates to:

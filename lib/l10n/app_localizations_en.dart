@@ -3589,6 +3589,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatListSearch => 'Search';
 
   @override
+  String get chatListEdit => 'Edit';
+
+  @override
+  String get chatListEditDone => 'Done';
+
+  @override
+  String get chatListReadAll => 'Read All';
+
+  @override
+  String get chatListReadSelected => 'Read';
+
+  @override
+  String get chatListCancel => 'Cancel';
+
+  @override
   String get chatListDraft => 'Draft: ';
 
   @override

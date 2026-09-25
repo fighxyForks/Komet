@@ -77,6 +77,11 @@ final class KometChatListPlatformView: NSObject, FlutterPlatformView {
     case "setChrome":
       list.applyChrome(arguments)
       result(nil)
+    case "setEditing":
+      list.setListEditing((arguments["on"] as? NSNumber)?.boolValue ?? false, notify: true)
+      result(nil)
+    case "actionSheet":
+      list.presentActionSheet(arguments, result: result)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -84,7 +89,7 @@ final class KometChatListPlatformView: NSObject, FlutterPlatformView {
 }
 
 final class KometChatListController: UIViewController, UICollectionViewDelegate,
-  UICollectionViewDataSourcePrefetching, UISearchResultsUpdating {
+  UICollectionViewDataSourcePrefetching, UISearchResultsUpdating, UIGestureRecognizerDelegate {
   var onEvent: ((String, Any?) -> Void)?
 
   private lazy var layout: UICollectionViewFlowLayout = {
@@ -97,8 +102,16 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     frame: .zero, collectionViewLayout: layout)
   private lazy var dataSource: UICollectionViewDiffableDataSource<Int, Int> = makeDataSource()
   private let searchController = UISearchController(searchResultsController: nil)
-  private let menuButton = UIButton(type: .system)
   private let composeButton = UIButton(type: .system)
+  private let downloadsButton = UIButton(type: .system)
+  private let lockButton = UIButton(type: .system)
+  private let editBar = KometChatListEditBar()
+  private lazy var reorderGesture: UILongPressGestureRecognizer = {
+    let gesture = UILongPressGestureRecognizer(target: self, action: #selector(handleReorder(_:)))
+    gesture.minimumPressDuration = 0.05
+    gesture.delegate = self
+    return gesture
+  }()
 
   private let layoutQueue = DispatchQueue(label: "ru.komet.app.chat-list-layout",
                                           qos: .userInitiated)
@@ -109,6 +122,10 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   private var bottomInset: CGFloat = 0
   private var query = ""
   private var hasApplied = false
+  private var lockEnabled = false
+  private var editingList = false
+  private var selectedIds = Set<Int>()
+  private var reordering = false
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -137,18 +154,34 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     KometNavigationChrome.styleBar(navigationController?.navigationBar)
     definesPresentationContext = true
 
-    menuButton.setImage(KometChatListStyle.symbol("ellipsis", size: 17, weight: .semibold),
-                        for: .normal)
-    menuButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
-    menuButton.addTarget(self, action: #selector(openMenu), for: .touchUpInside)
-    navigationItem.leftBarButtonItem = UIBarButtonItem(customView: menuButton)
+    setUpBarButton(composeButton, symbol: "square.and.pencil", action: #selector(openCompose))
+    setUpBarButton(downloadsButton, symbol: "arrow.down.circle",
+                   action: #selector(openDownloads))
+    setUpBarButton(lockButton, symbol: "lock.open", action: #selector(lockNow))
+    updateBarItems()
 
-    composeButton.setImage(KometChatListStyle.symbol("square.and.pencil", size: 17,
-                                                     weight: .semibold),
-                           for: .normal)
-    composeButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
-    composeButton.addTarget(self, action: #selector(openCompose), for: .touchUpInside)
-    navigationItem.rightBarButtonItem = UIBarButtonItem(customView: composeButton)
+    collectionView.addGestureRecognizer(reorderGesture)
+    if #available(iOS 14.0, *) {
+      dataSource.reorderingHandlers.canReorderItem = { [weak self] id in
+        self?.isReorderable(id) ?? false
+      }
+      dataSource.reorderingHandlers.didReorder = { [weak self] transaction in
+        self?.finishReorder(transaction.finalSnapshot.itemIdentifiers)
+      }
+    }
+
+    editBar.alpha = 0
+    editBar.isHidden = true
+    editBar.translatesAutoresizingMaskIntoConstraints = false
+    editBar.onAction = { [weak self] action in self?.handleEditAction(action) }
+    view.addSubview(editBar)
+    NSLayoutConstraint.activate([
+      editBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      editBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+      editBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor,
+                                      constant: -8),
+    ])
+    updateEditBar()
 
     applySnapshot(changed: [])
   }
@@ -178,9 +211,14 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
       bottomInset = CGFloat(inset)
       if isViewLoaded { applyBottomInset() }
     }
+    if let lock = (chrome["lockEnabled"] as? NSNumber)?.boolValue {
+      lockEnabled = lock
+    }
     strings.apply(chrome)
     if isViewLoaded {
       searchController.searchBar.placeholder = strings.search
+      updateBarItems()
+      updateEditBar()
     }
   }
 
@@ -204,8 +242,14 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
       var seen = Set<Int>()
       order = newOrder.filter { seen.insert($0).inserted }
       contents = contents.filter { seen.contains($0.key) }
+      let kept = selectedIds.intersection(seen)
+      if kept != selectedIds {
+        selectedIds = kept
+        emitSelection()
+      }
     }
     applySnapshot(changed: built.map { $0.row.id })
+    updateEditBar()
   }
 
   private func visibleOrder() -> [Int] {
@@ -244,7 +288,8 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
             let content = self.contents[id] else { return cell }
       let count = collectionView.numberOfItems(inSection: indexPath.section)
       chatCell.configure(content, accent: self.accent,
-                         showsSeparator: indexPath.item < count - 1)
+                         showsSeparator: indexPath.item < count - 1,
+                         editState: self.editState(for: id))
       return chatCell
     }
   }
@@ -260,12 +305,227 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     collectionView.verticalScrollIndicatorInsets.bottom = bottomInset
   }
 
-  @objc private func openMenu() {
-    onEvent?("menu", rectArguments(menuButton))
-  }
-
   @objc private func openCompose() {
     onEvent?("compose", rectArguments(composeButton))
+  }
+
+  @objc private func openDownloads() {
+    onEvent?("downloads", rectArguments(downloadsButton))
+  }
+
+  @objc private func lockNow() {
+    onEvent?("lock", rectArguments(lockButton))
+  }
+
+  private func setUpBarButton(_ button: UIButton, symbol: String, action: Selector) {
+    button.setImage(KometChatListStyle.symbol(symbol, size: 17, weight: .semibold), for: .normal)
+    button.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+    button.addTarget(self, action: action, for: .touchUpInside)
+  }
+
+  private func updateBarItems() {
+    let edit = UIBarButtonItem(
+      title: editingList ? strings.done : strings.edit,
+      style: editingList ? .done : .plain,
+      target: self, action: #selector(toggleEditing))
+    navigationItem.setLeftBarButton(edit, animated: false)
+    var trailing: [UIBarButtonItem] = []
+    if !editingList {
+      trailing.append(UIBarButtonItem(customView: composeButton))
+      trailing.append(UIBarButtonItem(customView: downloadsButton))
+      if lockEnabled { trailing.append(UIBarButtonItem(customView: lockButton)) }
+    }
+    navigationItem.setRightBarButtonItems(trailing, animated: true)
+  }
+
+  @objc private func toggleEditing() {
+    setListEditing(!editingList, notify: true)
+  }
+
+  func setListEditing(_ on: Bool, notify: Bool) {
+    guard on != editingList else { return }
+    editingList = on
+    selectedIds.removeAll()
+    if on, searchController.isActive {
+      searchController.isActive = false
+    }
+    searchController.searchBar.isUserInteractionEnabled = !on
+    updateBarItems()
+    updateEditBar()
+    for cell in collectionView.visibleCells {
+      guard let chatCell = cell as? KometChatListCell,
+            let indexPath = collectionView.indexPath(for: cell),
+            let id = dataSource.itemIdentifier(for: indexPath) else { continue }
+      chatCell.applyEditState(editState(for: id), animated: true)
+    }
+    if on { editBar.isHidden = false }
+    editBar.transform = on ? CGAffineTransform(translationX: 0, y: 24) : .identity
+    UIView.animate(withDuration: 0.3, delay: 0, options: [.beginFromCurrentState]) {
+      self.editBar.alpha = on ? 1 : 0
+      self.editBar.transform = on ? .identity : CGAffineTransform(translationX: 0, y: 24)
+    } completion: { _ in
+      if !self.editingList { self.editBar.isHidden = true }
+    }
+    if notify { onEvent?("editing", ["on": on]) }
+    emitSelection()
+  }
+
+  private func editState(for id: Int) -> KometChatEditState {
+    KometChatEditState(editing: editingList,
+                       selected: editingList && selectedIds.contains(id),
+                       reorderable: editingList && isReorderable(id))
+  }
+
+  private func isReorderable(_ id: Int) -> Bool {
+    guard #available(iOS 14.0, *) else { return false }
+    guard editingList, query.isEmpty else { return false }
+    return contents[id]?.row.pinned ?? false
+  }
+
+  private func toggleSelection(_ id: Int, at indexPath: IndexPath) {
+    if selectedIds.contains(id) {
+      selectedIds.remove(id)
+    } else {
+      selectedIds.insert(id)
+    }
+    (collectionView.cellForItem(at: indexPath) as? KometChatListCell)?
+      .applyEditState(editState(for: id), animated: true)
+    updateEditBar()
+    emitSelection()
+  }
+
+  private func emitSelection() {
+    onEvent?("selection", ["ids": orderedSelection()])
+  }
+
+  private func orderedSelection() -> [Int] {
+    order.filter { selectedIds.contains($0) }
+  }
+
+  private func updateEditBar() {
+    let selected = orderedSelection().compactMap { contents[$0]?.row }
+    editBar.update(
+      readTitle: selected.isEmpty ? strings.readAll : strings.readSelected,
+      archiveTitle: strings.toArchive,
+      deleteTitle: strings.deleteSelected,
+      canArchive: !selected.isEmpty,
+      canDelete: !selected.isEmpty && selected.allSatisfy { $0.canDelete },
+      accent: accent)
+  }
+
+  private func handleEditAction(_ action: KometChatListEditBar.Action) {
+    let ids = orderedSelection()
+    switch action {
+    case .read:
+      onEvent?("bulk", ["action": ids.isEmpty ? "readAll" : "read", "ids": ids])
+      setListEditing(false, notify: true)
+    case .archive:
+      guard !ids.isEmpty else { return }
+      onEvent?("bulk", ["action": "archive", "ids": ids])
+      setListEditing(false, notify: true)
+    case .delete:
+      guard !ids.isEmpty else { return }
+      onEvent?("bulk", ["action": "delete", "ids": ids])
+    }
+  }
+
+  func presentActionSheet(_ arguments: [String: Any], result: @escaping FlutterResult) {
+    let title = arguments["title"] as? String
+    let message = arguments["message"] as? String
+    let sheet = UIAlertController(
+      title: title?.isEmpty == false ? title : nil,
+      message: message?.isEmpty == false ? message : nil,
+      preferredStyle: .actionSheet)
+    var finished = false
+    func finish(_ value: String?) {
+      guard !finished else { return }
+      finished = true
+      result(value)
+    }
+    for action in arguments["actions"] as? [[String: Any]] ?? [] {
+      guard let id = action["id"] as? String, let label = action["title"] as? String else {
+        continue
+      }
+      let destructive = (action["destructive"] as? NSNumber)?.boolValue ?? false
+      sheet.addAction(UIAlertAction(title: label, style: destructive ? .destructive : .default) {
+        _ in finish(id)
+      })
+    }
+    sheet.addAction(UIAlertAction(title: strings.cancel, style: .cancel) { _ in finish(nil) })
+    if let popover = sheet.popoverPresentationController {
+      let anchor: UIView = editingList ? editBar.deleteButton : view
+      popover.sourceView = anchor
+      popover.sourceRect = anchor.bounds
+    }
+    let presenter: UIViewController = navigationController ?? self
+    guard presenter.presentedViewController == nil else {
+      finish(nil)
+      return
+    }
+    presenter.present(sheet, animated: true)
+  }
+
+  @objc private func handleReorder(_ gesture: UILongPressGestureRecognizer) {
+    let location = gesture.location(in: collectionView)
+    switch gesture.state {
+    case .began:
+      guard let indexPath = collectionView.indexPathForItem(at: location) else { return }
+      reordering = collectionView.beginInteractiveMovementForItem(at: indexPath)
+      if reordering { UISelectionFeedbackGenerator().selectionChanged() }
+    case .changed:
+      guard reordering else { return }
+      collectionView.updateInteractiveMovementTargetPosition(
+        CGPoint(x: collectionView.bounds.midX, y: location.y))
+    case .ended:
+      guard reordering else { return }
+      reordering = false
+      collectionView.endInteractiveMovement()
+    default:
+      guard reordering else { return }
+      reordering = false
+      collectionView.cancelInteractiveMovement()
+    }
+  }
+
+  func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    guard gestureRecognizer === reorderGesture else { return true }
+    let location = gestureRecognizer.location(in: collectionView)
+    guard editingList,
+          let indexPath = collectionView.indexPathForItem(at: location),
+          let cell = collectionView.cellForItem(at: indexPath) as? KometChatListCell else {
+      return false
+    }
+    return cell.gripContains(collectionView.convert(location, to: cell))
+  }
+
+  private var pinnedCount: Int {
+    dataSource.snapshot().itemIdentifiers.prefix { contents[$0]?.row.pinned ?? false }.count
+  }
+
+  private func clampedMove(_ proposed: IndexPath) -> IndexPath {
+    let limit = max(pinnedCount - 1, 0)
+    return IndexPath(item: min(max(proposed.item, 0), limit), section: proposed.section)
+  }
+
+  func collectionView(_ collectionView: UICollectionView,
+                      targetIndexPathForMoveFromItemAt originalIndexPath: IndexPath,
+                      toProposedIndexPath proposedIndexPath: IndexPath) -> IndexPath {
+    clampedMove(proposedIndexPath)
+  }
+
+  @available(iOS 15.0, *)
+  func collectionView(_ collectionView: UICollectionView,
+                      targetIndexPathForMoveOfItemFromOriginalIndexPath originalIndexPath: IndexPath,
+                      atCurrentIndexPath currentIndexPath: IndexPath,
+                      toProposedIndexPath proposedIndexPath: IndexPath) -> IndexPath {
+    clampedMove(proposedIndexPath)
+  }
+
+  private func finishReorder(_ ids: [Int]) {
+    let moved = Set(ids)
+    order = ids + order.filter { !moved.contains($0) }
+    let pinned = ids.filter { contents[$0]?.row.pinned ?? false }
+    onEvent?("reorderPinned", ["ids": pinned])
   }
 
   private func rectArguments(_ source: UIView) -> [String: Any] {
@@ -273,9 +533,20 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     return ["x": rect.minX, "y": rect.minY, "width": rect.width, "height": rect.height]
   }
 
+  func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell,
+                      forItemAt indexPath: IndexPath) {
+    guard let chatCell = cell as? KometChatListCell,
+          let id = dataSource.itemIdentifier(for: indexPath) else { return }
+    chatCell.applyEditState(editState(for: id), animated: false)
+  }
+
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-    collectionView.deselectItem(at: indexPath, animated: true)
+    collectionView.deselectItem(at: indexPath, animated: !editingList)
     guard let id = dataSource.itemIdentifier(for: indexPath) else { return }
+    if editingList {
+      toggleSelection(id, at: indexPath)
+      return
+    }
     onEvent?("open", ["id": id])
   }
 
@@ -294,7 +565,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   }
 
   private func contextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
-    guard let id = dataSource.itemIdentifier(for: indexPath),
+    guard !editingList, let id = dataSource.itemIdentifier(for: indexPath),
           let row = contents[id]?.row else { return nil }
     return UIContextMenuConfiguration(identifier: NSNumber(value: id), previewProvider: nil) {
       [weak self] _ in

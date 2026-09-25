@@ -1,7 +1,15 @@
 import UIKit
 
+struct KometChatEditState: Equatable {
+  var editing = false
+  var selected = false
+  var reorderable = false
+}
+
 final class KometChatListCell: UICollectionViewCell {
   static let reuseIdentifier = "KometChatListCell"
+  static let editShift: CGFloat = 42
+  static let gripWidth: CGFloat = 56
 
   private let avatarView = UIImageView()
   private let kindIcon = UIImageView()
@@ -20,9 +28,13 @@ final class KometChatListCell: UICollectionViewCell {
   private let mentionLabel = UILabel()
   private let pinIcon = UIImageView()
   private let separator = UIView()
+  private let checkView = UIImageView()
+  private let gripView = UIImageView()
 
   private var avatarUrl = ""
   private var baseBackground: UIColor = .systemBackground
+  private var accent: UIColor = .systemBlue
+  private(set) var editState = KometChatEditState()
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -53,8 +65,13 @@ final class KometChatListCell: UICollectionViewCell {
     pinIcon.tintColor = KometChatListStyle.secondary
     pinIcon.image = KometChatListStyle.symbol("pin.fill", size: 15)
     separator.backgroundColor = .separator
+    checkView.contentMode = .center
+    gripView.contentMode = .center
+    gripView.tintColor = KometChatListStyle.secondary
+    gripView.image = KometChatListStyle.symbol("line.3.horizontal", size: 17, weight: .medium)
     [avatarView, kindIcon, titleLabel, mutedIcon, verifiedIcon, lockIcon, statusIcon, readIcon,
-     timeLabel, authorLabel, previewLabel, badgeView, mentionView, pinIcon, separator]
+     timeLabel, authorLabel, previewLabel, badgeView, mentionView, pinIcon, separator,
+     checkView, gripView]
       .forEach(contentView.addSubview)
   }
 
@@ -71,10 +88,46 @@ final class KometChatListCell: UICollectionViewCell {
   }
 
   private func applyBackground() {
-    contentView.backgroundColor = isHighlighted || isSelected ? .systemGray5 : baseBackground
+    let pressed = (isHighlighted || isSelected) && !editState.editing
+    contentView.backgroundColor = pressed ? .systemGray5 : baseBackground
   }
 
-  func configure(_ content: KometChatRowContent, accent: UIColor, showsSeparator: Bool) {
+  func gripContains(_ point: CGPoint) -> Bool {
+    editState.reorderable && point.x >= contentView.bounds.width - KometChatListCell.gripWidth
+  }
+
+  func applyEditState(_ state: KometChatEditState, animated: Bool) {
+    guard state != editState else { return }
+    editState = state
+    applyEditVisuals()
+    applyBackground()
+    guard animated, window != nil else {
+      setNeedsLayout()
+      return
+    }
+    UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 1,
+                   initialSpringVelocity: 0, options: [.beginFromCurrentState, .allowUserInteraction]) {
+      self.setNeedsLayout()
+      self.layoutIfNeeded()
+    }
+  }
+
+  private func applyEditVisuals() {
+    let symbol = editState.selected ? "checkmark.circle.fill" : "circle"
+    checkView.image = KometChatListStyle.symbol(symbol, size: 22, weight: .regular)
+    checkView.tintColor = editState.selected ? accent : KometChatListStyle.mutedBadge
+    checkView.alpha = editState.editing ? 1 : 0
+    gripView.alpha = editState.reorderable ? 1 : 0
+    let trailing: CGFloat = editState.reorderable ? 0 : 1
+    [timeLabel, statusIcon, readIcon, badgeView, mentionView, pinIcon].forEach {
+      $0.alpha = trailing
+    }
+  }
+
+  func configure(_ content: KometChatRowContent, accent: UIColor, showsSeparator: Bool,
+                 editState: KometChatEditState) {
+    self.accent = accent
+    self.editState = editState
     let row = content.row
     baseBackground = row.pinned ? KometChatListStyle.pinnedBackground : .systemBackground
     applyBackground()
@@ -123,6 +176,8 @@ final class KometChatListCell: UICollectionViewCell {
     mentionView.backgroundColor = accent
     pinIcon.isHidden = !(row.pinned && row.unread <= 0 && !row.mention)
     separator.isHidden = !showsSeparator
+    applyEditVisuals()
+    applyBackground()
     setNeedsLayout()
   }
 
@@ -164,9 +219,14 @@ final class KometChatListCell: UICollectionViewCell {
     super.layoutSubviews()
     let width = contentView.bounds.width
     let height = contentView.bounds.height
-    let right = width - 16
+    let shift = editState.editing ? KometChatListCell.editShift : 0
+    let right = width - 16 - (editState.reorderable ? KometChatListCell.gripWidth - 16 : 0)
     let side = KometChatListStyle.avatarSize
-    avatarView.frame = CGRect(x: 16, y: (height - side) / 2, width: side, height: side)
+    avatarView.frame = CGRect(x: 16 + shift, y: (height - side) / 2, width: side, height: side)
+    checkView.frame = CGRect(x: shift - KometChatListCell.editShift + 10, y: (height - 30) / 2,
+                             width: 30, height: 30)
+    gripView.frame = CGRect(x: width - KometChatListCell.gripWidth, y: 0,
+                            width: KometChatListCell.gripWidth, height: height)
 
     let timeSize = timeLabel.sizeThatFits(CGSize(width: 120, height: 20))
     let timeX = right - ceil(timeSize.width)
@@ -182,7 +242,7 @@ final class KometChatListCell: UICollectionViewCell {
       titleRight = x - 6
     }
 
-    var x = KometChatListStyle.textInset
+    var x = KometChatListStyle.textInset + shift
     if !kindIcon.isHidden, let size = kindIcon.image?.size {
       kindIcon.frame = CGRect(x: x, y: 21 - size.height / 2, width: size.width, height: size.height)
       x += size.width + 4
@@ -222,7 +282,7 @@ final class KometChatListCell: UICollectionViewCell {
       trailingX -= 8
     }
 
-    let textX = KometChatListStyle.textInset
+    let textX = KometChatListStyle.textInset + shift
     let textWidth = max(0, trailingX - textX)
     if authorLabel.isHidden {
       let fit = previewLabel.sizeThatFits(CGSize(width: textWidth, height: 40))
@@ -233,8 +293,8 @@ final class KometChatListCell: UICollectionViewCell {
     }
 
     let hairline = 1 / max(traitCollection.displayScale, 1)
-    separator.frame = CGRect(x: KometChatListStyle.textInset, y: height - hairline,
-                             width: width - KometChatListStyle.textInset, height: hairline)
+    separator.frame = CGRect(x: textX, y: height - hairline,
+                             width: width - textX, height: hairline)
   }
 
   override func prepareForReuse() {

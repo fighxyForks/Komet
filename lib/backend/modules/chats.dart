@@ -2193,6 +2193,71 @@ class ChatsModule {
     }
   }
 
+  Future<String?> reorderPinned(Api api, List<int> orderedIds) async {
+    if (orderedIds.isEmpty) return null;
+    try {
+      final accountId = await TokenStorage.getActiveAccountId();
+      if (accountId == null) return 'Нет активного аккаунта';
+      final folders = await FoldersModule.loadFolders(accountId);
+      final allFolder = folders.firstWhere(
+        FoldersModule.isAllChatsFolder,
+        orElse: () => folders.isEmpty
+            ? throw StateError('Папка "Все" не найдена')
+            : folders.first,
+      );
+      final favorites = pinnedOrder(allFolder.favorites, orderedIds);
+      if (listEquals(favorites, allFolder.favorites)) return null;
+
+      await _applyFavIndexes(accountId, favorites);
+      try {
+        await FoldersModule.setFolderFavorites(
+          api,
+          accountId,
+          allFolder,
+          favorites,
+        );
+      } catch (_) {
+        await _applyFavIndexes(accountId, allFolder.favorites);
+        rethrow;
+      }
+      return null;
+    } on PacketError catch (e) {
+      logger.w('reorderPinned: ${e.message}');
+      return e.message;
+    } catch (e) {
+      logger.w('reorderPinned: $e');
+      return 'Не удалось изменить порядок';
+    }
+  }
+
+  @visibleForTesting
+  static List<int> pinnedOrder(List<int> favorites, List<int> orderedIds) {
+    final known = favorites.toSet();
+    final moved = [
+      for (final id in orderedIds)
+        if (known.contains(id)) id,
+    ];
+    final movedSet = moved.toSet();
+    var next = 0;
+    return [
+      for (final id in favorites)
+        movedSet.contains(id) ? moved[next++] : id,
+    ];
+  }
+
+  Future<void> _applyFavIndexes(int accountId, List<int> favorites) async {
+    final rows = await AppDatabase.loadChatsByIds(accountId, favorites);
+    final updates = <(Map<String, dynamic>, Map<String, dynamic>)>[];
+    for (final row in rows) {
+      final next = favorites.indexOf(row['id'] as int) + 1;
+      if (row['fav_index'] == next) continue;
+      final newRow = Map<String, dynamic>.from(row);
+      newRow['fav_index'] = next;
+      updates.add((row, newRow));
+    }
+    await _commitChatContent(updates);
+  }
+
   // #***! избранное берётся из папок, переносим в favIndex
   Future<void> applyFavorites(int accountId) async {
     try {
