@@ -24,6 +24,9 @@ NativeChatListCallbacks _callbacks(List<Object> log) => NativeChatListCallbacks(
   onSelection: (ids) => log.add('selection $ids'),
   onBulk: (action, ids) => log.add('${action.name} $ids'),
   onReorderPinned: (ids) => log.add('reorder $ids'),
+  onStory: (ownerId, rect) => log.add('story $ownerId $rect'),
+  onAddStory: () => log.add('storyAdd'),
+  onArchive: () => log.add('archive'),
 );
 
 void main() {
@@ -204,6 +207,94 @@ void main() {
         'reorder [7, 5]',
         'editing false',
       ]);
+    });
+
+    test('истории и архив: события и данные', () async {
+      final calls = <MethodCall>[];
+      messenger.setMockMethodCallHandler(const MethodChannel(channelName), (
+        call,
+      ) async {
+        calls.add(call);
+        return null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(
+          const MethodChannel(channelName),
+          null,
+        ),
+      );
+      final log = <Object>[];
+      final controller = NativeChatListController(5, _callbacks(log));
+      addTearDown(controller.dispose);
+      const codec = StandardMethodCodec();
+
+      Future<void> send(String method, Map<String, Object?>? args) =>
+          messenger.handlePlatformMessage(
+            channelName,
+            codec.encodeMethodCall(MethodCall(method, args)),
+            (_) {},
+          );
+
+      await send('story', {
+        'ownerId': 7,
+        'x': 1,
+        'y': 2,
+        'width': 60,
+        'height': 60,
+      });
+      await send('storyAdd', null);
+      await send('archive', null);
+      expect(log, [
+        'story 7 ${const Rect.fromLTWH(1, 2, 60, 60)}',
+        'storyAdd',
+        'archive',
+      ]);
+
+      const stories = NativeStories(
+        visible: true,
+        items: [
+          NativeStoryItem(ownerId: 1, title: 'Ваша история', isSelf: true),
+          NativeStoryItem(ownerId: 7, title: 'Вера', total: 3, read: 1),
+        ],
+      );
+      await controller.setStories(stories);
+      await controller.setArchive(
+        const NativeArchiveEntry(title: 'Архив', count: 4, unread: 2),
+      );
+      await controller.setArchive(null);
+      expect(calls.map((c) => c.method), [
+        'setStories',
+        'setArchive',
+        'setArchive',
+      ]);
+      final storiesArgs = calls[0].arguments as Map;
+      expect(storiesArgs['visible'], isTrue);
+      expect((storiesArgs['items'] as List).last, {
+        'ownerId': 7,
+        'title': 'Вера',
+        'avatarUrl': '',
+        'total': 3,
+        'read': 1,
+        'self': false,
+      });
+      expect((calls[1].arguments as Map)['archive'], {
+        'title': 'Архив',
+        'text': '',
+        'count': 4,
+        'unread': 2,
+        'pull': true,
+      });
+      expect((calls[2].arguments as Map)['archive'], isNull);
+      expect(
+        stories,
+        const NativeStories(
+          visible: true,
+          items: [
+            NativeStoryItem(ownerId: 1, title: 'Ваша история', isSelf: true),
+            NativeStoryItem(ownerId: 7, title: 'Вера', total: 3, read: 1),
+          ],
+        ),
+      );
     });
 
     test('команды доходят до Swift и возвращают выбор', () async {
