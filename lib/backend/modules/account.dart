@@ -658,21 +658,11 @@ class AccountModule {
     banners.clear();
     chats.resetForAccountSwitch();
     await ContactsModule.primeCacheFromDb(accountId);
+    await chats.ensureLoaded(accountId);
 
-    try {
-      await _api.connect(authenticated: true);
-    } catch (e) {
-      logger.e(
-        'switchAccount: ошибка соединения при переключении на $accountId: $e',
-      );
-      throw StateError('switchAccount: не удалось подключиться к серверу');
-    }
-    if (_api.state != SessionState.online) {
-      logger.w(
-        'switchAccount: нет соединения с сервером после переключения на $accountId',
-      );
-      throw StateError('switchAccount: нет соединения с сервером');
-    }
+    unawaited(_api.connect(authenticated: true).catchError((Object e) {
+      logger.e('switchAccount: ошибка соединения для $accountId: $e');
+    }));
 
     logger.i('Активный аккаунт переключён на $accountId');
     return profile;

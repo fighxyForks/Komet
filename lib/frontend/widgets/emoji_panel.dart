@@ -87,6 +87,8 @@ class _EmojiPanelState extends State<EmojiPanel> {
   List<_PanelTab> _tabs = const [];
   List<EmojiSearchHit> _searchHits = const [];
   List<Animoji> _animojis = const [];
+  Map<int, Animoji> _animojiById = const {};
+  List<EmojiRecent> _recents = const [];
   OverlayEntry? _skinOverlay;
 
   @override
@@ -111,7 +113,7 @@ class _EmojiPanelState extends State<EmojiPanel> {
   Future<void> _load() async {
     try {
       await EmojiCatalog.instance.ensureLoaded();
-      unawaited(EmojiRecents.ensureLoaded());
+      await EmojiRecents.ensureLoaded();
       unawaited(EmojiSkinPrefs.ensureLoaded());
       _platform = EmojiPlatformInfo(
         platform: EmojiVersionFilter.debugPlatform ?? defaultTargetPlatform,
@@ -145,6 +147,7 @@ class _EmojiPanelState extends State<EmojiPanel> {
       final list = await EmojiAnimojiSource.load().timeout(const Duration(seconds: 8));
       if (!mounted) return;
       _animojis = list;
+      _animojiById = {for (final a in list) a.id: a};
       _rebuildTabs();
       setState(() {});
     } catch (_) {}
@@ -153,12 +156,28 @@ class _EmojiPanelState extends State<EmojiPanel> {
   void _rebuildTabs() {
     final l10n = AppLocalizations.of(context)!;
     final tabs = <_PanelTab>[];
-    if (EmojiRecents.current.value.isNotEmpty) {
+    _recents = [
+      for (final recent in EmojiRecents.current.value)
+        if (recent is EmojiRecentGlyph ||
+            (recent is EmojiRecentAnimoji &&
+                _animojiById.containsKey(recent.id)))
+          recent,
+    ];
+    if (_recents.isNotEmpty) {
       tabs.add(
         _PanelTab(
           kind: _PanelTabKind.recent,
           title: l10n.emojiPanelRecent,
           icon: (c) => IosSymbols.schedule(c),
+        ),
+      );
+    }
+    if (_animojis.isNotEmpty) {
+      tabs.add(
+        _PanelTab(
+          kind: _PanelTabKind.animoji,
+          title: l10n.emojiPanelAnimated,
+          icon: (c) => IosSymbols.animation(c),
         ),
       );
     }
@@ -169,15 +188,6 @@ class _EmojiPanelState extends State<EmojiPanel> {
           category: category,
           title: _categoryTitle(l10n, category),
           icon: (c) => _categoryIcon(c, category),
-        ),
-      );
-    }
-    if (_animojis.isNotEmpty) {
-      tabs.add(
-        _PanelTab(
-          kind: _PanelTabKind.animoji,
-          title: l10n.emojiPanelAnimated,
-          icon: (c) => IosSymbols.animation(c),
         ),
       );
     }
@@ -304,22 +314,21 @@ class _EmojiPanelState extends State<EmojiPanel> {
 
   void _insertPlain(String emoji) {
     widget.onPlainEmojiTap?.call(emoji);
-    unawaited(EmojiRecents.noteUsed(EmojiCatalog.normalize(emoji)).then((_) {
-      if (!mounted) return;
-      final hadRecent = _tabs.any((t) => t.kind == _PanelTabKind.recent);
-      _rebuildTabs();
-      if (!hadRecent && _tabs.any((t) => t.kind == _PanelTabKind.recent)) {
-        setState(() {});
-      } else if (mounted) {
-        setState(() {});
-      }
-    }));
+    _noteRecent(EmojiRecents.noteGlyph(EmojiCatalog.normalize(emoji)));
     if (IosGlass.of(context)) IosHaptics.selectionChange();
   }
 
   void _insertAnimoji(Animoji animoji) {
     widget.onEmojiTap(animoji);
+    _noteRecent(EmojiRecents.noteAnimoji(animoji.id));
     if (IosGlass.of(context)) IosHaptics.selectionChange();
+  }
+
+  void _noteRecent(Future<void> noted) {
+    unawaited(noted.then((_) {
+      if (!mounted) return;
+      setState(_rebuildTabs);
+    }));
   }
 
   void _dismissSkinPicker() {
@@ -616,20 +625,39 @@ class _EmojiPanelState extends State<EmojiPanel> {
       ];
     }
 
-    final List<String> glyphs;
-    final List<EmojiEntry?> entries;
     if (tab.kind == _PanelTabKind.recent) {
-      glyphs = EmojiRecents.current.value;
-      entries = List<EmojiEntry?>.filled(glyphs.length, null);
-    } else {
-      final list =
-          EmojiCatalog.instance.categoryForPlatform(tab.category!, platform);
-      glyphs = [
-        for (final e in list)
-          EmojiSkinPrefs.displayGlyph(e.glyph, e.skinToneVariants),
+      final recents = _recents;
+      return [
+        header,
+        SliverLayoutBuilder(
+          builder: (context, constraints) {
+            final columns =
+                (constraints.crossAxisExtent / 44).floor().clamp(6, 10);
+            return SliverGrid(
+              gridDelegate: SliverGridFixed(columns),
+              delegate: SliverChildBuilderDelegate(
+                (context, i) => switch (recents[i]) {
+                  EmojiRecentGlyph(:final glyph) => _PlainEmojiCell(
+                      key: ValueKey('r-$glyph'),
+                      glyph: glyph,
+                      onTap: () => _insertPlain(glyph),
+                    ),
+                  EmojiRecentAnimoji(:final id) => _AnimojiCell(
+                      key: ValueKey('ra-$id'),
+                      animoji: _animojiById[id]!,
+                      onTap: _insertAnimoji,
+                    ),
+                },
+                childCount: recents.length,
+              ),
+            );
+          },
+        ),
       ];
-      entries = list;
     }
+
+    final entries =
+        EmojiCatalog.instance.categoryForPlatform(tab.category!, platform);
 
     return [
       header,
@@ -641,27 +669,17 @@ class _EmojiPanelState extends State<EmojiPanel> {
             gridDelegate: SliverGridFixed(columns),
             delegate: SliverChildBuilderDelegate(
               (context, i) {
-                final entry = tab.kind == _PanelTabKind.recent
-                    ? null
-                    : entries[i];
-                final glyph = glyphs[i];
-                if (entry != null) {
-                  return _EmojiTextCell(
-                    key: ValueKey('e-${entry.glyph}'),
-                    entry: entry,
-                    onTap: _insertPlain,
-                    onLongPress: entry.skinToneCapable
-                        ? (ctx) => _showSkinPicker(ctx, entry)
-                        : null,
-                  );
-                }
-                return _PlainEmojiCell(
-                  key: ValueKey('r-$glyph'),
-                  glyph: glyph,
-                  onTap: () => _insertPlain(glyph),
+                final entry = entries[i];
+                return _EmojiTextCell(
+                  key: ValueKey('e-${entry.glyph}'),
+                  entry: entry,
+                  onTap: _insertPlain,
+                  onLongPress: entry.skinToneCapable
+                      ? (ctx) => _showSkinPicker(ctx, entry)
+                      : null,
                 );
               },
-              childCount: glyphs.length,
+              childCount: entries.length,
             ),
           );
         },
