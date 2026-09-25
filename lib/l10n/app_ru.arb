@@ -342,7 +342,7 @@
   "callLinkSendFailed": "Не удалось отправить ссылку",
   "callLinkCreateFailed": "Не удалось создать звонок",
   "callsActionCreate": "Создать",
-  "callsActionJoin": "Войти",
+  "callsActionJoin": "Подключиться",
   "callParticipantYou": "Вы",
   "callParticipantFallback": "Участник",
   "callTooltipMinimize": "Свернуть",

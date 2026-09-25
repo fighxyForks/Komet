@@ -1050,7 +1050,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callsActionCreate => 'Создать';
 
   @override
-  String get callsActionJoin => 'Войти';
+  String get callsActionJoin => 'Подключиться';
 
   @override
   String get callParticipantYou => 'Вы';
