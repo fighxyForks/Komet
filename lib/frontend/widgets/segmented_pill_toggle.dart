@@ -59,7 +59,6 @@ class SegmentedPillToggle extends StatelessWidget {
   Widget _buildIos(ColorScheme cs, double pad, int sel) {
     return GlassCapsule(
       key: const ValueKey('ios-segmented'),
-      allowNative: false,
       height: height,
       padding: EdgeInsets.all(pad),
       child: Stack(

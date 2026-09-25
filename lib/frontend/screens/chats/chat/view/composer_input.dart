@@ -705,7 +705,6 @@ class ComposerInputBar extends StatelessWidget {
       return GlassCapsule(
         key: const ValueKey('ios-composer-field'),
         borderRadius: BorderRadius.circular(_controlSize / 2),
-        allowNative: false,
         forceOpaque: forceOpaqueChrome,
         child: child,
       );
@@ -761,7 +760,6 @@ class ComposerInputBar extends StatelessWidget {
       return GlassCapsule(
         key: const ValueKey('ios-composer-action'),
         tint: color.a >= 1 ? color : null,
-        allowNative: false,
         forceOpaque: forceOpaqueChrome,
         onTap: onTap,
         onLongPress: onLongPress,
@@ -1228,7 +1226,6 @@ class ComposerInputBar extends StatelessWidget {
               child: GlassCapsule(
                 key: key,
                 height: 46,
-                allowNative: false,
                 forceOpaque: forceOpaqueChrome,
                 onTap: onTap,
                 child: Center(child: child),
@@ -1239,7 +1236,6 @@ class ComposerInputBar extends StatelessWidget {
               GlassIconButton(
                 key: const ValueKey('ios-channel-search'),
                 icon: IosSymbols.search(context),
-                allowNative: false,
                 size: 46,
                 tooltip: AppLocalizations.of(context)!.iosChatSearch,
                 onPressed: onOpenSearch,

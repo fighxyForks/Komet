@@ -292,7 +292,6 @@ class SelectionBottomBar extends StatelessWidget {
       return GlassCapsule(
         key: ValueKey('ios-selection-$label'),
         height: 46,
-        allowNative: false,
         onTap: onTap,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

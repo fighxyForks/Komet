@@ -55,7 +55,7 @@ use an immediate surface tap).
 4. **Double-tap** (within `singleTapDelay`, away from edges, when zoomable) → spring zoom to point / back to fit.
 5. **Single tap** → chrome toggle (delayed only per rule above).
 
-During dismiss drag: update `Transform` / opacity via `AnimatedBuilder` — do not rebuild the pager subtree. No live blur over the drag (see glass budget).
+During dismiss drag: update `Transform` / opacity via `AnimatedBuilder` — do not rebuild the pager subtree. No live blur over the drag (see glass rules).
 
 ## Velocity handoff
 
@@ -147,4 +147,4 @@ Under `IosGlass`, settings / glass controls / polls / NFC (and other wired iOS p
 - [ ] Overlays: spring appear; reverse mid-flight keeps velocity; Reduce Motion = fade only
 - [ ] Reduce Motion: hero cross-fade, no zoom flights, menus fade-only, reply snaps, page routes cross-fade
 - [ ] `flutter analyze lib test` and `flutter test` clean
-- [ ] Glass budget still respected on touched screens
+- [ ] Glass rules still respected on touched screens

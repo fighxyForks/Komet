@@ -281,7 +281,6 @@ class PinnedMessageBanner extends StatelessWidget {
     if (ios) {
       return GlassCapsule(
         key: const ValueKey('ios-pinned-banner'),
-        allowNative: false,
         borderRadius: floating
             ? (borderRadius ?? BorderRadius.circular(20))
             : BorderRadius.zero,
