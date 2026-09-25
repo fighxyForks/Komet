@@ -47,6 +47,7 @@ import '../../widgets/swipe_route.dart';
 import '../../widgets/sliding_pill_nav.dart';
 import '../../widgets/springy_tap.dart';
 import '../../widgets/informer_banner_tile.dart';
+import '../../widgets/ios_tab_switcher.dart';
 import '../../../backend/modules/share_sender.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/utils/format.dart';
@@ -2745,14 +2746,18 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   Widget _iosRootPage(double pageW, double pageH) {
-    final Widget page = switch (_currentNavIndex) {
-      1 => const CallsTab(key: PageStorageKey<String>('ios-root-calls')),
-      2 => const ContactsTab(key: PageStorageKey<String>('ios-root-contacts')),
-      3 => const SettingsTab(key: PageStorageKey<String>('ios-root-settings')),
-      _ => _getChatsBody(),
-    };
-    return RepaintBoundary(
-      child: SizedBox(width: pageW, height: pageH, child: page),
+    return SizedBox(
+      width: pageW,
+      height: pageH,
+      child: IosTabSwitcher(
+        index: _currentNavIndex.clamp(0, 3),
+        tabs: [
+          (_) => RepaintBoundary(child: _getChatsBody()),
+          (_) => const RepaintBoundary(child: CallsTab()),
+          (_) => const RepaintBoundary(child: ContactsTab()),
+          (_) => const RepaintBoundary(child: SettingsTab()),
+        ],
+      ),
     );
   }
 
