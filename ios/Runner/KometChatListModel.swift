@@ -331,3 +331,29 @@ final class KometAvatarCache {
     }
   }
 }
+
+enum KometNavigationChrome {
+  static func styleBar(_ bar: UINavigationBar?) {
+    guard let bar = bar else { return }
+    let standard = UINavigationBarAppearance()
+    standard.configureWithDefaultBackground()
+    let edge = UINavigationBarAppearance()
+    edge.configureWithTransparentBackground()
+    bar.standardAppearance = standard
+    bar.compactAppearance = standard
+    bar.scrollEdgeAppearance = edge
+    if #available(iOS 15.0, *) {
+      bar.compactScrollEdgeAppearance = edge
+    }
+  }
+
+  static func pinSearchToTop(_ item: UINavigationItem) {
+    item.hidesSearchBarWhenScrolling = false
+    if #available(iOS 16.0, *) {
+      item.preferredSearchBarPlacement = .stacked
+    }
+    if #available(iOS 26.0, *) {
+      item.searchBarPlacementAllowsToolbarIntegration = false
+    }
+  }
+}

@@ -32,6 +32,7 @@ import '../../../core/config/app_ios_glass.dart';
 import '../../../core/config/app_native_tab_minimize_prototype.dart';
 import '../../native/native_tab_chrome.dart';
 import '../../../core/native/native_chat_list_bridge.dart';
+import '../../../core/native/native_list_bridge.dart';
 import '../../../core/native/native_tab_chrome_bridge.dart';
 import '../../native/native_chat_list_view.dart';
 import '../../../core/utils/perf_trace.dart';
@@ -924,6 +925,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     });
     chats.chatOrderRevision.addListener(_onChatsChanged);
     ArchivedChatsStore.instance.revision.addListener(_onArchivedChanged);
+    NativeChatListBridge.eligibility.addListener(_onNativeEligibilityChanged);
+    NativeListBridge.eligibility.addListener(_onNativeEligibilityChanged);
     ChatEncryptionStore.instance.revision.addListener(_onEncryptionChanged);
     E2eeService.instance.revision.addListener(_onEncryptionChanged);
     DraftStore.instance.revision.addListener(_onDraftsChanged);
@@ -1778,6 +1781,10 @@ class _ChatListScreenState extends State<ChatListScreen>
     _settleTimer?.cancel();
     chats.chatOrderRevision.removeListener(_onChatsChanged);
     ArchivedChatsStore.instance.revision.removeListener(_onArchivedChanged);
+    NativeChatListBridge.eligibility.removeListener(
+      _onNativeEligibilityChanged,
+    );
+    NativeListBridge.eligibility.removeListener(_onNativeEligibilityChanged);
     ChatEncryptionStore.instance.revision.removeListener(_onEncryptionChanged);
     E2eeService.instance.revision.removeListener(_onEncryptionChanged);
     DraftStore.instance.revision.removeListener(_onDraftsChanged);
@@ -2713,6 +2720,19 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
+  bool _isNativeTab(int index) => switch (index) {
+    0 => _useNativeChatList,
+    1 || 2 => NativeListBridge.isEligible,
+    _ => false,
+  };
+
+  Widget _underStatusBar(int index, {required Widget child}) =>
+      _isNativeTab(index) ? child : SafeArea(bottom: false, child: child);
+
+  void _onNativeEligibilityChanged() {
+    if (mounted) setState(() {});
+  }
+
   Widget _iosRootPage(double pageW, double pageH) {
     return SizedBox(
       width: pageW,
@@ -2720,10 +2740,18 @@ class _ChatListScreenState extends State<ChatListScreen>
       child: IosTabSwitcher(
         index: _currentNavIndex.clamp(0, 3),
         tabs: [
-          (_) => RepaintBoundary(child: _getChatsBody()),
-          (_) => const RepaintBoundary(child: CallsTab()),
-          (_) => const RepaintBoundary(child: ContactsTab()),
-          (_) => const RepaintBoundary(child: SettingsTab()),
+          (_) => RepaintBoundary(
+            child: _underStatusBar(0, child: _getChatsBody()),
+          ),
+          (_) => RepaintBoundary(
+            child: _underStatusBar(1, child: const CallsTab()),
+          ),
+          (_) => RepaintBoundary(
+            child: _underStatusBar(2, child: const ContactsTab()),
+          ),
+          (_) => RepaintBoundary(
+            child: _underStatusBar(3, child: const SettingsTab()),
+          ),
         ],
       ),
     );
@@ -2737,9 +2765,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
     final ios = IosGlass.of(context);
     final iosChatsTop = ios && _currentNavIndex == 0;
+    final iosRoot = ios && !widget.forwardMode && !_shareMode;
+    final nativeTop = iosRoot && _isNativeTab(_currentNavIndex);
     final scaffold = Scaffold(
       backgroundColor: ios ? IosPalette.background(cs) : cs.surface,
       body: SafeArea(
+        top: !iosRoot,
         bottom: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -2991,7 +3022,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
     if (!ios) return scaffold;
     final top = MediaQuery.paddingOf(context).top;
-    final topColor = iosChatsTop
+    final topColor = iosChatsTop || nativeTop
         ? IosPalette.background(cs)
         : IosPalette.grouped(cs);
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -2999,18 +3030,19 @@ class _ChatListScreenState extends State<ChatListScreen>
       child: Stack(
         children: [
           scaffold,
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            height: top,
-            child: IgnorePointer(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                color: topColor,
+          if (!nativeTop)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              height: top,
+              child: IgnorePointer(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  color: topColor,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -3187,11 +3219,18 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
+  bool get _selectionBarUnderStatusBar =>
+      IosGlass.of(context) && !widget.forwardMode && !_shareMode;
+
   Widget _buildSelectionActionBar(ColorScheme cs) {
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOutCubic,
-      top: _isSelectionMode ? 0 : -80,
+      top: _isSelectionMode
+          ? (_selectionBarUnderStatusBar
+                ? MediaQuery.paddingOf(context).top
+                : 0)
+          : -80 - MediaQuery.paddingOf(context).top,
       left: 0,
       right: 0,
       child: Container(
