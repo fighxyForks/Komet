@@ -195,8 +195,11 @@ void main() {
         _app(harness.build(chatType: 'CHANNEL', canPost: true)),
       );
       expect(find.byKey(const ValueKey('ios-mute')), findsNothing);
-      expect(find.byKey(const ValueKey('ios-composer-field')), findsOneWidget);
-      expect(find.byKey(const ValueKey('ios-composer-action')), findsOneWidget);
+      for (final key in const ['ios-composer-field', 'ios-composer-action']) {
+        final capsule = find.byKey(ValueKey(key));
+        expect(capsule, findsOneWidget);
+        expect(tester.widget<GlassCapsule>(capsule).allowNative, isTrue);
+      }
     });
 
     testWidgets('без iOS панель канала остаётся прежней', (tester) async {

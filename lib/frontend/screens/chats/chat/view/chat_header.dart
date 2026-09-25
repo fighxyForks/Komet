@@ -11,7 +11,6 @@ import 'package:komet/frontend/screens/stories/story_owner_info.dart';
 import 'package:komet/frontend/screens/stories/story_ring.dart';
 import 'package:komet/frontend/screens/stories/story_viewer_screen.dart';
 import 'package:komet/frontend/widgets/encryption_lock_badge.dart';
-import 'package:komet/frontend/motion/ios_haptics.dart';
 import 'package:komet/frontend/widgets/glass/glass_capsule.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
@@ -91,24 +90,8 @@ class ChatHeaderRow extends StatelessWidget {
     Key? key,
     VoidCallback? onTap,
     EdgeInsetsGeometry padding = EdgeInsets.zero,
-    bool glass = true,
   }) {
     if (IosGlass.of(context)) {
-      if (!glass) {
-        final padded = Padding(padding: padding, child: child);
-        if (onTap == null) {
-          return key == null ? padded : KeyedSubtree(key: key, child: padded);
-        }
-        return GestureDetector(
-          key: key,
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            IosHaptics.itemActivate();
-            onTap();
-          },
-          child: padded,
-        );
-      }
       return GlassCapsule(
         key: key,
         onTap: onTap,
@@ -185,7 +168,6 @@ class ChatHeaderRow extends StatelessWidget {
           height: ios ? IosMetrics.minHitTarget : 56,
           child: _chromePill(
             context,
-            glass: !ios,
             key: const ValueKey('chat-header-back'),
             onTap: () {
               if (embedded) {
@@ -211,7 +193,6 @@ class ChatHeaderRow extends StatelessWidget {
     );
     final title = _chromePill(
       context,
-      glass: !ios,
       key: const ValueKey('chat-header-title'),
       onTap: onOpenInfo,
       padding: ios
@@ -313,7 +294,6 @@ class ChatHeaderRow extends StatelessWidget {
     );
     final actions = _chromePill(
       context,
-      glass: !ios,
       key: const ValueKey('chat-header-actions'),
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: SizedBox(
@@ -359,17 +339,13 @@ class ChatHeaderRow extends StatelessWidget {
           ? const EdgeInsets.fromLTRB(12, 3, 12, 7)
           : const EdgeInsets.fromLTRB(10, 4, 10, 8),
       child: ios
-          ? GlassCapsule(
-              key: const ValueKey('chat-header'),
-              borderRadius: BorderRadius.circular(22),
-              child: CustomMultiChildLayout(
-                delegate: IosHeaderLayout(gap: 6),
-                children: [
-                  LayoutId(id: IosHeaderSlot.back, child: back),
-                  LayoutId(id: IosHeaderSlot.title, child: title),
-                  LayoutId(id: IosHeaderSlot.actions, child: actions),
-                ],
-              ),
+          ? CustomMultiChildLayout(
+              delegate: IosHeaderLayout(gap: 6),
+              children: [
+                LayoutId(id: IosHeaderSlot.back, child: back),
+                LayoutId(id: IosHeaderSlot.title, child: title),
+                LayoutId(id: IosHeaderSlot.actions, child: actions),
+              ],
             )
           : Row(
               children: [

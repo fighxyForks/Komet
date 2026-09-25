@@ -705,7 +705,6 @@ class ComposerInputBar extends StatelessWidget {
       return GlassCapsule(
         key: const ValueKey('ios-composer-field'),
         borderRadius: BorderRadius.circular(_controlSize / 2),
-        allowNative: false,
         forceOpaque: forceOpaqueChrome,
         child: child,
       );
@@ -761,7 +760,6 @@ class ComposerInputBar extends StatelessWidget {
       return GlassCapsule(
         key: const ValueKey('ios-composer-action'),
         tint: color.a >= 1 ? color : null,
-        allowNative: false,
         forceOpaque: forceOpaqueChrome,
         onTap: onTap,
         onLongPress: onLongPress,

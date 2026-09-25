@@ -71,7 +71,6 @@ class ScrollDownButton extends StatelessWidget {
                       child: IosGlass.of(context)
                           ? GlassCapsule(
                               key: const ValueKey('ios-scroll-down'),
-                              allowNative: false,
                               onTap: onTap,
                               child: child!,
                             )
