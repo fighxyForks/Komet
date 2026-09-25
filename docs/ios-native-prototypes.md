@@ -8,6 +8,7 @@ Experimental, **off by default**. Gated by `IosGlass` + `AppIosGlass.nativeViews
 |------|----------|---------|
 | Native attachment sheet | `app_native_sheet_prototype` | off |
 | Native tab minimize | `app_native_tab_minimize_prototype` | off |
+| Native chat list | `app_native_chat_list_prototype` | off |
 
 ## Prototype 1 — `UISheetPresentationController`
 
@@ -31,14 +32,31 @@ Experimental, **off by default**. Gated by `IosGlass` + `AppIosGlass.nativeViews
 - **UIKit note:** `UITabBarController.tabBarMinimizeBehavior` cannot drive our custom Flutter shell. Minimize is a **local transform animation** on the hosted `UITabBar` (public API only)
 - **Budget:** 1 platform view for tab+accessory combined (replaces `IosNativeTabBar` when the flag is on). Chat list stays ≤ 2 PVs (folder strip may use another)
 
+## Prototype 3 — UIKit chat list
+
+Every expensive step happens off the main thread, and the main thread only applies finished results.
+
+- Swift: `ios/Runner/KometChatList.swift` (platform view, navigation, diffable data source), `KometChatListCell.swift` (manual frame layout, no Auto Layout), `KometChatListModel.swift` (row decoding, preview text, avatar cache)
+- Dart: `lib/core/native/native_chat_list_bridge.dart` (row model, diff, channel), `lib/frontend/native/native_chat_list_view.dart` (`UiKitView`)
+- Channel: `ru.komet.app/native_chat_list/<viewId>` — Dart sends `apply` (`order` only when it changed, `rows` only for rows that changed) and `setChrome`; Swift sends `open`, `action`, `compose`, `menu`
+- Dart stays the source of truth: `ChatListState` builds each row through the same `_rowFacts` as the Flutter row, so both lists show the same name, preview, draft and status. Swift only renders
+- Swift decodes rows and builds the preview `NSAttributedString` on a serial background queue, then applies one diffable snapshot on main. Changed rows are reconfigured, not reloaded
+- Avatars are downloaded, decoded and clipped to a circle off the main thread, cached in memory and in a `URLCache`; letter avatars use a seven-colour gradient palette
+- `UINavigationController` hosts a large title, `UISearchController` (filters loaded chats by name) and two bar buttons that open the existing Flutter overflow and create menus
+- Long press opens a `UIContextMenu`: mark read, pin, mute, archive, delete. Actions run the same Flutter handlers as the Flutter preview menu
+- Only the chats tab uses it, and never in forward, share, archive or desktop split mode. Chat screens, menus and the tab bar stay Flutter
+
+Not ported yet: stories, folders strip, archive entry, swipe actions, selection mode, online dots, typing, media thumbnails and message formatting in previews.
+
 ## How Ivan tests on an iOS 26 iPhone
 
 1. Build/install a Debug build of this branch
 2. Enable **iOS interface** (style) so glass is active
-3. Open **Debug → feature toggles**, enable the two native prototypes
+3. Open **Debug → feature toggles**, enable the native prototypes
 4. Attachment: open a chat → attach → confirm medium/large sheet + grabber; toggle flag off and confirm Flutter sheet returns
 5. Tabs: on chat list, scroll down/up → tab bar should ease away/back; place a call and confirm the green accessory appears
-6. Turn on **Reduce Transparency** → both prototypes must refuse native path
+6. Turn on **Reduce Transparency** → the sheet and tab prototypes must refuse native path
+7. Chat list: enable **Native chat list**, scroll a long list, open a chat, long-press a row, search by name; send a message from another device and confirm the row moves to the top
 
 ## App Store / API notes
 
