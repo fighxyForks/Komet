@@ -189,7 +189,7 @@ final class KometChatListCell: UICollectionViewCell {
     }
     let trailingIcons = [mutedIcon, verifiedIcon, lockIcon].filter { !$0.isHidden }
     let iconsWidth = trailingIcons.reduce(CGFloat(0)) { $0 + ($1.image?.size.width ?? 0) + 4 }
-    let titleFit = titleLabel.sizeThatFits(CGSize(width: .greatestFiniteMagnitude, height: 22))
+    let titleFit = titleLabel.sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: 22))
     let titleWidth = max(0, min(ceil(titleFit.width), titleRight - x - iconsWidth))
     titleLabel.frame = CGRect(x: x, y: 10, width: titleWidth, height: 22)
     var iconX = titleLabel.frame.maxX + 4
