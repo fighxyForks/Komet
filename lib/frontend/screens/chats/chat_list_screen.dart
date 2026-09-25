@@ -69,9 +69,7 @@ import '../../../models/informer_banner.dart';
 import '../calls/calls_tab.dart';
 import '../contacts/contacts_tab.dart';
 import '../profile/settings_tab.dart';
-import '../auth/login_screen.dart';
-import '../digital_id/digital_id_web_screen.dart';
-import '../../widgets/account_switcher_overlay.dart';
+import '../profile/account_switching.dart';
 import 'chat/view/chat_list_shimmer.dart';
 import 'chat/view/chat_list_tile.dart';
 import 'chat/view/ios_chat_row.dart';
@@ -104,7 +102,6 @@ import '../../../core/storage/draft_store.dart';
 import '../../../core/storage/archived_chats_store.dart';
 import '../../../core/crypto/e2ee_service.dart';
 import '../../../core/storage/chat_encryption_store.dart';
-import '../../../core/storage/token_storage.dart';
 import '../../../core/storage/chat_activity_store.dart';
 import '../../../main.dart'
     show
@@ -4881,47 +4878,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
-  void _openAccountSwitcher(Offset point) {
-    Haptics.medium();
-    final controller = AccountSwitcherController()..attach(point);
-    showAccountSwitcher(
-      context: context,
-      tapPoint: point,
-      controller: controller,
-      onSelected: (accountId) async {
-        controller.dispose();
-        if (!mounted) return;
-        if (accountId == null) {
-          final previousId = await TokenStorage.getActiveAccountId();
-          await resetDigitalIdSession();
-          try {
-            await accountModule.beginAddAccount();
-          } catch (_) {}
-          if (!mounted) return;
-          await Navigator.of(context).pushAndRemoveUntil(
-            iosPageRoute(context,
-              builder: (_) => LoginScreen(returnToAccountId: previousId),
-            ),
-            (route) => false,
-          );
-          return;
-        }
-        await resetDigitalIdSession();
-        try {
-          await accountModule.switchAccount(accountId);
-        } catch (e) {
-          if (!mounted) return;
-          showCustomNotification(context, 'Не удалось переключить аккаунт');
-          return;
-        }
-        if (!mounted) return;
-        await Navigator.of(context).pushAndRemoveUntil(
-          iosPageRoute(context, builder: (_) => const AdaptiveShell()),
-          (route) => false,
-        );
-      },
-    );
-  }
+  void _openAccountSwitcher(Offset point) =>
+      showAccountSwitcherAt(context, point);
 
   void _showIosCreateMenu(Rect anchor) {
     showChatMenu(
