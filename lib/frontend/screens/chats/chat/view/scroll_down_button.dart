@@ -49,7 +49,7 @@ class ScrollDownButton extends StatelessWidget {
             ? (_materialIconSlot - _scrollDownSize) / 2
             : 16,
         bottom: (composerUnderlap ? height : 0) + 12,
-        child: child!,
+        child: TextFieldTapRegion(child: child!),
       ),
       child: AnimatedBuilder(
         animation: scrollDownCurved,
