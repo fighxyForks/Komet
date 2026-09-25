@@ -154,6 +154,20 @@ void main() {
         find.byKey(const ValueKey('ios-subscribe')),
       );
       expect(tester.getRect(search).left, greaterThan(subscribeRect.right));
+      expect(
+        tester
+            .widget<GlassCapsule>(find.byKey(const ValueKey('ios-subscribe')))
+            .allowNative,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<GlassCapsule>(
+              find.descendant(of: search, matching: find.byType(GlassCapsule)),
+            )
+            .allowNative,
+        isTrue,
+      );
 
       await tester.tap(find.text('Подписаться'));
       await tester.tap(search);
@@ -301,7 +315,10 @@ void main() {
       );
       expect(find.byKey(const ValueKey('ios-segmented')), findsOneWidget);
       expect(find.byType(GlassSegmentThumb), findsOneWidget);
-      expect(find.byType(GlassCapsule), findsOneWidget);
+      expect(
+        tester.widget<GlassCapsule>(find.byType(GlassCapsule)).allowNative,
+        isTrue,
+      );
       await tester.tap(find.text('Стикеры'));
       await tester.pumpAndSettle();
       expect(selected, 1);
@@ -372,7 +389,7 @@ void main() {
     );
     expect(capsules, findsNWidgets(2));
     for (final capsule in capsules.evaluate()) {
-      expect((capsule.widget as GlassCapsule).allowNative, isFalse);
+      expect((capsule.widget as GlassCapsule).allowNative, isTrue);
       expect(tester.getSize(find.byWidget(capsule.widget)).height, 46);
     }
     await tester.tap(capsules.first);

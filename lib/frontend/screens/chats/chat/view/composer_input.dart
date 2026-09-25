@@ -1226,7 +1226,6 @@ class ComposerInputBar extends StatelessWidget {
               child: GlassCapsule(
                 key: key,
                 height: 46,
-                allowNative: false,
                 forceOpaque: forceOpaqueChrome,
                 onTap: onTap,
                 child: Center(child: child),
@@ -1237,7 +1236,6 @@ class ComposerInputBar extends StatelessWidget {
               GlassIconButton(
                 key: const ValueKey('ios-channel-search'),
                 icon: IosSymbols.search(context),
-                allowNative: false,
                 size: 46,
                 tooltip: AppLocalizations.of(context)!.iosChatSearch,
                 onPressed: onOpenSearch,

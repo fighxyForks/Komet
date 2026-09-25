@@ -324,7 +324,7 @@ void main() {
     );
     final banner = find.byKey(const ValueKey('ios-pinned-banner'));
     expect(tester.widget(banner), isA<GlassCapsule>());
-    expect(tester.widget<GlassCapsule>(banner).allowNative, isFalse);
+    expect(tester.widget<GlassCapsule>(banner).allowNative, isTrue);
     expect(tester.getSize(banner).height, lessThanOrEqualTo(50));
   });
 

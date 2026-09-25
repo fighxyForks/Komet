@@ -29,7 +29,7 @@ Experimental, **off by default**. Gated by `IosGlass` + `AppIosGlass.nativeViews
 - Flutter scroll deltas → `TabScrollHysteresis` → `setMinimized`
 - Call accessory reads `CallController.isBusy` (tap posts back to Flutter)
 - **UIKit note:** `UITabBarController.tabBarMinimizeBehavior` cannot drive our custom Flutter shell. Minimize is a **local transform animation** on the hosted `UITabBar` (public API only)
-- **Budget:** 1 platform view for tab+accessory combined (replaces `IosNativeTabBar` when the flag is on). Chat list stays ≤ 2 PVs (folder strip may use another)
+- One platform view hosts the tab bar and its accessory together (replaces `IosNativeTabBar` when the flag is on)
 
 ## How Ivan tests on an iOS 26 iPhone
 

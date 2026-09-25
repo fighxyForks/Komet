@@ -22,7 +22,7 @@ class GlassSwitch extends StatelessWidget {
     }
     final cs = Theme.of(context).colorScheme;
     // Keep CupertinoSwitch — LiquidGlassToggle is a platform view and is not
-    // safe one-per-row in settings lists (glass budget ≤1–2 views/screen).
+    // safe one-per-row in scrolling settings lists.
     return CupertinoSwitch(
       value: value,
       onChanged: onChanged == null
