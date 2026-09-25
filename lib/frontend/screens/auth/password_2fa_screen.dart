@@ -81,14 +81,12 @@ class _Password2FAScreenState extends State<Password2FAScreen>
         trackId: widget.trackId,
       );
       passed = true;
-
-      if (!mounted) return;
+      stopSessionRecovery();
 
       String? avatarUrl;
       // #***! эксперим. SMS-вход через веб: пароль пользователя уже есть, добываем
       // сокетовый токен и перезаходим боевой версией
       if (api.webHandshake && widget.rawPhone != null) {
-        stopSessionRecovery();
         await accountModule.completeWebSmsSocketLogin(
           phone: widget.rawPhone!,
           accountId: result.accountId,
@@ -103,18 +101,16 @@ class _Password2FAScreenState extends State<Password2FAScreen>
         avatarUrl = loginResult.profile.baseUrl;
       }
 
-      if (!mounted) return;
-
-      final avatar = await precacheLoginAvatar(context, avatarUrl);
-
-      if (!mounted) return;
+      final avatar = mounted
+          ? await precacheLoginAvatar(context, avatarUrl)
+          : null;
 
       await markAuthLimitsPending(AuthEntry.login);
 
-      if (!mounted) return;
-
-      Navigator.pushAndRemoveUntil(
-        context,
+      final navigator = mounted
+          ? Navigator.of(context)
+          : KometApp.navigatorKey.currentState;
+      navigator?.pushAndRemoveUntil(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 240),
           pageBuilder: (_, _, _) => LoginSuccessScreen(avatar: avatar),
