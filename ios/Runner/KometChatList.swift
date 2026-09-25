@@ -133,7 +133,8 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     searchController.obscuresBackgroundDuringPresentation = false
     searchController.searchBar.placeholder = strings.search
     navigationItem.searchController = searchController
-    navigationItem.hidesSearchBarWhenScrolling = false
+    KometNavigationChrome.pinSearchToTop(navigationItem)
+    KometNavigationChrome.styleBar(navigationController?.navigationBar)
     definesPresentationContext = true
 
     menuButton.setImage(KometChatListStyle.symbol("ellipsis", size: 17, weight: .semibold),

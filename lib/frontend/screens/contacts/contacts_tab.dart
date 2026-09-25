@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/config/debug_test.dart';
 import '../../../core/contacts/contact_labels.dart';
+import '../../../core/contacts/contact_sections.dart';
 import '../../../core/contacts/device_contacts_service.dart';
 import '../../../core/protocol/opcode_map.dart';
 import '../../../core/protocol/packet.dart';
@@ -250,19 +251,12 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
     );
   }
 
-  static String _sectionLetter(String title) {
-    final trimmed = title.trim();
-    if (trimmed.isEmpty) return '#';
-    final letter = trimmed.characters.first.toUpperCase();
-    return letter.toLowerCase() != letter ? letter : '#';
-  }
-
   List<NativeListSection> _nativeSections() {
     final groups = <String, List<NativeListRow>>{};
     for (final contact in _contacts) {
       final text = _contactText(contact);
       groups
-          .putIfAbsent(_sectionLetter(text.title), () => [])
+          .putIfAbsent(contactSectionLetter(text.title), () => [])
           .add(
             NativeListRow(
               id: 'contact:${contact.id}',
@@ -274,12 +268,7 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
             ),
           );
     }
-    final letters = groups.keys.toList()
-      ..sort((a, b) {
-        if (a == '#') return 1;
-        if (b == '#') return -1;
-        return a.compareTo(b);
-      });
+    final letters = groups.keys.toList()..sort(compareContactSections);
     return [
       for (final letter in letters)
         NativeListSection(id: letter, title: letter, rows: groups[letter]!),
@@ -304,27 +293,25 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
   Widget _buildNative(ColorScheme cs) {
     return Scaffold(
       backgroundColor: IosPalette.background(cs),
-      body: SafeArea(
-        bottom: false,
-        child: NativeListView(
-          sections: _isLoading ? const [] : _nativeSections(),
-          chrome: {
-            'title': 'Контакты',
-            'largeTitle': true,
-            'search': 'Поиск',
-            'index': true,
-            'loading': _isLoading,
-            'emptyText': 'Нет контактов',
-            'buttons': const [
-              {'id': 'find', 'symbol': 'person.badge.plus'},
-            ],
-            'accent': cs.primary.toARGB32(),
-            'bottomInset': 100.0,
-          },
-          callbacks: NativeListCallbacks(
-            onTap: _onNativeTap,
-            onButton: (id, _) => unawaited(_openSearchById()),
-          ),
+      body: NativeListView(
+        sections: _isLoading ? const [] : _nativeSections(),
+        chrome: {
+          'title': 'Контакты',
+          'largeTitle': true,
+          'search': 'Поиск',
+          'index': true,
+          'indexTitles': kContactIndexTitles,
+          'loading': _isLoading,
+          'emptyText': 'Нет контактов',
+          'buttons': const [
+            {'id': 'find', 'symbol': 'person.badge.plus'},
+          ],
+          'accent': cs.primary.toARGB32(),
+          'bottomInset': 100.0,
+        },
+        callbacks: NativeListCallbacks(
+          onTap: _onNativeTap,
+          onButton: (id, _) => unawaited(_openSearchById()),
         ),
       ),
     );

@@ -147,6 +147,7 @@ final class KometNativeListPlatformView: NSObject, FlutterPlatformView {
 final class KometNativeListDataSource: UITableViewDiffableDataSource<String, String> {
   var titles: [String: String] = [:]
   var showsIndex = false
+  var indexTitles: [String] = []
 
   override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int)
     -> String? {
@@ -159,6 +160,7 @@ final class KometNativeListDataSource: UITableViewDiffableDataSource<String, Str
 
   override func sectionIndexTitles(for tableView: UITableView) -> [String]? {
     guard showsIndex else { return nil }
+    if !indexTitles.isEmpty { return indexTitles }
     let titles = snapshot().sectionIdentifiers.compactMap { self.titles[$0] }
       .filter { !$0.isEmpty }
     return titles.isEmpty ? nil : titles
@@ -166,8 +168,14 @@ final class KometNativeListDataSource: UITableViewDiffableDataSource<String, Str
 
   override func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String,
                           at index: Int) -> Int {
-    let ids = snapshot().sectionIdentifiers
-    return ids.firstIndex { titles[$0] == title } ?? 0
+    let sectionTitles = snapshot().sectionIdentifiers.map { titles[$0] ?? "" }
+    if let exact = sectionTitles.firstIndex(of: title) { return exact }
+    guard let wanted = indexTitles.firstIndex(of: title) else { return 0 }
+    let following = sectionTitles.firstIndex { sectionTitle in
+      guard let position = indexTitles.firstIndex(of: sectionTitle) else { return false }
+      return position >= wanted
+    }
+    return following ?? max(0, sectionTitles.count - 1)
   }
 }
 
@@ -201,6 +209,10 @@ final class KometNativeListController: UIViewController, UITableViewDelegate,
     tableView.separatorInset = UIEdgeInsets(
       top: 0, left: KometListCell.textInset, bottom: 0, right: 0)
     tableView.register(KometListCell.self, forCellReuseIdentifier: KometListCell.reuseIdentifier)
+    tableView.sectionHeaderHeight = 28
+    if #available(iOS 15.0, *) {
+      tableView.sectionHeaderTopPadding = 0
+    }
     view.addSubview(tableView)
     emptyLabel.textColor = KometChatListStyle.secondary
     emptyLabel.font = .systemFont(ofSize: 17)
@@ -227,6 +239,7 @@ final class KometNativeListController: UIViewController, UITableViewDelegate,
   }
 
   private func applyChromeToViews() {
+    KometNavigationChrome.styleBar(navigationController?.navigationBar)
     view.tintColor = accent
     navigationController?.view.tintColor = accent
 
@@ -275,6 +288,7 @@ final class KometNativeListController: UIViewController, UITableViewDelegate,
     tableView.verticalScrollIndicatorInsets.bottom = inset
     emptyLabel.text = chrome["emptyText"] as? String
     dataSource.showsIndex = (chrome["index"] as? NSNumber)?.boolValue ?? false
+    dataSource.indexTitles = chrome["indexTitles"] as? [String] ?? []
   }
 
   private func makeSegmentedControl(_ segments: [String]) -> UISegmentedControl {
@@ -288,7 +302,7 @@ final class KometNativeListController: UIViewController, UITableViewDelegate,
     controller.searchResultsUpdater = self
     controller.obscuresBackgroundDuringPresentation = false
     navigationItem.searchController = controller
-    navigationItem.hidesSearchBarWhenScrolling = false
+    KometNavigationChrome.pinSearchToTop(navigationItem)
     definesPresentationContext = true
     searchController = controller
     return controller
