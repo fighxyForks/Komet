@@ -47,6 +47,10 @@ final class KometChatListPlatformView: NSObject, FlutterPlatformView {
     if let chrome = map["chrome"] as? [String: Any] {
       list.applyChrome(chrome)
     }
+    if let stories = map["stories"] as? [String: Any] {
+      list.applyStories(stories)
+    }
+    list.applyArchive(map["archive"] as? [String: Any])
     let rows = map["rows"] as? [[String: Any]] ?? []
     list.applyRows(
       order: rows.compactMap { ($0["id"] as? NSNumber)?.intValue }, rows: rows)
@@ -82,6 +86,12 @@ final class KometChatListPlatformView: NSObject, FlutterPlatformView {
       result(nil)
     case "actionSheet":
       list.presentActionSheet(arguments, result: result)
+    case "setStories":
+      list.applyStories(arguments)
+      result(nil)
+    case "setArchive":
+      list.applyArchive(arguments["archive"] as? [String: Any])
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -89,7 +99,10 @@ final class KometChatListPlatformView: NSObject, FlutterPlatformView {
 }
 
 final class KometChatListController: UIViewController, UICollectionViewDelegate,
-  UICollectionViewDataSourcePrefetching, UISearchResultsUpdating, UIGestureRecognizerDelegate {
+  UICollectionViewDataSourcePrefetching, UIGestureRecognizerDelegate {
+  private static let archiveId = Int.min
+  private static let archivePullThreshold: CGFloat = 120
+
   var onEvent: ((String, Any?) -> Void)?
 
   private lazy var layout: UICollectionViewFlowLayout = {
@@ -101,7 +114,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   private lazy var collectionView: UICollectionView = UICollectionView(
     frame: .zero, collectionViewLayout: layout)
   private lazy var dataSource: UICollectionViewDiffableDataSource<Int, Int> = makeDataSource()
-  private let searchController = UISearchController(searchResultsController: nil)
+  private let header = KometChatListHeader()
   private let composeButton = UIButton(type: .system)
   private let downloadsButton = UIButton(type: .system)
   private let lockButton = UIButton(type: .system)
@@ -126,6 +139,12 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   private var editingList = false
   private var selectedIds = Set<Int>()
   private var reordering = false
+  private var archive: [String: Any]?
+  private var archiveContent: KometChatRowContent?
+  private var archiveRevealed = false
+  private var archiveArmed = false
+  private var stories: [KometStoryItem] = []
+  private var storiesVisible = false
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -146,13 +165,18 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     view.tintColor = accent
     navigationController?.view.tintColor = accent
 
-    searchController.searchResultsUpdater = self
-    searchController.obscuresBackgroundDuringPresentation = false
-    searchController.searchBar.placeholder = strings.search
-    navigationItem.searchController = searchController
-    KometNavigationChrome.pinSearchToTop(navigationItem)
     KometNavigationChrome.styleBar(navigationController?.navigationBar)
-    definesPresentationContext = true
+    header.setPlaceholder(strings.search)
+    header.accent = accent
+    header.setStories(stories, visible: storiesVisible)
+    header.onQuery = { [weak self] text in self?.updateQuery(text) }
+    header.onStory = { [weak self] item, rect in
+      self?.onEvent?("story", ["ownerId": item.ownerId, "x": rect.minX, "y": rect.minY,
+                               "width": rect.width, "height": rect.height])
+    }
+    header.onAddStory = { [weak self] in self?.onEvent?("storyAdd", nil) }
+    collectionView.addSubview(header)
+    layoutHeader()
 
     setUpBarButton(composeButton, symbol: "square.and.pencil", action: #selector(openCompose))
     setUpBarButton(downloadsButton, symbol: "arrow.down.circle",
@@ -188,6 +212,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
+    layoutHeader()
     let size = CGSize(width: collectionView.bounds.width, height: KometChatListStyle.rowHeight)
     if layout.itemSize != size, size.width > 0 {
       layout.itemSize = size
@@ -216,7 +241,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     }
     strings.apply(chrome)
     if isViewLoaded {
-      searchController.searchBar.placeholder = strings.search
+      header.setPlaceholder(strings.search)
       updateBarItems()
       updateEditBar()
     }
@@ -254,11 +279,117 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
 
   private func visibleOrder() -> [Int] {
     let ids = order.filter { contents[$0] != nil }
-    guard !query.isEmpty else { return ids }
-    return ids.filter { contents[$0]?.row.title.localizedCaseInsensitiveContains(query) ?? false }
+    guard query.isEmpty else {
+      return ids.filter {
+        contents[$0]?.row.title.localizedCaseInsensitiveContains(query) ?? false
+      }
+    }
+    return showsArchiveRow ? [KometChatListController.archiveId] + ids : ids
   }
 
-  private func applySnapshot(changed: [Int]) {
+  private var archivePullEnabled: Bool {
+    (archive?["pull"] as? NSNumber)?.boolValue ?? true
+  }
+
+  private var showsArchiveRow: Bool {
+    archiveContent != nil && !editingList && (!archivePullEnabled || archiveRevealed)
+  }
+
+  private var archiveAwaitsPull: Bool {
+    archiveContent != nil && archivePullEnabled && !archiveRevealed && !editingList
+      && query.isEmpty
+  }
+
+  func applyStories(_ payload: [String: Any]) {
+    stories = (payload["items"] as? [[String: Any]] ?? []).compactMap(KometStoryItem.init)
+    storiesVisible = (payload["visible"] as? NSNumber)?.boolValue ?? false
+    guard isViewLoaded else { return }
+    header.setStories(stories, visible: storiesVisible)
+    layoutHeader()
+  }
+
+  func applyArchive(_ payload: [String: Any]?) {
+    archive = payload
+    if let payload = payload, ((payload["count"] as? NSNumber)?.intValue ?? 0) > 0 {
+      let map: [String: Any] = [
+        "id": KometChatListController.archiveId,
+        "title": payload["title"] as? String ?? "",
+        "kind": "archive",
+        "text": payload["text"] as? String ?? "",
+        "unread": payload["unread"] ?? 0,
+        "muted": true,
+      ]
+      archiveContent = KometChatRow(map).map { KometChatRowContent(row: $0, strings: strings) }
+    } else {
+      archiveContent = nil
+      archiveRevealed = false
+    }
+    guard isViewLoaded else { return }
+    applySnapshot(changed: [KometChatListController.archiveId])
+  }
+
+  private func content(for id: Int) -> KometChatRowContent? {
+    id == KometChatListController.archiveId ? archiveContent : contents[id]
+  }
+
+  private func layoutHeader() {
+    let height = header.preferredHeight
+    let width = collectionView.bounds.width
+    let previousTop = collectionView.contentInset.top
+    header.frame = CGRect(x: 0, y: -height, width: width, height: height)
+    guard previousTop != height else { return }
+    let atTop = collectionView.contentOffset.y <= -collectionView.adjustedContentInset.top + 1
+    collectionView.contentInset.top = height
+    if atTop {
+      collectionView.contentOffset.y = -collectionView.adjustedContentInset.top
+    }
+  }
+
+  private func updateQuery(_ text: String) {
+    guard text != query else { return }
+    query = text
+    applySnapshot(changed: [])
+  }
+
+  private func revealArchive() {
+    guard archiveAwaitsPull else { return }
+    archiveRevealed = true
+    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    applySnapshot(changed: [])
+  }
+
+  private func collapseArchiveIfScrolledPast(_ scrollView: UIScrollView) {
+    guard archiveRevealed, archivePullEnabled, !editingList else { return }
+    let offset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+    let rowHeight = KometChatListStyle.rowHeight
+    guard offset > rowHeight + 8 else { return }
+    archiveRevealed = false
+    applySnapshot(changed: [], animated: false)
+    scrollView.contentOffset.y -= rowHeight
+  }
+
+  func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    collapseArchiveIfScrolledPast(scrollView)
+    guard archiveAwaitsPull, scrollView.isTracking else {
+      archiveArmed = false
+      return
+    }
+    let pull = -(scrollView.contentOffset.y + scrollView.adjustedContentInset.top)
+    let armed = pull > KometChatListController.archivePullThreshold
+    if armed != archiveArmed {
+      archiveArmed = armed
+      if armed { UISelectionFeedbackGenerator().selectionChanged() }
+    }
+  }
+
+  func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint,
+                                 targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    guard archiveArmed else { return }
+    archiveArmed = false
+    revealArchive()
+  }
+
+  private func applySnapshot(changed: [Int], animated: Bool = true) {
     guard isViewLoaded else { return }
     let visible = visibleOrder()
     let previous = Set(dataSource.snapshot().itemIdentifiers)
@@ -274,7 +405,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
         snapshot.reloadItems(refresh)
       }
     }
-    let animate = hasApplied && view.window != nil
+    let animate = animated && hasApplied && view.window != nil
     hasApplied = true
     dataSource.apply(snapshot, animatingDifferences: animate)
   }
@@ -285,7 +416,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
       let cell = collectionView.dequeueReusableCell(
         withReuseIdentifier: KometChatListCell.reuseIdentifier, for: indexPath)
       guard let self = self, let chatCell = cell as? KometChatListCell,
-            let content = self.contents[id] else { return cell }
+            let content = self.content(for: id) else { return cell }
       let count = collectionView.numberOfItems(inSection: indexPath.section)
       chatCell.configure(content, accent: self.accent,
                          showsSeparator: indexPath.item < count - 1,
@@ -295,6 +426,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   }
 
   private func applyAccent() {
+    header.accent = accent
     view.tintColor = accent
     navigationController?.view.tintColor = accent
     applySnapshot(changed: order)
@@ -346,11 +478,9 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     guard on != editingList else { return }
     editingList = on
     selectedIds.removeAll()
-    if on, searchController.isActive {
-      searchController.isActive = false
-    }
-    searchController.searchBar.isUserInteractionEnabled = !on
+    header.setSearchEnabled(!on)
     updateBarItems()
+    applySnapshot(changed: [])
     updateEditBar()
     for cell in collectionView.visibleCells {
       guard let chatCell = cell as? KometChatListCell,
@@ -543,6 +673,10 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     collectionView.deselectItem(at: indexPath, animated: !editingList)
     guard let id = dataSource.itemIdentifier(for: indexPath) else { return }
+    if id == KometChatListController.archiveId {
+      onEvent?("archive", nil)
+      return
+    }
     if editingList {
       toggleSelection(id, at: indexPath)
       return
@@ -611,11 +745,4 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     }
   }
 
-  func updateSearchResults(for searchController: UISearchController) {
-    let text = searchController.searchBar.text?
-      .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-    guard text != query else { return }
-    query = text
-    applySnapshot(changed: [])
-  }
 }

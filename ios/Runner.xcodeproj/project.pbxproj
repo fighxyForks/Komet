@@ -24,6 +24,7 @@
 		AA11BB22CC33DD44EE55010B /* KometChatListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55000B /* KometChatListModel.swift */; };
 		AA11BB22CC33DD44EE55010C /* KometNativeList.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55000C /* KometNativeList.swift */; };
 		AA11BB22CC33DD44EE55010E /* KometChatListEditBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55000E /* KometChatListEditBar.swift */; };
+		AA11BB22CC33DD44EE55010F /* KometChatListHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55000F /* KometChatListHeader.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
@@ -80,6 +81,7 @@
 		AA11BB22CC33DD44EE55000B /* KometChatListModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometChatListModel.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55000C /* KometNativeList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometNativeList.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55000E /* KometChatListEditBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometChatListEditBar.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55000F /* KometChatListHeader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometChatListHeader.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE550004 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		782E66FE4E292DCFD0D1B7D2 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		789A1AEF2F4FF7DEED202476 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -193,6 +195,7 @@
 				AA11BB22CC33DD44EE55000A /* KometChatListCell.swift */,
 				AA11BB22CC33DD44EE55000B /* KometChatListModel.swift */,
 				AA11BB22CC33DD44EE55000E /* KometChatListEditBar.swift */,
+				AA11BB22CC33DD44EE55000F /* KometChatListHeader.swift */,
 				AA11BB22CC33DD44EE55000C /* KometNativeList.swift */,
 				AA11BB22CC33DD44EE550004 /* Runner.entitlements */,
 			);
@@ -445,6 +448,7 @@
 				AA11BB22CC33DD44EE55010A /* KometChatListCell.swift in Sources */,
 				AA11BB22CC33DD44EE55010B /* KometChatListModel.swift in Sources */,
 				AA11BB22CC33DD44EE55010E /* KometChatListEditBar.swift in Sources */,
+				AA11BB22CC33DD44EE55010F /* KometChatListHeader.swift in Sources */,
 				AA11BB22CC33DD44EE55010C /* KometNativeList.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);

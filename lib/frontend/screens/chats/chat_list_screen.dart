@@ -362,6 +362,8 @@ class _ChatListScreenState extends State<ChatListScreen>
   bool get _isSelectionMode => !_shareMode && _selectedChats.isNotEmpty;
   bool _nativeEditing = false;
   final NativeChatListCommands _nativeCommands = NativeChatListCommands();
+  final ValueNotifier<int> _nativeStoryOwnersTick = ValueNotifier(0);
+  final Set<int> _nativeStoryOwnersPending = {};
   bool get _hidesBottomNav => _isSelectionMode || _nativeEditing;
   bool? _foldersListKnown;
 
@@ -1829,6 +1831,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
     _nativeDecryptionWatch.clear();
     _nativeDecryptionTick.dispose();
+    _nativeStoryOwnersTick.dispose();
     _dayRolloverTimer?.cancel();
     _lifecycle.dispose();
     _shareCaption?.dispose();
@@ -3691,6 +3694,11 @@ class _ChatListScreenState extends State<ChatListScreen>
         for (final chat in pageChats) chats.chatListenable(chat.id),
         _nativeDecryptionTick,
         AppLock.instance.enabled,
+        storiesModule.storiesChanged,
+        AppStories.current,
+        _nativeStoryOwnersTick,
+        chats.chatsChanged,
+        KometSettings.archiveOnPull,
       ]),
       builder: (context, _) => NativeChatListView(
         rows: [
@@ -3699,6 +3707,8 @@ class _ChatListScreenState extends State<ChatListScreen>
         ],
         chrome: _nativeChatListChrome(),
         commands: _nativeCommands,
+        stories: _nativeStories(),
+        archive: _nativeArchive(),
         callbacks: NativeChatListCallbacks(
           onOpen: _openNativeChat,
           onAction: _onNativeChatAction,
@@ -3712,8 +3722,88 @@ class _ChatListScreenState extends State<ChatListScreen>
           onSelection: (_) {},
           onBulk: _onNativeBulk,
           onReorderPinned: (ids) => unawaited(_reorderPinned(ids)),
+          onStory: (ownerId, avatar) =>
+              _openStoriesForOwner(ownerId, avatar.center),
+          onAddStory: () => unawaited(_composeStory()),
+          onArchive: () => pushSwipeable(
+            context,
+            (_) => const ChatListScreen(archiveMode: true),
+          ),
         ),
       ),
+    );
+  }
+
+  NativeStories _nativeStories() {
+    if (!AppStories.current.value) return const NativeStories();
+    final me = _profile?.id;
+    final previews = storiesModule.previews;
+    StoryPreview? mine;
+    final others = <NativeStoryItem>[];
+    for (final preview in previews) {
+      final ownerId = preview.owner.ownerId;
+      if (ownerId == me) {
+        mine = preview;
+        continue;
+      }
+      final info = _nativeStoryOwner(preview.owner);
+      others.add(
+        NativeStoryItem(
+          ownerId: ownerId,
+          title: info?.name ?? '…',
+          avatarUrl: info?.avatarUrl ?? '',
+          total: preview.totalCount,
+          read: preview.readCount,
+        ),
+      );
+    }
+    return NativeStories(
+      visible: true,
+      items: [
+        if (me != null)
+          NativeStoryItem(
+            ownerId: me,
+            title: 'Ваша история',
+            avatarUrl: _profile?.baseUrl ?? '',
+            total: mine?.totalCount ?? 0,
+            read: mine?.readCount ?? 0,
+            isSelf: true,
+          ),
+        ...others,
+      ],
+    );
+  }
+
+  StoryOwnerInfo? _nativeStoryOwner(StoryOwner owner) {
+    final info = peekStoryOwnerInfo(owner);
+    if (info != null || !_nativeStoryOwnersPending.add(owner.ownerId)) {
+      return info;
+    }
+    fetchStoryOwnerInfo(owner)
+        .then((resolved) {
+          if (resolved != null && mounted) _nativeStoryOwnersTick.value++;
+        })
+        .catchError((Object _) {})
+        .whenComplete(() => _nativeStoryOwnersPending.remove(owner.ownerId));
+    return null;
+  }
+
+  NativeArchiveEntry? _nativeArchive() {
+    if (!_shouldShowArchiveEntry(_selectedFolderIndex, ignorePull: true)) {
+      return null;
+    }
+    final archived = [
+      for (final chat in _chatsWithArchived)
+        if (_archivedIds.contains(chat.id) &&
+            !CloudStorageModule.isCloudStorageGroup(chat))
+          chats.chatListenable(chat.id).value,
+    ];
+    return NativeArchiveEntry(
+      title: 'Архив',
+      count: _archivedCount,
+      unread: _liveUnread(archived).total,
+      text: archived.take(5).map((c) => _rowFacts(c).name).join(', '),
+      pull: KometSettings.archiveOnPull.value,
     );
   }
 

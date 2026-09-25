@@ -107,6 +107,95 @@ class NativeChatRow {
 }
 
 @immutable
+class NativeStoryItem {
+  final int ownerId;
+  final String title;
+  final String avatarUrl;
+  final int total;
+  final int read;
+  final bool isSelf;
+
+  const NativeStoryItem({
+    required this.ownerId,
+    required this.title,
+    this.avatarUrl = '',
+    this.total = 0,
+    this.read = 0,
+    this.isSelf = false,
+  });
+
+  Map<String, Object?> toMap() => {
+    'ownerId': ownerId,
+    'title': title,
+    'avatarUrl': avatarUrl,
+    'total': total,
+    'read': read,
+    'self': isSelf,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeStoryItem && mapEquals(toMap(), other.toMap());
+
+  @override
+  int get hashCode => Object.hashAll(toMap().values);
+}
+
+@immutable
+class NativeStories {
+  final bool visible;
+  final List<NativeStoryItem> items;
+
+  const NativeStories({this.visible = false, this.items = const []});
+
+  Map<String, Object?> toMap() => {
+    'visible': visible,
+    'items': [for (final item in items) item.toMap()],
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeStories &&
+      other.visible == visible &&
+      listEquals(other.items, items);
+
+  @override
+  int get hashCode => Object.hash(visible, Object.hashAll(items));
+}
+
+@immutable
+class NativeArchiveEntry {
+  final String title;
+  final String text;
+  final int count;
+  final int unread;
+  final bool pull;
+
+  const NativeArchiveEntry({
+    required this.title,
+    required this.count,
+    this.text = '',
+    this.unread = 0,
+    this.pull = true,
+  });
+
+  Map<String, Object?> toMap() => {
+    'title': title,
+    'text': text,
+    'count': count,
+    'unread': unread,
+    'pull': pull,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeArchiveEntry && mapEquals(toMap(), other.toMap());
+
+  @override
+  int get hashCode => Object.hashAll(toMap().values);
+}
+
+@immutable
 class NativeChatListUpdate {
   final List<int>? order;
   final List<NativeChatRow> rows;
@@ -149,6 +238,9 @@ class NativeChatListCallbacks {
   final ValueChanged<List<int>> onSelection;
   final void Function(NativeChatBulkAction action, List<int> ids) onBulk;
   final ValueChanged<List<int>> onReorderPinned;
+  final void Function(int ownerId, Rect avatar) onStory;
+  final VoidCallback onAddStory;
+  final VoidCallback onArchive;
 
   const NativeChatListCallbacks({
     required this.onOpen,
@@ -160,6 +252,9 @@ class NativeChatListCallbacks {
     required this.onSelection,
     required this.onBulk,
     required this.onReorderPinned,
+    required this.onStory,
+    required this.onAddStory,
+    required this.onArchive,
   });
 }
 
@@ -211,6 +306,12 @@ class NativeChatListController {
       _invoke('setChrome', chrome);
 
   Future<void> setEditing(bool on) => _invoke('setEditing', {'on': on});
+
+  Future<void> setStories(NativeStories stories) =>
+      _invoke('setStories', stories.toMap());
+
+  Future<void> setArchive(NativeArchiveEntry? archive) =>
+      _invoke('setArchive', {'archive': archive?.toMap()});
 
   Future<String?> actionSheet({
     String? title,
@@ -269,6 +370,13 @@ class NativeChatListController {
         if (action != null) callbacks.onBulk(action, _idsOf(args));
       case 'reorderPinned':
         callbacks.onReorderPinned(_idsOf(args));
+      case 'story':
+        final ownerId = args['ownerId'];
+        if (ownerId is int) callbacks.onStory(ownerId, _rectOf(args));
+      case 'storyAdd':
+        callbacks.onAddStory();
+      case 'archive':
+        callbacks.onArchive();
     }
     return null;
   }

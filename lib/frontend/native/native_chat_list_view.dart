@@ -10,6 +10,8 @@ class NativeChatListView extends StatefulWidget {
   final Map<String, Object?> chrome;
   final NativeChatListCallbacks callbacks;
   final NativeChatListCommands? commands;
+  final NativeStories stories;
+  final NativeArchiveEntry? archive;
 
   const NativeChatListView({
     super.key,
@@ -17,6 +19,8 @@ class NativeChatListView extends StatefulWidget {
     required this.chrome,
     required this.callbacks,
     this.commands,
+    this.stories = const NativeStories(),
+    this.archive,
   });
 
   @override
@@ -27,6 +31,8 @@ class _NativeChatListViewState extends State<NativeChatListView> {
   NativeChatListController? _controller;
   late final List<NativeChatRow> _createdRows = widget.rows;
   late final Map<String, Object?> _createdChrome = widget.chrome;
+  late final NativeStories _createdStories = widget.stories;
+  late final NativeArchiveEntry? _createdArchive = widget.archive;
 
   void _onCreated(int viewId) {
     final controller = NativeChatListController(viewId, widget.callbacks)
@@ -36,6 +42,12 @@ class _NativeChatListViewState extends State<NativeChatListView> {
     controller.update(widget.rows);
     if (!mapEquals(_createdChrome, widget.chrome)) {
       controller.setChrome(widget.chrome);
+    }
+    if (_createdStories != widget.stories) {
+      controller.setStories(widget.stories);
+    }
+    if (_createdArchive != widget.archive) {
+      controller.setArchive(widget.archive);
     }
   }
 
@@ -52,6 +64,12 @@ class _NativeChatListViewState extends State<NativeChatListView> {
     controller.update(widget.rows);
     if (!mapEquals(oldWidget.chrome, widget.chrome)) {
       controller.setChrome(widget.chrome);
+    }
+    if (oldWidget.stories != widget.stories) {
+      controller.setStories(widget.stories);
+    }
+    if (oldWidget.archive != widget.archive) {
+      controller.setArchive(widget.archive);
     }
   }
 
@@ -72,6 +90,8 @@ class _NativeChatListViewState extends State<NativeChatListView> {
       creationParams: <String, Object?>{
         'rows': [for (final row in _createdRows) row.toMap()],
         'chrome': _createdChrome,
+        'stories': _createdStories.toMap(),
+        'archive': _createdArchive?.toMap(),
       },
       creationParamsCodec: const StandardMessageCodec(),
       onPlatformViewCreated: _onCreated,

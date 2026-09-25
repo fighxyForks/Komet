@@ -268,9 +268,14 @@ final class KometAvatarCache {
 
   func placeholder(for row: KometChatRow, side: CGFloat, scale: CGFloat,
                    accent: UIColor) -> UIImage {
-    row.saved
-      ? symbolAvatar("bookmark.fill", side: side, scale: scale, fill: accent, tint: .white)
-      : letterAvatar(seed: row.id, title: row.title, side: side, scale: scale)
+    if row.saved {
+      return symbolAvatar("bookmark.fill", side: side, scale: scale, fill: accent, tint: .white)
+    }
+    if row.kind == "archive" {
+      return symbolAvatar("archivebox.fill", side: side, scale: scale,
+                          fill: KometChatListStyle.mutedBadge, tint: .white)
+    }
+    return letterAvatar(seed: row.id, title: row.title, side: side, scale: scale)
   }
 
   func letterAvatar(seed: Int, title: String, side: CGFloat, scale: CGFloat) -> UIImage {
