@@ -13,8 +13,7 @@ import 'ios_typography.dart';
 /// [AppBar] / [ConnectionTitleBar].
 ///
 /// Native [LiquidGlassNavigationBar] is intentionally not used here: nested
-/// settings need arbitrary Flutter trailing actions, and one platform view per
-/// settings push would burn the glass budget next to the tab bar.
+/// settings need arbitrary Flutter trailing actions.
 class IosSettingsScaffold extends StatelessWidget {
   final String title;
   final Widget body;

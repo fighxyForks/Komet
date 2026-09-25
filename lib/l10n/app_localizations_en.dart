@@ -1046,6 +1046,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callLinkCreateFailed => 'Couldn\'t create the call';
 
   @override
+  String get callsActionCreate => 'New call';
+
+  @override
+  String get callsActionJoin => 'Join';
+
+  @override
   String get callParticipantYou => 'You';
 
   @override
@@ -3575,6 +3581,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatActionSelect => 'Select';
+
+  @override
+  String get chatListTitle => 'Chats';
+
+  @override
+  String get chatListSearch => 'Search';
+
+  @override
+  String get chatListDraft => 'Draft: ';
 
   @override
   String get chatListYesterday => 'Yesterday';

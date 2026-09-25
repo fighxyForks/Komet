@@ -1047,6 +1047,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callLinkCreateFailed => 'Не удалось создать звонок';
 
   @override
+  String get callsActionCreate => 'Создать';
+
+  @override
+  String get callsActionJoin => 'Подключиться';
+
+  @override
   String get callParticipantYou => 'Вы';
 
   @override
@@ -3590,6 +3596,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatActionSelect => 'Выбрать';
+
+  @override
+  String get chatListTitle => 'Чаты';
+
+  @override
+  String get chatListSearch => 'Поиск';
+
+  @override
+  String get chatListDraft => 'Черновик: ';
 
   @override
   String get chatListYesterday => 'Вчера';

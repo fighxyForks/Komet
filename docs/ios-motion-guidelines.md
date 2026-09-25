@@ -55,7 +55,7 @@ use an immediate surface tap).
 4. **Double-tap** (within `singleTapDelay`, away from edges, when zoomable) → spring zoom to point / back to fit.
 5. **Single tap** → chrome toggle (delayed only per rule above).
 
-During dismiss drag: update `Transform` / opacity via `AnimatedBuilder` — do not rebuild the pager subtree. No live blur over the drag (see glass budget).
+During dismiss drag: update `Transform` / opacity via `AnimatedBuilder` — do not rebuild the pager subtree. No live blur over the drag (see glass rules).
 
 ## Velocity handoff
 
@@ -136,6 +136,10 @@ Under `IosGlass`, settings / glass controls / polls / NFC (and other wired iOS p
 
 `iosPageRoute` returns `IosCupertinoPageRoute` in iOS mode. When `IosMotion.reduceMotionOf(context)` is true at push time, the route uses `pageCrossFade` and a fade transition (no horizontal slide / parallax). When false, behavior matches stock `CupertinoPageRoute`. Material mode still returns `MaterialPageRoute` unchanged.
 
+## Root tab switch (`IosTabSwitcher`)
+
+A root tab is built the first time it is opened and then stays mounted: hidden tabs sit in an `Offstage` with tickers off, so switching never reloads a tab or loses its scroll position. On a switch the new tab fades in over 0.1 s, then settles from a 3 pt smaller scale over 0.15 s; the old tab shrinks by the same 3 pt over 0.12 s and is hidden once the new one is opaque. Reduce Motion switches instantly.
+
 ## Testing checklist
 
 - [ ] Gallery: dismiss commit vs snap-back; zoom blocks dismiss; double-tap zoom / unzoom
@@ -147,4 +151,4 @@ Under `IosGlass`, settings / glass controls / polls / NFC (and other wired iOS p
 - [ ] Overlays: spring appear; reverse mid-flight keeps velocity; Reduce Motion = fade only
 - [ ] Reduce Motion: hero cross-fade, no zoom flights, menus fade-only, reply snaps, page routes cross-fade
 - [ ] `flutter analyze lib test` and `flutter test` clean
-- [ ] Glass budget still respected on touched screens
+- [ ] Glass rules still respected on touched screens

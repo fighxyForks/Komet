@@ -223,22 +223,6 @@ class GlassCapsule extends StatelessWidget {
     return NativeGlassGate(
       label: _traceLabel(),
       builder: (context, useNative) {
-        if (forceOpaque) {
-          return _tappable(
-            context,
-            GlassBackground(
-              borderRadius: borderRadius ?? GlassStyle.capsule,
-              tint:
-                  fallbackTint ??
-                  tint ??
-                  Theme.of(context).colorScheme.surfaceContainerHigh,
-              sigma: 0,
-              shadow: shadow,
-              forceOpaque: true,
-              child: SizedBox(width: width, height: height, child: content),
-            ),
-          );
-        }
         if (useNative && allowNative) {
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -260,6 +244,22 @@ class GlassCapsule extends StatelessWidget {
               if (onLongPress == null) return native;
               return GestureDetector(onLongPress: onLongPress, child: native);
             },
+          );
+        }
+        if (forceOpaque) {
+          return _tappable(
+            context,
+            GlassBackground(
+              borderRadius: borderRadius ?? GlassStyle.capsule,
+              tint:
+                  fallbackTint ??
+                  tint ??
+                  Theme.of(context).colorScheme.surfaceContainerHigh,
+              sigma: 0,
+              shadow: shadow,
+              forceOpaque: true,
+              child: SizedBox(width: width, height: height, child: content),
+            ),
           );
         }
         final surface = GlassBackground(

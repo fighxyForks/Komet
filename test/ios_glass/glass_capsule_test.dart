@@ -54,6 +54,25 @@ void main() {
       expect(find.text('field'), findsOneWidget);
     });
 
+    testWidgets('нативное стекло не сменяется заливкой при прокрутке', (
+      tester,
+    ) async {
+      AppIosGlass.debugIosMajorVersion = 26;
+      AppIosGlass.debugNativeGlassSupported = true;
+      await tester.pumpWidget(
+        _host(
+          const GlassCapsule(
+            forceOpaque: true,
+            width: 120,
+            height: 44,
+            child: Text('field'),
+          ),
+        ),
+      );
+      expect(find.byType(LiquidGlassContainer), findsOneWidget);
+      expect(find.byType(GlassBackground), findsNothing);
+    });
+
     testWidgets('непрозрачная капсула всё ещё принимает нажатие', (
       tester,
     ) async {

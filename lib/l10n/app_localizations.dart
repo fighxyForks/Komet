@@ -2060,6 +2060,18 @@ abstract class AppLocalizations {
   /// **'Couldn\'t create the call'**
   String get callLinkCreateFailed;
 
+  /// No description provided for @callsActionCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'New call'**
+  String get callsActionCreate;
+
+  /// No description provided for @callsActionJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get callsActionJoin;
+
   /// No description provided for @callParticipantYou.
   ///
   /// In en, this message translates to:
@@ -6655,6 +6667,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select'**
   String get chatActionSelect;
+
+  /// No description provided for @chatListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chatListTitle;
+
+  /// No description provided for @chatListSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get chatListSearch;
+
+  /// No description provided for @chatListDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft: '**
+  String get chatListDraft;
 
   /// No description provided for @chatListYesterday.
   ///

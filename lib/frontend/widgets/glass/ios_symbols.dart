@@ -89,7 +89,7 @@ abstract final class IosSymbols {
   static IconData phoneMissed(BuildContext c) => resolve(
     c,
     material: Symbols.phone_missed,
-    cupertino: CupertinoIcons.phone_down,
+    cupertino: Symbols.phone_missed,
   );
 
   static IconData phoneDisabled(BuildContext c) => resolve(
@@ -143,7 +143,7 @@ abstract final class IosSymbols {
   static IconData videocamOff(BuildContext c) => resolve(
     c,
     material: Symbols.videocam_off,
-    cupertino: CupertinoIcons.videocam,
+    cupertino: Symbols.videocam_off,
   );
 
   static IconData speaker(BuildContext c) => resolve(
@@ -335,7 +335,7 @@ abstract final class IosSymbols {
   static IconData fingerprint(BuildContext c) => resolve(
     c,
     material: Symbols.fingerprint,
-    cupertino: CupertinoIcons.hand_raised_fill,
+    cupertino: Symbols.fingerprint,
   );
 
   static IconData backspace(BuildContext c) => resolve(
@@ -478,7 +478,7 @@ abstract final class IosSymbols {
   static IconData doneAll(BuildContext c) => resolve(
     c,
     material: Symbols.done_all,
-    cupertino: CupertinoIcons.checkmark_alt,
+    cupertino: Symbols.done_all,
   );
 
   static IconData block(BuildContext c) => resolve(
@@ -502,7 +502,7 @@ abstract final class IosSymbols {
   static IconData cameraOff(BuildContext c) => resolve(
     c,
     material: Symbols.no_photography,
-    cupertino: CupertinoIcons.camera,
+    cupertino: Symbols.no_photography,
   );
 
   static IconData archive(BuildContext c) => resolve(
@@ -607,7 +607,7 @@ abstract final class IosSymbols {
   static IconData hourglass(BuildContext c) => resolve(
     c,
     material: Symbols.hourglass_top,
-    cupertino: CupertinoIcons.time,
+    cupertino: CupertinoIcons.hourglass,
   );
 
   static IconData deleteSweep(BuildContext c) => resolve(
@@ -691,7 +691,7 @@ abstract final class IosSymbols {
   static IconData noPhotography(BuildContext c) => resolve(
     c,
     material: Symbols.no_photography,
-    cupertino: CupertinoIcons.camera,
+    cupertino: Symbols.no_photography,
   );
 
   static IconData attachment(BuildContext c) => resolve(
@@ -1003,7 +1003,7 @@ abstract final class IosSymbols {
   static IconData cloudOff(BuildContext c) => resolve(
     c,
     material: Symbols.cloud_off,
-    cupertino: CupertinoIcons.cloud,
+    cupertino: Symbols.cloud_off,
   );
 
   static IconData ampStories(BuildContext c) => resolve(
@@ -1015,13 +1015,13 @@ abstract final class IosSymbols {
   static IconData showChart(BuildContext c) => resolve(
     c,
     material: Symbols.show_chart,
-    cupertino: CupertinoIcons.chart_bar,
+    cupertino: CupertinoIcons.graph_square,
   );
 
   static IconData smartToy(BuildContext c) => resolve(
     c,
     material: Symbols.smart_toy,
-    cupertino: CupertinoIcons.desktopcomputer,
+    cupertino: Symbols.smart_toy,
   );
 
   static IconData brightnessAuto(BuildContext c) => resolve(
@@ -1051,7 +1051,7 @@ abstract final class IosSymbols {
   static IconData animation(BuildContext c) => resolve(
     c,
     material: Symbols.animation,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.sparkles,
   );
 
   static IconData arrowDownward(BuildContext c) => resolve(
@@ -1069,7 +1069,7 @@ abstract final class IosSymbols {
   static IconData arrowSplit(BuildContext c) => resolve(
     c,
     material: Symbols.arrow_split,
-    cupertino: CupertinoIcons.arrow_right,
+    cupertino: CupertinoIcons.arrow_branch,
   );
 
   static IconData arrowUpward(BuildContext c) => resolve(
@@ -1081,7 +1081,7 @@ abstract final class IosSymbols {
   static IconData article(BuildContext c) => resolve(
     c,
     material: Symbols.article,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.doc_text,
   );
 
   static IconData attachFile(BuildContext c) => resolve(
@@ -1105,37 +1105,37 @@ abstract final class IosSymbols {
   static IconData bedtime(BuildContext c) => resolve(
     c,
     material: Symbols.bedtime,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.moon,
   );
 
   static IconData bluetoothDisabled(BuildContext c) => resolve(
     c,
     material: Symbols.bluetooth_disabled,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.bluetooth_disabled,
   );
 
   static IconData blurCircular(BuildContext c) => resolve(
     c,
     material: Symbols.blur_circular,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.circle_grid_hex,
   );
 
   static IconData blurLinear(BuildContext c) => resolve(
     c,
     material: Symbols.blur_linear,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.blur_linear,
   );
 
   static IconData blurOn(BuildContext c) => resolve(
     c,
     material: Symbols.blur_on,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.blur_on,
   );
 
   static IconData bubbleChart(BuildContext c) => resolve(
     c,
     material: Symbols.bubble_chart,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.chart_pie,
   );
 
   static IconData bugReport(BuildContext c) => resolve(
@@ -1147,13 +1147,13 @@ abstract final class IosSymbols {
   static IconData callMissed(BuildContext c) => resolve(
     c,
     material: Symbols.call_missed,
-    cupertino: CupertinoIcons.phone_down,
+    cupertino: Symbols.call_missed,
   );
 
   static IconData cameraAlt(BuildContext c) => resolve(
     c,
     material: Symbols.camera_alt,
-    cupertino: CupertinoIcons.photo,
+    cupertino: CupertinoIcons.camera,
   );
 
   static IconData cameraFront(BuildContext c) => resolve(
@@ -1165,13 +1165,13 @@ abstract final class IosSymbols {
   static IconData cameraRear(BuildContext c) => resolve(
     c,
     material: Symbols.camera_rear,
-    cupertino: CupertinoIcons.photo,
+    cupertino: CupertinoIcons.camera,
   );
 
   static IconData cellTower(BuildContext c) => resolve(
     c,
     material: Symbols.cell_tower,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.antenna_radiowaves_left_right,
   );
 
   static IconData checkBox(BuildContext c) => resolve(
@@ -1195,7 +1195,7 @@ abstract final class IosSymbols {
   static IconData closeFullscreen(BuildContext c) => resolve(
     c,
     material: Symbols.close_fullscreen,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.arrow_down_right_arrow_up_left,
   );
 
   static IconData cloud(BuildContext c) => resolve(
@@ -1207,25 +1207,25 @@ abstract final class IosSymbols {
   static IconData cloudDone(BuildContext c) => resolve(
     c,
     material: Symbols.cloud_done,
-    cupertino: CupertinoIcons.checkmark,
+    cupertino: Symbols.cloud_done,
   );
 
   static IconData code(BuildContext c) => resolve(
     c,
     material: Symbols.code,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.chevron_left_slash_chevron_right,
   );
 
   static IconData contactPage(BuildContext c) => resolve(
     c,
     material: Symbols.contact_page,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.person_crop_rectangle,
   );
 
   static IconData contrast(BuildContext c) => resolve(
     c,
     material: Symbols.contrast,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.circle_lefthalf_fill,
   );
 
   static IconData deleteHistory(BuildContext c) => resolve(
@@ -1237,19 +1237,19 @@ abstract final class IosSymbols {
   static IconData dialpad(BuildContext c) => resolve(
     c,
     material: Symbols.dialpad,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.circle_grid_3x3_fill,
   );
 
   static IconData dns(BuildContext c) => resolve(
     c,
     material: Symbols.dns,
-    cupertino: CupertinoIcons.cloud,
+    cupertino: Symbols.dns,
   );
 
   static IconData doNotDisturbOn(BuildContext c) => resolve(
     c,
     material: Symbols.do_not_disturb_on,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.minus_circle_fill,
   );
 
   static IconData doNotTouch(BuildContext c) => resolve(
@@ -1261,7 +1261,7 @@ abstract final class IosSymbols {
   static IconData editSquare(BuildContext c) => resolve(
     c,
     material: Symbols.edit_square,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.square_pencil,
   );
 
   static IconData emojiEmotions(BuildContext c) => resolve(
@@ -1273,7 +1273,7 @@ abstract final class IosSymbols {
   static IconData encrypted(BuildContext c) => resolve(
     c,
     material: Symbols.encrypted,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.lock_shield,
   );
 
   static IconData error2(BuildContext c) => resolve(
@@ -1285,67 +1285,67 @@ abstract final class IosSymbols {
   static IconData exitToApp(BuildContext c) => resolve(
     c,
     material: Symbols.exit_to_app,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.square_arrow_right,
   );
 
   static IconData extension(BuildContext c) => resolve(
     c,
     material: Symbols.extension,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.extension,
   );
 
   static IconData face(BuildContext c) => resolve(
     c,
     material: Symbols.face,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.smiley,
   );
 
   static IconData flashOff(BuildContext c) => resolve(
     c,
     material: Symbols.flash_off,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.bolt_slash,
   );
 
   static IconData flip(BuildContext c) => resolve(
     c,
     material: Symbols.flip,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.arrow_left_right_square,
   );
 
   static IconData flipCameraIos(BuildContext c) => resolve(
     c,
     material: Symbols.flip_camera_ios,
-    cupertino: CupertinoIcons.photo,
+    cupertino: CupertinoIcons.camera_rotate,
   );
 
   static IconData folderOff(BuildContext c) => resolve(
     c,
     material: Symbols.folder_off,
-    cupertino: CupertinoIcons.folder,
+    cupertino: Symbols.folder_off,
   );
 
   static IconData folderZip(BuildContext c) => resolve(
     c,
     material: Symbols.folder_zip,
-    cupertino: CupertinoIcons.folder,
+    cupertino: Symbols.folder_zip,
   );
 
   static IconData formatQuote(BuildContext c) => resolve(
     c,
     material: Symbols.format_quote,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.quote_bubble,
   );
 
   static IconData formatSize(BuildContext c) => resolve(
     c,
     material: Symbols.format_size,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.textformat_size,
   );
 
   static IconData forum(BuildContext c) => resolve(
     c,
     material: Symbols.forum,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.chat_bubble_2,
   );
 
   static IconData fullscreen(BuildContext c) => resolve(
@@ -1357,13 +1357,13 @@ abstract final class IosSymbols {
   static IconData gifBox(BuildContext c) => resolve(
     c,
     material: Symbols.gif_box,
-    cupertino: CupertinoIcons.photo,
+    cupertino: Symbols.gif_box,
   );
 
   static IconData gppBad(BuildContext c) => resolve(
     c,
     material: Symbols.gpp_bad,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.shield_slash,
   );
 
   static IconData gppMaybe(BuildContext c) => resolve(
@@ -1375,19 +1375,19 @@ abstract final class IosSymbols {
   static IconData gridOn(BuildContext c) => resolve(
     c,
     material: Symbols.grid_on,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.grid,
   );
 
   static IconData hd(BuildContext c) => resolve(
     c,
     material: Symbols.hd,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.hd,
   );
 
   static IconData historyEdu(BuildContext c) => resolve(
     c,
     material: Symbols.history_edu,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.book,
   );
 
   static IconData howToReg(BuildContext c) => resolve(
@@ -1399,43 +1399,43 @@ abstract final class IosSymbols {
   static IconData inkEraser(BuildContext c) => resolve(
     c,
     material: Symbols.ink_eraser,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.ink_eraser,
   );
 
   static IconData inkHighlighter(BuildContext c) => resolve(
     c,
     material: Symbols.ink_highlighter,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.ink_highlighter,
   );
 
   static IconData insertDriveFile(BuildContext c) => resolve(
     c,
     material: Symbols.insert_drive_file,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.doc,
   );
 
   static IconData installMobile(BuildContext c) => resolve(
     c,
     material: Symbols.install_mobile,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.arrow_down_to_line,
   );
 
   static IconData inventory2(BuildContext c) => resolve(
     c,
     material: Symbols.inventory_2,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.archivebox,
   );
 
   static IconData iosShare(BuildContext c) => resolve(
     c,
     material: Symbols.ios_share,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.share,
   );
 
   static IconData key(BuildContext c) => resolve(
     c,
     material: Symbols.key,
-    cupertino: CupertinoIcons.lock_rotation,
+    cupertino: Symbols.key,
   );
 
   static IconData keyboardArrowUp(BuildContext c) => resolve(
@@ -1447,7 +1447,7 @@ abstract final class IosSymbols {
   static IconData lan(BuildContext c) => resolve(
     c,
     material: Symbols.lan,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.lan,
   );
 
   static IconData layers(BuildContext c) => resolve(
@@ -1459,7 +1459,7 @@ abstract final class IosSymbols {
   static IconData locationCity(BuildContext c) => resolve(
     c,
     material: Symbols.location_city,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.building_2_fill,
   );
 
   static IconData lockClock(BuildContext c) => resolve(
@@ -1471,7 +1471,7 @@ abstract final class IosSymbols {
   static IconData markChatRead(BuildContext c) => resolve(
     c,
     material: Symbols.mark_chat_read,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.chat_bubble_text,
   );
 
   static IconData memory(BuildContext c) => resolve(
@@ -1483,19 +1483,19 @@ abstract final class IosSymbols {
   static IconData menu(BuildContext c) => resolve(
     c,
     material: Symbols.menu,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.line_horizontal_3,
   );
 
   static IconData missedVideoCall(BuildContext c) => resolve(
     c,
     material: Symbols.missed_video_call,
-    cupertino: CupertinoIcons.videocam,
+    cupertino: Symbols.missed_video_call,
   );
 
   static IconData modeComment(BuildContext c) => resolve(
     c,
     material: Symbols.mode_comment,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.chat_bubble,
   );
 
   static IconData mood(BuildContext c) => resolve(
@@ -1513,13 +1513,13 @@ abstract final class IosSymbols {
   static IconData motionPhotosOn(BuildContext c) => resolve(
     c,
     material: Symbols.motion_photos_on,
-    cupertino: CupertinoIcons.photo,
+    cupertino: Symbols.motion_photos_on,
   );
 
   static IconData musicNote(BuildContext c) => resolve(
     c,
     material: Symbols.music_note,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.music_note,
   );
 
   static IconData nfc(BuildContext c) => resolve(
@@ -1531,7 +1531,7 @@ abstract final class IosSymbols {
   static IconData noiseControlOn(BuildContext c) => resolve(
     c,
     material: Symbols.noise_control_on,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.waveform,
   );
 
   static IconData northEast(BuildContext c) => resolve(
@@ -1555,13 +1555,13 @@ abstract final class IosSymbols {
   static IconData openInFull(BuildContext c) => resolve(
     c,
     material: Symbols.open_in_full,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.arrow_up_left_arrow_down_right,
   );
 
   static IconData openInNew(BuildContext c) => resolve(
     c,
     material: Symbols.open_in_new,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.arrow_up_right_square,
   );
 
   static IconData personRemove(BuildContext c) => resolve(
@@ -1579,19 +1579,19 @@ abstract final class IosSymbols {
   static IconData priorityHigh(BuildContext c) => resolve(
     c,
     material: Symbols.priority_high,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.exclamationmark,
   );
 
   static IconData qrCodeScanner(BuildContext c) => resolve(
     c,
     material: Symbols.qr_code_scanner,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.qrcode_viewfinder,
   );
 
   static IconData radar(BuildContext c) => resolve(
     c,
     material: Symbols.radar,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.dot_radiowaves_left_right,
   );
 
   static IconData recordVoiceOver(BuildContext c) => resolve(
@@ -1603,13 +1603,13 @@ abstract final class IosSymbols {
   static IconData rectangle(BuildContext c) => resolve(
     c,
     material: Symbols.rectangle,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.rectangle,
   );
 
   static IconData removeCircle(BuildContext c) => resolve(
     c,
     material: Symbols.remove_circle,
-    cupertino: CupertinoIcons.delete,
+    cupertino: CupertinoIcons.minus_circle_fill,
   );
 
   static IconData removeModerator(BuildContext c) => resolve(
@@ -1621,7 +1621,7 @@ abstract final class IosSymbols {
   static IconData rotateRight(BuildContext c) => resolve(
     c,
     material: Symbols.rotate_right,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.rotate_right,
   );
 
   static IconData saveAlt(BuildContext c) => resolve(
@@ -1633,7 +1633,7 @@ abstract final class IosSymbols {
   static IconData shieldLock(BuildContext c) => resolve(
     c,
     material: Symbols.shield_lock,
-    cupertino: CupertinoIcons.lock,
+    cupertino: CupertinoIcons.lock_shield,
   );
 
   static IconData shieldPerson(BuildContext c) => resolve(
@@ -1651,13 +1651,13 @@ abstract final class IosSymbols {
   static IconData southWest(BuildContext c) => resolve(
     c,
     material: Symbols.south_west,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.arrow_down_left,
   );
 
   static IconData stadiaController(BuildContext c) => resolve(
     c,
     material: Symbols.stadia_controller,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.gamecontroller,
   );
 
   static IconData star(BuildContext c) => resolve(
@@ -1669,7 +1669,7 @@ abstract final class IosSymbols {
   static IconData stayCurrentPortrait(BuildContext c) => resolve(
     c,
     material: Symbols.stay_current_portrait,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.device_phone_portrait,
   );
 
   static IconData stopCircle(BuildContext c) => resolve(
@@ -1681,13 +1681,13 @@ abstract final class IosSymbols {
   static IconData styler(BuildContext c) => resolve(
     c,
     material: Symbols.styler,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.paintbrush,
   );
 
   static IconData swipeRight(BuildContext c) => resolve(
     c,
     material: Symbols.swipe_right,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.hand_point_right,
   );
 
   static IconData sync(BuildContext c) => resolve(
@@ -1699,7 +1699,7 @@ abstract final class IosSymbols {
   static IconData systemUpdate(BuildContext c) => resolve(
     c,
     material: Symbols.system_update,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.arrow_2_circlepath,
   );
 
   static IconData tableChart(BuildContext c) => resolve(
@@ -1711,13 +1711,13 @@ abstract final class IosSymbols {
   static IconData terminal(BuildContext c) => resolve(
     c,
     material: Symbols.terminal,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.terminal,
   );
 
   static IconData textSnippet(BuildContext c) => resolve(
     c,
     material: Symbols.text_snippet,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.doc_plaintext,
   );
 
   static IconData touchApp(BuildContext c) => resolve(
@@ -1729,7 +1729,7 @@ abstract final class IosSymbols {
   static IconData translate(BuildContext c) => resolve(
     c,
     material: Symbols.translate,
-    cupertino: CupertinoIcons.textformat,
+    cupertino: Symbols.translate,
   );
 
   static IconData unarchive(BuildContext c) => resolve(
@@ -1747,13 +1747,13 @@ abstract final class IosSymbols {
   static IconData vibration(BuildContext c) => resolve(
     c,
     material: Symbols.vibration,
-    cupertino: CupertinoIcons.circle,
+    cupertino: Symbols.vibration,
   );
 
   static IconData videoFile(BuildContext c) => resolve(
     c,
     material: Symbols.video_file,
-    cupertino: CupertinoIcons.videocam,
+    cupertino: CupertinoIcons.film,
   );
 
   static IconData visibilityLock(BuildContext c) => resolve(
@@ -1771,25 +1771,25 @@ abstract final class IosSymbols {
   static IconData vpnKey(BuildContext c) => resolve(
     c,
     material: Symbols.vpn_key,
-    cupertino: CupertinoIcons.lock_shield,
+    cupertino: Symbols.vpn_key,
   );
 
   static IconData vpnKeyOff(BuildContext c) => resolve(
     c,
     material: Symbols.vpn_key_off,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.lock_slash,
   );
 
   static IconData waterDrop(BuildContext c) => resolve(
     c,
     material: Symbols.water_drop,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.drop,
   );
 
   static IconData wbSunny(BuildContext c) => resolve(
     c,
     material: Symbols.wb_sunny,
-    cupertino: CupertinoIcons.circle,
+    cupertino: CupertinoIcons.sun_max,
   );
 
   /// Adapts a Material [Symbols] icon to the Cupertino twin when in iOS mode.
@@ -1799,6 +1799,10 @@ abstract final class IosSymbols {
     final mapped = _cupertinoByCodePoint[material.codePoint];
     return mapped ?? material;
   }
+
+  @visibleForTesting
+  static Map<int, IconData> get debugCupertinoByCodePoint =>
+      _cupertinoByCodePoint;
 
   static final Map<int, IconData> _cupertinoByCodePoint = {
     Symbols.search.codePoint: CupertinoIcons.search,
@@ -1814,7 +1818,6 @@ abstract final class IosSymbols {
     Symbols.verified.codePoint: CupertinoIcons.checkmark_seal_fill,
     Symbols.call.codePoint: CupertinoIcons.phone,
     Symbols.call_end.codePoint: CupertinoIcons.phone_down_fill,
-    Symbols.phone_missed.codePoint: CupertinoIcons.phone_down,
     Symbols.phone_disabled.codePoint: CupertinoIcons.phone_down,
     Symbols.call_made.codePoint: CupertinoIcons.phone_arrow_up_right,
     Symbols.call_received.codePoint: CupertinoIcons.phone_arrow_down_left,
@@ -1825,7 +1828,6 @@ abstract final class IosSymbols {
     Symbols.mic.codePoint: CupertinoIcons.mic_fill,
     Symbols.mic_off.codePoint: CupertinoIcons.mic_off,
     Symbols.videocam.codePoint: CupertinoIcons.videocam_fill,
-    Symbols.videocam_off.codePoint: CupertinoIcons.videocam,
     Symbols.volume_up.codePoint: CupertinoIcons.speaker_3_fill,
     Symbols.volume_down.codePoint: CupertinoIcons.speaker_1_fill,
     Symbols.screen_share.codePoint: CupertinoIcons.rectangle_on_rectangle,
@@ -1859,7 +1861,6 @@ abstract final class IosSymbols {
     Symbols.language.codePoint: CupertinoIcons.globe,
     Symbols.settings.codePoint: CupertinoIcons.gear_alt,
     Symbols.admin_panel_settings.codePoint: CupertinoIcons.shield,
-    Symbols.fingerprint.codePoint: CupertinoIcons.hand_raised_fill,
     Symbols.backspace.codePoint: CupertinoIcons.delete_left,
     Symbols.refresh.codePoint: CupertinoIcons.refresh,
     Symbols.tune.codePoint: CupertinoIcons.slider_horizontal_3,
@@ -1880,11 +1881,9 @@ abstract final class IosSymbols {
     Symbols.notifications.codePoint: CupertinoIcons.bell,
     Symbols.chat_bubble.codePoint: CupertinoIcons.chat_bubble,
     Symbols.check_circle.codePoint: CupertinoIcons.check_mark_circled_solid,
-    Symbols.done_all.codePoint: CupertinoIcons.checkmark_alt,
     Symbols.block.codePoint: CupertinoIcons.xmark_circle,
     Symbols.palette.codePoint: CupertinoIcons.paintbrush,
     Symbols.photo_camera.codePoint: CupertinoIcons.camera,
-    Symbols.no_photography.codePoint: CupertinoIcons.camera,
     Symbols.archive.codePoint: CupertinoIcons.archivebox,
     Symbols.keep.codePoint: CupertinoIcons.pin,
     Symbols.broken_image.codePoint: CupertinoIcons.photo,
@@ -1896,7 +1895,7 @@ abstract final class IosSymbols {
     Symbols.expand_less.codePoint: CupertinoIcons.chevron_up,
     Symbols.radio_button_checked.codePoint: CupertinoIcons.circle_filled,
     Symbols.radio_button_unchecked.codePoint: CupertinoIcons.circle,
-    Symbols.hourglass_top.codePoint: CupertinoIcons.time,
+    Symbols.hourglass_top.codePoint: CupertinoIcons.hourglass,
     Symbols.delete_sweep.codePoint: CupertinoIcons.delete,
     Symbols.campaign.codePoint: CupertinoIcons.speaker_3,
     Symbols.badge.codePoint: CupertinoIcons.person_crop_circle_badge_checkmark,
@@ -1938,137 +1937,114 @@ abstract final class IosSymbols {
     Symbols.contact_phone.codePoint: CupertinoIcons.phone,
     Symbols.keyboard_alt.codePoint: CupertinoIcons.keyboard,
     Symbols.wifi_off.codePoint: CupertinoIcons.wifi_slash,
-    Symbols.cloud_off.codePoint: CupertinoIcons.cloud,
     Symbols.amp_stories.codePoint: CupertinoIcons.rectangle_stack,
-    Symbols.show_chart.codePoint: CupertinoIcons.chart_bar,
-    Symbols.smart_toy.codePoint: CupertinoIcons.desktopcomputer,
+    Symbols.show_chart.codePoint: CupertinoIcons.graph_square,
     Symbols.brightness_auto.codePoint: CupertinoIcons.circle_lefthalf_fill,
     Symbols.light_mode.codePoint: CupertinoIcons.sun_max,
     Symbols.add_a_photo.codePoint: CupertinoIcons.camera,
     Symbols.add_circle_outline.codePoint: CupertinoIcons.plus,
-    Symbols.animation.codePoint: CupertinoIcons.circle,
+    Symbols.animation.codePoint: CupertinoIcons.sparkles,
     Symbols.arrow_downward.codePoint: CupertinoIcons.arrow_down,
     Symbols.arrow_right_alt.codePoint: CupertinoIcons.arrow_right,
-    Symbols.arrow_split.codePoint: CupertinoIcons.arrow_right,
+    Symbols.arrow_split.codePoint: CupertinoIcons.arrow_branch,
     Symbols.arrow_upward.codePoint: CupertinoIcons.arrow_up,
-    Symbols.article.codePoint: CupertinoIcons.circle,
+    Symbols.article.codePoint: CupertinoIcons.doc_text,
     Symbols.attach_file.codePoint: CupertinoIcons.paperclip,
     Symbols.autorenew.codePoint: CupertinoIcons.arrow_2_circlepath,
     Symbols.back_hand.codePoint: CupertinoIcons.hand_raised,
-    Symbols.bedtime.codePoint: CupertinoIcons.circle,
-    Symbols.bluetooth_disabled.codePoint: CupertinoIcons.circle,
-    Symbols.blur_circular.codePoint: CupertinoIcons.circle,
-    Symbols.blur_linear.codePoint: CupertinoIcons.circle,
-    Symbols.blur_on.codePoint: CupertinoIcons.circle,
-    Symbols.bubble_chart.codePoint: CupertinoIcons.circle,
+    Symbols.bedtime.codePoint: CupertinoIcons.moon,
+    Symbols.blur_circular.codePoint: CupertinoIcons.circle_grid_hex,
+    Symbols.bubble_chart.codePoint: CupertinoIcons.chart_pie,
     Symbols.bug_report.codePoint: CupertinoIcons.ant,
-    Symbols.call_missed.codePoint: CupertinoIcons.phone_down,
-    Symbols.camera_alt.codePoint: CupertinoIcons.photo,
+    Symbols.camera_alt.codePoint: CupertinoIcons.camera,
     Symbols.camera_front.codePoint: CupertinoIcons.camera,
-    Symbols.camera_rear.codePoint: CupertinoIcons.photo,
-    Symbols.cell_tower.codePoint: CupertinoIcons.circle,
+    Symbols.camera_rear.codePoint: CupertinoIcons.camera,
+    Symbols.cell_tower.codePoint: CupertinoIcons.antenna_radiowaves_left_right,
     Symbols.check_box.codePoint: CupertinoIcons.checkmark_square,
     Symbols.check_box_outline_blank.codePoint: CupertinoIcons.square,
     Symbols.circle.codePoint: CupertinoIcons.circle,
-    Symbols.close_fullscreen.codePoint: CupertinoIcons.circle,
+    Symbols.close_fullscreen.codePoint: CupertinoIcons.arrow_down_right_arrow_up_left,
     Symbols.cloud.codePoint: CupertinoIcons.cloud,
-    Symbols.cloud_done.codePoint: CupertinoIcons.checkmark,
-    Symbols.code.codePoint: CupertinoIcons.circle,
-    Symbols.contact_page.codePoint: CupertinoIcons.circle,
-    Symbols.contrast.codePoint: CupertinoIcons.circle,
+    Symbols.code.codePoint: CupertinoIcons.chevron_left_slash_chevron_right,
+    Symbols.contact_page.codePoint: CupertinoIcons.person_crop_rectangle,
+    Symbols.contrast.codePoint: CupertinoIcons.circle_lefthalf_fill,
     Symbols.delete_history.codePoint: CupertinoIcons.delete,
-    Symbols.dialpad.codePoint: CupertinoIcons.circle,
-    Symbols.dns.codePoint: CupertinoIcons.cloud,
-    Symbols.do_not_disturb_on.codePoint: CupertinoIcons.circle,
+    Symbols.dialpad.codePoint: CupertinoIcons.circle_grid_3x3_fill,
+    Symbols.do_not_disturb_on.codePoint: CupertinoIcons.minus_circle_fill,
     Symbols.do_not_touch.codePoint: CupertinoIcons.hand_raised_slash,
-    Symbols.edit_square.codePoint: CupertinoIcons.circle,
+    Symbols.edit_square.codePoint: CupertinoIcons.square_pencil,
     Symbols.emoji_emotions.codePoint: CupertinoIcons.smiley,
-    Symbols.encrypted.codePoint: CupertinoIcons.circle,
+    Symbols.encrypted.codePoint: CupertinoIcons.lock_shield,
     Symbols.error.codePoint: CupertinoIcons.exclamationmark_circle,
-    Symbols.exit_to_app.codePoint: CupertinoIcons.circle,
-    Symbols.extension.codePoint: CupertinoIcons.circle,
-    Symbols.face.codePoint: CupertinoIcons.circle,
-    Symbols.flash_off.codePoint: CupertinoIcons.circle,
-    Symbols.flip.codePoint: CupertinoIcons.circle,
-    Symbols.flip_camera_ios.codePoint: CupertinoIcons.photo,
-    Symbols.folder_off.codePoint: CupertinoIcons.folder,
-    Symbols.folder_zip.codePoint: CupertinoIcons.folder,
-    Symbols.format_quote.codePoint: CupertinoIcons.circle,
-    Symbols.format_size.codePoint: CupertinoIcons.circle,
-    Symbols.forum.codePoint: CupertinoIcons.circle,
+    Symbols.exit_to_app.codePoint: CupertinoIcons.square_arrow_right,
+    Symbols.face.codePoint: CupertinoIcons.smiley,
+    Symbols.flash_off.codePoint: CupertinoIcons.bolt_slash,
+    Symbols.flip.codePoint: CupertinoIcons.arrow_left_right_square,
+    Symbols.flip_camera_ios.codePoint: CupertinoIcons.camera_rotate,
+    Symbols.format_quote.codePoint: CupertinoIcons.quote_bubble,
+    Symbols.format_size.codePoint: CupertinoIcons.textformat_size,
+    Symbols.forum.codePoint: CupertinoIcons.chat_bubble_2,
     Symbols.fullscreen.codePoint: CupertinoIcons.fullscreen,
-    Symbols.gif_box.codePoint: CupertinoIcons.photo,
-    Symbols.gpp_bad.codePoint: CupertinoIcons.circle,
+    Symbols.gpp_bad.codePoint: CupertinoIcons.shield_slash,
     Symbols.gpp_maybe.codePoint: CupertinoIcons.shield,
-    Symbols.grid_on.codePoint: CupertinoIcons.circle,
-    Symbols.hd.codePoint: CupertinoIcons.circle,
-    Symbols.history_edu.codePoint: CupertinoIcons.circle,
+    Symbols.grid_on.codePoint: CupertinoIcons.grid,
+    Symbols.history_edu.codePoint: CupertinoIcons.book,
     Symbols.how_to_reg.codePoint: CupertinoIcons.person_crop_circle_badge_checkmark,
-    Symbols.ink_eraser.codePoint: CupertinoIcons.circle,
-    Symbols.ink_highlighter.codePoint: CupertinoIcons.circle,
-    Symbols.insert_drive_file.codePoint: CupertinoIcons.circle,
-    Symbols.install_mobile.codePoint: CupertinoIcons.circle,
-    Symbols.inventory_2.codePoint: CupertinoIcons.circle,
-    Symbols.ios_share.codePoint: CupertinoIcons.circle,
-    Symbols.key.codePoint: CupertinoIcons.lock_rotation,
+    Symbols.insert_drive_file.codePoint: CupertinoIcons.doc,
+    Symbols.install_mobile.codePoint: CupertinoIcons.arrow_down_to_line,
+    Symbols.inventory_2.codePoint: CupertinoIcons.archivebox,
+    Symbols.ios_share.codePoint: CupertinoIcons.share,
     Symbols.keyboard_arrow_up.codePoint: CupertinoIcons.chevron_up,
-    Symbols.lan.codePoint: CupertinoIcons.circle,
     Symbols.layers.codePoint: CupertinoIcons.square_stack,
-    Symbols.location_city.codePoint: CupertinoIcons.circle,
+    Symbols.location_city.codePoint: CupertinoIcons.building_2_fill,
     Symbols.lock_clock.codePoint: CupertinoIcons.lock,
-    Symbols.mark_chat_read.codePoint: CupertinoIcons.circle,
+    Symbols.mark_chat_read.codePoint: CupertinoIcons.chat_bubble_text,
     Symbols.memory.codePoint: CupertinoIcons.cube,
-    Symbols.menu.codePoint: CupertinoIcons.circle,
-    Symbols.missed_video_call.codePoint: CupertinoIcons.videocam,
-    Symbols.mode_comment.codePoint: CupertinoIcons.circle,
+    Symbols.menu.codePoint: CupertinoIcons.line_horizontal_3,
+    Symbols.mode_comment.codePoint: CupertinoIcons.chat_bubble,
     Symbols.mood.codePoint: CupertinoIcons.smiley,
     Symbols.mop.codePoint: CupertinoIcons.trash,
-    Symbols.motion_photos_on.codePoint: CupertinoIcons.photo,
-    Symbols.music_note.codePoint: CupertinoIcons.circle,
+    Symbols.music_note.codePoint: CupertinoIcons.music_note,
     Symbols.nfc.codePoint: CupertinoIcons.radiowaves_right,
-    Symbols.noise_control_on.codePoint: CupertinoIcons.circle,
+    Symbols.noise_control_on.codePoint: CupertinoIcons.waveform,
     Symbols.north_east.codePoint: CupertinoIcons.arrow_up_right,
     Symbols.notifications_off.codePoint: CupertinoIcons.bell_slash,
     Symbols.numbers.codePoint: CupertinoIcons.number,
-    Symbols.open_in_full.codePoint: CupertinoIcons.circle,
-    Symbols.open_in_new.codePoint: CupertinoIcons.circle,
+    Symbols.open_in_full.codePoint: CupertinoIcons.arrow_up_left_arrow_down_right,
+    Symbols.open_in_new.codePoint: CupertinoIcons.arrow_up_right_square,
     Symbols.person_remove.codePoint: CupertinoIcons.person_badge_minus,
     Symbols.picture_as_pdf.codePoint: CupertinoIcons.doc,
-    Symbols.priority_high.codePoint: CupertinoIcons.circle,
-    Symbols.qr_code_scanner.codePoint: CupertinoIcons.circle,
-    Symbols.radar.codePoint: CupertinoIcons.circle,
+    Symbols.priority_high.codePoint: CupertinoIcons.exclamationmark,
+    Symbols.qr_code_scanner.codePoint: CupertinoIcons.qrcode_viewfinder,
+    Symbols.radar.codePoint: CupertinoIcons.dot_radiowaves_left_right,
     Symbols.record_voice_over.codePoint: CupertinoIcons.person_crop_circle,
-    Symbols.rectangle.codePoint: CupertinoIcons.circle,
-    Symbols.remove_circle.codePoint: CupertinoIcons.delete,
+    Symbols.rectangle.codePoint: CupertinoIcons.rectangle,
+    Symbols.remove_circle.codePoint: CupertinoIcons.minus_circle_fill,
     Symbols.remove_moderator.codePoint: CupertinoIcons.person_badge_minus,
-    Symbols.rotate_right.codePoint: CupertinoIcons.circle,
+    Symbols.rotate_right.codePoint: CupertinoIcons.rotate_right,
     Symbols.save_alt.codePoint: CupertinoIcons.square_arrow_down,
-    Symbols.shield_lock.codePoint: CupertinoIcons.lock,
+    Symbols.shield_lock.codePoint: CupertinoIcons.lock_shield,
     Symbols.shield_person.codePoint: CupertinoIcons.shield,
     Symbols.slideshow.codePoint: CupertinoIcons.photo_on_rectangle,
-    Symbols.south_west.codePoint: CupertinoIcons.circle,
-    Symbols.stadia_controller.codePoint: CupertinoIcons.circle,
+    Symbols.south_west.codePoint: CupertinoIcons.arrow_down_left,
+    Symbols.stadia_controller.codePoint: CupertinoIcons.gamecontroller,
     Symbols.star.codePoint: CupertinoIcons.star,
-    Symbols.stay_current_portrait.codePoint: CupertinoIcons.circle,
+    Symbols.stay_current_portrait.codePoint: CupertinoIcons.device_phone_portrait,
     Symbols.stop_circle.codePoint: CupertinoIcons.stop_circle,
-    Symbols.styler.codePoint: CupertinoIcons.circle,
-    Symbols.swipe_right.codePoint: CupertinoIcons.circle,
+    Symbols.styler.codePoint: CupertinoIcons.paintbrush,
+    Symbols.swipe_right.codePoint: CupertinoIcons.hand_point_right,
     Symbols.sync.codePoint: CupertinoIcons.arrow_2_circlepath,
-    Symbols.system_update.codePoint: CupertinoIcons.circle,
+    Symbols.system_update.codePoint: CupertinoIcons.arrow_2_circlepath,
     Symbols.table_chart.codePoint: CupertinoIcons.table,
-    Symbols.terminal.codePoint: CupertinoIcons.circle,
-    Symbols.text_snippet.codePoint: CupertinoIcons.circle,
+    Symbols.text_snippet.codePoint: CupertinoIcons.doc_plaintext,
     Symbols.touch_app.codePoint: CupertinoIcons.hand_draw,
-    Symbols.translate.codePoint: CupertinoIcons.textformat,
     Symbols.unarchive.codePoint: CupertinoIcons.archivebox,
     Symbols.update.codePoint: CupertinoIcons.arrow_2_circlepath,
-    Symbols.vibration.codePoint: CupertinoIcons.circle,
-    Symbols.video_file.codePoint: CupertinoIcons.videocam,
+    Symbols.video_file.codePoint: CupertinoIcons.film,
     Symbols.visibility_lock.codePoint: CupertinoIcons.lock,
     Symbols.voice_over_off.codePoint: CupertinoIcons.mic_off,
-    Symbols.vpn_key.codePoint: CupertinoIcons.lock_shield,
-    Symbols.vpn_key_off.codePoint: CupertinoIcons.circle,
-    Symbols.water_drop.codePoint: CupertinoIcons.circle,
-    Symbols.wb_sunny.codePoint: CupertinoIcons.circle,
+    Symbols.vpn_key_off.codePoint: CupertinoIcons.lock_slash,
+    Symbols.water_drop.codePoint: CupertinoIcons.drop,
+    Symbols.wb_sunny.codePoint: CupertinoIcons.sun_max,
   };
 }

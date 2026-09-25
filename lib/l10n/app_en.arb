@@ -383,6 +383,8 @@
   "callLinkSent": "Link sent",
   "callLinkSendFailed": "Couldn't send the link",
   "callLinkCreateFailed": "Couldn't create the call",
+  "callsActionCreate": "New call",
+  "callsActionJoin": "Join",
   "callParticipantYou": "You",
   "callParticipantFallback": "Participant",
   "callTooltipMinimize": "Minimize",
@@ -1545,6 +1547,9 @@
   "chatActionArchive": "Archive",
   "chatActionUnarchive": "Unarchive",
   "chatActionSelect": "Select",
+  "chatListTitle": "Chats",
+  "chatListSearch": "Search",
+  "chatListDraft": "Draft: ",
   "chatListYesterday": "Yesterday",
   "chatListDatePattern": "M/d/yy",
   "chatActionDelete": "Delete"

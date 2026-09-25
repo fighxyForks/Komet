@@ -76,7 +76,7 @@ void main() {
       expect(status.dx, lessThan(time.dx));
     });
 
-    testWidgets('закреп — серый фон и крупная скрепка под датой', (
+    testWidgets('закреп — лёгкий оттенок и крупная скрепка под датой', (
       tester,
     ) async {
       await tester.pumpWidget(_app(_row(pinned: true)));
@@ -97,7 +97,7 @@ void main() {
       );
       final color = (box.decoration as BoxDecoration?)?.color;
       final context = tester.element(find.byType(IosChatRow));
-      expect(color, IosPalette.grouped(Theme.of(context).colorScheme));
+      expect(color, IosPalette.pinnedRow(Theme.of(context).colorScheme));
     });
 
     testWidgets('счётчик заглушённого чата серый', (tester) async {

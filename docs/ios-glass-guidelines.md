@@ -1,4 +1,4 @@
-# iOS glass budget and helpers
+# iOS glass rules and helpers
 
 Rules for Flutter-drawn chrome when `IosGlass` is on. Goal: keep scroll jank low while preserving the glass look when the UI is idle.
 
@@ -16,13 +16,13 @@ Rules for Flutter-drawn chrome when `IosGlass` is on. Goal: keep scroll jank low
 
 - Use `IosGlass.of(context)` for layout, typography, icons, hit targets, sheets, alerts, and Flutter-drawn chrome.
 - Use `AppIosGlass.nativeViews` (or `NativeGlassGate`) **only** when constructing a `native_liquid_glass` widget (`LiquidGlassTabBar`, `LiquidGlassContainer`, `LiquidGlassAlert`, segmented control, …). Never assume `IosGlass.of` implies a UiKitView.
-- On every iOS version with style on, a `GlassCapsule` that is not showing a native view uses an opaque fill. That includes iOS 26 while a route is moving, Reduce Motion, Reduce Transparency, and any capsule with `allowNative: false` (composer, pinned banner, scroll-down). Do not leave an empty `SizedBox` where a tab bar or control should be — use the Flutter fallback (`SlidingPillNav`, `GlassSegmentTrack`, Cupertino alerts).
+- On every iOS version with style on, a `GlassCapsule` that is not showing a native view uses an opaque fill. That includes iOS 26 while a route is moving, Reduce Motion, Reduce Transparency, and any capsule with `allowNative: false`. Do not leave an empty `SizedBox` where a tab bar or control should be — use the Flutter fallback (`SlidingPillNav`, `GlassSegmentTrack`, Cupertino alerts).
 - Material / Android / desktop: both tiers stay off.
 
-## Glass budget
+## Glass rules
 
-1. **At most 1–2 native platform views per screen** (tab bar, a glass menu, an alert, a segmented control). Never put a platform view in a list row or message bubble.
-2. **No live `BackdropFilter` / `ImageFilter.blur` over scrolling content.** On iOS the Flutter glass fallback stays opaque, including after the scroll settles. A chat header is one native container, not one platform view per button.
+1. **There is no per-screen limit on native glass.** Floating chrome uses a separate native capsule per object — in a chat: back, title, header actions, composer field, composer action (send / mic / video), scroll-down, pinned banner, channel bar, selection buttons. Never put a platform view in a list row or message bubble: it scrolls with the content and is created again for every row.
+2. **No live `BackdropFilter` / `ImageFilter.blur` over scrolling content.** On iOS the Flutter glass fallback stays opaque, including after the scroll settles. `forceOpaque` only applies to that fallback: a capsule already showing native glass keeps it while the chat scrolls, instead of tearing the platform view down on every drag.
 3. Prefer opaque fills during drag and ballistic scroll. Material chrome may still restore a blur after scroll settles; iOS style chrome does not.
 4. Use hysteresis for header / stories open-close thresholds so slow drags around the boundary do not flip-flop layout.
 5. Prefer fixed extent and stable keys on long lists when row height is known.
@@ -66,7 +66,7 @@ Prefer one Flutter-drawn frosted surface (no live blur over the chat, `GlassSupp
 
 ## Call controls
 
-In iOS mode call buttons use Flutter-drawn glass (tint + rim + shadow) and `IosTappable` highlight — never Material `InkWell` ripple. Respect the platform-view budget: prefer one shared native glass container for a tight button **group**, or Flutter-drawn glass for spaced circular controls with labels (do **not** allocate one platform view per button). Targets ≥ 44 pt; expose VoiceOver labels via `Semantics` / tooltips.
+In iOS mode call buttons use Flutter-drawn glass (tint + rim + shadow) and `IosTappable` highlight — never Material `InkWell` ripple. Targets ≥ 44 pt; expose VoiceOver labels via `Semantics` / tooltips.
 
 ## Settings large title
 
