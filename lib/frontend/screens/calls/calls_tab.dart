@@ -366,6 +366,17 @@ class _CallsTabState extends State<CallsTab>
     required VoidCallback onTap,
     bool alignEnd = false,
   }) {
+    final ios = IosGlass.of(context);
+    final text = Text(
+      label,
+      style: TextStyle(
+        color: cs.primary,
+        fontSize: ios ? IosTypography.listTitle : 16,
+        fontWeight: FontWeight.w500,
+      ),
+      maxLines: 1,
+      overflow: ios ? TextOverflow.visible : TextOverflow.ellipsis,
+    );
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -379,16 +390,15 @@ class _CallsTabState extends State<CallsTab>
             Icon(icon, color: cs.primary, size: 24),
             const SizedBox(width: 12),
             Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: cs.primary,
-                  fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: ios
+                  ? FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: alignEnd
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
+                      child: text,
+                    )
+                  : text,
             ),
           ],
         ),
@@ -494,6 +504,7 @@ class _CallsTabState extends State<CallsTab>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     final filteredCalls = _selectedTabIndex == 1
         ? _calls.where((c) => c.status == CallStatus.missed).toList()
@@ -541,7 +552,7 @@ class _CallsTabState extends State<CallsTab>
                     child: _buildLinkAction(
                       cs,
                       icon: IosSymbols.link(context),
-                      label: 'Создать звонок',
+                      label: ios ? l10n.callsActionCreate : 'Создать звонок',
                       onTap: _createGroupCall,
                     ),
                   ),
@@ -549,7 +560,7 @@ class _CallsTabState extends State<CallsTab>
                     child: _buildLinkAction(
                       cs,
                       icon: IosSymbols.personAddGroup(context),
-                      label: 'Присоединиться',
+                      label: ios ? l10n.callsActionJoin : 'Присоединиться',
                       onTap: _joinGroupCall,
                       alignEnd: true,
                     ),

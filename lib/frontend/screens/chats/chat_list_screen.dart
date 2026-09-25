@@ -1933,7 +1933,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     final ios = IosGlass.of(context);
     final iosTopBar = ios && !_shareMode && !widget.forwardMode;
     return ColoredBox(
-      color: ios ? IosPalette.grouped(cs) : cs.surface,
+      color: ios ? IosPalette.background(cs) : cs.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3019,8 +3019,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     if (!ios) return scaffold;
     final top = MediaQuery.paddingOf(context).top;
     final topColor = iosChatsTop
-        ? IosPalette.grouped(cs)
-        : IosPalette.background(cs);
+        ? IosPalette.background(cs)
+        : IosPalette.grouped(cs);
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: IosPalette.overlayFor(topColor),
       child: Stack(
@@ -3996,6 +3996,8 @@ class _ChatListScreenState extends State<ChatListScreen>
       radius: avatarRadius,
       backgroundColor: isSavedMessages
           ? cs.primary
+          : ios
+          ? cs.primaryContainer
           : cs.surfaceContainerHighest,
       backgroundImage: (!isSavedMessages && imageUrl.isNotEmpty)
           ? CachedNetworkImageProvider(
@@ -4014,7 +4016,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                 ? Text(
                     name.isNotEmpty ? name[0].toUpperCase() : '?',
                     style: TextStyle(
-                      color: cs.onSurfaceVariant,
+                      color: ios ? cs.onPrimaryContainer : cs.onSurfaceVariant,
                       fontSize: ios ? 24 : (story == null ? 20 : 17),
                     ),
                   )
