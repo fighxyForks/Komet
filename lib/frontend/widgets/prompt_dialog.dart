@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/config/app_fonts.dart';
 import '../../core/config/app_shape.dart';
+import '../../core/native/native_alert_bridge.dart';
 import 'glass/ios_glass.dart';
 
 Future<String?> showTextInputDialog(
@@ -18,6 +19,18 @@ Future<String?> showTextInputDialog(
   TextInputType? keyboardType,
 }) async {
   if (IosGlass.of(context)) {
+    final native = await NativeAlertBridge.prompt(
+      title: title,
+      message: description,
+      placeholder: hint,
+      text: initialValue,
+      confirm: confirmLabel,
+      cancel: cancelLabel,
+      secure: obscureText,
+      keyboardType: keyboardType,
+    );
+    if (native != null) return native.text;
+    if (!context.mounted) return null;
     return showCupertinoDialog<String>(
       context: context,
       builder: (dialogContext) => _IosTextPrompt(

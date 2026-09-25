@@ -50,6 +50,9 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       registerNativeTabChrome(messenger)
       registerNativeChatList(messenger, host: controller)
       registerNativeList(messenger, host: controller)
+      method("ru.komet.app/native_alert", messenger) { call, result in
+        KometNativeAlert.shared.handle(call, result: result)
+      }
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
