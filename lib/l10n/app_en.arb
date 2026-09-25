@@ -1545,5 +1545,8 @@
   "chatActionArchive": "Archive",
   "chatActionUnarchive": "Unarchive",
   "chatActionSelect": "Select",
+  "chatListTitle": "Chats",
+  "chatListSearch": "Search",
+  "chatListDraft": "Draft: ",
   "chatActionDelete": "Delete"
 }

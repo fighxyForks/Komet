@@ -77,6 +77,9 @@ const Set<ChatPreviewKind> _iconWithCaption = {
   ChatPreviewKind.missedVideoCall,
 };
 
+bool previewKindHasIcon(ChatPreviewKind kind) =>
+    _iconWithCaption.contains(kind);
+
 class ChatPreviewLine extends StatelessWidget {
   final String prefix;
   final String text;
@@ -168,7 +171,7 @@ class ChatPreviewLine extends StatelessWidget {
         ),
       );
     }
-    if (!labelled && !_iconWithCaption.contains(preview.kind)) return null;
+    if (!labelled && !previewKindHasIcon(preview.kind)) return null;
     return Padding(
       padding: EdgeInsets.only(right: gap),
       child: Icon(

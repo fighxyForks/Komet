@@ -1216,5 +1216,8 @@
   "chatActionArchive": "В архив",
   "chatActionUnarchive": "Из архива",
   "chatActionSelect": "Выбрать",
+  "chatListTitle": "Чаты",
+  "chatListSearch": "Поиск",
+  "chatListDraft": "Черновик: ",
   "chatActionDelete": "Удалить"
 }

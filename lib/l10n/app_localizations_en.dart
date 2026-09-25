@@ -3577,5 +3577,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatActionSelect => 'Select';
 
   @override
+  String get chatListTitle => 'Chats';
+
+  @override
+  String get chatListSearch => 'Search';
+
+  @override
+  String get chatListDraft => 'Draft: ';
+
+  @override
   String get chatActionDelete => 'Delete';
 }

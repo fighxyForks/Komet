@@ -31,7 +31,9 @@ import '../calls/call_screen.dart';
 import '../../../core/config/app_ios_glass.dart';
 import '../../../core/config/app_native_tab_minimize_prototype.dart';
 import '../../native/native_tab_chrome.dart';
+import '../../../core/native/native_chat_list_bridge.dart';
 import '../../../core/native/native_tab_chrome_bridge.dart';
+import '../../native/native_chat_list_view.dart';
 import '../../../core/utils/perf_trace.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
@@ -378,6 +380,8 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   List<CachedChat> _chats = [];
   List<CachedChat> _chatsWithArchived = [];
+  final ValueNotifier<int> _nativeDecryptionTick = ValueNotifier<int>(0);
+  final Map<String, VoidCallback> _nativeDecryptionWatch = {};
   Set<int> _archivedIds = const {};
   int _archivedCount = 0;
   bool _archiveHadChats = false;
@@ -1719,6 +1723,13 @@ class _ChatListScreenState extends State<ChatListScreen>
   @override
   void dispose() {
     if (ChatListScreen._root == this) ChatListScreen._root = null;
+    for (final entry in _nativeDecryptionWatch.entries) {
+      MessageDecryptionCache.instance
+          .listenableFor(entry.key)
+          .removeListener(entry.value);
+    }
+    _nativeDecryptionWatch.clear();
+    _nativeDecryptionTick.dispose();
     _shareCaption?.dispose();
     appRouteObserver.unsubscribe(this);
     _settleTimer?.cancel();
@@ -2374,130 +2385,36 @@ class _ChatListScreenState extends State<ChatListScreen>
                       key: ValueKey('chat_${baseChat.id}'),
                       valueListenable: chats.chatListenable(baseChat.id),
                       builder: (context, chat, _) {
-                        final isPinned = (chat.favIndex ?? 0) > 0;
-
-                        if (chat.type.isNotEmpty &&
-                            chat.type == "DIALOG" &&
-                            chat.id != 0) {
-                          int secondId = _profile?.id ?? 0;
-                          for (final entry in chat.participants.entries) {
-                            if (entry.key != _profile?.id) {
-                              secondId = entry.key;
-                              break;
-                            }
-                          }
-                          final name = ContactCache.get(secondId) ?? chat.title;
-                          final avatar =
-                              ContactCache.getAvatar(secondId) ?? chat.iconUrl;
-                          final isVerified =
-                              ContactCache.isOfficial(secondId) ||
-                              chat.isOfficial;
-
-                          final isPlaceholder = chat.isLastMsgDeleted;
-                          final previewText = isPlaceholder
-                              ? 'зайдите в чат для подгрузки'
-                              : (chat.lastMsgTextOneLine ?? '');
-                          return _animateChatTile(
-                            chat.id.toString(),
-                            _buildChatItem(
-                              chat.id.toString(),
-                              name ?? "Пользователь",
-                              previewText,
-                              _formatTime(chat.lastMsgTime),
-                              avatar ?? "",
-                              presenceUserId: secondId,
-                              unreadCount: chat.unreadCount,
-                              hasMention: chat.hasUnreadMention,
-                              isMuted: chat.isMuted,
-                              isVerified: isVerified,
-                              isPinned: isPinned,
-                              chatType: "DIALOG",
-                              messageItalic: isPlaceholder,
-                              draft: _draftFor(chat.id),
-                              ownStatus: _ownStatusFor(chat, isPlaceholder),
-                              ownRead: chat.lastMsgReadByOthers,
-                              messageRanges: isPlaceholder
-                                  ? const []
-                                  : chat.lastMsgFormatRanges,
-                              previewMessageId: isPlaceholder
-                                  ? null
-                                  : chat.lastMsgId,
-                              previewCipherText: isPlaceholder
-                                  ? null
-                                  : chat.lastMsgTextOneLine,
-                              previewMedia: isPlaceholder
-                                  ? null
-                                  : chat.lastMsgMedia,
-                              titleIcon: chatKindIcon('DIALOG',
-                                isBot: _isBotDialog(secondId, chat),
-                              ),
-                              hasMiniApp: _hasMiniApp(secondId, chat),
-                              hasCall: chat.activeCall != null,
-                            ),
-                          );
-                        } else {
-                          final isPlaceholder = chat.isLastMsgDeleted;
-                          final isSavedWelcome =
-                              chat.id == 0 &&
-                              chat.lastMsgText == _savedWelcomeKey;
-                          final sender = chat.lastMsgSenderId != null
-                              ? ContactCache.get(chat.lastMsgSenderId!)
-                              : null;
-
-                          final senderPrefix =
-                              !isPlaceholder &&
-                                  sender?.isNotEmpty == true &&
-                                  chat.id != 0
-                              ? "$sender: "
-                              : "";
-                          final body = isPlaceholder
-                              ? 'зайдите в чат для подгрузки'
-                              : isSavedWelcome
-                              ? AppLocalizations.of(
-                                  context,
-                                )!.savedMessagesEmptyPreview
-                              : (chat.lastMsgTextOneLine ?? '');
-
-                          return _animateChatTile(
-                            chat.id.toString(),
-                            _buildChatItem(
-                              chat.id.toString(),
-                              chat.id == 0 ? "Избранное" : chat.title ?? "Чат",
-                              body,
-                              _formatTime(chat.lastMsgTime),
-                              (chat.iconUrl != null && chat.iconUrl!.isNotEmpty)
-                                  ? chat.iconUrl!
-                                  : '',
-                              unreadCount: chat.unreadCount,
-                              hasMention: chat.hasUnreadMention,
-                              isMuted: chat.isMuted,
-                              isVerified: chat.isOfficial,
-                              isPinned: isPinned,
-                              chatType: chat.type,
-                              messageItalic: isPlaceholder || isSavedWelcome,
-                              draft: chat.id == 0 ? null : _draftFor(chat.id),
-                              ownStatus: _ownStatusFor(chat, isPlaceholder),
-                              ownRead: chat.lastMsgReadByOthers,
-                              messageRanges: isPlaceholder || isSavedWelcome
-                                  ? const []
-                                  : chat.lastMsgFormatRanges,
-                              previewMessageId: isPlaceholder
-                                  ? null
-                                  : chat.lastMsgId,
-                              previewPrefix: senderPrefix,
-                              previewCipherText: isPlaceholder || isSavedWelcome
-                                  ? null
-                                  : chat.lastMsgText,
-                              previewMedia: isPlaceholder
-                                  ? null
-                                  : chat.lastMsgMedia,
-                              titleIcon: chat.id == 0
-                                  ? null
-                                  : chatKindIcon(chat.type, isBot: false),
-                              hasCall: chat.activeCall != null,
-                            ),
-                          );
-                        }
+                        final facts = _rowFacts(chat);
+                        return _animateChatTile(
+                          facts.id,
+                          _buildChatItem(
+                            facts.id,
+                            facts.name,
+                            facts.message,
+                            facts.time,
+                            facts.imageUrl,
+                            presenceUserId: facts.presenceUserId,
+                            unreadCount: facts.unreadCount,
+                            hasMention: facts.hasMention,
+                            isMuted: facts.isMuted,
+                            isVerified: facts.isVerified,
+                            isPinned: facts.isPinned,
+                            chatType: facts.chatType,
+                            messageItalic: facts.messageItalic,
+                            draft: facts.draft,
+                            ownStatus: facts.ownStatus,
+                            ownRead: facts.ownRead,
+                            messageRanges: facts.messageRanges,
+                            previewMessageId: facts.previewMessageId,
+                            previewPrefix: facts.previewPrefix,
+                            previewCipherText: facts.previewCipherText,
+                            previewMedia: facts.previewMedia,
+                            titleIcon: facts.titleIcon,
+                            hasMiniApp: facts.hasMiniApp,
+                            hasCall: facts.hasCall,
+                          ),
+                        );
                       },
                     );
                   },
@@ -2524,6 +2441,15 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   Widget _buildChatsTabBody() {
+    return ListenableBuilder(
+      listenable: NativeChatListBridge.eligibility,
+      builder: (context, _) => _useNativeChatList
+          ? _buildNativeChatList()
+          : _buildFlutterChatsTabBody(),
+    );
+  }
+
+  Widget _buildFlutterChatsTabBody() {
     return Listener(
       onPointerDown: (_) {
         _storiesLockdownUntil = DateTime.fromMillisecondsSinceEpoch(0);
@@ -3593,6 +3519,320 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
+  bool _isEncryptedChat(int chatId) {
+    final me = _profile?.id ?? 0;
+    return ChatEncryptionStore.instance.isEnabled(me, chatId) ||
+        E2eeService.instance.isOn(me, chatId);
+  }
+
+  bool _isE2eeVerified(int chatId) {
+    final info = E2eeService.instance.info(_profile?.id ?? 0, chatId);
+    return info?.phase == E2eePhase.established && info!.verified;
+  }
+
+  bool get _useNativeChatList =>
+      IosGlass.of(context) &&
+      NativeChatListBridge.isEligible &&
+      !widget.forwardMode &&
+      !widget.archiveMode &&
+      !_shareMode &&
+      widget.onChatSelected == null;
+
+  Widget _buildNativeChatList() {
+    final pageChats = _isInitialLoading
+        ? const <CachedChat>[]
+        : _chatsForPageIndex(_selectedFolderIndex);
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        for (final chat in pageChats) chats.chatListenable(chat.id),
+        _nativeDecryptionTick,
+      ]),
+      builder: (context, _) => NativeChatListView(
+        rows: [
+          for (final chat in pageChats)
+            _nativeRowFor(chats.chatListenable(chat.id).value),
+        ],
+        chrome: _nativeChatListChrome(),
+        callbacks: NativeChatListCallbacks(
+          onOpen: _openNativeChat,
+          onAction: _onNativeChatAction,
+          onCompose: _showIosCreateMenu,
+          onMenu: _showIosOverflowMenu,
+        ),
+      ),
+    );
+  }
+
+  Map<String, Object?> _nativeChatListChrome() {
+    final l10n = AppLocalizations.of(context)!;
+    final status = connectionStatusLabel(_sessionState);
+    return {
+      'title': status ?? l10n.chatListTitle,
+      'busy': status != null,
+      'accent': Theme.of(context).colorScheme.primary.toARGB32(),
+      'bottomInset': 100.0,
+      'search': l10n.chatListSearch,
+      'draft': l10n.chatListDraft,
+      'markRead': l10n.chatPreviewMarkRead,
+      'pin': l10n.chatActionPin,
+      'unpin': l10n.chatActionUnpin,
+      'mute': l10n.chatActionMute,
+      'unmute': l10n.chatActionUnmute,
+      'archive': l10n.chatActionArchive,
+      'delete': l10n.chatActionDelete,
+    };
+  }
+
+  NativeChatRow _nativeRowFor(CachedChat chat) {
+    final facts = _rowFacts(chat);
+    final preview = _nativePreview(facts, chat.id);
+    final prefix = facts.previewPrefix;
+    return NativeChatRow(
+      id: chat.id,
+      title: facts.name,
+      avatarUrl: facts.imageUrl,
+      saved: chat.id == 0,
+      kind: chat.id == 0 ? null : _nativeKind(facts.chatType, facts.isBot),
+      encrypted: _isEncryptedChat(chat.id),
+      verified: _isE2eeVerified(chat.id),
+      muted: facts.isMuted,
+      pinned: facts.isPinned,
+      time: facts.time,
+      author: prefix.endsWith(': ')
+          ? prefix.substring(0, prefix.length - 2)
+          : '',
+      text: preview.text,
+      mediaKind: preview.mediaKind,
+      italic: preview.italic,
+      draft: facts.draft,
+      status: facts.draft == null
+          ? _nativeStatus(facts.ownStatus, facts.ownRead)
+          : null,
+      unread: facts.unreadCount,
+      mention: facts.hasMention,
+      canMarkRead: facts.unreadCount > 0 && chat.lastMsgId != null,
+      canDelete: _selectionDeleteCategoryFor([chat]) != null,
+    );
+  }
+
+  ({String text, String? mediaKind, bool italic}) _nativePreview(
+    _ChatRowFacts facts,
+    int chatId,
+  ) {
+    final messageId = facts.previewMessageId;
+    final cipherText = facts.previewCipherText;
+    if (facts.draft == null &&
+        messageId != null &&
+        (cipherText?.isNotEmpty ?? false) &&
+        _isEncryptedChat(chatId)) {
+      switch (_nativeDecryption(chatId, messageId.toString(), cipherText!)) {
+        case null:
+          break;
+        case MessageDecryption(
+          state: MessageDecryptionState.decrypted,
+          :final plaintext,
+        ):
+          return (
+            text: plaintext ?? '',
+            mediaKind: null,
+            italic: facts.messageItalic,
+          );
+        case MessageDecryption(state: MessageDecryptionState.wrongKey):
+          return (text: 'неверный ключ', mediaKind: null, italic: true);
+        case MessageDecryption(state: MessageDecryptionState.unavailable):
+          return (
+            text: 'недоступно на этом устройстве',
+            mediaKind: null,
+            italic: true,
+          );
+      }
+    }
+    final media = facts.previewMedia;
+    if (media == null) {
+      return (
+        text: facts.message,
+        mediaKind: null,
+        italic: facts.messageItalic,
+      );
+    }
+    final label = media.label;
+    final detail = media.detail;
+    final labelled = label != null || detail != null;
+    final showsIcon =
+        media.thumbs.isNotEmpty || labelled || previewKindHasIcon(media.kind);
+    final String body;
+    if (detail != null) {
+      body = detail;
+    } else if (label != null) {
+      body = label;
+    } else {
+      body = facts.message;
+    }
+    return (
+      text: body,
+      mediaKind: showsIcon ? media.kind.name : null,
+      italic: facts.messageItalic,
+    );
+  }
+
+  MessageDecryption? _nativeDecryption(
+    int chatId,
+    String messageId,
+    String cipherText,
+  ) {
+    final cache = MessageDecryptionCache.instance;
+    final entry = cache.listenableFor(messageId);
+    final value = entry.value;
+    if (value != null) return value;
+    if (!_nativeDecryptionWatch.containsKey(messageId)) {
+      void onDecrypted() {
+        entry.removeListener(onDecrypted);
+        _nativeDecryptionWatch.remove(messageId);
+        _nativeDecryptionTick.value++;
+      }
+
+      _nativeDecryptionWatch[messageId] = onDecrypted;
+      entry.addListener(onDecrypted);
+      cache.request(
+        accountId: _profile?.id ?? 0,
+        chatId: chatId,
+        messageId: messageId,
+        cipherText: cipherText,
+      );
+    }
+    return null;
+  }
+
+  static String? _nativeKind(String chatType, bool isBot) => switch (chatType) {
+    'CHANNEL' => 'channel',
+    'CHAT' || 'GROUP' => 'group',
+    _ => isBot ? 'bot' : null,
+  };
+
+  static NativeChatStatus? _nativeStatus(String? status, bool read) {
+    if (status == null) return null;
+    if (isSendingStatus(status)) return NativeChatStatus.sending;
+    if (status == 'error') return NativeChatStatus.error;
+    return read ? NativeChatStatus.read : NativeChatStatus.sent;
+  }
+
+  void _openNativeChat(int chatId) {
+    final chat = _chatById(chatId);
+    if (chat == null) return;
+    final facts = _rowFacts(chat);
+    _openChatFromList(facts.id, facts.name, facts.imageUrl, facts.chatType);
+  }
+
+  void _onNativeChatAction(int chatId, NativeChatAction action) {
+    final chat = _chatById(chatId);
+    if (chat == null) return;
+    switch (action) {
+      case NativeChatAction.markRead:
+        unawaited(_markChatRead(chatId));
+      case NativeChatAction.pin || NativeChatAction.unpin:
+        unawaited(_pinChats([chat]));
+      case NativeChatAction.mute || NativeChatAction.unmute:
+        unawaited(_muteChats([chat]));
+      case NativeChatAction.archive:
+        unawaited(_archiveChats([chat]));
+      case NativeChatAction.delete:
+        unawaited(_deleteChats({chatId}));
+    }
+  }
+
+  _ChatRowFacts _rowFacts(CachedChat chat) {
+    final id = chat.id.toString();
+    final isPinned = (chat.favIndex ?? 0) > 0;
+    final isPlaceholder = chat.isLastMsgDeleted;
+    final time = _formatTime(chat.lastMsgTime);
+    final ownStatus = _ownStatusFor(chat, isPlaceholder);
+    final hasCall = chat.activeCall != null;
+    if (chat.type.isNotEmpty && chat.type == "DIALOG" && chat.id != 0) {
+      int secondId = _profile?.id ?? 0;
+      for (final entry in chat.participants.entries) {
+        if (entry.key != _profile?.id) {
+          secondId = entry.key;
+          break;
+        }
+      }
+      final isBot = _isBotDialog(secondId, chat);
+      return _ChatRowFacts(
+        id: id,
+        name: ContactCache.get(secondId) ?? chat.title ?? "Пользователь",
+        message: isPlaceholder
+            ? 'зайдите в чат для подгрузки'
+            : (chat.lastMsgTextOneLine ?? ''),
+        time: time,
+        imageUrl: ContactCache.getAvatar(secondId) ?? chat.iconUrl ?? "",
+        presenceUserId: secondId,
+        unreadCount: chat.unreadCount,
+        hasMention: chat.hasUnreadMention,
+        isMuted: chat.isMuted,
+        isVerified: ContactCache.isOfficial(secondId) || chat.isOfficial,
+        isPinned: isPinned,
+        chatType: "DIALOG",
+        isBot: isBot,
+        messageItalic: isPlaceholder,
+        draft: _draftFor(chat.id),
+        ownStatus: ownStatus,
+        ownRead: chat.lastMsgReadByOthers,
+        messageRanges: isPlaceholder ? const [] : chat.lastMsgFormatRanges,
+        previewMessageId: isPlaceholder ? null : chat.lastMsgId,
+        previewPrefix: '',
+        previewCipherText: isPlaceholder ? null : chat.lastMsgTextOneLine,
+        previewMedia: isPlaceholder ? null : chat.lastMsgMedia,
+        titleIcon: chatKindIcon('DIALOG', isBot: isBot),
+        hasMiniApp: _hasMiniApp(secondId, chat),
+        hasCall: hasCall,
+      );
+    }
+    final isSavedWelcome = chat.id == 0 && chat.lastMsgText == _savedWelcomeKey;
+    final sender = chat.lastMsgSenderId != null
+        ? ContactCache.get(chat.lastMsgSenderId!)
+        : null;
+    final senderPrefix =
+        !isPlaceholder && sender?.isNotEmpty == true && chat.id != 0
+        ? "$sender: "
+        : "";
+    return _ChatRowFacts(
+      id: id,
+      name: chat.id == 0 ? "Избранное" : chat.title ?? "Чат",
+      message: isPlaceholder
+          ? 'зайдите в чат для подгрузки'
+          : isSavedWelcome
+          ? AppLocalizations.of(context)!.savedMessagesEmptyPreview
+          : (chat.lastMsgTextOneLine ?? ''),
+      time: time,
+      imageUrl: (chat.iconUrl != null && chat.iconUrl!.isNotEmpty)
+          ? chat.iconUrl!
+          : '',
+      presenceUserId: 0,
+      unreadCount: chat.unreadCount,
+      hasMention: chat.hasUnreadMention,
+      isMuted: chat.isMuted,
+      isVerified: chat.isOfficial,
+      isPinned: isPinned,
+      chatType: chat.type,
+      isBot: false,
+      messageItalic: isPlaceholder || isSavedWelcome,
+      draft: chat.id == 0 ? null : _draftFor(chat.id),
+      ownStatus: ownStatus,
+      ownRead: chat.lastMsgReadByOthers,
+      messageRanges: isPlaceholder || isSavedWelcome
+          ? const []
+          : chat.lastMsgFormatRanges,
+      previewMessageId: isPlaceholder ? null : chat.lastMsgId,
+      previewPrefix: senderPrefix,
+      previewCipherText: isPlaceholder || isSavedWelcome
+          ? null
+          : chat.lastMsgText,
+      previewMedia: isPlaceholder ? null : chat.lastMsgMedia,
+      titleIcon: chat.id == 0 ? null : chatKindIcon(chat.type, isBot: false),
+      hasMiniApp: false,
+      hasCall: hasCall,
+    );
+  }
+
   String? _draftFor(int chatId) {
     final raw = DraftStore.instance.get(_profile?.id ?? 0, chatId);
     if (raw == null) return null;
@@ -3897,18 +4137,8 @@ class _ChatListScreenState extends State<ChatListScreen>
   }) {
     final cs = Theme.of(context).colorScheme;
     final isSelected = _selectedChats.contains(id);
-    final e2eeInfo = E2eeService.instance.info(
-      _profile?.id ?? 0,
-      int.tryParse(id) ?? 0,
-    );
-    final isEncrypted =
-        ChatEncryptionStore.instance.isEnabled(
-          _profile?.id ?? 0,
-          int.tryParse(id) ?? 0,
-        ) ||
-        E2eeService.instance.isOn(_profile?.id ?? 0, int.tryParse(id) ?? 0);
-    final isVerified =
-        e2eeInfo?.phase == E2eePhase.established && e2eeInfo!.verified;
+    final isEncrypted = _isEncryptedChat(int.tryParse(id) ?? 0);
+    final isVerified = _isE2eeVerified(int.tryParse(id) ?? 0);
     final Widget? statusIcon = (ownStatus != null && draft == null)
         ? _ownStatusIcon(cs, ownStatus, ownRead)
         : null;
@@ -4745,6 +4975,62 @@ class _ChatListScreenState extends State<ChatListScreen>
       ),
     );
   }
+}
+
+class _ChatRowFacts {
+  final String id;
+  final String name;
+  final String message;
+  final String time;
+  final String imageUrl;
+  final int presenceUserId;
+  final int unreadCount;
+  final bool hasMention;
+  final bool isMuted;
+  final bool isVerified;
+  final bool isPinned;
+  final String chatType;
+  final bool isBot;
+  final bool messageItalic;
+  final String? draft;
+  final String? ownStatus;
+  final bool ownRead;
+  final List<FormatRange> messageRanges;
+  final int? previewMessageId;
+  final String previewPrefix;
+  final String? previewCipherText;
+  final ChatPreviewMedia? previewMedia;
+  final IconData? titleIcon;
+  final bool hasMiniApp;
+  final bool hasCall;
+
+  const _ChatRowFacts({
+    required this.id,
+    required this.name,
+    required this.message,
+    required this.time,
+    required this.imageUrl,
+    required this.presenceUserId,
+    required this.unreadCount,
+    required this.hasMention,
+    required this.isMuted,
+    required this.isVerified,
+    required this.isPinned,
+    required this.chatType,
+    required this.isBot,
+    required this.messageItalic,
+    required this.draft,
+    required this.ownStatus,
+    required this.ownRead,
+    required this.messageRanges,
+    required this.previewMessageId,
+    required this.previewPrefix,
+    required this.previewCipherText,
+    required this.previewMedia,
+    required this.titleIcon,
+    required this.hasMiniApp,
+    required this.hasCall,
+  });
 }
 
 class _StoriesUi extends ChangeNotifier {

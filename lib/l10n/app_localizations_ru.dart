@@ -3592,5 +3592,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatActionSelect => 'Выбрать';
 
   @override
+  String get chatListTitle => 'Чаты';
+
+  @override
+  String get chatListSearch => 'Поиск';
+
+  @override
+  String get chatListDraft => 'Черновик: ';
+
+  @override
   String get chatActionDelete => 'Удалить';
 }
