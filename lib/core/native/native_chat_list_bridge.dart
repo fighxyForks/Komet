@@ -8,6 +8,27 @@ enum NativeChatAction { markRead, pin, unpin, mute, unmute, archive, delete }
 
 enum NativeChatStatus { sending, sent, read, error }
 
+enum NativeChatBulkAction { readAll, read, archive, delete }
+
+@immutable
+class NativeSheetAction {
+  final String id;
+  final String title;
+  final bool destructive;
+
+  const NativeSheetAction({
+    required this.id,
+    required this.title,
+    this.destructive = false,
+  });
+
+  Map<String, Object?> toMap() => {
+    'id': id,
+    'title': title,
+    'destructive': destructive,
+  };
+}
+
 @immutable
 class NativeChatRow {
   final int id;
@@ -86,6 +107,95 @@ class NativeChatRow {
 }
 
 @immutable
+class NativeStoryItem {
+  final int ownerId;
+  final String title;
+  final String avatarUrl;
+  final int total;
+  final int read;
+  final bool isSelf;
+
+  const NativeStoryItem({
+    required this.ownerId,
+    required this.title,
+    this.avatarUrl = '',
+    this.total = 0,
+    this.read = 0,
+    this.isSelf = false,
+  });
+
+  Map<String, Object?> toMap() => {
+    'ownerId': ownerId,
+    'title': title,
+    'avatarUrl': avatarUrl,
+    'total': total,
+    'read': read,
+    'self': isSelf,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeStoryItem && mapEquals(toMap(), other.toMap());
+
+  @override
+  int get hashCode => Object.hashAll(toMap().values);
+}
+
+@immutable
+class NativeStories {
+  final bool visible;
+  final List<NativeStoryItem> items;
+
+  const NativeStories({this.visible = false, this.items = const []});
+
+  Map<String, Object?> toMap() => {
+    'visible': visible,
+    'items': [for (final item in items) item.toMap()],
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeStories &&
+      other.visible == visible &&
+      listEquals(other.items, items);
+
+  @override
+  int get hashCode => Object.hash(visible, Object.hashAll(items));
+}
+
+@immutable
+class NativeArchiveEntry {
+  final String title;
+  final String text;
+  final int count;
+  final int unread;
+  final bool pull;
+
+  const NativeArchiveEntry({
+    required this.title,
+    required this.count,
+    this.text = '',
+    this.unread = 0,
+    this.pull = true,
+  });
+
+  Map<String, Object?> toMap() => {
+    'title': title,
+    'text': text,
+    'count': count,
+    'unread': unread,
+    'pull': pull,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeArchiveEntry && mapEquals(toMap(), other.toMap());
+
+  @override
+  int get hashCode => Object.hashAll(toMap().values);
+}
+
+@immutable
 class NativeChatListUpdate {
   final List<int>? order;
   final List<NativeChatRow> rows;
@@ -122,14 +232,54 @@ class NativeChatListCallbacks {
   final ValueChanged<int> onOpen;
   final void Function(int id, NativeChatAction action) onAction;
   final ValueChanged<Rect> onCompose;
-  final ValueChanged<Rect> onMenu;
+  final ValueChanged<Rect> onDownloads;
+  final ValueChanged<Rect> onLock;
+  final ValueChanged<bool> onEditing;
+  final ValueChanged<List<int>> onSelection;
+  final void Function(NativeChatBulkAction action, List<int> ids) onBulk;
+  final ValueChanged<List<int>> onReorderPinned;
+  final void Function(int ownerId, Rect avatar) onStory;
+  final VoidCallback onAddStory;
+  final VoidCallback onArchive;
 
   const NativeChatListCallbacks({
     required this.onOpen,
     required this.onAction,
     required this.onCompose,
-    required this.onMenu,
+    required this.onDownloads,
+    required this.onLock,
+    required this.onEditing,
+    required this.onSelection,
+    required this.onBulk,
+    required this.onReorderPinned,
+    required this.onStory,
+    required this.onAddStory,
+    required this.onArchive,
   });
+}
+
+class NativeChatListCommands {
+  NativeChatListController? _controller;
+
+  bool get isAttached => _controller != null;
+
+  void attach(NativeChatListController controller) => _controller = controller;
+
+  void detach(NativeChatListController controller) {
+    if (identical(_controller, controller)) _controller = null;
+  }
+
+  Future<void> setEditing(bool on) async => _controller?.setEditing(on);
+
+  Future<String?> actionSheet({
+    String? title,
+    String? message,
+    required List<NativeSheetAction> actions,
+  }) async => _controller?.actionSheet(
+    title: title,
+    message: message,
+    actions: actions,
+  );
 }
 
 class NativeChatListController {
@@ -154,6 +304,33 @@ class NativeChatListController {
 
   Future<void> setChrome(Map<String, Object?> chrome) =>
       _invoke('setChrome', chrome);
+
+  Future<void> setEditing(bool on) => _invoke('setEditing', {'on': on});
+
+  Future<void> setStories(NativeStories stories) =>
+      _invoke('setStories', stories.toMap());
+
+  Future<void> setArchive(NativeArchiveEntry? archive) =>
+      _invoke('setArchive', {'archive': archive?.toMap()});
+
+  Future<String?> actionSheet({
+    String? title,
+    String? message,
+    required List<NativeSheetAction> actions,
+  }) async {
+    if (_disposed) return null;
+    try {
+      return await channel.invokeMethod<String>('actionSheet', {
+        'title': title,
+        'message': message,
+        'actions': [for (final action in actions) action.toMap()],
+      });
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
+  }
 
   Future<void> _invoke(String method, Object? arguments) async {
     if (_disposed) return;
@@ -180,10 +357,34 @@ class NativeChatListController {
         if (id is int && action != null) callbacks.onAction(id, action);
       case 'compose':
         callbacks.onCompose(_rectOf(args));
-      case 'menu':
-        callbacks.onMenu(_rectOf(args));
+      case 'downloads':
+        callbacks.onDownloads(_rectOf(args));
+      case 'lock':
+        callbacks.onLock(_rectOf(args));
+      case 'editing':
+        callbacks.onEditing(args['on'] == true);
+      case 'selection':
+        callbacks.onSelection(_idsOf(args));
+      case 'bulk':
+        final action = NativeChatBulkAction.values.asNameMap()[args['action']];
+        if (action != null) callbacks.onBulk(action, _idsOf(args));
+      case 'reorderPinned':
+        callbacks.onReorderPinned(_idsOf(args));
+      case 'story':
+        final ownerId = args['ownerId'];
+        if (ownerId is int) callbacks.onStory(ownerId, _rectOf(args));
+      case 'storyAdd':
+        callbacks.onAddStory();
+      case 'archive':
+        callbacks.onArchive();
     }
     return null;
+  }
+
+  static List<int> _idsOf(Map<String, Object?> args) {
+    final raw = args['ids'];
+    if (raw is! List) return const [];
+    return raw.whereType<int>().toList(growable: false);
   }
 
   static Rect _rectOf(Map<String, Object?> args) {

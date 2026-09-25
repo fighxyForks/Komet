@@ -18,7 +18,15 @@ NativeChatListCallbacks _callbacks(List<Object> log) => NativeChatListCallbacks(
   onOpen: (id) => log.add('open $id'),
   onAction: (id, action) => log.add('${action.name} $id'),
   onCompose: (rect) => log.add('compose $rect'),
-  onMenu: (rect) => log.add('menu $rect'),
+  onDownloads: (rect) => log.add('downloads $rect'),
+  onLock: (rect) => log.add('lock $rect'),
+  onEditing: (on) => log.add('editing $on'),
+  onSelection: (ids) => log.add('selection $ids'),
+  onBulk: (action, ids) => log.add('${action.name} $ids'),
+  onReorderPinned: (ids) => log.add('reorder $ids'),
+  onStory: (ownerId, rect) => log.add('story $ownerId $rect'),
+  onAddStory: () => log.add('storyAdd'),
+  onArchive: () => log.add('archive'),
 );
 
 void main() {
@@ -152,11 +160,185 @@ void main() {
       await send('action', {'id': 42, 'action': 'pin'});
       await send('action', {'id': 42, 'action': 'unknown'});
       await send('compose', {'x': 1, 'y': 2, 'width': 3, 'height': 4});
+      await send('downloads', {'x': 5, 'y': 6, 'width': 7, 'height': 8});
       expect(log, [
         'open 42',
         'pin 42',
         'compose ${const Rect.fromLTWH(1, 2, 3, 4)}',
+        'downloads ${const Rect.fromLTWH(5, 6, 7, 8)}',
       ]);
+    });
+
+    test('режим «Изменить»: выбор, действия и порядок закреплённых', () async {
+      final log = <Object>[];
+      final controller = NativeChatListController(5, _callbacks(log));
+      addTearDown(controller.dispose);
+      const codec = StandardMethodCodec();
+
+      Future<void> send(String method, Map<String, Object?> args) =>
+          messenger.handlePlatformMessage(
+            channelName,
+            codec.encodeMethodCall(MethodCall(method, args)),
+            (_) {},
+          );
+
+      await send('editing', {'on': true});
+      await send('selection', {
+        'ids': [3, 1],
+      });
+      await send('bulk', {
+        'action': 'delete',
+        'ids': [3, 1],
+      });
+      await send('bulk', {'action': 'readAll', 'ids': <int>[]});
+      await send('bulk', {
+        'action': 'explode',
+        'ids': [1],
+      });
+      await send('reorderPinned', {
+        'ids': [7, 5],
+      });
+      await send('editing', {'on': false});
+      expect(log, [
+        'editing true',
+        'selection [3, 1]',
+        'delete [3, 1]',
+        'readAll []',
+        'reorder [7, 5]',
+        'editing false',
+      ]);
+    });
+
+    test('истории и архив: события и данные', () async {
+      final calls = <MethodCall>[];
+      messenger.setMockMethodCallHandler(const MethodChannel(channelName), (
+        call,
+      ) async {
+        calls.add(call);
+        return null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(
+          const MethodChannel(channelName),
+          null,
+        ),
+      );
+      final log = <Object>[];
+      final controller = NativeChatListController(5, _callbacks(log));
+      addTearDown(controller.dispose);
+      const codec = StandardMethodCodec();
+
+      Future<void> send(String method, Map<String, Object?>? args) =>
+          messenger.handlePlatformMessage(
+            channelName,
+            codec.encodeMethodCall(MethodCall(method, args)),
+            (_) {},
+          );
+
+      await send('story', {
+        'ownerId': 7,
+        'x': 1,
+        'y': 2,
+        'width': 60,
+        'height': 60,
+      });
+      await send('storyAdd', null);
+      await send('archive', null);
+      expect(log, [
+        'story 7 ${const Rect.fromLTWH(1, 2, 60, 60)}',
+        'storyAdd',
+        'archive',
+      ]);
+
+      const stories = NativeStories(
+        visible: true,
+        items: [
+          NativeStoryItem(ownerId: 1, title: 'Ваша история', isSelf: true),
+          NativeStoryItem(ownerId: 7, title: 'Вера', total: 3, read: 1),
+        ],
+      );
+      await controller.setStories(stories);
+      await controller.setArchive(
+        const NativeArchiveEntry(title: 'Архив', count: 4, unread: 2),
+      );
+      await controller.setArchive(null);
+      expect(calls.map((c) => c.method), [
+        'setStories',
+        'setArchive',
+        'setArchive',
+      ]);
+      final storiesArgs = calls[0].arguments as Map;
+      expect(storiesArgs['visible'], isTrue);
+      expect((storiesArgs['items'] as List).last, {
+        'ownerId': 7,
+        'title': 'Вера',
+        'avatarUrl': '',
+        'total': 3,
+        'read': 1,
+        'self': false,
+      });
+      expect((calls[1].arguments as Map)['archive'], {
+        'title': 'Архив',
+        'text': '',
+        'count': 4,
+        'unread': 2,
+        'pull': true,
+      });
+      expect((calls[2].arguments as Map)['archive'], isNull);
+      expect(
+        stories,
+        const NativeStories(
+          visible: true,
+          items: [
+            NativeStoryItem(ownerId: 1, title: 'Ваша история', isSelf: true),
+            NativeStoryItem(ownerId: 7, title: 'Вера', total: 3, read: 1),
+          ],
+        ),
+      );
+    });
+
+    test('команды доходят до Swift и возвращают выбор', () async {
+      final calls = <MethodCall>[];
+      messenger.setMockMethodCallHandler(const MethodChannel(channelName), (
+        call,
+      ) async {
+        calls.add(call);
+        return call.method == 'actionSheet' ? 'me' : null;
+      });
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(
+          const MethodChannel(channelName),
+          null,
+        ),
+      );
+      final commands = NativeChatListCommands();
+      expect(await commands.actionSheet(actions: const []), isNull);
+
+      final controller = NativeChatListController(5, _callbacks([]));
+      addTearDown(controller.dispose);
+      commands.attach(controller);
+
+      await commands.setEditing(false);
+      final choice = await commands.actionSheet(
+        title: 'Удалить чат?',
+        actions: const [
+          NativeSheetAction(id: 'both', title: 'У обоих', destructive: true),
+          NativeSheetAction(id: 'me', title: 'У меня', destructive: true),
+        ],
+      );
+      expect(choice, 'me');
+      expect(calls.first.method, 'setEditing');
+      expect(calls.first.arguments, {'on': false});
+      final sheet = calls.last.arguments as Map;
+      expect(sheet['title'], 'Удалить чат?');
+      expect((sheet['actions'] as List).first, {
+        'id': 'both',
+        'title': 'У обоих',
+        'destructive': true,
+      });
+
+      commands.detach(controller);
+      expect(commands.isAttached, isFalse);
     });
   });
 

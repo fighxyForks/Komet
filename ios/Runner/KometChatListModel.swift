@@ -10,6 +10,13 @@ struct KometChatListStrings {
   var unmute = "Unmute"
   var archive = "Archive"
   var delete = "Delete"
+  var edit = "Edit"
+  var done = "Done"
+  var readAll = "Read All"
+  var readSelected = "Read"
+  var toArchive = "Archive"
+  var deleteSelected = "Delete"
+  var cancel = "Cancel"
 
   mutating func apply(_ map: [String: Any]) {
     search = map["search"] as? String ?? search
@@ -21,6 +28,13 @@ struct KometChatListStrings {
     unmute = map["unmute"] as? String ?? unmute
     archive = map["archive"] as? String ?? archive
     delete = map["delete"] as? String ?? delete
+    edit = map["edit"] as? String ?? edit
+    done = map["done"] as? String ?? done
+    readAll = map["readAll"] as? String ?? readAll
+    readSelected = map["readSelected"] as? String ?? readSelected
+    toArchive = map["toArchive"] as? String ?? toArchive
+    deleteSelected = map["deleteSelected"] as? String ?? deleteSelected
+    cancel = map["cancel"] as? String ?? cancel
   }
 }
 
@@ -254,9 +268,14 @@ final class KometAvatarCache {
 
   func placeholder(for row: KometChatRow, side: CGFloat, scale: CGFloat,
                    accent: UIColor) -> UIImage {
-    row.saved
-      ? symbolAvatar("bookmark.fill", side: side, scale: scale, fill: accent, tint: .white)
-      : letterAvatar(seed: row.id, title: row.title, side: side, scale: scale)
+    if row.saved {
+      return symbolAvatar("bookmark.fill", side: side, scale: scale, fill: accent, tint: .white)
+    }
+    if row.kind == "archive" {
+      return symbolAvatar("archivebox.fill", side: side, scale: scale,
+                          fill: KometChatListStyle.mutedBadge, tint: .white)
+    }
+    return letterAvatar(seed: row.id, title: row.title, side: side, scale: scale)
   }
 
   func letterAvatar(seed: Int, title: String, side: CGFloat, scale: CGFloat) -> UIImage {
@@ -328,6 +347,32 @@ final class KometAvatarCache {
       let drawn = CGSize(width: source.size.width * aspect, height: source.size.height * aspect)
       source.draw(in: CGRect(x: (side - drawn.width) / 2, y: (side - drawn.height) / 2,
                              width: drawn.width, height: drawn.height))
+    }
+  }
+}
+
+enum KometNavigationChrome {
+  static func styleBar(_ bar: UINavigationBar?) {
+    guard let bar = bar else { return }
+    let standard = UINavigationBarAppearance()
+    standard.configureWithDefaultBackground()
+    let edge = UINavigationBarAppearance()
+    edge.configureWithTransparentBackground()
+    bar.standardAppearance = standard
+    bar.compactAppearance = standard
+    bar.scrollEdgeAppearance = edge
+    if #available(iOS 15.0, *) {
+      bar.compactScrollEdgeAppearance = edge
+    }
+  }
+
+  static func pinSearchToTop(_ item: UINavigationItem) {
+    item.hidesSearchBarWhenScrolling = false
+    if #available(iOS 16.0, *) {
+      item.preferredSearchBarPlacement = .stacked
+    }
+    if #available(iOS 26.0, *) {
+      item.searchBarPlacementAllowsToolbarIntegration = false
     }
   }
 }

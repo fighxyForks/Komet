@@ -127,7 +127,7 @@ class _CodeConfirmationScreenState extends State<CodeConfirmationScreen>
       }
       if (!mounted) return;
       setState(() {
-        sessionEpoch = api.sessionEpoch;
+        sessionEpoch = currentSessionEpoch;
         dropNotified = false;
       });
       showCustomNotification(context, 'Соединение восстановлено');
@@ -170,7 +170,7 @@ class _CodeConfirmationScreenState extends State<CodeConfirmationScreen>
       if (!mounted) return;
       setState(() {
         _token = fresh.token;
-        sessionEpoch = api.sessionEpoch;
+        sessionEpoch = currentSessionEpoch;
         dropNotified = false;
         _codeController.clear();
         _errorMessage = null;
@@ -263,18 +263,16 @@ class _CodeConfirmationScreenState extends State<CodeConfirmationScreen>
   }
 
   Future<void> _completeLogin(String? avatarUrl) async {
-    if (!mounted) return;
-
-    final avatar = await precacheLoginAvatar(context, avatarUrl);
-
-    if (!mounted) return;
+    final avatar = mounted
+        ? await precacheLoginAvatar(context, avatarUrl)
+        : null;
 
     await markAuthLimitsPending(AuthEntry.login);
 
-    if (!mounted) return;
-
-    Navigator.pushAndRemoveUntil(
-      context,
+    final navigator = mounted
+        ? Navigator.of(context)
+        : KometApp.navigatorKey.currentState;
+    navigator?.pushAndRemoveUntil(
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 240),
         pageBuilder: (_, _, _) => LoginSuccessScreen(avatar: avatar),
@@ -392,6 +390,7 @@ class _CodeConfirmationScreenState extends State<CodeConfirmationScreen>
         return;
       }
 
+      stopSessionRecovery();
       final loginResult = await accountModule.login();
 
       await _completeLogin(loginResult.profile.baseUrl);

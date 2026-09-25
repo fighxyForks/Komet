@@ -610,24 +610,21 @@ class _CallsTabState extends State<CallsTab>
   Widget _buildNative(ColorScheme cs) {
     return Scaffold(
       backgroundColor: IosPalette.background(cs),
-      body: SafeArea(
-        bottom: false,
-        child: NativeListView(
-          sections: _isLoading ? const [] : _nativeSections(),
-          chrome: {
-            'title': 'Звонки',
-            'segments': const ['Все', 'Пропущенные'],
-            'segment': _selectedTabIndex,
-            'loading': _isLoading,
-            'emptyText': 'Нет звонков',
-            'accent': cs.primary.toARGB32(),
-            'bottomInset': 100.0,
-          },
-          callbacks: NativeListCallbacks(
-            onTap: _onNativeTap,
-            onMenu: _onNativeMenu,
-            onSegment: (index) => setState(() => _selectedTabIndex = index),
-          ),
+      body: NativeListView(
+        sections: _isLoading ? const [] : _nativeSections(),
+        chrome: {
+          'title': 'Звонки',
+          'segments': const ['Все', 'Пропущенные'],
+          'segment': _selectedTabIndex,
+          'loading': _isLoading,
+          'emptyText': 'Нет звонков',
+          'accent': cs.primary.toARGB32(),
+          'bottomInset': 100.0,
+        },
+        callbacks: NativeListCallbacks(
+          onTap: _onNativeTap,
+          onMenu: _onNativeMenu,
+          onSegment: (index) => setState(() => _selectedTabIndex = index),
         ),
       ),
     );

@@ -10,20 +10,25 @@ mixin SessionStaleRecovery<T extends StatefulWidget> on State<T> {
   bool dropNotified = false;
   StreamSubscription<SessionState>? _stateSub;
 
+  Stream<SessionState> get sessionStates => api.stateStream;
+
+  int get currentSessionEpoch => api.sessionEpoch;
+
   bool get sessionStale =>
-      api.sessionEpoch != sessionEpoch || api.state != SessionState.online;
+      currentSessionEpoch != sessionEpoch || api.state != SessionState.online;
 
   String get connectionDroppedMessage;
 
   void recoverStaleSession();
 
   void startSessionRecovery() {
-    sessionEpoch = api.sessionEpoch;
-    _stateSub = api.stateStream.listen(_onSessionState);
+    sessionEpoch = currentSessionEpoch;
+    _stateSub = sessionStates.listen(_onSessionState);
   }
 
   void stopSessionRecovery() {
     _stateSub?.cancel();
+    _stateSub = null;
   }
 
   void _onSessionState(SessionState state) {
@@ -35,6 +40,6 @@ mixin SessionStaleRecovery<T extends StatefulWidget> on State<T> {
       }
       return;
     }
-    if (api.sessionEpoch != sessionEpoch) recoverStaleSession();
+    if (currentSessionEpoch != sessionEpoch) recoverStaleSession();
   }
 }
