@@ -3604,6 +3604,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatListSearch => 'Поиск';
 
   @override
+  String get chatListEdit => 'Изменить';
+
+  @override
+  String get chatListEditDone => 'Готово';
+
+  @override
+  String get chatListReadAll => 'Прочитать все';
+
+  @override
+  String get chatListReadSelected => 'Прочитать';
+
+  @override
+  String get chatListCancel => 'Отмена';
+
+  @override
   String get chatListDraft => 'Черновик: ';
 
   @override

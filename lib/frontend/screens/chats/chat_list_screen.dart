@@ -360,6 +360,9 @@ class _ChatListScreenState extends State<ChatListScreen>
   Timer? _settleTimer;
   bool get _shareMode => widget.sharePayload != null;
   bool get _isSelectionMode => !_shareMode && _selectedChats.isNotEmpty;
+  bool _nativeEditing = false;
+  final NativeChatListCommands _nativeCommands = NativeChatListCommands();
+  bool get _hidesBottomNav => _isSelectionMode || _nativeEditing;
   bool? _foldersListKnown;
 
   late AnimationController _navPageAnimController;
@@ -652,29 +655,33 @@ class _ChatListScreenState extends State<ChatListScreen>
   Future<void> _onDeleteTap() =>
       _deleteChats({for (final c in _selectedChatObjects()) c.id});
 
-  Future<void> _deleteChats(Set<int> ids) async {
+  Future<bool> _deleteChats(
+    Set<int> ids, {
+    Future<({bool forAll})?> Function(List<CachedChat>, _DeleteKind)? confirm,
+  }) async {
     final selectedBefore = _chatObjectsFor(ids);
-    if (selectedBefore.isEmpty) return;
+    if (selectedBefore.isEmpty) return false;
     final myId = _profile?.id;
-    if (myId == null) return;
+    if (myId == null) return false;
 
     await chats.refreshChats(api, selectedBefore.map((c) => c.id).toList());
-    if (!mounted) return;
+    if (!mounted) return false;
 
     final selectedAfter = _chatObjectsFor(ids);
-    if (selectedAfter.isEmpty) return;
+    if (selectedAfter.isEmpty) return false;
     final cats = selectedAfter.map((c) => _categorizeChat(c, myId)).toSet();
     if (cats.contains(_DeleteKind.blocked) || cats.length > 1) {
       showCustomNotification(
         context,
         'Статус чатов изменился, попробуйте ещё раз',
       );
-      return;
+      return false;
     }
     final kind = cats.single;
 
-    final choice = await _showDeleteConfirmDialog(selectedAfter, kind);
-    if (!mounted || choice == null) return;
+    final choice =
+        await (confirm ?? _showDeleteConfirmDialog)(selectedAfter, kind);
+    if (!mounted || choice == null) return false;
 
     final errors = <String>[];
     for (final c in selectedAfter) {
@@ -688,7 +695,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       );
       if (err != null) errors.add(err);
     }
-    if (!mounted) return;
+    if (!mounted) return true;
     if (errors.isNotEmpty) {
       final msg = errors.length == 1
           ? errors.first
@@ -696,6 +703,54 @@ class _ChatListScreenState extends State<ChatListScreen>
       showCustomNotification(context, msg);
     }
     _clearSelection();
+    return true;
+  }
+
+  Future<({bool forAll})?> _confirmDeleteNative(
+    List<CachedChat> selected,
+    _DeleteKind kind,
+  ) async {
+    final single = selected.length == 1 ? selected.first : null;
+    final String title;
+    final List<NativeSheetAction> actions;
+    switch (kind) {
+      case _DeleteKind.personalLike:
+        title = single != null
+            ? 'Удалить чат с ${single.title ?? ''}?'
+            : 'Удалить ${selected.length} чатов?';
+        actions = [
+          if (selected.any((c) => c.id != 0))
+            const NativeSheetAction(
+              id: 'all',
+              title: 'Удалить у обоих участников',
+              destructive: true,
+            ),
+          const NativeSheetAction(
+            id: 'me',
+            title: 'Удалить только у меня',
+            destructive: true,
+          ),
+        ];
+      case _DeleteKind.ownerGroup:
+        title = single != null
+            ? 'Удалить чат «${single.title ?? ''}» у всех?'
+            : 'Удалить ${selected.length} групп у всех?';
+        actions = const [
+          NativeSheetAction(id: 'all', title: 'Удалить у всех', destructive: true),
+        ];
+      case _DeleteKind.blocked:
+        return null;
+    }
+    final choice = await _nativeCommands.actionSheet(
+      title: title,
+      message: 'Восстановить переписку не получится',
+      actions: actions,
+    );
+    return switch (choice) {
+      'all' => (forAll: true),
+      'me' => (forAll: false),
+      _ => null,
+    };
   }
 
   Future<({bool forAll})?> _showDeleteConfirmDialog(
@@ -2568,7 +2623,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         curve: Curves.easeOutCubic,
         left: 0,
         right: 0,
-        bottom: _isSelectionMode ? -140 : bottomInset,
+        bottom: _hidesBottomNav ? -140 : bottomInset,
         child: NativeTabChromeHost(
           items: _iosNavItems,
           currentIndex: _currentNavIndex,
@@ -2599,7 +2654,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         curve: Curves.easeOutCubic,
         left: 0,
         right: 0,
-        bottom: _isSelectionMode ? -140 : bottomInset,
+        bottom: _hidesBottomNav ? -140 : bottomInset,
         child: IosNativeTabBar(
           items: _iosNavItems,
           currentIndex: _currentNavIndex,
@@ -2642,7 +2697,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       curve: Curves.easeOutCubic,
       left: side,
       right: side,
-      bottom: _isSelectionMode ? -100 : bottomInset + 10.0,
+      bottom: _hidesBottomNav ? -100 : bottomInset + 10.0,
       child: RepaintBoundary(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -2730,7 +2785,10 @@ class _ChatListScreenState extends State<ChatListScreen>
       _isNativeTab(index) ? child : SafeArea(bottom: false, child: child);
 
   void _onNativeEligibilityChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {
+      if (!_useNativeChatList) _nativeEditing = false;
+    });
   }
 
   Widget _iosRootPage(double pageW, double pageH) {
@@ -3632,6 +3690,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       listenable: Listenable.merge([
         for (final chat in pageChats) chats.chatListenable(chat.id),
         _nativeDecryptionTick,
+        AppLock.instance.enabled,
       ]),
       builder: (context, _) => NativeChatListView(
         rows: [
@@ -3639,14 +3698,57 @@ class _ChatListScreenState extends State<ChatListScreen>
             _nativeRowFor(chats.chatListenable(chat.id).value),
         ],
         chrome: _nativeChatListChrome(),
+        commands: _nativeCommands,
         callbacks: NativeChatListCallbacks(
           onOpen: _openNativeChat,
           onAction: _onNativeChatAction,
           onCompose: _showIosCreateMenu,
-          onMenu: _showIosOverflowMenu,
+          onDownloads: (_) => unawaited(_openDownloads()),
+          onLock: (rect) {
+            Haptics.medium();
+            AppLock.instance.lock(origin: rect);
+          },
+          onEditing: _onNativeEditing,
+          onSelection: (_) {},
+          onBulk: _onNativeBulk,
+          onReorderPinned: (ids) => unawaited(_reorderPinned(ids)),
         ),
       ),
     );
+  }
+
+  void _onNativeEditing(bool on) {
+    if (_nativeEditing == on || !mounted) return;
+    if (on) Haptics.selection();
+    setState(() => _nativeEditing = on);
+  }
+
+  void _onNativeBulk(NativeChatBulkAction action, List<int> ids) {
+    switch (action) {
+      case NativeChatBulkAction.readAll:
+        unawaited(_markAllChatsRead());
+      case NativeChatBulkAction.read:
+        for (final id in ids) {
+          unawaited(_markChatRead(id));
+        }
+      case NativeChatBulkAction.archive:
+        unawaited(_archiveChats(_chatObjectsFor(ids.toSet())));
+      case NativeChatBulkAction.delete:
+        unawaited(_deleteNativeSelection(ids));
+    }
+  }
+
+  Future<void> _deleteNativeSelection(List<int> ids) async {
+    final deleted = await _deleteChats(
+      ids.toSet(),
+      confirm: _confirmDeleteNative,
+    );
+    if (deleted) await _nativeCommands.setEditing(false);
+  }
+
+  Future<void> _reorderPinned(List<int> ids) async {
+    final err = await chats.reorderPinned(api, ids);
+    if (err != null && mounted) showCustomNotification(context, err);
   }
 
   Map<String, Object?> _nativeChatListChrome() {
@@ -3666,6 +3768,14 @@ class _ChatListScreenState extends State<ChatListScreen>
       'unmute': l10n.chatActionUnmute,
       'archive': l10n.chatActionArchive,
       'delete': l10n.chatActionDelete,
+      'edit': l10n.chatListEdit,
+      'done': l10n.chatListEditDone,
+      'readAll': l10n.chatListReadAll,
+      'readSelected': l10n.chatListReadSelected,
+      'toArchive': l10n.chatActionArchive,
+      'deleteSelected': l10n.chatActionDelete,
+      'cancel': l10n.chatListCancel,
+      'lockEnabled': AppLock.instance.enabled.value,
     };
   }
 
@@ -3822,7 +3932,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       case NativeChatAction.archive:
         unawaited(_archiveChats([chat]));
       case NativeChatAction.delete:
-        unawaited(_deleteChats({chatId}));
+        unawaited(_deleteChats({chatId}, confirm: _confirmDeleteNative));
     }
   }
 

@@ -10,6 +10,13 @@ struct KometChatListStrings {
   var unmute = "Unmute"
   var archive = "Archive"
   var delete = "Delete"
+  var edit = "Edit"
+  var done = "Done"
+  var readAll = "Read All"
+  var readSelected = "Read"
+  var toArchive = "Archive"
+  var deleteSelected = "Delete"
+  var cancel = "Cancel"
 
   mutating func apply(_ map: [String: Any]) {
     search = map["search"] as? String ?? search
@@ -21,6 +28,13 @@ struct KometChatListStrings {
     unmute = map["unmute"] as? String ?? unmute
     archive = map["archive"] as? String ?? archive
     delete = map["delete"] as? String ?? delete
+    edit = map["edit"] as? String ?? edit
+    done = map["done"] as? String ?? done
+    readAll = map["readAll"] as? String ?? readAll
+    readSelected = map["readSelected"] as? String ?? readSelected
+    toArchive = map["toArchive"] as? String ?? toArchive
+    deleteSelected = map["deleteSelected"] as? String ?? deleteSelected
+    cancel = map["cancel"] as? String ?? cancel
   }
 }
 
