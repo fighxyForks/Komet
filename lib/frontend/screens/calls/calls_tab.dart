@@ -19,6 +19,8 @@ import '../../widgets/spectrum_tint.dart';
 import '../../../l10n/app_localizations.dart';
 import 'call_link_sheet.dart';
 import 'call_screen.dart';
+import '../../../core/native/native_list_bridge.dart';
+import '../../native/native_list_view.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_route.dart';
@@ -501,8 +503,148 @@ class _CallsTabState extends State<CallsTab>
     );
   }
 
+  static String _callSymbol(CallStatus status) => switch (status) {
+    CallStatus.missed => 'phone.down.fill',
+    CallStatus.canceled => 'phone.down',
+    CallStatus.outgoing => 'phone.arrow.up.right',
+    CallStatus.incoming => 'phone.arrow.down.left',
+  };
+
+  static String _callStatusText(CallStatus status) => switch (status) {
+    CallStatus.missed => 'Пропущенный',
+    CallStatus.canceled => 'Отменённый',
+    CallStatus.outgoing => 'Исходящий',
+    CallStatus.incoming => 'Входящий',
+  };
+
+  CallLogEntry? _callById(String id) {
+    for (final call in _calls) {
+      if (call.id == id) return call;
+    }
+    return null;
+  }
+
+  List<NativeListSection> _nativeSections() {
+    final calls = _selectedTabIndex == 1
+        ? _calls.where((c) => c.status == CallStatus.missed)
+        : _calls;
+    return [
+      const NativeListSection(
+        id: 'actions',
+        rows: [
+          NativeListRow(
+            id: 'action:create',
+            style: NativeListRowStyle.action,
+            title: 'Создать звонок',
+            symbol: 'link',
+          ),
+          NativeListRow(
+            id: 'action:join',
+            style: NativeListRowStyle.action,
+            title: 'Присоединиться',
+            symbol: 'person.badge.plus',
+          ),
+        ],
+      ),
+      NativeListSection(
+        id: 'calls',
+        rows: [
+          for (final call in calls)
+            if (!_removing.contains(call.id))
+              NativeListRow(
+                id: 'call:${call.id}',
+                title: call.count > 1
+                    ? '${call.name} (${call.count})'
+                    : call.name,
+                alert: call.status == CallStatus.missed,
+                subtitle: _callStatusText(call.status),
+                subtitleSymbol: _callSymbol(call.status),
+                trailing: _formatDate(call.time),
+                avatarUrl: call.avatarUrl ?? '',
+                avatarSeed: call.peerId,
+                avatarSymbol: call.isGroup ? 'person.2.fill' : null,
+                menu: [
+                  if (!call.isGroup)
+                    const NativeListAction(
+                      id: 'callback',
+                      title: 'Перезвонить',
+                      symbol: 'phone',
+                    ),
+                  const NativeListAction(
+                    id: 'delete',
+                    title: 'Удалить',
+                    symbol: 'trash',
+                    destructive: true,
+                  ),
+                ],
+              ),
+        ],
+      ),
+    ];
+  }
+
+  void _onNativeTap(String rowId) {
+    switch (rowId) {
+      case 'action:create':
+        unawaited(_createGroupCall());
+      case 'action:join':
+        unawaited(_joinGroupCall());
+      default:
+        final call = _callById(rowId.substring('call:'.length));
+        if (call != null && !call.isGroup) unawaited(_callBack(call));
+    }
+  }
+
+  void _onNativeMenu(String rowId, String actionId) {
+    final call = _callById(rowId.substring('call:'.length));
+    if (call == null) return;
+    switch (actionId) {
+      case 'callback':
+        unawaited(_callBack(call));
+      case 'delete':
+        _deleteCall(call);
+        _onRemovalComplete(call.id);
+    }
+  }
+
+  Widget _buildNative(ColorScheme cs) {
+    return Scaffold(
+      backgroundColor: IosPalette.background(cs),
+      body: SafeArea(
+        bottom: false,
+        child: NativeListView(
+          sections: _isLoading ? const [] : _nativeSections(),
+          chrome: {
+            'title': 'Звонки',
+            'segments': const ['Все', 'Пропущенные'],
+            'segment': _selectedTabIndex,
+            'loading': _isLoading,
+            'emptyText': 'Нет звонков',
+            'accent': cs.primary.toARGB32(),
+            'bottomInset': 100.0,
+          },
+          callbacks: NativeListCallbacks(
+            onTap: _onNativeTap,
+            onMenu: _onNativeMenu,
+            onSegment: (index) => setState(() => _selectedTabIndex = index),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: NativeListBridge.eligibility,
+      builder: (context, _) =>
+          IosGlass.of(context) && NativeListBridge.isEligible
+          ? _buildNative(Theme.of(context).colorScheme)
+          : _buildFlutter(context),
+    );
+  }
+
+  Widget _buildFlutter(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 

@@ -6668,6 +6668,24 @@ abstract class AppLocalizations {
   /// **'Select'**
   String get chatActionSelect;
 
+  /// No description provided for @chatListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chatListTitle;
+
+  /// No description provided for @chatListSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get chatListSearch;
+
+  /// No description provided for @chatListDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft: '**
+  String get chatListDraft;
+
   /// No description provided for @chatActionDelete.
   ///
   /// In en, this message translates to:
