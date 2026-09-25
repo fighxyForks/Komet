@@ -38,7 +38,12 @@ import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/update_dialog.dart';
-import '../chats/chat_list_screen.dart' show activeNavTab;
+import '../../native/native_menu_button.dart';
+import '../../widgets/swipe_route.dart';
+import '../chats/chat_list_screen.dart' show ChatListScreen, activeNavTab;
+import '../chats/chat_screen.dart';
+import 'account_switching.dart';
+import 'folders_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/proxy_settings_sheet.dart';
 import '../../../core/config/app_digital_id_mode.dart';
@@ -79,12 +84,14 @@ const int _avatarHistoryPageSize = 50;
 
 class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
   ProfileData? _profile;
+  List<ProfileData> _accounts = const [];
   List<String> _avatarUrls = const [];
   List<int?> _avatarIds = const [];
   List<AvatarPhoto> _avatarPhotos = const [];
   int _avatarIndex = 0;
   bool _avatarForward = true;
   final GlobalKey _avatarMenuKey = GlobalKey();
+  final GlobalKey _accountRowKey = GlobalKey();
   bool _isPhoneVisible = false;
   ScrollController? _scrollController;
   double _headerDelta = 0;
@@ -104,6 +111,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
   void initState() {
     super.initState();
     _loadProfile();
+    _loadAccounts();
     _loadAppVersion();
     final appState = KometApp.stateOf(context);
     if (appState != null) {
@@ -240,6 +248,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         _debugMenuVisible = !_debugMenuVisible;
       }
     });
+  }
+
+  Future<void> _loadAccounts() async {
+    final accounts = await accountModule.listAccounts();
+    if (!mounted) return;
+    setState(() => _accounts = accounts);
   }
 
   Future<void> _loadProfile() async {
@@ -605,6 +619,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 );
                               },
                             ),
+                            _SettingsItem(
+                              icon: Symbols.bookmark,
+                              label: 'Избранное',
+                              onTap: _openSavedMessages,
+                            ),
+                            _accountItem(context),
                             if (showExtraInfo)
                               _SettingsItem(
                                 icon: Symbols.info,
@@ -628,6 +648,26 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
                     child: CustomizationSection(),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: _buildSection(
+                      context,
+                      items: [
+                        _SettingsItem(
+                          icon: Symbols.folder,
+                          label: 'Папки',
+                          onTap: () => Navigator.push(
+                            context,
+                            iosPageRoute(context,
+                              builder: (context) => const FoldersScreen(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -1431,7 +1471,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     return SettingsCard(
       children: List.generate(items.length, (index) {
         final item = items[index];
-        return SettingsNavTile(
+        final tile = SettingsNavTile(
           icon: item.icon,
           leading: item.leading,
           label: item.label,
@@ -1439,10 +1479,113 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
           onTap: item.onTap,
           isLast: index == items.length - 1,
         );
+        return item.wrap?.call(tile) ?? tile;
       }),
     );
   }
+
+  void _openSavedMessages() {
+    if (ChatListScreen.openSavedMessages()) return;
+    pushSwipeable(
+      context,
+      (_) => const ChatScreen(
+        chatId: 0,
+        name: 'Избранное',
+        imageUrl: '',
+        chatType: 'DIALOG',
+      ),
+    );
+  }
+
+  _SettingsItem _accountItem(BuildContext context) {
+    final activeId = _profile?.id;
+    final others = [
+      for (final account in _accounts)
+        if (account.id != activeId) account,
+    ];
+    if (others.isEmpty) {
+      return _SettingsItem(
+        icon: Symbols.person_add,
+        label: 'Добавить профиль',
+        onTap: () => unawaited(startAddAccount(context)),
+      );
+    }
+    final other = others.first;
+    return _SettingsItem(
+      leading: KometAvatar(
+        name: _accountName(other),
+        imageUrl: other.baseUrl,
+        size: IosGlass.of(context) ? 30 : 24,
+      ),
+      label: _accountName(other),
+      onTap: _showAccountFallbackMenu,
+      wrap: (tile) => KeyedSubtree(
+        key: _accountRowKey,
+        child: NativeMenuButton.supported
+            ? NativeMenuButton(
+                items: _accountMenuItems(),
+                onSelected: _onAccountMenuSelected,
+                onFallback: (rect) =>
+                    showAccountSwitcherAt(context, rect.center),
+                child: tile,
+              )
+            : tile,
+      ),
+    );
+  }
+
+  static String _accountName(ProfileData account) {
+    final name = [account.firstName, account.lastName ?? '']
+        .where((part) => part.trim().isNotEmpty)
+        .join(' ');
+    return name.isEmpty ? '+${account.phone}' : name;
+  }
+
+  List<NativeMenuItem> _accountMenuItems() {
+    final activeId = _profile?.id;
+    final ordered = [
+      ..._accounts.where((a) => a.id == activeId),
+      ..._accounts.where((a) => a.id != activeId),
+    ];
+    return [
+      for (final account in ordered)
+        NativeMenuItem(
+          id: '${account.id}',
+          title: _accountName(account),
+          subtitle: '+${account.phone}',
+          imageUrl: account.baseUrl,
+          symbol: 'person.crop.circle',
+          checked: account.id == activeId,
+        ),
+      const NativeMenuItem.separator(),
+      const NativeMenuItem(
+        id: _addAccountMenuId,
+        title: 'Добавить профиль',
+        symbol: 'plus',
+      ),
+    ];
+  }
+
+  void _onAccountMenuSelected(String id) {
+    if (id == _addAccountMenuId) {
+      unawaited(startAddAccount(context));
+      return;
+    }
+    final accountId = int.tryParse(id);
+    if (accountId == null || accountId == _profile?.id) return;
+    unawaited(switchToAccount(context, accountId));
+  }
+
+  void _showAccountFallbackMenu() {
+    final box = _accountRowKey.currentContext?.findRenderObject() as RenderBox?;
+    final point = box != null && box.hasSize
+        ? box.localToGlobal(box.size.center(Offset.zero))
+        : MediaQuery.sizeOf(context).center(Offset.zero);
+    showAccountSwitcherAt(context, point);
+  }
 }
+
+const _addAccountMenuId = 'add';
 
 class _SettingsItem {
   final IconData? icon;
@@ -1450,6 +1593,7 @@ class _SettingsItem {
   final String label;
   final VoidCallback? onTap;
   final Color? tintColor;
+  final Widget Function(Widget tile)? wrap;
 
   const _SettingsItem({
     this.icon,
@@ -1457,6 +1601,7 @@ class _SettingsItem {
     required this.label,
     this.onTap,
     this.tintColor,
+    this.wrap,
   });
 }
 
