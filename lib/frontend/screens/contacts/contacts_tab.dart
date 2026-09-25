@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../../core/config/debug_test.dart';
 import '../../../core/contacts/contact_labels.dart';
@@ -32,6 +34,8 @@ import '../../widgets/glass/ios_empty_state.dart';
 import '../../widgets/glass/ios_metrics.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
+import '../../../core/native/native_list_bridge.dart';
+import '../../native/native_list_view.dart';
 
 enum _SearchMode { phone, id }
 
@@ -137,16 +141,9 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
     CachedContact contact,
   ) {
     final ios = IosGlass.of(context);
-    final labels = contactLabels(
-      idLabel: AppLocalizations.of(context)!.contactIdFallback('${contact.id}'),
-      firstName: contact.firstName,
-      lastName: contact.lastName,
-      phone: contact.phone,
-    );
-    final nameToDisplay = labels.title;
-    final subtitle = contact.updateTime > 0
-        ? 'Был(а) недавно'
-        : labels.subtitle;
+    final text = _contactText(contact);
+    final nameToDisplay = text.title;
+    final subtitle = text.subtitle;
 
     final row = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -240,8 +237,111 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
     );
   }
 
+  ({String title, String? subtitle}) _contactText(CachedContact contact) {
+    final labels = contactLabels(
+      idLabel: AppLocalizations.of(context)!.contactIdFallback('${contact.id}'),
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      phone: contact.phone,
+    );
+    return (
+      title: labels.title,
+      subtitle: contact.updateTime > 0 ? 'Был(а) недавно' : labels.subtitle,
+    );
+  }
+
+  static String _sectionLetter(String title) {
+    final trimmed = title.trim();
+    if (trimmed.isEmpty) return '#';
+    final letter = trimmed.characters.first.toUpperCase();
+    return letter.toLowerCase() != letter ? letter : '#';
+  }
+
+  List<NativeListSection> _nativeSections() {
+    final groups = <String, List<NativeListRow>>{};
+    for (final contact in _contacts) {
+      final text = _contactText(contact);
+      groups
+          .putIfAbsent(_sectionLetter(text.title), () => [])
+          .add(
+            NativeListRow(
+              id: 'contact:${contact.id}',
+              title: text.title,
+              verified: contact.isVerified,
+              subtitle: text.subtitle ?? '',
+              avatarUrl: contact.baseUrl ?? '',
+              avatarSeed: contact.id,
+            ),
+          );
+    }
+    final letters = groups.keys.toList()
+      ..sort((a, b) {
+        if (a == '#') return 1;
+        if (b == '#') return -1;
+        return a.compareTo(b);
+      });
+    return [
+      for (final letter in letters)
+        NativeListSection(id: letter, title: letter, rows: groups[letter]!),
+    ];
+  }
+
+  void _onNativeTap(String rowId) {
+    final id = int.tryParse(rowId.substring('contact:'.length));
+    if (id == null) return;
+    for (final contact in _contacts) {
+      if (contact.id != id) continue;
+      openContactDialogProfile(
+        context,
+        contactId: contact.id,
+        name: _contactText(contact).title,
+        avatarUrl: contact.baseUrl,
+      );
+      return;
+    }
+  }
+
+  Widget _buildNative(ColorScheme cs) {
+    return Scaffold(
+      backgroundColor: IosPalette.background(cs),
+      body: SafeArea(
+        bottom: false,
+        child: NativeListView(
+          sections: _isLoading ? const [] : _nativeSections(),
+          chrome: {
+            'title': 'Контакты',
+            'largeTitle': true,
+            'search': 'Поиск',
+            'index': true,
+            'loading': _isLoading,
+            'emptyText': 'Нет контактов',
+            'buttons': const [
+              {'id': 'find', 'symbol': 'person.badge.plus'},
+            ],
+            'accent': cs.primary.toARGB32(),
+            'bottomInset': 100.0,
+          },
+          callbacks: NativeListCallbacks(
+            onTap: _onNativeTap,
+            onButton: (id, _) => unawaited(_openSearchById()),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: NativeListBridge.eligibility,
+      builder: (context, _) =>
+          IosGlass.of(context) && NativeListBridge.isEligible
+          ? _buildNative(Theme.of(context).colorScheme)
+          : _buildFlutter(context),
+    );
+  }
+
+  Widget _buildFlutter(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final ios = IosGlass.of(context);
     final bg = ios ? IosPalette.grouped(cs) : spectrumSurfaceColor(cs);

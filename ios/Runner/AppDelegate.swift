@@ -49,6 +49,7 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       registerNativeSheet(messenger)
       registerNativeTabChrome(messenger)
       registerNativeChatList(messenger, host: controller)
+      registerNativeList(messenger, host: controller)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -225,6 +226,12 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
     registrar(forPlugin: "KometChatList")?.register(
       KometChatListViewFactory(messenger: messenger, host: host),
       withId: "ru.komet.app/native_chat_list")
+  }
+
+  private func registerNativeList(_ messenger: FlutterBinaryMessenger, host: UIViewController) {
+    registrar(forPlugin: "KometNativeList")?.register(
+      KometNativeListViewFactory(messenger: messenger, host: host),
+      withId: "ru.komet.app/native_list")
   }
 
   private func registerAccessibility(_ messenger: FlutterBinaryMessenger) {

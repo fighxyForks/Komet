@@ -9,6 +9,7 @@ Experimental, **off by default**. Gated by `IosGlass` + `AppIosGlass.nativeViews
 | Native attachment sheet | `app_native_sheet_prototype` | off |
 | Native tab minimize | `app_native_tab_minimize_prototype` | off |
 | Native chat list | `app_native_chat_list_prototype` | off |
+| Native calls & contacts | `app_native_lists_prototype` | off |
 
 ## Prototype 1 — `UISheetPresentationController`
 
@@ -48,6 +49,18 @@ Every expensive step happens off the main thread, and the main thread only appli
 
 Not ported yet: stories, folders strip, archive entry, swipe actions, selection mode, online dots, typing, media thumbnails and message formatting in previews.
 
+## Prototype 4 — UIKit calls and contacts
+
+One generic native list drives both tabs. Dart describes the screen, UIKit renders it.
+
+- Swift: `ios/Runner/KometNativeList.swift` — `UITableView` with a diffable data source inside a `UINavigationController`, custom cells laid out by frames. Avatars reuse `KometAvatarCache`
+- Dart: `lib/core/native/native_list_bridge.dart` (sections, rows, row menus, diff, channel), `lib/frontend/native/native_list_view.dart`
+- Channel: `ru.komet.app/native_list/<viewId>` — Dart sends `apply` (section layout only when it changed, rows only when they changed) and `setChrome`; Swift sends `tap`, `menu`, `button`, `segment`
+- Chrome options: title, large title, a segmented control in the navigation bar, a local search field, a section index, bar buttons, loading and empty states
+- Row menus become both the long-press `UIContextMenu` and, for destructive actions, the trailing swipe
+- Calls: “All / Missed” segmented control, create and join rows at the top, long press or swipe to call back or delete
+- Contacts: alphabetical sections with the side index, search by name, the bar button opens the existing search by phone or ID
+
 ## How Ivan tests on an iOS 26 iPhone
 
 1. Build/install a Debug build of this branch
@@ -56,7 +69,8 @@ Not ported yet: stories, folders strip, archive entry, swipe actions, selection 
 4. Attachment: open a chat → attach → confirm medium/large sheet + grabber; toggle flag off and confirm Flutter sheet returns
 5. Tabs: on chat list, scroll down/up → tab bar should ease away/back; place a call and confirm the green accessory appears
 6. Turn on **Reduce Transparency** → the sheet and tab prototypes must refuse native path
-7. Chat list: enable **Native chat list**, scroll a long list, open a chat, long-press a row, search by name; send a message from another device and confirm the row moves to the top
+7. Calls and contacts: enable **Native calls & contacts**, switch All/Missed, swipe a call to delete, long-press to call back, scroll contacts with the side index, search by name
+8. Chat list: enable **Native chat list**, scroll a long list, open a chat, long-press a row, search by name; send a message from another device and confirm the row moves to the top
 
 ## App Store / API notes
 
