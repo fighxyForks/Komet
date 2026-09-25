@@ -1221,5 +1221,7 @@
   "chatListTitle": "Чаты",
   "chatListSearch": "Поиск",
   "chatListDraft": "Черновик: ",
+  "chatListYesterday": "Вчера",
+  "chatListDatePattern": "dd.MM.yy",
   "chatActionDelete": "Удалить"
 }

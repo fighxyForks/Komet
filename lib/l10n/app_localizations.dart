@@ -6686,6 +6686,18 @@ abstract class AppLocalizations {
   /// **'Draft: '**
   String get chatListDraft;
 
+  /// No description provided for @chatListYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get chatListYesterday;
+
+  /// No description provided for @chatListDatePattern.
+  ///
+  /// In en, this message translates to:
+  /// **'M/d/yy'**
+  String get chatListDatePattern;
+
   /// No description provided for @chatActionDelete.
   ///
   /// In en, this message translates to:

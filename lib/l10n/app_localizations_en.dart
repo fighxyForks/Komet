@@ -3592,5 +3592,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatListDraft => 'Draft: ';
 
   @override
+  String get chatListYesterday => 'Yesterday';
+
+  @override
+  String get chatListDatePattern => 'M/d/yy';
+
+  @override
   String get chatActionDelete => 'Delete';
 }
