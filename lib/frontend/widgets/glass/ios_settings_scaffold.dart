@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
 import '../connection_status.dart';
@@ -230,17 +231,62 @@ class _CollapsingIosSettingsState extends State<_CollapsingIosSettings> {
             final handle = NestedScrollView.sliverOverlapAbsorberHandleFor(
               context,
             );
-            return ListenableBuilder(
-              listenable: handle,
-              builder: (context, child) => Padding(
-                padding: EdgeInsets.only(top: handle.layoutExtent ?? 0),
-                child: child,
-              ),
-              child: widget.body,
-            );
+            return _OverlapPadding(handle: handle, child: widget.body);
           },
         ),
       ),
+    );
+  }
+}
+
+class _OverlapPadding extends StatefulWidget {
+  final SliverOverlapAbsorberHandle handle;
+  final Widget child;
+
+  const _OverlapPadding({required this.handle, required this.child});
+
+  @override
+  State<_OverlapPadding> createState() => _OverlapPaddingState();
+}
+
+class _OverlapPaddingState extends State<_OverlapPadding> {
+  bool _scheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.handle.addListener(_onExtentChanged);
+  }
+
+  @override
+  void didUpdateWidget(_OverlapPadding oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.handle == widget.handle) return;
+    oldWidget.handle.removeListener(_onExtentChanged);
+    widget.handle.addListener(_onExtentChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.handle.removeListener(_onExtentChanged);
+    super.dispose();
+  }
+
+  void _onExtentChanged() {
+    if (_scheduled) return;
+    _scheduled = true;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _scheduled = false;
+      if (mounted) setState(() {});
+    });
+    SchedulerBinding.instance.ensureVisualUpdate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: widget.handle.layoutExtent ?? 0),
+      child: widget.child,
     );
   }
 }

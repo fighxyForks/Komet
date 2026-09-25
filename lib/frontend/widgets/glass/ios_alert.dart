@@ -192,3 +192,83 @@ Future<T?> _showMaterialAlert<T>({
     },
   );
 }
+
+class IosSheetAction {
+  final String id;
+  final String label;
+  final String? sfSymbol;
+  final bool isDestructive;
+  final VoidCallback onSelected;
+
+  const IosSheetAction({
+    required this.id,
+    required this.label,
+    required this.onSelected,
+    this.sfSymbol,
+    this.isDestructive = false,
+  });
+}
+
+Future<void> showIosActionSheet({
+  required BuildContext context,
+  String? title,
+  String? message,
+  required List<IosSheetAction> actions,
+  required String cancelLabel,
+}) async {
+  String? selected;
+  var presented = false;
+  if (AppIosGlass.nativeViews) {
+    try {
+      selected = await LiquidGlassAlert.show(
+        context: context,
+        title: title,
+        message: message,
+        style: LiquidGlassAlertStyle.actionSheet,
+        actions: [
+          for (final a in actions)
+            LiquidGlassAlertAction(
+              id: a.id,
+              title: a.label,
+              icon: a.sfSymbol == null
+                  ? null
+                  : NativeLiquidGlassIcon.sfSymbol(a.sfSymbol!),
+              isDestructive: a.isDestructive,
+            ),
+          LiquidGlassAlertAction(id: '', title: cancelLabel, isCancel: true),
+        ],
+      );
+      presented = true;
+    } catch (_) {
+      presented = false;
+    }
+  }
+  if (!presented) {
+    if (!context.mounted) return;
+    selected = await showCupertinoModalPopup<String>(
+      context: context,
+      builder: (sheetContext) => CupertinoActionSheet(
+        title: title == null ? null : Text(title),
+        message: message == null ? null : Text(message),
+        actions: [
+          for (final a in actions)
+            CupertinoActionSheetAction(
+              isDestructiveAction: a.isDestructive,
+              onPressed: () => Navigator.of(sheetContext).pop(a.id),
+              child: Text(a.label),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(sheetContext).pop(),
+          child: Text(cancelLabel),
+        ),
+      ),
+    );
+  }
+  for (final a in actions) {
+    if (a.id == selected) {
+      a.onSelected();
+      return;
+    }
+  }
+}
