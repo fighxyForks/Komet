@@ -121,6 +121,7 @@ import 'frontend/widgets/theme_reveal.dart';
 import 'frontend/widgets/floating_call_badge.dart';
 import 'frontend/widgets/floating_video_note.dart';
 import './frontend/widgets/glass/ios_route.dart';
+import 'frontend/widgets/keyboard_dismissal.dart';
 
 final api = Api();
 final accountModule = AccountModule(api);
@@ -1210,6 +1211,7 @@ class KometAppState extends State<KometApp>
                 appRouteObserver,
                 PerfRouteObserver(),
                 LiquidGlassNavigatorObserver(),
+                KeyboardNavigatorObserver(),
               ],
               builder: (context, child) {
                 return ValueListenableBuilder<double>(
@@ -1285,7 +1287,7 @@ class KometAppState extends State<KometApp>
                                   }
                                   return false;
                                 },
-                                child: sChild!,
+                                child: KeyboardDismissal(child: sChild!),
                               ),
                             ),
                             const Positioned.fill(

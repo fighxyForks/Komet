@@ -376,7 +376,7 @@ class ComposerArea extends StatelessWidget {
       );
     }
 
-    final base = wrapChrome(content);
+    final base = TextFieldTapRegion(child: wrapChrome(content));
     return AnimatedBuilder(
       animation: searchAnim,
       builder: (context, _) {

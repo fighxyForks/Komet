@@ -115,12 +115,14 @@ class ChatBodyLayout extends StatelessWidget {
   }
 
   Widget _panelsColumn() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        MentionPanelView(mentionPanel: mentionPanel),
-        CommandPanelView(commandPanel: commandPanel),
-      ],
+    return TextFieldTapRegion(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MentionPanelView(mentionPanel: mentionPanel),
+          CommandPanelView(commandPanel: commandPanel),
+        ],
+      ),
     );
   }
 
