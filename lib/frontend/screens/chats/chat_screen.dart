@@ -109,6 +109,7 @@ import '../../widgets/connection_status.dart';
 import '../../widgets/message_bubble.dart';
 import '../../widgets/photo_viewer.dart';
 import '../../native/native_chat_view.dart';
+import '../../native/native_sticker_playback.dart';
 import '../../widgets/message_actions_overlay.dart';
 import '../../widgets/share_unopenable_file.dart';
 import '../../widgets/text_entity_actions.dart';
@@ -495,6 +496,11 @@ class _ChatScreenState extends State<ChatScreen>
   final GlobalKey _messageListKey = GlobalKey();
   _ChatMessageList? _messageListWidget;
   final NativeChatCommands _nativeChatCommands = NativeChatCommands();
+  late final NativeStickerPlayback _nativeStickers = NativeStickerPlayback(
+    onFrame: (id, bytes, width, height) {
+      unawaited(_nativeChatCommands.stickerFrame(id, bytes, width, height));
+    },
+  );
   final Map<String, VoiceAudioController> _nativeVoices = {};
   final Map<String, String> _notePaths = {};
   final Set<String> _noteLoads = {};
@@ -2188,6 +2194,7 @@ class _ChatScreenState extends State<ChatScreen>
 
   @override
   void dispose() {
+    _nativeStickers.dispose();
     _chatScrollOpaqueHold?.cancel();
     _chatScrollActive.dispose();
     ChatScreen._open.remove(this);
@@ -5512,6 +5519,7 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   void _markVisibleNative(List<String> ids) {
+    _syncNativeStickers(ids);
     if (_commentsMode || widget.preview) return;
     if (!mounted || _myId == 0 || ids.isEmpty) return;
     if (_awaitingPosition || !_initialPositionDone) return;
@@ -5626,6 +5634,29 @@ class _ChatScreenState extends State<ChatScreen>
   void _onNativePolls() {
     if (!mounted || !NativeChatBridge.isEligible) return;
     _bumpMessageRows();
+  }
+
+  void _syncNativeStickers(List<String> ids) {
+    if (widget.preview) {
+      _nativeStickers.setVisible(const {});
+      return;
+    }
+    final rows = <NativeStickerPlay>[];
+    for (final id in ids) {
+      final message = _chatController.byId(id);
+      if (message == null) continue;
+      rows.add(NativeStickerPlay(id: id, lottieUrl: _stickerLottie(message)));
+    }
+    _nativeStickers.setVisible(nativeStickerPlays(rows));
+  }
+
+  String? _stickerLottie(CachedMessage message) {
+    for (final attachment in _nativeAttachments(message)) {
+      if (attachment is! StickerAttachment) continue;
+      final url = attachment.lottieUrl;
+      if (url != null && url.isNotEmpty) return url;
+    }
+    return null;
   }
 
   VideoAttachment? _videoNoteAttachment(CachedMessage message) {

@@ -54,6 +54,7 @@ final class KometChatMessageCell: UICollectionViewCell {
   var onEvent: ((String, [String: Any]) -> Void)?
   private var item: KometChatMessage?
   private var accent = UIColor.systemBlue
+  private var stickerToken = 0
 
   private let selectionMark = UIImageView()
   private let avatar = UIImageView()
@@ -218,6 +219,7 @@ final class KometChatMessageCell: UICollectionViewCell {
   override func prepareForReuse() {
     super.prepareForReuse()
     KometNotePlayback.stop(ifHost: mediaView)
+    stickerToken += 1
     onEvent = nil
     item = nil
     mediaView.image = nil
@@ -272,8 +274,10 @@ final class KometChatMessageCell: UICollectionViewCell {
     fillAlbum(item)
     fillPoll(item, foreground: foreground, accent: accent)
     let roundMedia = item.kind == "videoNote" || item.kind == "sticker"
-    let showsMedia = item.kind != "album" && item.mediaUrl != nil &&
-      (item.kind == "photo" || item.kind == "video" || roundMedia)
+    let showsMedia = item.kind == "sticker" || (
+      item.kind != "album" && item.mediaUrl != nil &&
+      (item.kind == "photo" || item.kind == "video" || item.kind == "videoNote"))
+    mediaView.contentMode = item.kind == "sticker" ? .scaleAspectFit : .scaleAspectFill
     mediaView.isHidden = !showsMedia
     let side: CGFloat = item.kind == "sticker" ? 150 : 180
     mediaHeight?.constant = showsMedia ? (roundMedia ? side : 180) : 0
@@ -282,10 +286,11 @@ final class KometChatMessageCell: UICollectionViewCell {
       widthConstraint.isActive = roundMedia && showsMedia
     }
     mediaView.layer.cornerRadius = item.kind == "videoNote" ? side / 2 : 12
+    let token = stickerToken
     if showsMedia, let url = item.mediaUrl.flatMap(URL.init(string:)) {
       KometChatImages.load(url) { [weak self] image in
-        guard self?.item?.id == item.id else { return }
-        self?.mediaView.image = image
+        guard let self, self.item?.id == item.id, self.stickerToken == token else { return }
+        self.mediaView.image = image
       }
     }
     if item.kind == "videoNote", let path = item.playUrl, !path.isEmpty {
@@ -388,6 +393,12 @@ final class KometChatMessageCell: UICollectionViewCell {
     case "error": return "exclamationmark.circle"
     default: return "checkmark"
     }
+  }
+
+  func showStickerFrame(_ image: UIImage, id: String) {
+    guard item?.id == id, item?.kind == "sticker" else { return }
+    stickerToken += 1
+    mediaView.image = image
   }
 
   @objc private func tapRow() {

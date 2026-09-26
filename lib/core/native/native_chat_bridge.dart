@@ -560,6 +560,15 @@ class NativeChatCommands {
   Future<void> scrollTo(String id) async => _controller?.scrollTo(id);
 
   Future<void> scrollToEnd() async => _controller?.scrollToEnd();
+
+  Future<void> stickerFrame(
+    String id,
+    Uint8List rgba,
+    int width,
+    int height,
+  ) async {
+    await _controller?.stickerFrame(id, rgba, width, height);
+  }
 }
 
 class NativeChatController {
@@ -590,6 +599,18 @@ class NativeChatController {
   Future<void> scrollTo(String id) => _invoke('scrollTo', {'id': id});
 
   Future<void> scrollToEnd() => _invoke('scrollToEnd', null);
+
+  Future<void> stickerFrame(
+    String id,
+    Uint8List rgba,
+    int width,
+    int height,
+  ) => _invoke('stickerFrame', {
+    'id': id,
+    'bytes': rgba,
+    'width': width,
+    'height': height,
+  });
 
   Future<void> _invoke(String method, Object? arguments) async {
     if (_disposed) return;

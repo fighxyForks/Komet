@@ -87,6 +87,14 @@ final class KometChatPlatformView: NSObject, FlutterPlatformView {
     case "scrollToEnd":
       chat.scrollToEnd(animated: true)
       result(nil)
+    case "stickerFrame":
+      if let id = arguments["id"] as? String,
+         let bytes = arguments["bytes"] as? FlutterStandardTypedData,
+         let width = (arguments["width"] as? NSNumber)?.intValue,
+         let height = (arguments["height"] as? NSNumber)?.intValue {
+        chat.stickerFrame(id: id, bytes: bytes.data, width: width, height: height)
+      }
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -110,6 +118,7 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
   private let sizingService = KometChatServiceCell(frame: .zero)
 
   private var contents: [String: KometChatMessage] = [:]
+  private var stickerFrames: [String: UIImage] = [:]
   private var order: [String] = []
   private var chrome = KometChatChrome()
   private var nearBottom = true
@@ -171,6 +180,7 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     let offset = collectionView.contentOffset.y
     if let incoming = incoming { order = incoming }
     contents = contents.filter { order.contains($0.key) }
+    stickerFrames = stickerFrames.filter { order.contains($0.key) }
     var snapshot = NSDiffableDataSourceSnapshot<Int, String>()
     snapshot.appendSections([0])
     snapshot.appendItems(order)
@@ -208,6 +218,32 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     guard let index = order.firstIndex(of: id) else { return }
     collectionView.scrollToItem(
       at: IndexPath(item: index, section: 0), at: .centeredVertically, animated: true)
+  }
+
+  func stickerFrame(id: String, bytes: Data, width: Int, height: Int) {
+    guard width > 0, height > 0, bytes.count >= width * height * 4 else { return }
+    let bitmapInfo = CGBitmapInfo(rawValue:
+      CGImageAlphaInfo.last.rawValue | CGBitmapInfo.byteOrder32Big.rawValue)
+    guard let provider = CGDataProvider(data: bytes as CFData),
+          let cg = CGImage(
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bitsPerPixel: 32,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: bitmapInfo,
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: true,
+            intent: .defaultIntent
+          ) else { return }
+    let image = UIImage(cgImage: cg)
+    stickerFrames[id] = image
+    guard let index = order.firstIndex(of: id),
+          let cell = collectionView.cellForItem(at: IndexPath(item: index, section: 0))
+            as? KometChatMessageCell else { return }
+    cell.showStickerFrame(image, id: id)
   }
 
   func scrollToEnd(animated: Bool) {
@@ -305,6 +341,9 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
       cell.apply(
         item, accent: self.chrome.accent, selecting: self.chrome.selecting,
         width: collectionView.bounds.width)
+      if item.kind == "sticker", let frame = self.stickerFrames[id] {
+        cell.showStickerFrame(frame, id: id)
+      }
       cell.onEvent = { [weak self] method, arguments in
         self?.onEvent?(method, arguments)
       }
