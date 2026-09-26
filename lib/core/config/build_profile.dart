@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/services.dart' show appFlavor;
 
 // #***! что включено в сборке, всё считается на компиляции из flavor
@@ -20,7 +22,10 @@ abstract final class BuildProfile {
       !_publicRelease &&
       bool.fromEnvironment('KOMET_SELF_UPDATE', defaultValue: true);
   static const bool firebasePush = appFlavor == 'oneme';
-  static const bool spoofUi = !_publicRelease;
+  // #***! на iOS экран подмены скрыт, хендшейк при этом как у остальных
+  static bool get spoofUi =>
+      !_publicRelease &&
+      (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS);
   static const bool tokenLogin = false;
   static const bool qrLogin = false;
   static const bool devTools = !_publicRelease;
