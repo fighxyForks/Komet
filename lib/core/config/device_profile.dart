@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 
-import 'ios_client.dart';
-
 // #***! реальные данные устройства для юзерагента
 /// Данные устройства для user-agent, неизменные за время жизни процесса.
 /// Читаются с платформы один раз: на каждый реконнект их запрашивать незачем.
@@ -11,7 +9,6 @@ class DeviceProfile {
   const DeviceProfile({
     this.osVersion = '',
     this.deviceName = 'Unknown',
-    this.screen = '',
     this.manufacturer,
     this.model,
     this.sdkInt,
@@ -19,7 +16,6 @@ class DeviceProfile {
 
   final String osVersion;
   final String deviceName;
-  final String screen;
   final String? manufacturer;
   final String? model;
   final int? sdkInt;
@@ -51,16 +47,8 @@ class DeviceProfile {
     if (Platform.isIOS) {
       final info = await deviceInfo.iosInfo;
       return DeviceProfile(
-        osVersion: IosClient.osLabel(
-          systemName: info.systemName,
-          systemVersion: info.systemVersion,
-        ),
-        deviceName: IosClient.deviceTitle(
-          modelName: info.modelName,
-          model: info.model,
-          machine: info.utsname.machine,
-        ),
-        screen: IosClient.currentScreen(),
+        osVersion: info.systemVersion,
+        deviceName: info.utsname.machine,
       );
     }
     if (Platform.isLinux) {

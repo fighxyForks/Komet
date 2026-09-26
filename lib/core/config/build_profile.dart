@@ -1,7 +1,5 @@
 import 'package:flutter/services.dart' show appFlavor;
 
-import 'ios_client.dart';
-
 // #***! что включено в сборке, всё считается на компиляции из flavor
 abstract final class BuildProfile {
   static const String storeFlavor = 'store';
@@ -22,7 +20,7 @@ abstract final class BuildProfile {
       !_publicRelease &&
       bool.fromEnvironment('KOMET_SELF_UPDATE', defaultValue: true);
   static const bool firebasePush = appFlavor == 'oneme';
-  static bool get spoofUi => !_publicRelease && !IosClient.reportsRealDevice;
+  static const bool spoofUi = !_publicRelease;
   static const bool tokenLogin = false;
   static const bool qrLogin = false;
   static const bool devTools = !_publicRelease;
