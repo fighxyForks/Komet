@@ -19,6 +19,8 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/settings_card.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_symbols.dart';
 
@@ -202,6 +204,7 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
     final app = KometApp.stateOf(context);
     final currentId = app?.fontId ?? AppFonts.fallback.id;
 
@@ -211,7 +214,12 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
         top: false,
         child: ListView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+          padding: EdgeInsets.fromLTRB(
+            IosGlass.of(context) ? 20 : 16,
+            8,
+            IosGlass.of(context) ? 20 : 16,
+            120,
+          ),
           children: [
             _PreviewCard(fontId: currentId),
             const SizedBox(height: 28),
@@ -220,44 +228,82 @@ class _FontSettingsScreenState extends State<FontSettingsScreen> {
               text: l10n.fontSettingsSectionFont,
             ),
             const SizedBox(height: 14),
-            for (final font in AppFonts.builtIn) ...[
-              _FontOption(
-                font: font,
-                selected: font.id == currentId,
-                onTap: () => _selectFont(font.id),
-              ),
-              const SizedBox(height: 8),
-            ],
-            for (final family in _custom) ...[
-              _FontOption(
-                font: AppFonts.resolve(AppFonts.customId(family)),
-                selected: AppFonts.customId(family) == currentId,
-                onTap: () => _selectFont(AppFonts.customId(family)),
-                onDelete: () => _removeFont(family),
-              ),
-              const SizedBox(height: 8),
+            if (IosGlass.of(context))
+              IosCheckList<String>(
+                value: currentId,
+                onChanged: _selectFont,
+                options: [
+                  for (final font in AppFonts.builtIn)
+                    IosCheckOption(value: font.id, label: font.label),
+                  for (final family in _custom)
+                    IosCheckOption(
+                      value: AppFonts.customId(family),
+                      label: family,
+                      trailing: IconButton(
+                        onPressed: () => _removeFont(family),
+                        tooltip: l10n.msgActionsDelete,
+                        icon: Icon(
+                          IosSymbols.delete(context),
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                ],
+              )
+            else ...[
+              for (final font in AppFonts.builtIn) ...[
+                _FontOption(
+                  font: font,
+                  selected: font.id == currentId,
+                  onTap: () => _selectFont(font.id),
+                ),
+                const SizedBox(height: 8),
+              ],
+              for (final family in _custom) ...[
+                _FontOption(
+                  font: AppFonts.resolve(AppFonts.customId(family)),
+                  selected: AppFonts.customId(family) == currentId,
+                  onTap: () => _selectFont(AppFonts.customId(family)),
+                  onDelete: () => _removeFont(family),
+                ),
+                const SizedBox(height: 8),
+              ],
             ],
             const SizedBox(height: 4),
-            SizedBox(
-              width: double.infinity,
-              child: ButtonM3E(
+            if (IosGlass.of(context))
+              IosCapsuleButton(
+                label: _adding
+                    ? l10n.fontSettingsLoading
+                    : l10n.fontSettingsAddFontTitle,
                 onPressed: _adding ? null : _showAddFontDialog,
-                style: ButtonM3EStyle.outlined,
-                size: ButtonM3ESize.md,
-                icon: Icon(_adding ? IosSymbols.hourglass(context) : IosSymbols.add(context)),
-                label: Text(
-                  _adding
-                      ? l10n.fontSettingsLoading
-                      : l10n.fontSettingsAddFontTitle,
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                child: ButtonM3E(
+                  onPressed: _adding ? null : _showAddFontDialog,
+                  style: ButtonM3EStyle.outlined,
+                  size: ButtonM3ESize.md,
+                  icon: Icon(
+                    _adding
+                        ? IosSymbols.hourglass(context)
+                        : IosSymbols.add(context),
+                  ),
+                  label: Text(
+                    _adding
+                        ? l10n.fontSettingsLoading
+                        : l10n.fontSettingsAddFontTitle,
+                  ),
                 ),
               ),
-            ),
             const SizedBox(height: 30),
-            _SectionLabel(
-              icon: IosSymbols.formatSize(context),
-              text: l10n.fontSettingsSectionFontSize,
-            ),
-            const SizedBox(height: 6),
+            if (!IosGlass.of(context)) ...[
+              _SectionLabel(
+                icon: IosSymbols.formatSize(context),
+                text: l10n.fontSettingsSectionFontSize,
+              ),
+              const SizedBox(height: 6),
+            ],
             if (app != null)
               ValueListenableBuilder<double>(
                 valueListenable: app.fontScale,
@@ -356,6 +402,9 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    if (IosGlass.of(context)) {
+      return IosSectionHeader(text);
+    }
     return Padding(
       padding: const EdgeInsets.only(left: 6),
       child: Row(
@@ -402,7 +451,9 @@ class _FontOption extends StatelessWidget {
       icon: Icon(
         selected
             ? IosSymbols.checkCircle(context)
-            : (font.isSystem ? IosSymbols.smartphone(context) : IosSymbols.textFields(context)),
+            : (font.isSystem
+                  ? IosSymbols.smartphone(context)
+                  : IosSymbols.textFields(context)),
         fill: selected ? 1 : 0,
       ),
       label: Text(font.label, style: AppFonts.sample(font.id, fontSize: 16)),
@@ -419,7 +470,11 @@ class _FontOption extends StatelessWidget {
         IconButton(
           onPressed: onDelete,
           tooltip: AppLocalizations.of(context)!.msgActionsDelete,
-          icon: Icon(IosSymbols.delete(context), color: cs.onSurfaceVariant, weight: 500),
+          icon: Icon(
+            IosSymbols.delete(context),
+            color: cs.onSurfaceVariant,
+            weight: 500,
+          ),
         ),
       ],
     );
@@ -443,6 +498,50 @@ class _FontSizeControl extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isDefault = (scale - AppFonts.defaultScale).abs() < 0.001;
+    if (IosGlass.of(context)) {
+      final steps = [
+        for (
+          var step = AppFonts.minScale;
+          step <= AppFonts.maxScale + 0.001;
+          step += 0.05
+        )
+          double.parse(step.toStringAsFixed(2)),
+      ];
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const IosSectionHeader('Размер текста'),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: IosPalette.settingsCard(cs),
+              borderRadius: BorderRadius.circular(26),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                children: [
+                  IosSteppedSlider(
+                    value: scale,
+                    steps: steps,
+                    semanticLabel: 'Размер текста',
+                    semanticValue: '${(scale * 100).round()}%',
+                    onChanged: onChanged,
+                    onChangeEnd: onChangeEnd,
+                  ),
+                  const SizedBox(height: 12),
+                  IosTextScalePreview(scale: scale),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          IosCapsuleButton(
+            label: AppLocalizations.of(context)!.fontSettingsReset,
+            onPressed: isDefault ? null : onReset,
+          ),
+        ],
+      );
+    }
     return SettingsPanel(
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
       child: Column(

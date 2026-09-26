@@ -106,7 +106,8 @@ class IosSettingsScaffold extends StatelessWidget {
       barTrailing = Row(mainAxisSize: MainAxisSize.min, children: actions!);
     }
 
-    final barLeading = leading ??
+    final barLeading =
+        leading ??
         (automaticallyImplyLeading && Navigator.of(context).canPop()
             ? CupertinoButton(
                 padding: EdgeInsets.zero,
@@ -129,26 +130,48 @@ class IosSettingsScaffold extends StatelessWidget {
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,
-      body: _CollapsingIosSettings(
-        background: bg,
-        separator: IosPalette.separator(cs),
-        largeTitle: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: IosPalette.label(cs),
-            fontSize: IosTypography.largeTitle,
-            fontWeight: IosType.largeTitle,
-            letterSpacing: IosTypography.letterSpacing(
-              IosTypography.largeTitle,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: SizedBox(
+              height: 52,
+              child: NavigationToolbar(
+                leading: barLeading == null
+                    ? null
+                    : _GlassBack(child: barLeading),
+                middle: middle,
+                trailing: barTrailing,
+                centerMiddle: true,
+              ),
             ),
           ),
+          Expanded(child: body),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlassBack extends StatelessWidget {
+  final Widget child;
+
+  const _GlassBack({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: IosPalette.searchFill(Theme.of(context).colorScheme),
+          shape: BoxShape.circle,
         ),
-        middle: middle,
-        leading: barLeading,
-        trailing: barTrailing,
-        body: body,
+        child: SizedBox(
+          width: IosMetrics.minHitTarget,
+          height: IosMetrics.minHitTarget,
+          child: child,
+        ),
       ),
     );
   }
@@ -371,7 +394,12 @@ class IosSettingsButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(IosSymbols.adapt(context, icon!), size: 18, color: fg, weight: 500),
+              Icon(
+                IosSymbols.adapt(context, icon!),
+                size: 18,
+                color: fg,
+                weight: 500,
+              ),
               const SizedBox(width: 8),
             ],
             Text(

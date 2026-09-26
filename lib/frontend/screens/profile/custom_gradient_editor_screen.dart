@@ -9,6 +9,7 @@ import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
 
 class CustomGradientResult {
   final List<Color> colors;
@@ -147,47 +148,64 @@ class _CustomGradientEditorScreenState
               ),
             ),
             const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Анимация',
-                          style: TextStyle(
-                            color: cs.onSurface,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+            if (IosGlass.of(context))
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: IosToggleCard(
+                  label: 'Анимация',
+                  helper: 'Плавный перелив цветов',
+                  value: _animated,
+                  onChanged: _colors.length > 1
+                      ? (v) => setState(() => _animated = v)
+                      : null,
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Анимация',
+                            style: TextStyle(
+                              color: cs.onSurface,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        Text(
-                          'Плавный перелив цветов',
-                          style: TextStyle(
-                            color: cs.onSurfaceVariant,
-                            fontSize: 12.5,
+                          Text(
+                            'Плавный перелив цветов',
+                            style: TextStyle(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 12.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  GlassSwitch(
-                    value: _animated,
-                    onChanged: _colors.length > 1
-                        ? (v) => setState(() => _animated = v)
-                        : null,
-                  ),
-                ],
+                    GlassSwitch(
+                      value: _animated,
+                      onChanged: _colors.length > 1
+                          ? (v) => setState(() => _animated = v)
+                          : null,
+                    ),
+                  ],
+                ),
               ),
-            ),
             if (!_animated && _colors.length > 1)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                 child: Row(
                   children: [
-                    Icon(IosSymbols.rotateRight(context), color: cs.onSurfaceVariant, size: 20),
+                    Icon(
+                      IosSymbols.rotateRight(context),
+                      color: cs.onSurfaceVariant,
+                      size: 20,
+                    ),
                     Expanded(
                       child: IosSlider(
                         value: _rotation % 8,
@@ -286,7 +304,11 @@ class _Swatch extends StatelessWidget {
                       color: cs.surfaceContainerHighest,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(IosSymbols.close(context), size: 14, color: cs.onSurface),
+                    child: Icon(
+                      IosSymbols.close(context),
+                      size: 14,
+                      color: cs.onSurface,
+                    ),
                   ),
                 ),
               ),

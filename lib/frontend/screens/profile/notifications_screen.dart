@@ -21,6 +21,7 @@ import '../../widgets/glass/ios_route.dart';
 import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -103,9 +104,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   }
 
   void _openWebPush() {
-    Navigator.of(context).push(
-      iosPageRoute(context, builder: (context) => const WebPushScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(iosPageRoute(context, builder: (context) => const WebPushScreen()));
   }
 
   Future<void> _onFkmChanged(bool value) async {
@@ -172,7 +173,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             ? const Center(child: SmallSpinner(size: 36))
             : ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
+                padding: EdgeInsets.fromLTRB(
+                  IosGlass.of(context) ? 20 : 16,
+                  12,
+                  IosGlass.of(context) ? 20 : 16,
+                  120,
+                ),
                 children: [
                   if (Platform.isIOS) ...[
                     SettingsCard(
@@ -191,23 +197,34 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     SectionHeader(
                       l10n.notificationsFkmSectionTitle,
                       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                      fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
+                      fontSize: IosGlass.of(context)
+                          ? IosTypography.listSubtitle
+                          : 14,
                     ),
-                    SettingsCard(
-                      children: [
-                        ValueListenableBuilder<bool>(
-                          valueListenable: FkmController.instance.enabled,
-                          builder: (context, fkmEnabled, _) =>
-                              SettingsToggleTile(
-                                icon: IosSymbols.notificationsActive(context),
-                                label: l10n.notificationsFkmEnableLabel,
-                                subtitle: l10n.notificationsFkmEnableSubtitle,
-                                value: fkmEnabled,
-                                enabled: !_fkmBusy,
-                                onChanged: _onFkmChanged,
-                              ),
-                        ),
-                      ],
+                    ValueListenableBuilder<bool>(
+                      valueListenable: FkmController.instance.enabled,
+                      builder: (context, fkmEnabled, _) {
+                        if (IosGlass.of(context)) {
+                          return IosToggleCard(
+                            label: l10n.notificationsFkmEnableLabel,
+                            helper: l10n.notificationsFkmEnableSubtitle,
+                            value: fkmEnabled,
+                            onChanged: _fkmBusy ? null : _onFkmChanged,
+                          );
+                        }
+                        return SettingsCard(
+                          children: [
+                            SettingsToggleTile(
+                              icon: IosSymbols.notificationsActive(context),
+                              label: l10n.notificationsFkmEnableLabel,
+                              subtitle: l10n.notificationsFkmEnableSubtitle,
+                              value: fkmEnabled,
+                              enabled: !_fkmBusy,
+                              onChanged: _onFkmChanged,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 20),
                   ],
@@ -226,7 +243,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsMainSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.listSubtitle
+                        : 14,
                   ),
                   SettingsCard(
                     children: [
@@ -246,7 +265,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsNewSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.listSubtitle
+                        : 14,
                   ),
                   SettingsCard(
                     children: [
@@ -278,7 +299,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsAdditionalSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.listSubtitle
+                        : 14,
                   ),
                   SettingsCard(
                     children: [
@@ -308,19 +331,29 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   SectionHeader(
                     l10n.notificationsHapticsSectionTitle,
                     padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.listSubtitle
+                        : 14,
                   ),
-                  SettingsCard(
-                    children: [
-                      SettingsToggleTile(
-                        icon: IosSymbols.vibration(context),
-                        label: l10n.notificationsHapticsLabel,
-                        subtitle: l10n.notificationsHapticsSubtitle,
-                        value: _hapticsEnabled,
-                        onChanged: _setHaptics,
-                      ),
-                    ],
-                  ),
+                  if (IosGlass.of(context))
+                    IosToggleCard(
+                      label: l10n.notificationsHapticsLabel,
+                      helper: l10n.notificationsHapticsSubtitle,
+                      value: _hapticsEnabled,
+                      onChanged: _setHaptics,
+                    )
+                  else
+                    SettingsCard(
+                      children: [
+                        SettingsToggleTile(
+                          icon: IosSymbols.vibration(context),
+                          label: l10n.notificationsHapticsLabel,
+                          subtitle: l10n.notificationsHapticsSubtitle,
+                          value: _hapticsEnabled,
+                          onChanged: _setHaptics,
+                        ),
+                      ],
+                    ),
                 ],
               ),
       ),

@@ -16,6 +16,9 @@ import '../../widgets/confirm_dialog.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/glossy_pill.dart';
+import '../../widgets/settings_card.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
+import '../../widgets/glass/ios_tappable.dart';
 import '../../widgets/info_action_sheet.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
@@ -308,6 +311,18 @@ class _SecurityScreenState extends State<SecurityScreen>
     );
   }
 
+  Widget _grouped(ColorScheme cs, {required Widget child}) {
+    if (IosGlass.of(context)) {
+      return IosGroupedSection(radius: 26, child: child);
+    }
+    return GlossyPill(
+      color: cs.surfaceContainerHigh,
+      borderRadius: AppShape.cardRadius,
+      depth: 6,
+      child: child,
+    );
+  }
+
   String _getPrivacyLabel(String value) {
     final l10n = AppLocalizations.of(context)!;
     switch (value) {
@@ -325,10 +340,8 @@ class _SecurityScreenState extends State<SecurityScreen>
 
   Widget _buildTopSection(ColorScheme cs) {
     final l10n = AppLocalizations.of(context)!;
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: AppShape.cardRadius,
-      depth: 6,
+    return _grouped(
+      cs,
       child: Column(
         children: [
           _buildPasswordRow(cs),
@@ -369,7 +382,8 @@ class _SecurityScreenState extends State<SecurityScreen>
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
           child: Row(
             children: [
-              Icon(IosSymbols.lock(context),
+              Icon(
+                IosSymbols.lock(context),
                 color: cs.onSurfaceVariant,
                 size: 22,
                 weight: 400,
@@ -383,7 +397,9 @@ class _SecurityScreenState extends State<SecurityScreen>
                       l10n.passcodeTitle,
                       style: TextStyle(
                         color: cs.onSurface,
-                        fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+                        fontSize: IosGlass.of(context)
+                            ? IosTypography.listTitle
+                            : 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -403,7 +419,8 @@ class _SecurityScreenState extends State<SecurityScreen>
                   ],
                 ),
               ),
-              Icon(IosSymbols.chevronRight(context),
+              Icon(
+                IosSymbols.chevronRight(context),
                 color: cs.outline,
                 size: 20,
                 weight: 400,
@@ -425,7 +442,8 @@ class _SecurityScreenState extends State<SecurityScreen>
             onTap: () {
               Navigator.push(
                 context,
-                iosPageRoute(context,
+                iosPageRoute(
+                  context,
                   builder: (context) => const PasswordEntryScreen(),
                 ),
               );
@@ -450,7 +468,9 @@ class _SecurityScreenState extends State<SecurityScreen>
                           l10n.securityPasswordTitle,
                           style: TextStyle(
                             color: cs.onSurface,
-                            fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+                            fontSize: IosGlass.of(context)
+                                ? IosTypography.listTitle
+                                : 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -469,7 +489,8 @@ class _SecurityScreenState extends State<SecurityScreen>
                   ),
                   _buildWarningBadge(cs),
                   const SizedBox(width: 4),
-                  Icon(IosSymbols.chevronRight(context),
+                  Icon(
+                    IosSymbols.chevronRight(context),
                     color: cs.outline,
                     size: 20,
                     weight: 400,
@@ -496,10 +517,8 @@ class _SecurityScreenState extends State<SecurityScreen>
     final l10n = AppLocalizations.of(context)!;
     final isSafeMode = _privacyConfig?.safeMode ?? false;
     final contentLevelAccess = _privacyConfig?.contentLevelAccess ?? false;
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: AppShape.cardRadius,
-      depth: 6,
+    return _grouped(
+      cs,
       child: Column(
         children: [
           _buildSafeModeRow(cs, isSafeMode),
@@ -614,7 +633,8 @@ class _SecurityScreenState extends State<SecurityScreen>
                 ('CONTACTS', l10n.securityPrivacyContacts),
                 ('NOBODY', l10n.securityPrivacyNobody),
               ],
-              onSelect: (value) => _updateSetting('PHONE_NUMBER_PRIVACY', value),
+              onSelect: (value) =>
+                  _updateSetting('PHONE_NUMBER_PRIVACY', value),
             ),
           ),
         ],
@@ -626,52 +646,49 @@ class _SecurityScreenState extends State<SecurityScreen>
     final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _isSaving ? null : () => _setSafeMode(!isSafeMode),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 17,
-              ),
-              child: Row(
-                children: [
-                  Icon(IosSymbols.lock(context),
-                    color: cs.onSurfaceVariant,
-                    size: 22,
-                    weight: 400,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.securityModeTitle,
-                          style: TextStyle(
-                            color: cs.onSurface,
-                            fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
-                            fontWeight: FontWeight.w500,
-                          ),
+        IosTappable(
+          onTap: _isSaving ? null : () => _setSafeMode(!isSafeMode),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
+            child: Row(
+              children: [
+                Icon(
+                  IosSymbols.lock(context),
+                  color: cs.onSurfaceVariant,
+                  size: 22,
+                  weight: 400,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.securityModeTitle,
+                        style: TextStyle(
+                          color: cs.onSurface,
+                          fontSize: IosGlass.of(context)
+                              ? IosTypography.listTitle
+                              : 16,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.securityModeSubtitle,
-                          style: TextStyle(
-                            color: cs.onSurfaceVariant,
-                            fontSize: 13,
-                          ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.securityModeSubtitle,
+                        style: TextStyle(
+                          color: cs.onSurfaceVariant,
+                          fontSize: 13,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  GlassSwitch(
-                    value: isSafeMode,
-                    onChanged: _isSaving ? null : _setSafeMode,
-                  ),
-                ],
-              ),
+                ),
+                GlassSwitch(
+                  value: isSafeMode,
+                  onChanged: _isSaving ? null : _setSafeMode,
+                ),
+              ],
             ),
           ),
         ),
@@ -716,39 +733,59 @@ class _SecurityScreenState extends State<SecurityScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              ...options.map((option) {
-                final isSelected = option.$1 == currentValue;
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
+              if (IosGlass.of(context))
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: IosCheckList<String>(
+                    value: currentValue,
+                    options: [
+                      for (final option in options)
+                        IosCheckOption(value: option.$1, label: option.$2),
+                    ],
+                    onChanged: (value) {
                       Navigator.pop(context);
-                      if (!isSelected) onSelect(option.$1);
+                      if (value != currentValue) onSelect(value);
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              option.$2,
-                              style: TextStyle(
-                                color: cs.onSurface,
-                                fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+                  ),
+                )
+              else
+                ...options.map((option) {
+                  final isSelected = option.$1 == currentValue;
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                        if (!isSelected) onSelect(option.$1);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                option.$2,
+                                style: TextStyle(
+                                  color: cs.onSurface,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
-                          ),
-                          if (isSelected)
-                            Icon(IosSymbols.check(context), color: cs.primary, size: 20),
-                        ],
+                            if (isSelected)
+                              Icon(
+                                IosSymbols.check(context),
+                                color: cs.primary,
+                                size: 20,
+                              ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
               const SizedBox(height: 16),
             ],
           ),
@@ -815,10 +852,8 @@ class _SecurityScreenState extends State<SecurityScreen>
     final unsafeFiles = _privacyConfig?.unsafeFiles ?? true;
     final audioTranscription =
         _privacyConfig?.audioTranscriptionEnabled ?? true;
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: AppShape.cardRadius,
-      depth: 6,
+    return _grouped(
+      cs,
       child: Column(
         children: [
           _settingsRow(
@@ -827,18 +862,13 @@ class _SecurityScreenState extends State<SecurityScreen>
             label: l10n.securityReadReceipts,
             trailingWidget: GlassSwitch(
               value: showReadMark,
-              onChanged: (v) => _updateConfidentialSetting(
-                'SHOW_READ_MARK',
-                v,
-              ),
+              onChanged: (v) => _updateConfidentialSetting('SHOW_READ_MARK', v),
             ),
             showChevron: false,
             verticalPadding: 14,
             isLast: false,
-            onTap: () => _updateConfidentialSetting(
-              'SHOW_READ_MARK',
-              !showReadMark,
-            ),
+            onTap: () =>
+                _updateConfidentialSetting('SHOW_READ_MARK', !showReadMark),
           ),
           _settingsRow(
             cs,
@@ -851,10 +881,8 @@ class _SecurityScreenState extends State<SecurityScreen>
             showChevron: false,
             verticalPadding: 14,
             isLast: false,
-            onTap: () => _updateConfidentialSetting(
-              'ALT_KEYBOARD',
-              !altKeyboard,
-            ),
+            onTap: () =>
+                _updateConfidentialSetting('ALT_KEYBOARD', !altKeyboard),
           ),
           _settingsRow(
             cs,
@@ -867,10 +895,8 @@ class _SecurityScreenState extends State<SecurityScreen>
             showChevron: false,
             verticalPadding: 14,
             isLast: false,
-            onTap: () => _updateConfidentialSetting(
-              'UNSAFE_FILES',
-              !unsafeFiles,
-            ),
+            onTap: () =>
+                _updateConfidentialSetting('UNSAFE_FILES', !unsafeFiles),
           ),
           _settingsRow(
             cs,
@@ -878,10 +904,8 @@ class _SecurityScreenState extends State<SecurityScreen>
             label: l10n.securityAudioTranscription,
             trailingWidget: GlassSwitch(
               value: audioTranscription,
-              onChanged: (v) => _updateConfidentialSetting(
-                'AUDIO_TRANSCRIPTION_ENABLED',
-                v,
-              ),
+              onChanged: (v) =>
+                  _updateConfidentialSetting('AUDIO_TRANSCRIPTION_ENABLED', v),
             ),
             showChevron: false,
             verticalPadding: 14,
@@ -899,7 +923,8 @@ class _SecurityScreenState extends State<SecurityScreen>
   Future<void> _openBlacklist() async {
     await Navigator.push(
       context,
-      iosPageRoute(context,
+      iosPageRoute(
+        context,
         builder: (_) => BlacklistScreen(initialContacts: _blockedContacts),
       ),
     );
@@ -951,15 +976,15 @@ class _SecurityScreenState extends State<SecurityScreen>
     final l10n = AppLocalizations.of(context)!;
     final scheduledAt = _profileDeletionAt;
     final pending = scheduledAt != null;
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: AppShape.cardRadius,
-      depth: 6,
+    return _grouped(
+      cs,
       child: Column(
         children: [
           _settingsRow(
             cs,
-            icon: pending ? IosSymbols.error2(context) : IosSymbols.personRemove(context),
+            icon: pending
+                ? IosSymbols.error2(context)
+                : IosSymbols.personRemove(context),
             label: pending
                 ? l10n.securityDeleteProfileScheduled(
                     formatDateNumeric(scheduledAt),
@@ -988,56 +1013,55 @@ class _SecurityScreenState extends State<SecurityScreen>
   Widget _buildBlacklistSection(ColorScheme cs) {
     final l10n = AppLocalizations.of(context)!;
     final count = _blockedContacts.length;
-    return GlossyPill(
-      color: cs.surfaceContainerHigh,
-      borderRadius: AppShape.cardRadius,
-      depth: 6,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _openBlacklist,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
-            child: Row(
-              children: [
-                Icon(IosSymbols.block(context),
-                  color: cs.onSurfaceVariant,
-                  size: 22,
-                  weight: 400,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.securityBlacklistTitle,
-                        style: TextStyle(
-                          color: cs.onSurface,
-                          fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+    return _grouped(
+      cs,
+      child: IosTappable(
+        onTap: _openBlacklist,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
+          child: Row(
+            children: [
+              Icon(
+                IosSymbols.block(context),
+                color: cs.onSurfaceVariant,
+                size: 22,
+                weight: 400,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.securityBlacklistTitle,
+                      style: TextStyle(
+                        color: cs.onSurface,
+                        fontSize: IosGlass.of(context)
+                            ? IosTypography.listTitle
+                            : 16,
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '$count ${_getBlockedCountText(count)}',
-                        style: TextStyle(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 13,
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$count ${_getBlockedCountText(count)}',
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 13,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Icon(IosSymbols.chevronRight(context),
-                  color: cs.outline,
-                  size: 20,
-                  weight: 400,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                IosSymbols.chevronRight(context),
+                color: cs.outline,
+                size: 20,
+                weight: 400,
+              ),
+            ],
           ),
         ),
       ),
@@ -1071,87 +1095,99 @@ class _SecurityScreenState extends State<SecurityScreen>
     VoidCallback? onTap,
   }) {
     final l10n = AppLocalizations.of(context)!;
+    final ios = IosGlass.of(context);
     return Column(
       children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: lockedBySafeMode
-                ? () => showCustomNotification(context, l10n.securityModeLocked)
-                : (onTap ?? () => showCustomNotification(context, label)),
-            borderRadius: isLast
-                ? const BorderRadius.vertical(
-                    bottom: Radius.circular(AppShape.card),
-                  )
-                : BorderRadius.zero,
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: verticalPadding,
-              ),
-              child: Row(
-                children: [
-                  if (icon != null) ...[
-                    Icon(
-                      icon,
-                      color: accentColor ?? cs.onSurfaceVariant,
-                      size: 22,
-                      weight: 400,
-                    ),
-                    const SizedBox(width: 16),
-                  ],
-                  Expanded(
-                    child: subtitle != null
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                label,
-                                style: TextStyle(
-                                  color: accentColor ?? cs.onSurface,
-                                  fontSize: labelFontSize,
-                                  fontWeight: labelFontWeight,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                subtitle,
-                                style: TextStyle(
-                                  color: cs.onSurfaceVariant,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          )
-                        : Text(
-                            label,
-                            style: TextStyle(
-                              color: accentColor ?? cs.onSurface,
-                              fontSize: labelFontSize,
-                              fontWeight: labelFontWeight,
-                            ),
-                          ),
+        IosTappable(
+          onTap: lockedBySafeMode
+              ? () => showCustomNotification(context, l10n.securityModeLocked)
+              : (onTap ?? () => showCustomNotification(context, label)),
+          borderRadius: isLast
+              ? const BorderRadius.vertical(
+                  bottom: Radius.circular(AppShape.card),
+                )
+              : BorderRadius.zero,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: verticalPadding,
+            ),
+            child: Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(
+                    icon,
+                    color: accentColor ?? cs.onSurfaceVariant,
+                    size: 22,
+                    weight: 400,
                   ),
-                  if (trailingText != null)
-                    Text(
-                      trailingText,
-                      style: TextStyle(
-                        color: cs.onSurfaceVariant,
-                        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
-                      ),
-                    ),
-                  ?trailingWidget,
-                  if (showChevron) ...[
-                    const SizedBox(width: 4),
-                    Icon(
-                      lockedBySafeMode ? IosSymbols.lock(context) : IosSymbols.chevronRight(context),
-                      color: cs.outline,
-                      size: chevronSize,
-                      weight: 400,
-                    ),
-                  ],
+                  const SizedBox(width: 16),
                 ],
-              ),
+                Expanded(
+                  child: subtitle != null
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              label,
+                              softWrap: true,
+                              style: TextStyle(
+                                color: accentColor ?? cs.onSurface,
+                                fontSize: ios
+                                    ? IosTypography.listTitle
+                                    : labelFontSize,
+                                fontWeight: ios
+                                    ? IosTypography.regular
+                                    : labelFontWeight,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitle,
+                              style: TextStyle(
+                                color: cs.onSurfaceVariant,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          label,
+                          softWrap: true,
+                          style: TextStyle(
+                            color: accentColor ?? cs.onSurface,
+                            fontSize: ios
+                                ? IosTypography.listTitle
+                                : labelFontSize,
+                            fontWeight: ios
+                                ? IosTypography.regular
+                                : labelFontWeight,
+                          ),
+                        ),
+                ),
+                if (trailingText != null)
+                  Text(
+                    trailingText,
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
+                      fontSize: IosGlass.of(context)
+                          ? IosTypography.listSubtitle
+                          : 14,
+                    ),
+                  ),
+                ?trailingWidget,
+                if (showChevron) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    lockedBySafeMode
+                        ? IosSymbols.lock(context)
+                        : IosSymbols.chevronRight(context),
+                    color: cs.outline,
+                    size: chevronSize,
+                    weight: 400,
+                  ),
+                ],
+              ],
             ),
           ),
         ),

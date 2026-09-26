@@ -26,6 +26,8 @@ import '../../widgets/connection_status.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_symbols.dart';
+import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
 
 class DebugMenuScreen extends StatefulWidget {
   const DebugMenuScreen({super.key});
@@ -104,21 +106,38 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
                 ),
               ),
             ),
-            for (final preset in AppMediaCacheLimit.presets)
-              ListTile(
-                title: Text(
-                  _limitLabel(preset),
-                  style: TextStyle(color: cs.onSurface, fontSize: 16),
+            if (IosGlass.of(sheetContext))
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: IosCheckList<int>(
+                  value: AppMediaCacheLimit.current.value,
+                  options: [
+                    for (final preset in AppMediaCacheLimit.presets)
+                      IosCheckOption(value: preset, label: _limitLabel(preset)),
+                  ],
+                  onChanged: (preset) {
+                    AppMediaCacheLimit.save(preset);
+                    Navigator.pop(sheetContext);
+                    setState(() {});
+                  },
                 ),
-                trailing: AppMediaCacheLimit.current.value == preset
-                    ? Icon(IosSymbols.check(context), color: cs.primary)
-                    : null,
-                onTap: () {
-                  AppMediaCacheLimit.save(preset);
-                  Navigator.pop(sheetContext);
-                  setState(() {});
-                },
-              ),
+              )
+            else
+              for (final preset in AppMediaCacheLimit.presets)
+                ListTile(
+                  title: Text(
+                    _limitLabel(preset),
+                    style: TextStyle(color: cs.onSurface, fontSize: 16),
+                  ),
+                  trailing: AppMediaCacheLimit.current.value == preset
+                      ? Icon(IosSymbols.check(context), color: cs.primary)
+                      : null,
+                  onTap: () {
+                    AppMediaCacheLimit.save(preset);
+                    Navigator.pop(sheetContext);
+                    setState(() {});
+                  },
+                ),
             const SizedBox(height: 8),
           ],
         ),

@@ -19,6 +19,7 @@ import '../../widgets/glass/ios_route.dart';
 import '../../widgets/glass/ios_symbols.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
 
 class PasscodeSettingsScreen extends StatefulWidget {
   const PasscodeSettingsScreen({super.key});
@@ -104,17 +105,31 @@ class _PasscodeSettingsScreenState extends State<PasscodeSettingsScreen> {
                     style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
                   ),
                 ),
-                for (final minutes in AppLock.idleOptions)
-                  ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                if (IosGlass.of(sheetContext))
+                  IosCheckList<int>(
+                    value: _lock.idleMinutes.value,
+                    options: [
+                      for (final minutes in AppLock.idleOptions)
+                        IosCheckOption(
+                          value: minutes,
+                          label: _idleLabel(l10n, minutes),
+                        ),
+                    ],
+                    onChanged: (minutes) =>
+                        Navigator.pop(sheetContext, minutes),
+                  )
+                else
+                  for (final minutes in AppLock.idleOptions)
+                    ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: Text(_idleLabel(l10n, minutes)),
+                      trailing: minutes == _lock.idleMinutes.value
+                          ? Icon(IosSymbols.check(context), color: cs.primary)
+                          : null,
+                      onTap: () => Navigator.pop(sheetContext, minutes),
                     ),
-                    title: Text(_idleLabel(l10n, minutes)),
-                    trailing: minutes == _lock.idleMinutes.value
-                        ? Icon(IosSymbols.check(context), color: cs.primary)
-                        : null,
-                    onTap: () => Navigator.pop(sheetContext, minutes),
-                  ),
               ],
             ),
           ),
@@ -339,14 +354,17 @@ class _ValueTile extends StatelessWidget {
                   label,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.listTitle
+                        : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
               Text(value, style: TextStyle(color: cs.primary, fontSize: 14.5)),
               const SizedBox(width: 4),
-              Icon(IosSymbols.chevronRight(context),
+              Icon(
+                IosSymbols.chevronRight(context),
                 color: cs.outline,
                 size: 20,
                 weight: 400,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
@@ -9,7 +10,10 @@ import '../../widgets/color_wheel_picker.dart';
 import '../../../core/config/app_bubble_behavior.dart';
 import '../../../core/config/app_bubble_shape.dart';
 import '../../../core/config/app_pill_gradient.dart';
+import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_ios_glass.dart';
+import '../../../core/config/app_theme_mode.dart';
+import '../../../core/config/app_wallpaper_tint.dart';
 import '../../../core/config/app_visual_style.dart';
 import '../../../core/config/app_chat_chrome.dart';
 import '../../../core/config/app_composer_background.dart';
@@ -24,6 +28,12 @@ import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
+import '../../widgets/glass/ios_tappable.dart';
+import 'chat_background_screen.dart';
+import 'theme_settings_screen.dart';
 import '../../widgets/liquid_glass.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/glass/ios_typography.dart';
@@ -114,50 +124,299 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
+    final ios = IosGlass.of(context);
+    final gap = ios ? 20.0 : 12.0;
+    final blocks = <Widget>[
+      _ColorPickerCard(
+        color: _color,
+        isSystem: _isSystem,
+        expanded: _accentExpanded,
+        onToggle: _toggleAccentExpanded,
+        onColorChanged: _onColorChanged,
+        onReset: _resetToSystem,
+      ),
+      SizedBox(height: gap),
+      _BubbleShapeCard(onChanged: _onStyleChanged),
+      SizedBox(height: gap),
+      _BubbleBehaviorCard(onChanged: _onBehaviorChanged),
+      SizedBox(height: gap),
+      const _VisualStyleCard(),
+      SizedBox(height: gap),
+      const _ChatChromeCard(),
+      SizedBox(height: gap),
+      const _ComposerBarCard(),
+      SizedBox(height: gap),
+      const _NavPillStyleCard(),
+      SizedBox(height: gap),
+      if (ios)
+        const _IosEffectToggles()
+      else ...[
+        const _GradientToggleCard(),
+        SizedBox(height: gap),
+        const _SpectrumToggleCard(),
+      ],
+    ];
+
     return IosSettingsScaffold(
       title: l10n.appearanceTitle,
       body: SafeArea(
         top: false,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: _PreviewSection(color: _color, isSystem: _isSystem),
-            ),
-            Expanded(
-              child: ListView(
+        child: ios
+            ? ListView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
                 children: [
-                  _ColorPickerCard(
-                    color: _color,
-                    isSystem: _isSystem,
-                    expanded: _accentExpanded,
-                    onToggle: _toggleAccentExpanded,
-                    onColorChanged: _onColorChanged,
-                    onReset: _resetToSystem,
+                  _PreviewSection(color: _color, isSystem: _isSystem),
+                  const SizedBox(height: 20),
+                  const _IosThemeBlock(),
+                  const SizedBox(height: 20),
+                  const _IosTextSizeBlock(),
+                  const SizedBox(height: 20),
+                  ...blocks,
+                ],
+              )
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: _PreviewSection(color: _color, isSystem: _isSystem),
                   ),
-                  const SizedBox(height: 12),
-                  _BubbleShapeCard(onChanged: _onStyleChanged),
-                  const SizedBox(height: 12),
-                  _BubbleBehaviorCard(onChanged: _onBehaviorChanged),
-                  const SizedBox(height: 12),
-                  const _VisualStyleCard(),
-                  const SizedBox(height: 12),
-                  const _ChatChromeCard(),
-                  const SizedBox(height: 12),
-                  const _ComposerBarCard(),
-                  const SizedBox(height: 12),
-                  const _NavPillStyleCard(),
-                  const SizedBox(height: 12),
-                  const _GradientToggleCard(),
-                  const SizedBox(height: 12),
-                  const _SpectrumToggleCard(),
+                  Expanded(
+                    child: ListView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+                      children: blocks,
+                    ),
+                  ),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+class _IosChoice<T> extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final T value;
+  final List<IosCheckOption<T>> options;
+  final ValueChanged<T> onChanged;
+  final Widget? footer;
+
+  const _IosChoice({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+    this.footer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        IosSectionHeader(title),
+        IosCheckList<T>(value: value, options: options, onChanged: onChanged),
+        IosHelperText(subtitle),
+        if (footer != null) ...[const SizedBox(height: 16), footer!],
+      ],
+    );
+  }
+}
+
+class _IosThemeBlock extends StatelessWidget {
+  const _IosThemeBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        AppThemeModeConfig.current,
+        AppWallpaperTint.current,
+      ]),
+      builder: (context, _) {
+        final custom = AppWallpaperTint.current.value;
+        final current = AppThemeModeConfig.current.value;
+        final schedule = !custom && current == AppThemeMode.schedule;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const IosSectionHeader('Тема'),
+            IosTilePicker<AppThemeMode>(
+              value: custom || schedule ? null : current,
+              options: const [
+                IosTileOption(
+                  value: AppThemeMode.system,
+                  icon: CupertinoIcons.circle_lefthalf_fill,
+                  label: 'Система',
+                ),
+                IosTileOption(
+                  value: AppThemeMode.light,
+                  icon: CupertinoIcons.sun_max_fill,
+                  label: 'День',
+                ),
+                IosTileOption(
+                  value: AppThemeMode.dark,
+                  icon: CupertinoIcons.moon_fill,
+                  label: 'Ночь',
+                ),
+              ],
+              onChanged: (mode) {
+                if (custom) unawaited(AppWallpaperTint.save(false));
+                KometApp.stateOf(
+                  context,
+                )?.applyThemeModeWithReveal(mode, Offset.zero);
+              },
+            ),
+            const SizedBox(height: 16),
+            IosValueCard(
+              entries: [
+                IosValueEntry(
+                  label: 'По расписанию',
+                  value: schedule ? 'Включено' : null,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      iosPageRoute(
+                        context,
+                        builder: (context) => const ThemeSettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                IosValueEntry(
+                  label: 'Обои',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      iosPageRoute(
+                        context,
+                        builder: (context) => const ChatBackgroundScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
-        ),
+        );
+      },
+    );
+  }
+}
+
+class _IosTextSizeBlock extends StatelessWidget {
+  const _IosTextSizeBlock();
+
+  @override
+  Widget build(BuildContext context) {
+    final app = KometApp.stateOf(context);
+    if (app == null) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context)!;
+    return ValueListenableBuilder<double>(
+      valueListenable: app.fontScale,
+      builder: (context, scale, _) {
+        final steps = [
+          for (
+            var step = AppFonts.minScale;
+            step <= AppFonts.maxScale + 0.001;
+            step += 0.05
+          )
+            double.parse(step.toStringAsFixed(2)),
+        ];
+        final isDefault = (scale - AppFonts.defaultScale).abs() < 0.001;
+        final cs = Theme.of(context).colorScheme;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const IosSectionHeader('Размер текста'),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: IosPalette.settingsCard(cs),
+                borderRadius: BorderRadius.circular(26),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: Column(
+                  children: [
+                    IosSteppedSlider(
+                      value: scale,
+                      steps: steps,
+                      semanticLabel: 'Размер текста',
+                      semanticValue: '${(scale * 100).round()}%',
+                      onChanged: (v) => app.applyFontScale(v, persist: false),
+                      onChangeEnd: app.applyFontScale,
+                    ),
+                    const SizedBox(height: 12),
+                    IosTextScalePreview(scale: scale),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            IosCapsuleButton(
+              label: l10n.fontSettingsReset,
+              onPressed: isDefault
+                  ? null
+                  : () => app.applyFontScale(AppFonts.defaultScale),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _IosGlassToggle extends StatelessWidget {
+  const _IosGlassToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppIosGlass.enabled,
+      builder: (context, enabled, _) => IosToggleCard(
+        label: l10n.appearanceIosGlassTitle,
+        helper: l10n.appearanceIosGlassSubtitle,
+        value: enabled,
+        onChanged: (value) {
+          unawaited(GlassSuppression.during(() => AppIosGlass.save(value)));
+        },
+      ),
+    );
+  }
+}
+
+class _IosEffectToggles extends StatelessWidget {
+  const _IosEffectToggles();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        AppPillGradient.current,
+        AppSpectrumBackground.current,
+      ]),
+      builder: (context, _) => IosToggleGroup(
+        items: [
+          IosToggleItem(
+            label: l10n.appearanceGradientTitle,
+            detail: l10n.appearanceGradientSubtitle,
+            value: AppPillGradient.current.value,
+            onChanged: (value) {
+              unawaited(AppPillGradient.save(value));
+            },
+          ),
+          IosToggleItem(
+            label: l10n.appearanceSpectrumTitle,
+            detail: l10n.appearanceSpectrumSubtitle,
+            value: AppSpectrumBackground.current.value,
+            onChanged: (value) {
+              unawaited(AppSpectrumBackground.save(value));
+            },
+          ),
+        ],
       ),
     );
   }
@@ -189,8 +448,41 @@ class _VisualStyleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      return ValueListenableBuilder<VisualStyle>(
+        valueListenable: AppVisualStyle.current,
+        builder: (context, current, _) {
+          final selectable =
+              current == VisualStyle.liquidGlass && !LiquidGlass.isSupported
+              ? VisualStyle.glossy
+              : current;
+          return _IosChoice<VisualStyle>(
+            title: l10n.appearanceVisualStyleTitle,
+            subtitle: l10n.appearanceVisualStyleSubtitle,
+            value: selectable,
+            onChanged: _applyVisualStyle,
+            options: [
+              IosCheckOption(
+                value: VisualStyle.materialYou,
+                label: l10n.appearanceVisualStyleMaterialYou,
+              ),
+              IosCheckOption(
+                value: VisualStyle.glossy,
+                label: l10n.appearanceVisualStyleGlossy,
+              ),
+              if (LiquidGlass.isSupported)
+                IosCheckOption(
+                  value: VisualStyle.liquidGlass,
+                  label: l10n.appearanceVisualStyleLiquidGlass,
+                ),
+            ],
+            footer: AppIosGlass.supported ? const _IosGlassToggle() : null,
+          );
+        },
+      );
+    }
+    final cs = Theme.of(context).colorScheme;
     return SettingsPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,8 +608,48 @@ class _ChatChromeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      return ValueListenableBuilder<ChatChromeStyle>(
+        valueListenable: AppChatChrome.current,
+        builder: (context, current, _) {
+          final selectable =
+              current == ChatChromeStyle.liquidGlass && !LiquidGlass.isSupported
+              ? ChatChromeStyle.transparent
+              : current;
+          return _IosChoice<ChatChromeStyle>(
+            title: l10n.appearanceChatChromeTitle,
+            subtitle: l10n.appearanceChatChromeSubtitle,
+            value: selectable,
+            onChanged: (value) => unawaited(AppChatChrome.save(value)),
+            options: [
+              IosCheckOption(
+                value: ChatChromeStyle.color,
+                label: l10n.appearanceChatChromeColor,
+              ),
+              IosCheckOption(
+                value: ChatChromeStyle.blur,
+                label: l10n.appearanceChatChromeBlur,
+              ),
+              IosCheckOption(
+                value: ChatChromeStyle.none,
+                label: l10n.appearanceChatChromeNone,
+              ),
+              IosCheckOption(
+                value: ChatChromeStyle.transparent,
+                label: l10n.appearanceChatChromeTransparent,
+              ),
+              if (LiquidGlass.isSupported)
+                IosCheckOption(
+                  value: ChatChromeStyle.liquidGlass,
+                  label: l10n.appearanceGlassMaterial,
+                ),
+            ],
+          );
+        },
+      );
+    }
+    final cs = Theme.of(context).colorScheme;
     return SettingsPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,8 +720,73 @@ class _ComposerBarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      return ValueListenableBuilder<ComposerStyle>(
+        valueListenable: AppComposerStyle.current,
+        builder: (context, current, _) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _IosChoice<ComposerStyle>(
+                title: l10n.appearanceComposerTitle,
+                subtitle: l10n.appearanceComposerSubtitle,
+                value: current,
+                onChanged: (value) => unawaited(AppComposerStyle.save(value)),
+                options: [
+                  IosCheckOption(
+                    value: ComposerStyle.auto,
+                    label: l10n.appearanceStyleAuto,
+                  ),
+                  IosCheckOption(
+                    value: ComposerStyle.glossy,
+                    label: l10n.appearanceVisualStyleGlossy,
+                  ),
+                  IosCheckOption(
+                    value: ComposerStyle.materialYou,
+                    label: l10n.appearanceVisualStyleMaterialYou,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              ValueListenableBuilder<ComposerBackground>(
+                valueListenable: AppComposerBackground.current,
+                builder: (context, background, _) {
+                  final selectable =
+                      background == ComposerBackground.liquidGlass &&
+                          !LiquidGlass.isSupported
+                      ? ComposerBackground.frostBlur
+                      : background;
+                  return _IosChoice<ComposerBackground>(
+                    title: 'Фон панели',
+                    subtitle: l10n.appearanceComposerSubtitle,
+                    value: selectable,
+                    onChanged: (value) =>
+                        unawaited(AppComposerBackground.save(value)),
+                    options: [
+                      IosCheckOption(
+                        value: ComposerBackground.standard,
+                        label: l10n.appearanceComposerBackgroundStandard,
+                      ),
+                      IosCheckOption(
+                        value: ComposerBackground.frostBlur,
+                        label: l10n.appearanceComposerBackgroundFrost,
+                      ),
+                      if (LiquidGlass.isSupported)
+                        IosCheckOption(
+                          value: ComposerBackground.liquidGlass,
+                          label: l10n.appearanceGlassMaterial,
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+    final cs = Theme.of(context).colorScheme;
     return SettingsPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,8 +875,44 @@ class _NavPillStyleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      return ValueListenableBuilder<NavPillStyle>(
+        valueListenable: AppNavPillStyle.current,
+        builder: (context, current, _) {
+          final selectable =
+              current == NavPillStyle.liquidGlass && !LiquidGlass.isSupported
+              ? NavPillStyle.frostBlur
+              : current;
+          return _IosChoice<NavPillStyle>(
+            title: l10n.appearanceNavPillTitle,
+            subtitle: l10n.appearanceNavPillSubtitle,
+            value: selectable,
+            onChanged: (value) => unawaited(AppNavPillStyle.save(value)),
+            options: [
+              IosCheckOption(
+                value: NavPillStyle.auto,
+                label: l10n.appearanceStyleAuto,
+              ),
+              IosCheckOption(
+                value: NavPillStyle.glossy,
+                label: l10n.appearanceNavPillGlossy,
+              ),
+              IosCheckOption(
+                value: NavPillStyle.frostBlur,
+                label: l10n.appearanceNavPillFrost,
+              ),
+              if (LiquidGlass.isSupported)
+                IosCheckOption(
+                  value: NavPillStyle.liquidGlass,
+                  label: l10n.appearanceGlassMaterial,
+                ),
+            ],
+          );
+        },
+      );
+    }
+    final cs = Theme.of(context).colorScheme;
     return SettingsPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +985,12 @@ class _GradientToggleCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
       child: Row(
         children: [
-          Icon(IosSymbols.blurOn(context), color: cs.onSurface, size: 24, weight: 500),
+          Icon(
+            IosSymbols.blurOn(context),
+            color: cs.onSurface,
+            size: 24,
+            weight: 500,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -603,7 +1041,12 @@ class _SpectrumToggleCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
       child: Row(
         children: [
-          Icon(IosSymbols.graphicEq(context), color: cs.onSurface, size: 24, weight: 500),
+          Icon(
+            IosSymbols.graphicEq(context),
+            color: cs.onSurface,
+            size: 24,
+            weight: 500,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -850,7 +1293,7 @@ class _ColorPickerCard extends StatelessWidget {
     return SettingsPanel(
       child: Column(
         children: [
-          InkWell(
+          IosTappable(
             onTap: onToggle,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
@@ -896,7 +1339,8 @@ class _ColorPickerCard extends StatelessWidget {
                   AnimatedRotation(
                     duration: const Duration(milliseconds: 200),
                     turns: expanded ? 0.5 : 0,
-                    child: Icon(IosSymbols.expandMore(context),
+                    child: Icon(
+                      IosSymbols.expandMore(context),
                       color: cs.onSurfaceVariant,
                       size: 24,
                     ),
@@ -920,17 +1364,25 @@ class _ColorPickerCard extends StatelessWidget {
                           onChanged: onColorChanged,
                         ),
                         const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: IosSettingsButton(
-                            filled: false,
-                            onPressed: sys ? null : onReset,
-                            icon: IosSymbols.autoAwesome(context),
+                        if (IosGlass.of(context))
+                          IosCapsuleButton(
                             label: sys
                                 ? l10n.appearanceAccentColorSystemActive
                                 : l10n.appearanceAccentColorReset,
+                            onPressed: sys ? null : onReset,
+                          )
+                        else
+                          SizedBox(
+                            width: double.infinity,
+                            child: IosSettingsButton(
+                              filled: false,
+                              onPressed: sys ? null : onReset,
+                              icon: IosSymbols.autoAwesome(context),
+                              label: sys
+                                  ? l10n.appearanceAccentColorSystemActive
+                                  : l10n.appearanceAccentColorReset,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   )
@@ -949,8 +1401,31 @@ class _BubbleShapeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      return ValueListenableBuilder<BubbleStyle>(
+        valueListenable: AppBubbleShape.current,
+        builder: (context, current, _) {
+          return _IosChoice<BubbleStyle>(
+            title: l10n.appearanceBubbleShapeTitle,
+            subtitle: l10n.appearanceBubbleShapeSubtitle,
+            value: current,
+            onChanged: onChanged,
+            options: [
+              IosCheckOption(
+                value: BubbleStyle.mobile,
+                label: l10n.appearanceBubbleShapeMobile,
+              ),
+              IosCheckOption(
+                value: BubbleStyle.desktop,
+                label: l10n.appearanceBubbleShapeDesktop,
+              ),
+            ],
+          );
+        },
+      );
+    }
+    final cs = Theme.of(context).colorScheme;
 
     return SettingsPanel(
       child: Column(
@@ -1006,8 +1481,31 @@ class _BubbleBehaviorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      return ValueListenableBuilder<BubbleBehavior>(
+        valueListenable: AppBubbleBehavior.current,
+        builder: (context, current, _) {
+          return _IosChoice<BubbleBehavior>(
+            title: l10n.appearanceBubbleBehaviorTitle,
+            subtitle: l10n.appearanceBubbleBehaviorSubtitle,
+            value: current,
+            onChanged: onChanged,
+            options: [
+              IosCheckOption(
+                value: BubbleBehavior.mutable,
+                label: l10n.appearanceBubbleBehaviorMutable,
+              ),
+              IosCheckOption(
+                value: BubbleBehavior.immutable,
+                label: l10n.appearanceBubbleBehaviorImmutable,
+              ),
+            ],
+          );
+        },
+      );
+    }
+    final cs = Theme.of(context).colorScheme;
 
     return SettingsPanel(
       child: Column(
@@ -1055,4 +1553,3 @@ class _BubbleBehaviorCard extends StatelessWidget {
     );
   }
 }
-
