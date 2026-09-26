@@ -9,6 +9,7 @@ import 'package:komet/core/config/app_frost.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 
+import '../../../../native/native_chat_header_view.dart';
 import 'chat_header.dart';
 import 'frosted_panel.dart';
 import 'search_view.dart';
@@ -55,6 +56,8 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onOpenScheduled;
   final VoidCallback onCall;
   final void Function(BuildContext) onMenu;
+  final bool useNativeHeader;
+  final void Function(Rect anchor)? onMenuAt;
 
   final ValueListenable<Set<String>> selectedIds;
   final List<CachedMessage> Function(Set<String> ids) copyableSelection;
@@ -99,6 +102,8 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.onOpenScheduled,
     required this.onCall,
     required this.onMenu,
+    this.useNativeHeader = false,
+    this.onMenuAt,
     required this.selectedIds,
     required this.copyableSelection,
     required this.singleEditable,
@@ -202,7 +207,28 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                           offset: Offset(0, -height * 0.4 * t),
                           child: NativeGlassScope(
                             enabled: t == 0 && s == 0,
-                            child: ChatHeaderRow(
+                            child: useNativeHeader
+                                ? ListenableBuilder(
+                                    listenable: Listenable.merge([
+                                      headerStatus,
+                                      scheduledCount,
+                                    ]),
+                                    builder: (context, _) => NativeChatHeaderView(
+                                      title: name,
+                                      subtitle: headerStatus.value,
+                                      avatarUrl: imageUrl,
+                                      embedded: embedded,
+                                      showCall: showCall,
+                                      showScheduled: scheduledCount.value > 0,
+                                      onClose: onClose ??
+                                          () => Navigator.of(context).maybePop(),
+                                      onInfo: onOpenInfo,
+                                      onScheduled: onOpenScheduled,
+                                      onCall: onCall,
+                                      onMenu: (rect) => onMenuAt?.call(rect),
+                                    ),
+                                  )
+                                : ChatHeaderRow(
                               glossy: glossyChrome,
                               frosted:
                                   glossyChrome &&

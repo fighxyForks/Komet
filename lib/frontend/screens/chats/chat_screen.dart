@@ -3210,7 +3210,10 @@ class _ChatScreenState extends State<ChatScreen>
   void _openChatMenu(BuildContext btnContext) {
     final box = btnContext.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
-    final anchorRect = box.localToGlobal(Offset.zero) & box.size;
+    _openChatMenuAt(box.localToGlobal(Offset.zero) & box.size);
+  }
+
+  void _openChatMenuAt(Rect anchorRect) {
     showChatMenu(
       context: context,
       anchorRect: anchorRect,
@@ -4867,6 +4870,9 @@ class _ChatScreenState extends State<ChatScreen>
                     onOpenScheduled: _openScheduledMessages,
                     onCall: _startCall,
                     onMenu: _commentsMode ? (_) {} : _openChatMenu,
+                    useNativeHeader:
+                        NativeChatBridge.isEligible && AppIosGlass.active.value,
+                    onMenuAt: _commentsMode ? null : _openChatMenuAt,
                     selectedIds: _selectedIds,
                     copyableSelection: _copyableSelection,
                     singleEditable: _singleEditable,
