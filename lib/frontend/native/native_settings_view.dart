@@ -2,6 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+class NativeSettingsSection {
+  final String header;
+  final List<NativeSettingsRow> rows;
+
+  const NativeSettingsSection({this.header = '', required this.rows});
+}
+
 class NativeSettingsRow {
   final String id;
   final String title;
@@ -9,6 +16,8 @@ class NativeSettingsRow {
   final bool destructive;
   final bool enabled;
   final bool? switchValue;
+  final String trailing;
+  final List<String> keywords;
 
   const NativeSettingsRow({
     required this.id,
@@ -17,6 +26,8 @@ class NativeSettingsRow {
     this.destructive = false,
     this.enabled = true,
     this.switchValue,
+    this.trailing = '',
+    this.keywords = const [],
   });
 
   Map<String, Object?> toMap() => {
@@ -26,6 +37,8 @@ class NativeSettingsRow {
     'destructive': destructive,
     'enabled': enabled,
     if (switchValue != null) 'switchValue': switchValue,
+    if (trailing.isNotEmpty) 'trailing': trailing,
+    if (keywords.isNotEmpty) 'keywords': keywords,
   };
 }
 
@@ -34,7 +47,9 @@ class NativeSettingsView extends StatefulWidget {
   final String status;
   final bool online;
   final String phone;
+  final String detail;
   final String bio;
+  final String layout;
   final String avatarUrl;
   final bool canEditAvatar;
   final String version;
@@ -43,7 +58,7 @@ class NativeSettingsView extends StatefulWidget {
   final bool showQr;
   final bool showEdit;
   final bool showMenu;
-  final List<List<NativeSettingsRow>> sections;
+  final List<NativeSettingsSection> sections;
   final void Function(String id) onTap;
   final void Function(String id, bool value)? onToggle;
   final void Function(String action, Rect rect) onHeader;
@@ -54,6 +69,7 @@ class NativeSettingsView extends StatefulWidget {
     required this.status,
     required this.online,
     required this.phone,
+    this.detail = '',
     required this.bio,
     required this.avatarUrl,
     required this.canEditAvatar,
@@ -63,6 +79,7 @@ class NativeSettingsView extends StatefulWidget {
     this.showQr = true,
     this.showEdit = true,
     this.showMenu = true,
+    this.layout = 'profile',
     required this.sections,
     required this.onTap,
     this.onToggle,
@@ -83,6 +100,7 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       'status': widget.status,
       'online': widget.online,
       'phone': widget.phone,
+      'detail': widget.detail,
       'bio': widget.bio,
       'avatarUrl': widget.avatarUrl,
       'canEditAvatar': widget.canEditAvatar,
@@ -93,10 +111,12 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       'showMenu': widget.showMenu,
     },
     'version': widget.version,
+    'layout': widget.layout,
     'sections': [
       for (final section in widget.sections)
         {
-          'rows': [for (final row in section) row.toMap()],
+          'header': section.header,
+          'rows': [for (final row in section.rows) row.toMap()],
         },
     ],
   };
@@ -152,6 +172,7 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       'status': view.status,
       'online': view.online,
       'phone': view.phone,
+      'detail': view.detail,
       'bio': view.bio,
       'avatarUrl': view.avatarUrl,
       'canEditAvatar': view.canEditAvatar,
@@ -162,10 +183,12 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       'showMenu': view.showMenu,
     },
     'version': view.version,
+    'layout': view.layout,
     'sections': [
       for (final section in view.sections)
         {
-          'rows': [for (final row in section) row.toMap()],
+          'header': section.header,
+          'rows': [for (final row in section.rows) row.toMap()],
         },
     ],
   };

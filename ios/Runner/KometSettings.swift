@@ -18,7 +18,12 @@ final class KometSettingsViewFactory: NSObject, FlutterPlatformViewFactory {
     viewIdentifier viewId: Int64,
     arguments args: Any?
   ) -> FlutterPlatformView {
-    KometSettingsPlatformView(
+    let layout = (args as? [String: Any])?["layout"] as? String
+    if layout == "settings" {
+      return KometSettingsListPlatformView(
+        frame: frame, viewId: viewId, arguments: args, messenger: messenger)
+    }
+    return KometSettingsPlatformView(
       frame: frame, viewId: viewId, arguments: args, messenger: messenger)
   }
 }
