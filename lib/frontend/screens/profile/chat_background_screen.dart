@@ -14,6 +14,7 @@ import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_route.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
 
 class ChatBackgroundScreen extends StatefulWidget {
   const ChatBackgroundScreen({super.key});
@@ -95,7 +96,8 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
     final bytes = await pickWallpaperBytes(context);
     if (bytes == null || !mounted) return;
     final settings = await Navigator.of(context).push<WallpaperImageSettings>(
-      iosPageRoute(context,
+      iosPageRoute(
+        context,
         builder: (_) => ChatWallpaperPreviewScreen(imageBytes: bytes),
       ),
     );
@@ -174,62 +176,78 @@ class _ChatBackgroundScreenState extends State<ChatBackgroundScreen> {
           const SizedBox(height: 12),
           ValueListenableBuilder<bool>(
             valueListenable: AppWallpaperTint.current,
-            builder: (context, enabled, _) => Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Подстраивать интерфейс под обои',
-                        style: TextStyle(
-                          color: cs.onSurface,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Акцентный цвет приложения возьмётся из фона',
-                        style: TextStyle(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 12.5,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                GlassSwitch(
+            builder: (context, enabled, _) {
+              if (IosGlass.of(context)) {
+                return IosToggleCard(
+                  label: 'Подстраивать интерфейс под обои',
+                  helper: 'Акцентный цвет приложения возьмётся из фона',
                   value: enabled,
                   onChanged: (v) => AppWallpaperTint.save(v),
-                ),
-              ],
-            ),
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Подстраивать интерфейс под обои',
+                          style: TextStyle(
+                            color: cs.onSurface,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Акцентный цвет приложения возьмётся из фона',
+                          style: TextStyle(
+                            color: cs.onSurfaceVariant,
+                            fontSize: 12.5,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GlassSwitch(
+                    value: enabled,
+                    onChanged: (v) => AppWallpaperTint.save(v),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 12),
-          GestureDetector(
-            onTap: _ready ? _openPicker : null,
-            child: Container(
-              height: 52,
-              decoration: BoxDecoration(
-                color: cs.primary,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Text(
-                  'Выбрать обои',
-                  style: TextStyle(
-                    color: cs.onPrimary,
-                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: displayFontOf(context),
+          if (IosGlass.of(context))
+            IosCapsuleButton(
+              label: 'Выбрать обои',
+              onPressed: _ready ? _openPicker : null,
+            )
+          else
+            GestureDetector(
+              onTap: _ready ? _openPicker : null,
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  color: cs.primary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    'Выбрать обои',
+                    style: TextStyle(
+                      color: cs.onPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: displayFontOf(context),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

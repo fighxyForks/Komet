@@ -41,7 +41,7 @@ abstract final class IosTypography {
   static const double callLabel = 12;
   static const double listTitle = 17;
   static const double listSubtitle = 15;
-  static const double sectionHeader = 13;
+  static const double sectionHeader = 15;
   static const double footer = 13;
 
   /// Letter spacing for iOS mode; see [iosLetterSpacing].

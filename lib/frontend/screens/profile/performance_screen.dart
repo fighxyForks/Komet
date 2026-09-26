@@ -9,6 +9,8 @@ import '../../widgets/confirm_dialog.dart';
 import '../../widgets/settings_card.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_typography.dart';
+import '../../widgets/glass/ios_palette.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
 
 class PerformanceScreen extends StatefulWidget {
   const PerformanceScreen({super.key});
@@ -105,54 +107,95 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         top: false,
         child: ListView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
+          padding: EdgeInsets.fromLTRB(
+            IosGlass.of(context) ? 20 : 16,
+            12,
+            IosGlass.of(context) ? 20 : 16,
+            120,
+          ),
           children: [
-            SettingsPanel(
-              child: Column(
+            if (IosGlass.of(context))
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Кеш сообщений',
-                    style: TextStyle(
-                      color: cs.onSurface,
-                      fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
-                      fontWeight: FontWeight.w700,
+                  const IosSectionHeader('Кеш сообщений'),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: IosPalette.settingsCard(cs),
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                      child: IosSlider(
+                        value: _value,
+                        min: AppCacheExtent.min,
+                        max: AppCacheExtent.max,
+                        onChanged: _onChanged,
+                        onChangeEnd: _onChangeEnd,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
+                  const IosHelperText(
                     'Сколько пикселей сообщений держать построенными за пределами видимой области.',
-                    style: TextStyle(color: hint, fontSize: 13, height: 1.3),
                   ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Текущий cacheExtent: ${_value.round()}',
-                    style: TextStyle(color: hint, fontSize: 12),
-                  ),
-                  const SizedBox(height: 4),
-                  IosSlider(
-                    value: _value,
-                    min: AppCacheExtent.min,
-                    max: AppCacheExtent.max,
-                    onChanged: _onChanged,
-                    onChangeEnd: _onChangeEnd,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Меньше потребление',
-                        style: TextStyle(color: hint, fontSize: 11),
-                      ),
-                      Text(
-                        'Больше FPS',
-                        style: TextStyle(color: hint, fontSize: 11),
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(
+                      'Сейчас: ${_value.round()}',
+                      style: TextStyle(color: hint, fontSize: 13),
+                    ),
                   ),
                 ],
+              )
+            else
+              SettingsPanel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Кеш сообщений',
+                      style: TextStyle(
+                        color: cs.onSurface,
+                        fontSize: IosGlass.of(context)
+                            ? IosTypography.listTitle
+                            : 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Сколько пикселей сообщений держать построенными за пределами видимой области.',
+                      style: TextStyle(color: hint, fontSize: 13, height: 1.3),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Текущий cacheExtent: ${_value.round()}',
+                      style: TextStyle(color: hint, fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    IosSlider(
+                      value: _value,
+                      min: AppCacheExtent.min,
+                      max: AppCacheExtent.max,
+                      onChanged: _onChanged,
+                      onChangeEnd: _onChangeEnd,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Меньше потребление',
+                          style: TextStyle(color: hint, fontSize: 11),
+                        ),
+                        Text(
+                          'Больше FPS',
+                          style: TextStyle(color: hint, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

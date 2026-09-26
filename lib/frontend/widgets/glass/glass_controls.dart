@@ -6,6 +6,7 @@ import 'glass_capsule.dart';
 import 'ios_palette.dart';
 import 'ios_glass.dart';
 import 'ios_metrics.dart';
+import 'ios_settings_controls.dart';
 import 'ios_symbols.dart';
 import 'ios_typography.dart';
 
@@ -95,11 +96,7 @@ class IosFlatSearchBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                IosSymbols.search(context),
-                size: 18,
-                color: color,
-              ),
+              Icon(IosSymbols.search(context), size: 18, color: color),
               const SizedBox(width: 6),
               Text(
                 hint,
@@ -304,16 +301,17 @@ class IosSlider extends StatelessWidget {
         divisions: divisions,
       );
     }
-    return SizedBox(
-      width: double.infinity,
-      child: CupertinoSlider(
-        value: value.clamp(min, max),
-        onChanged: onChanged,
-        onChangeEnd: onChangeEnd,
-        min: min,
-        max: max,
-        divisions: divisions,
-      ),
+    final count = divisions;
+    final steps = count == null || count <= 0
+        ? null
+        : [for (var i = 0; i <= count; i++) min + (max - min) * i / count];
+    return IosTrackSlider(
+      value: value.clamp(min, max),
+      min: min,
+      max: max,
+      steps: steps,
+      onChanged: onChanged,
+      onChangeEnd: onChangeEnd,
     );
   }
 }
@@ -334,19 +332,13 @@ class IosActivityIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (IosGlass.of(context)) {
-      return CupertinoActivityIndicator(
-        radius: radius ?? 10,
-        color: color,
-      );
+      return CupertinoActivityIndicator(radius: radius ?? 10, color: color);
     }
     final size = (radius ?? 10) * 2;
     return SizedBox(
       width: size,
       height: size,
-      child: CircularProgressIndicator(
-        strokeWidth: strokeWidth,
-        color: color,
-      ),
+      child: CircularProgressIndicator(strokeWidth: strokeWidth, color: color),
     );
   }
 }
@@ -356,11 +348,7 @@ class IosCheckbox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool?>? onChanged;
 
-  const IosCheckbox({
-    super.key,
-    required this.value,
-    required this.onChanged,
-  });
+  const IosCheckbox({super.key, required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -393,7 +381,11 @@ class IosCheckbox extends StatelessWidget {
               ),
             ),
             child: value
-                ? const Icon(CupertinoIcons.check_mark, size: 14, color: Colors.white)
+                ? const Icon(
+                    CupertinoIcons.check_mark,
+                    size: 14,
+                    color: Colors.white,
+                  )
                 : null,
           ),
         ),

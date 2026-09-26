@@ -516,7 +516,10 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
       showQr: false,
       showEdit: widget.chatType == 'DIALOG' && _isContact,
       showMenu: _moreMenuEntries().isNotEmpty,
-      sections: _nativeProfileSections(),
+      sections: [
+        for (final rows in _nativeProfileSections())
+          NativeSettingsSection(rows: rows),
+      ],
       onTap: _onNativeProfileRow,
       onHeader: _onNativeProfileHeader,
     );

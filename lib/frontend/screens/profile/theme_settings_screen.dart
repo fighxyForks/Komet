@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
-
 
 import '../../../core/config/app_amoled.dart';
 import '../../../core/config/app_theme_mode.dart';
@@ -24,6 +24,7 @@ import '../../widgets/settings_card.dart';
 import 'custom_gradient_editor_screen.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_route.dart';
+import '../../widgets/glass/ios_settings_controls.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
   const ThemeSettingsScreen({super.key});
@@ -38,7 +39,12 @@ class ThemeSettingsScreen extends StatelessWidget {
         top: false,
         child: ListView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
+          padding: EdgeInsets.fromLTRB(
+            IosGlass.of(context) ? 20 : 16,
+            12,
+            IosGlass.of(context) ? 20 : 16,
+            120,
+          ),
           children: const [
             _ThemeModeCard(),
             SizedBox(height: 12),
@@ -112,7 +118,8 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
   Future<void> _openEditor() async {
     if (_accountId == 0) return;
     final result = await Navigator.of(context).push<CustomGradientResult>(
-      iosPageRoute(context,
+      iosPageRoute(
+        context,
         builder: (_) => CustomGradientEditorScreen(
           initialColors: _wallpaper?.gradientColors,
           initialAnimated: _wallpaper?.gradientAnimated ?? false,
@@ -153,6 +160,97 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final colors = _wallpaper?.gradientColors;
+    if (IosGlass.of(context)) {
+      return ListenableBuilder(
+        listenable: Listenable.merge([
+          AppThemeModeConfig.current,
+          AppWallpaperTint.current,
+        ]),
+        builder: (context, _) {
+          final current = AppThemeModeConfig.current.value;
+          final customSelected = AppWallpaperTint.current.value;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IosSectionHeader(l10n.themeSettingsModeCardTitle),
+              IosTilePicker<AppThemeMode>(
+                value: customSelected ? null : current,
+                options: const [
+                  IosTileOption(
+                    value: AppThemeMode.system,
+                    icon: CupertinoIcons.circle_lefthalf_fill,
+                    label: 'Система',
+                  ),
+                  IosTileOption(
+                    value: AppThemeMode.light,
+                    icon: CupertinoIcons.sun_max_fill,
+                    label: 'День',
+                  ),
+                  IosTileOption(
+                    value: AppThemeMode.dark,
+                    icon: CupertinoIcons.moon_fill,
+                    label: 'Ночь',
+                  ),
+                ],
+                onChanged: (mode) {
+                  if (customSelected) {
+                    unawaited(AppWallpaperTint.save(false));
+                  }
+                  KometApp.stateOf(
+                    context,
+                  )?.applyThemeModeWithReveal(mode, Offset.zero);
+                },
+              ),
+              IosHelperText(l10n.themeSettingsModeCardSubtitle),
+              const SizedBox(height: 16),
+              IosCheckList<String>(
+                value: customSelected
+                    ? 'custom'
+                    : (current == AppThemeMode.schedule ? 'schedule' : null),
+                options: [
+                  IosCheckOption(
+                    value: 'schedule',
+                    label: _labelFor(l10n, AppThemeMode.schedule),
+                  ),
+                  IosCheckOption(
+                    value: 'custom',
+                    label: l10n.themeSettingsCustomTitle,
+                  ),
+                ],
+                onChanged: (choice) {
+                  if (choice == 'schedule') {
+                    if (!customSelected && current == AppThemeMode.schedule) {
+                      return;
+                    }
+                    if (customSelected) {
+                      unawaited(AppWallpaperTint.save(false));
+                    }
+                    KometApp.stateOf(context)?.applyThemeModeWithReveal(
+                      AppThemeMode.schedule,
+                      Offset.zero,
+                    );
+                    return;
+                  }
+                  if (customSelected) return;
+                  unawaited(_enableCustom());
+                },
+              ),
+              if (customSelected) ...[
+                const SizedBox(height: 12),
+                IosValueCard(
+                  entries: [
+                    IosValueEntry(
+                      label: 'Настроить',
+                      onTap: _ready ? _openEditor : null,
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          );
+        },
+      );
+    }
     return SettingsPanel(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
       child: Column(
@@ -230,7 +328,11 @@ class _ThemeModeCardState extends State<_ThemeModeCard> {
                                   )
                                 : ColoredBox(
                                     color: cs.surfaceContainerHighest,
-                                    child: Icon(IosSymbols.adapt(context, Symbols.palette),
+                                    child: Icon(
+                                      IosSymbols.adapt(
+                                        context,
+                                        Symbols.palette,
+                                      ),
                                       color: cs.onSurface,
                                       size: 18,
                                     ),
@@ -274,7 +376,12 @@ class _ModeTileState extends State<_ModeTile> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return SettingsRadioTile(
-      leading: Icon(IosSymbols.adapt(context, widget.icon), color: cs.onSurface, size: 22, weight: 500),
+      leading: Icon(
+        IosSymbols.adapt(context, widget.icon),
+        color: cs.onSurface,
+        size: 22,
+        weight: 500,
+      ),
       label: widget.label,
       selected: widget.selected,
       onTapDown: (d) => _lastTapPosition = d.globalPosition,
@@ -297,6 +404,27 @@ class _AmoledCardState extends State<_AmoledCard> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    if (IosGlass.of(context)) {
+      return ValueListenableBuilder<bool>(
+        valueListenable: AppAmoled.current,
+        builder: (context, value, _) {
+          return Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (e) => _lastPointerPosition = e.position,
+            child: IosToggleCard(
+              label: l10n.themeSettingsAmoledTitle,
+              helper: l10n.themeSettingsAmoledSubtitle,
+              value: value,
+              onChanged: (v) {
+                KometApp.stateOf(
+                  context,
+                )?.applyAmoledWithReveal(v, _lastPointerPosition);
+              },
+            ),
+          );
+        },
+      );
+    }
     return Listener(
       behavior: HitTestBehavior.translucent,
       onPointerDown: (e) => _lastPointerPosition = e.position,
@@ -304,7 +432,12 @@ class _AmoledCardState extends State<_AmoledCard> {
         padding: const EdgeInsets.fromLTRB(20, 14, 12, 14),
         child: Row(
           children: [
-            Icon(IosSymbols.adapt(context, Symbols.contrast), color: cs.onSurface, size: 24, weight: 500),
+            Icon(
+              IosSymbols.adapt(context, Symbols.contrast),
+              color: cs.onSurface,
+              size: 24,
+              weight: 500,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -360,6 +493,60 @@ class _ScheduleCard extends StatelessWidget {
       valueListenable: AppThemeModeConfig.current,
       builder: (context, mode, _) {
         final enabled = mode == AppThemeMode.schedule;
+        if (IosGlass.of(context)) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IosSectionHeader(l10n.themeSettingsScheduleTitle),
+              IosHelperText(
+                enabled
+                    ? l10n.themeSettingsScheduleSubtitleEnabled
+                    : l10n.themeSettingsScheduleSubtitleDisabled,
+              ),
+              const SizedBox(height: 8),
+              Opacity(
+                opacity: enabled ? 1 : 0.4,
+                child: ValueListenableBuilder<ThemeSchedule>(
+                  valueListenable: AppThemeSchedule.current,
+                  builder: (context, schedule, _) {
+                    return IosValueCard(
+                      entries: [
+                        IosValueEntry(
+                          label: l10n.themeSettingsScheduleDarkFrom,
+                          value: AppThemeSchedule.format(schedule.darkStart),
+                          enabled: enabled,
+                          onTap: () =>
+                              _pickTime(context, schedule.darkStart, (picked) {
+                                KometApp.stateOf(context)?.applyThemeSchedule(
+                                  ThemeSchedule(
+                                    darkStart: picked,
+                                    darkEnd: schedule.darkEnd,
+                                  ),
+                                );
+                              }),
+                        ),
+                        IosValueEntry(
+                          label: l10n.themeSettingsScheduleLightFrom,
+                          value: AppThemeSchedule.format(schedule.darkEnd),
+                          enabled: enabled,
+                          onTap: () =>
+                              _pickTime(context, schedule.darkEnd, (picked) {
+                                KometApp.stateOf(context)?.applyThemeSchedule(
+                                  ThemeSchedule(
+                                    darkStart: schedule.darkStart,
+                                    darkEnd: picked,
+                                  ),
+                                );
+                              }),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
         return AnimatedOpacity(
           opacity: enabled ? 1 : 0.5,
           duration: const Duration(milliseconds: 200),
@@ -428,6 +615,27 @@ class _ScheduleCard extends StatelessWidget {
       },
     );
   }
+
+  Future<void> _pickTime(
+    BuildContext context,
+    TimeOfDay time,
+    ValueChanged<TimeOfDay> onPick,
+  ) async {
+    if (IosGlass.of(context)) {
+      IosHaptics.itemActivate();
+    } else {
+      Haptics.tap();
+    }
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: time,
+      builder: (ctx, child) => MediaQuery(
+        data: MediaQuery.of(ctx).copyWith(alwaysUse24HourFormat: true),
+        child: child ?? const SizedBox.shrink(),
+      ),
+    );
+    if (picked != null) onPick(picked);
+  }
 }
 
 class _TimeRow extends StatelessWidget {
@@ -456,7 +664,12 @@ class _TimeRow extends StatelessWidget {
       onTap: enabled ? () => _pick(context) : null,
       child: Row(
         children: [
-          Icon(IosSymbols.adapt(context, icon), color: cs.onSurface, size: 22, weight: 500),
+          Icon(
+            IosSymbols.adapt(context, icon),
+            color: cs.onSurface,
+            size: 22,
+            weight: 500,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -499,4 +712,3 @@ class _TimeRow extends StatelessWidget {
     if (picked != null) onPick(picked);
   }
 }
-

@@ -8,6 +8,7 @@ import 'ios_metrics.dart';
 class IosTappable extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final GestureTapDownCallback? onTapDown;
   final VoidCallback? onLongPress;
   final BorderRadius? borderRadius;
   final bool enabled;
@@ -18,6 +19,7 @@ class IosTappable extends StatefulWidget {
     super.key,
     required this.child,
     this.onTap,
+    this.onTapDown,
     this.onLongPress,
     this.borderRadius,
     this.enabled = true,
@@ -42,6 +44,7 @@ class _IosTappableState extends State<IosTappable> {
         color: Colors.transparent,
         child: InkWell(
           onTap: enabled ? widget.onTap : null,
+          onTapDown: enabled ? widget.onTapDown : null,
           onLongPress: enabled ? widget.onLongPress : null,
           borderRadius: widget.borderRadius,
           child: widget.child,
@@ -53,7 +56,12 @@ class _IosTappableState extends State<IosTappable> {
       constraints: const BoxConstraints(minHeight: IosMetrics.minHitTarget),
       child: GestureDetector(
         behavior: widget.behavior,
-        onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
+        onTapDown: enabled
+            ? (details) {
+                setState(() => _pressed = true);
+                widget.onTapDown?.call(details);
+              }
+            : null,
         onTapUp: enabled ? (_) => setState(() => _pressed = false) : null,
         onTapCancel: enabled ? () => setState(() => _pressed = false) : null,
         onTap: enabled ? widget.onTap : null,

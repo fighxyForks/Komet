@@ -392,8 +392,9 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       await _applyProfileAfterDeletion(profile);
       if (mounted) showCustomNotification(context, 'Фото удалено');
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         showCustomNotification(context, 'Не удалось удалить фото: $e');
+      }
     }
   }
 
@@ -431,15 +432,14 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
   }
 
   Future<void> _setHaptics(bool value) async {
+    if (IosGlass.of(context)) {
+      IosHaptics.toggle();
+    } else {
+      Haptics.selection();
+    }
     await Haptics.setEnabled(value);
     if (!mounted) return;
     setState(() => _hapticsEnabled = value);
-    if (!value) return;
-    if (IosGlass.of(context)) {
-      IosHaptics.success();
-    } else {
-      Haptics.success();
-    }
   }
 
   Future<void> _checkForUpdates() async {
@@ -995,6 +995,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               canEditAvatar: _currentAvatar != null,
               version: _appVersionLabel ?? '',
               topInset: MediaQuery.paddingOf(context).top,
+              detail: phone,
+              layout: 'settings',
               sections: _nativeSettingsSections(context, l10n, others),
               onTap: (id) => _onNativeSettingsTap(context, id),
               onToggle: (id, value) {
@@ -1008,7 +1010,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     );
   }
 
-  List<List<NativeSettingsRow>> _nativeSettingsSections(
+  List<NativeSettingsSection> _nativeSettingsSections(
     BuildContext context,
     AppLocalizations l10n,
     List<ProfileData> others,
@@ -1026,128 +1028,173 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             symbol: 'person.crop.circle',
           );
     return [
-      [
-        if (BuildProfile.digitalId)
-          const NativeSettingsRow(
-            id: 'digital-id',
-            title: 'Цифровой ID',
-            symbol: 'person.text.rectangle',
-          ),
-        const NativeSettingsRow(
-          id: 'sferum',
-          title: 'Войти в Сферум',
-          symbol: 'globe',
-        ),
-        const NativeSettingsRow(
-          id: 'saved',
-          title: 'Избранное',
-          symbol: 'bookmark',
-        ),
-        account,
-        if (showExtra)
+      const NativeSettingsSection(
+        rows: [
           NativeSettingsRow(
-            id: 'info',
-            title: l10n.infoTitle,
-            symbol: 'info.circle',
-          ),
-      ],
-      const [
-        NativeSettingsRow(id: 'theme', title: 'Тема', symbol: 'moon'),
-        NativeSettingsRow(
-          id: 'appearance',
-          title: 'Внешний вид',
-          symbol: 'paintbrush',
-        ),
-        NativeSettingsRow(id: 'wallpaper', title: 'Фон чатов', symbol: 'photo'),
-        NativeSettingsRow(id: 'fonts', title: 'Шрифты', symbol: 'textformat'),
-        NativeSettingsRow(
-          id: 'actions',
-          title: 'Меню действий',
-          symbol: 'ellipsis.circle',
-        ),
-        NativeSettingsRow(
-          id: 'icon',
-          title: 'Иконка приложения',
-          symbol: 'app.badge',
-        ),
-      ],
-      const [
-        NativeSettingsRow(id: 'folders', title: 'Папки', symbol: 'folder'),
-      ],
-      [
-        NativeSettingsRow(
-          id: 'haptics',
-          title: 'Тактильный отклик',
-          symbol: 'waveform',
-          switchValue: _hapticsEnabled,
-        ),
-        const NativeSettingsRow(
-          id: 'notifications',
-          title: 'Уведомления',
-          symbol: 'bell',
-        ),
-        const NativeSettingsRow(
-          id: 'media',
-          title: 'Камера и микрофон',
-          symbol: 'video',
-        ),
-        const NativeSettingsRow(
-          id: 'cloud',
-          title: 'Облачное хранилище [BETA]',
-          symbol: 'cloud',
-        ),
-        const NativeSettingsRow(
-          id: 'proxy',
-          title: 'Прокси',
-          symbol: 'network',
-        ),
-        if (BuildProfile.spoofUi)
-          NativeSettingsRow(
-            id: 'spoof',
-            title: l10n.profileMenuSpoof,
-            symbol: 'lock.shield',
-          ),
-        const NativeSettingsRow(
-          id: 'security',
-          title: 'Безопасность',
-          symbol: 'lock',
-        ),
-        const NativeSettingsRow(
-          id: 'devices',
-          title: 'Устройства',
-          symbol: 'iphone',
-        ),
-      ],
-      if (_debugMenuVisible)
-        const [
-          NativeSettingsRow(
-            id: 'developers',
-            title: 'Для разработчиков',
-            symbol: 'hammer',
+            id: 'saved',
+            title: 'Избранное',
+            symbol: 'bookmark',
           ),
         ],
-      [
-        if (BuildProfile.selfUpdate)
-          NativeSettingsRow(
-            id: 'update',
-            title: _isCheckingForUpdates
-                ? l10n.updateChecking
-                : l10n.updateCheck,
-            symbol: 'arrow.down.circle',
-            enabled: !_isCheckingForUpdates,
+      ),
+      NativeSettingsSection(rows: [account]),
+      NativeSettingsSection(
+        rows: [
+          if (BuildProfile.digitalId)
+            const NativeSettingsRow(
+              id: 'digital-id',
+              title: 'Цифровой ID',
+              symbol: 'person.text.rectangle',
+              keywords: ['удостоверение'],
+            ),
+          const NativeSettingsRow(
+            id: 'security',
+            title: 'Безопасность',
+            symbol: 'lock',
+            keywords: ['пароль', 'код'],
           ),
-        const NativeSettingsRow(
-          id: 'komet',
-          title: 'Komet',
-          symbol: 'sparkles',
-        ),
-        const NativeSettingsRow(
-          id: 'logout',
-          title: 'Выйти из аккаунта',
-          symbol: 'rectangle.portrait.and.arrow.right',
-          destructive: true,
-        ),
-      ],
+          const NativeSettingsRow(
+            id: 'devices',
+            title: 'Устройства',
+            symbol: 'iphone',
+            keywords: ['сессии'],
+          ),
+          const NativeSettingsRow(
+            id: 'sferum',
+            title: 'Войти в Сферум',
+            symbol: 'globe',
+          ),
+          if (showExtra)
+            NativeSettingsRow(
+              id: 'info',
+              title: l10n.infoTitle,
+              symbol: 'info.circle',
+            ),
+        ],
+      ),
+      NativeSettingsSection(
+        header: 'Приложение',
+        rows: [
+          const NativeSettingsRow(
+            id: 'theme',
+            title: 'Тема',
+            symbol: 'moon',
+            keywords: ['оформление', 'тёмная'],
+          ),
+          const NativeSettingsRow(
+            id: 'appearance',
+            title: 'Внешний вид',
+            symbol: 'paintbrush',
+            keywords: ['оформление'],
+          ),
+          const NativeSettingsRow(
+            id: 'wallpaper',
+            title: 'Фон чатов',
+            symbol: 'photo',
+            keywords: ['оформление'],
+          ),
+          const NativeSettingsRow(
+            id: 'fonts',
+            title: 'Шрифты',
+            symbol: 'textformat',
+            keywords: ['оформление'],
+          ),
+          const NativeSettingsRow(
+            id: 'actions',
+            title: 'Меню действий',
+            symbol: 'ellipsis.circle',
+          ),
+          const NativeSettingsRow(
+            id: 'icon',
+            title: 'Иконка приложения',
+            symbol: 'app.badge',
+            keywords: ['оформление'],
+          ),
+          NativeSettingsRow(
+            id: 'haptics',
+            title: 'Тактильный отклик',
+            symbol: 'waveform',
+            keywords: const ['вибрация', 'отдача'],
+            switchValue: _hapticsEnabled,
+          ),
+          const NativeSettingsRow(
+            id: 'notifications',
+            title: 'Уведомления',
+            symbol: 'bell',
+            keywords: ['пуш', 'звук'],
+          ),
+          const NativeSettingsRow(
+            id: 'media',
+            title: 'Камера и микрофон',
+            symbol: 'video',
+            keywords: ['данные', 'память'],
+          ),
+          const NativeSettingsRow(
+            id: 'cloud',
+            title: 'Облачное хранилище [BETA]',
+            symbol: 'cloud',
+            keywords: ['данные'],
+          ),
+          const NativeSettingsRow(
+            id: 'proxy',
+            title: 'Прокси',
+            symbol: 'network',
+          ),
+          if (BuildProfile.spoofUi)
+            NativeSettingsRow(
+              id: 'spoof',
+              title: l10n.profileMenuSpoof,
+              symbol: 'lock.shield',
+            ),
+        ],
+      ),
+      const NativeSettingsSection(
+        header: 'Чаты',
+        rows: [
+          NativeSettingsRow(
+            id: 'folders',
+            title: 'Папки',
+            symbol: 'folder',
+            keywords: ['чаты'],
+          ),
+        ],
+      ),
+      NativeSettingsSection(
+        header: 'О приложении',
+        rows: [
+          if (_debugMenuVisible)
+            const NativeSettingsRow(
+              id: 'developers',
+              title: 'Для разработчиков',
+              symbol: 'hammer',
+            ),
+          if (BuildProfile.selfUpdate)
+            NativeSettingsRow(
+              id: 'update',
+              title: _isCheckingForUpdates
+                  ? l10n.updateChecking
+                  : l10n.updateCheck,
+              symbol: 'arrow.down.circle',
+              enabled: !_isCheckingForUpdates,
+            ),
+          const NativeSettingsRow(
+            id: 'komet',
+            title: 'Komet',
+            symbol: 'sparkles',
+            keywords: ['версия', 'о приложении'],
+          ),
+        ],
+      ),
+      const NativeSettingsSection(
+        rows: [
+          NativeSettingsRow(
+            id: 'logout',
+            title: 'Выйти из аккаунта',
+            symbol: 'rectangle.portrait.and.arrow.right',
+            destructive: true,
+          ),
+        ],
+      ),
     ];
   }
 
@@ -1330,6 +1377,16 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         );
       case 'version':
         _onVersionLabelTap();
+      case 'close':
+        activeNavTab.value = 0;
+      case 'profile':
+        Navigator.push(
+          context,
+          iosPageRoute(
+            context,
+            builder: (context) => const EditProfileScreen(),
+          ),
+        );
     }
   }
 

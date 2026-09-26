@@ -4,6 +4,7 @@ import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../core/config/app_shape.dart';
 import 'glass/glass_controls.dart';
 import 'glass/ios_glass.dart';
+import 'glass/ios_palette.dart';
 import 'glass/ios_metrics.dart';
 import 'glass/ios_tappable.dart';
 import 'glass/ios_typography.dart';
@@ -77,23 +78,11 @@ class IosSettingsIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final base = color ?? cs.primary;
-    return Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        color: base,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        IosSymbols.adapt(context, icon),
-        size: 19,
-        weight: 500,
-        fill: 1,
-        color: ThemeData.estimateBrightnessForColor(base) == Brightness.dark
-            ? Colors.white
-            : Colors.black,
-      ),
+    return Icon(
+      IosSymbols.adapt(context, icon),
+      size: 22,
+      weight: 400,
+      color: color ?? IosPalette.label(cs),
     );
   }
 }
@@ -108,13 +97,14 @@ class SettingsCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     if (IosGlass.of(context)) {
       return IosGroupedSection(
+        radius: 26,
         child: Column(
           children: [
             for (var i = 0; i < children.length; i++) ...[
               children[i],
               if (i != children.length - 1)
                 Padding(
-                  padding: const EdgeInsets.only(left: 62),
+                  padding: const EdgeInsets.only(left: 58),
                   child: Divider(
                     height: 0.5,
                     thickness: 0.5,
@@ -259,44 +249,46 @@ class SettingsNavTile extends StatelessWidget {
     return IosTappable(
       onTap: onTap ?? () {},
       borderRadius: isLast
-          ? const BorderRadius.vertical(
-              bottom: Radius.circular(AppShape.card),
-            )
+          ? const BorderRadius.vertical(bottom: Radius.circular(AppShape.card))
           : null,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
-        child: Row(
-          children: [
-            leading ??
-                (IosGlass.of(context) && icon != null
-                    ? IosSettingsIcon(icon: icon!, color: tintColor)
-                    : Icon(
-                        icon,
-                        color: tintColor ?? cs.onSurfaceVariant,
-                        size: 22,
-                        weight: 400,
-                      )),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: tintColor ?? cs.onSurface,
-                  fontSize: IosGlass.of(context)
-                      ? IosTypography.listTitle
-                      : 16,
-                  fontWeight: IosGlass.of(context)
-                      ? IosType.body
-                      : FontWeight.w500,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 60),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              leading ??
+                  (IosGlass.of(context) && icon != null
+                      ? IosSettingsIcon(icon: icon!, color: tintColor)
+                      : Icon(
+                          icon,
+                          color: tintColor ?? cs.onSurfaceVariant,
+                          size: 22,
+                          weight: 400,
+                        )),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: tintColor ?? cs.onSurface,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.listTitle
+                        : 16,
+                    fontWeight: IosGlass.of(context)
+                        ? IosType.body
+                        : FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-            Icon(IosSymbols.chevronRight(context),
-              color: cs.outline,
-              size: 20,
-              weight: 400,
-            ),
-          ],
+              Icon(
+                IosSymbols.chevronRight(context),
+                color: cs.outline,
+                size: 20,
+                weight: 400,
+              ),
+            ],
+          ),
         ),
       ),
     );

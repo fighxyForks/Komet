@@ -248,7 +248,8 @@ class _PluginsScreenState extends State<PluginsScreen> {
           padding: EdgeInsets.zero,
           onPressed: () {
             final box = btnContext.findRenderObject() as RenderBox?;
-            final overlay = Overlay.of(btnContext).context.findRenderObject() as RenderBox?;
+            final overlay =
+                Overlay.of(btnContext).context.findRenderObject() as RenderBox?;
             if (box == null || overlay == null) return;
             final origin = box.localToGlobal(Offset.zero, ancestor: overlay);
             showChatMenu(
@@ -282,44 +283,94 @@ class _PluginsScreenState extends State<PluginsScreen> {
             for (final plugin in plugins) ...[
               SettingsCard(
                 children: [
-                  ListTile(
-                    leading: Icon(IosSymbols.extension(context)),
-                    title: Text(plugin.manifest.name),
-                    subtitle: Text(
-                      '${plugin.manifest.version} · ${plugin.manifest.commands.map((item) => item.name).join(', ')}\n'
-                      '${switch (plugin.signatureStatus) {
-                        PluginSignatureStatus.bundled => 'Встроенный плагин Komet',
-                        PluginSignatureStatus.verified => 'Подписан · ${plugin.signerFingerprint}',
-                        PluginSignatureStatus.unsigned => 'Не подписан',
-                      }}',
-                    ),
-                    trailing: GlassSwitch(
+                  if (IosGlass.of(context)) ...[
+                    SettingsToggleTile(
+                      icon: IosSymbols.extension(context),
+                      label: plugin.manifest.name,
+                      subtitle:
+                          '${plugin.manifest.version} · ${plugin.manifest.commands.map((item) => item.name).join(', ')}\n'
+                          '${switch (plugin.signatureStatus) {
+                            PluginSignatureStatus.bundled => 'Встроенный плагин Komet',
+                            PluginSignatureStatus.verified => 'Подписан · ${plugin.signerFingerprint}',
+                            PluginSignatureStatus.unsigned => 'Не подписан',
+                          }}',
                       value: plugin.enabled,
                       onChanged: (value) => PluginStore.instance.setEnabled(
                         plugin.manifest.id,
                         value,
                       ),
                     ),
-                  ),
-                  if (plugin.manifest.updateUrl != null)
+                    if (plugin.manifest.updateUrl != null)
+                      SettingsNavTile(
+                        leading: _busy.contains(plugin.manifest.id)
+                            ? const SizedBox.square(
+                                dimension: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : null,
+                        icon: IosSymbols.update(context),
+                        label: 'Проверить обновления',
+                        onTap: _busy.contains(plugin.manifest.id)
+                            ? null
+                            : () => _checkUpdate(plugin),
+                      ),
+                    if (plugin.origin == PluginOrigin.installed)
+                      SettingsNavTile(
+                        icon: IosSymbols.delete(context),
+                        tintColor: cs.error,
+                        label: 'Удалить',
+                        onTap: () => _uninstall(plugin),
+                      ),
+                  ] else ...[
                     ListTile(
-                      leading: _busy.contains(plugin.manifest.id)
-                          ? const SizedBox.square(
-                              dimension: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Icon(IosSymbols.update(context)),
-                      title: const Text('Проверить обновления'),
-                      onTap: _busy.contains(plugin.manifest.id)
-                          ? null
-                          : () => _checkUpdate(plugin),
+                      leading: Icon(IosSymbols.extension(context)),
+                      title: Text(plugin.manifest.name),
+                      subtitle: Text(
+                        '${plugin.manifest.version} · ${plugin.manifest.commands.map((item) => item.name).join(', ')}\n'
+                        '${switch (plugin.signatureStatus) {
+                          PluginSignatureStatus.bundled => 'Встроенный плагин Komet',
+                          PluginSignatureStatus.verified => 'Подписан · ${plugin.signerFingerprint}',
+                          PluginSignatureStatus.unsigned => 'Не подписан',
+                        }}',
+                      ),
+                      trailing: GlassSwitch(
+                        value: plugin.enabled,
+                        onChanged: (value) => PluginStore.instance.setEnabled(
+                          plugin.manifest.id,
+                          value,
+                        ),
+                      ),
                     ),
-                  if (plugin.origin == PluginOrigin.installed)
-                    ListTile(
-                      leading: Icon(IosSymbols.delete(context), color: cs.error),
-                      title: Text('Удалить', style: TextStyle(color: cs.error)),
-                      onTap: () => _uninstall(plugin),
-                    ),
+                    if (plugin.manifest.updateUrl != null)
+                      ListTile(
+                        leading: _busy.contains(plugin.manifest.id)
+                            ? const SizedBox.square(
+                                dimension: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(IosSymbols.update(context)),
+                        title: const Text('Проверить обновления'),
+                        onTap: _busy.contains(plugin.manifest.id)
+                            ? null
+                            : () => _checkUpdate(plugin),
+                      ),
+                    if (plugin.origin == PluginOrigin.installed)
+                      ListTile(
+                        leading: Icon(
+                          IosSymbols.delete(context),
+                          color: cs.error,
+                        ),
+                        title: Text(
+                          'Удалить',
+                          style: TextStyle(color: cs.error),
+                        ),
+                        onTap: () => _uninstall(plugin),
+                      ),
+                  ],
                 ],
               ),
               const SizedBox(height: 12),
@@ -330,7 +381,6 @@ class _PluginsScreenState extends State<PluginsScreen> {
     );
   }
 }
-
 
 class PluginUrlDialog extends StatefulWidget {
   const PluginUrlDialog({super.key});

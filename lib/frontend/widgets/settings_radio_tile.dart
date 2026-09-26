@@ -1,5 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:komet/frontend/widgets/glass/ios_glass.dart';
+import 'package:komet/frontend/widgets/glass/ios_metrics.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
+import 'package:komet/frontend/widgets/glass/ios_tappable.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 
 class SettingsRadioTile extends StatelessWidget {
   final Widget leading;
@@ -26,12 +31,13 @@ class SettingsRadioTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ios = IosGlass.of(context);
     final resolvedLabelStyle =
         labelStyle ??
         TextStyle(
           color: cs.onSurface,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
+          fontSize: ios ? IosTypography.body : 15,
+          fontWeight: ios ? IosTypography.regular : FontWeight.w500,
         );
     final labelChild = description == null
         ? Text(label, style: resolvedLabelStyle)
@@ -50,6 +56,38 @@ class SettingsRadioTile extends StatelessWidget {
               ),
             ],
           );
+    if (ios) {
+      return Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        value: selected ? 'Выбрано' : 'Не выбрано',
+        child: IosTappable(
+          onTap: onTap,
+          onTapDown: onTapDown,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: IosMetrics.minHitTarget,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              child: Row(
+                children: [
+                  leading,
+                  SizedBox(width: leadingGap),
+                  Expanded(child: labelChild),
+                  Icon(
+                    CupertinoIcons.check_mark,
+                    size: 18,
+                    color: selected ? cs.primary : Colors.transparent,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Material(
       color: Colors.transparent,
       child: InkWell(
