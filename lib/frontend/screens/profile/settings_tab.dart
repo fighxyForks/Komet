@@ -20,6 +20,7 @@ import '../../../core/config/komet_settings.dart';
 import '../../../core/config/app_show_extra_info.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/utils/haptics.dart';
 import '../../../core/utils/update_checker.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -110,6 +111,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
   String? _appVersionLabel;
   bool _debugMenuVisible = false;
   bool _isCheckingForUpdates = false;
+  bool _hapticsEnabled = Haptics.enabled;
   int _versionSecretTapCount = 0;
   Timer? _versionSecretTapResetTimer;
   StreamSubscription? _profileUpdateSub;
@@ -322,7 +324,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
 
   AvatarPhoto? get _currentAvatar {
     if (_avatarPhotos.isEmpty) return null;
-    return _avatarPhotos[_avatarIndex.clamp(0, _avatarPhotos.length - 1)
+    return _avatarPhotos[_avatarIndex
+        .clamp(0, _avatarPhotos.length - 1)
         .toInt()];
   }
 
@@ -389,7 +392,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       await _applyProfileAfterDeletion(profile);
       if (mounted) showCustomNotification(context, 'Фото удалено');
     } catch (e) {
-      if (mounted) showCustomNotification(context, 'Не удалось удалить фото: $e');
+      if (mounted)
+        showCustomNotification(context, 'Не удалось удалить фото: $e');
     }
   }
 
@@ -414,6 +418,28 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     setState(() {
       _appVersionLabel = 'Версия ${info.version} (${info.buildNumber})';
     });
+  }
+
+  void _openNotifications() {
+    Navigator.push(
+      context,
+      iosPageRoute(context, builder: (context) => const NotificationsScreen()),
+    ).then((_) {
+      if (!mounted) return;
+      setState(() => _hapticsEnabled = Haptics.enabled);
+    });
+  }
+
+  Future<void> _setHaptics(bool value) async {
+    await Haptics.setEnabled(value);
+    if (!mounted) return;
+    setState(() => _hapticsEnabled = value);
+    if (!value) return;
+    if (IosGlass.of(context)) {
+      IosHaptics.success();
+    } else {
+      Haptics.success();
+    }
   }
 
   Future<void> _checkForUpdates() async {
@@ -554,13 +580,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               SelfPresence.lastSeenSeconds,
               AppShowExtraInfo.current,
             ]),
-            builder: (context, _) => _nativeSettingsScaffold(
-              context,
-              cs,
-              l10n,
-              fullName,
-              phone,
-            ),
+            builder: (context, _) =>
+                _nativeSettingsScaffold(context, cs, l10n, fullName, phone),
           );
         }
         final collapsedH = topPad + (statusEnabled ? 268.0 : 242.0);
@@ -616,7 +637,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    iosPageRoute(context,
+                                    iosPageRoute(
+                                      context,
                                       builder: (context) =>
                                           AppDigitalIdNative.current.value ||
                                               !webViewSupported
@@ -632,7 +654,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  iosPageRoute(context,
+                                  iosPageRoute(
+                                    context,
                                     builder: (context) => WebAppScreen(
                                       title: 'Сферум',
                                       entryPoint: WebAppEntryPoint.settings,
@@ -655,7 +678,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    iosPageRoute(context,
+                                    iosPageRoute(
+                                      context,
                                       builder: (context) => const InfoScreen(),
                                     ),
                                   );
@@ -684,7 +708,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           label: 'Папки',
                           onTap: () => Navigator.push(
                             context,
-                            iosPageRoute(context,
+                            iosPageRoute(
+                              context,
                               builder: (context) => const FoldersScreen(),
                             ),
                           ),
@@ -700,17 +725,16 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       context,
                       items: [
                         _SettingsItem(
+                          icon: Symbols.vibration,
+                          label: 'Тактильный отклик',
+                          subtitle: 'Виброотклик при действиях в приложении',
+                          toggleValue: _hapticsEnabled,
+                          onToggle: (value) => unawaited(_setHaptics(value)),
+                        ),
+                        _SettingsItem(
                           icon: Symbols.notifications_active,
                           label: 'Уведомления',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              iosPageRoute(context,
-                                builder: (context) =>
-                                    const NotificationsScreen(),
-                              ),
-                            );
-                          },
+                          onTap: _openNotifications,
                         ),
                         _SettingsItem(
                           icon: Symbols.videocam,
@@ -718,7 +742,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              iosPageRoute(context,
+                              iosPageRoute(
+                                context,
                                 builder: (context) =>
                                     const MediaDevicesScreen(),
                               ),
@@ -751,12 +776,14 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                         if (BuildProfile.spoofUi)
                           _SettingsItem(
                             icon: Symbols.shield_lock,
-                            label: AppLocalizations.of(context)!
-                                .profileMenuSpoof,
+                            label: AppLocalizations.of(
+                              context,
+                            )!.profileMenuSpoof,
                             onTap: () {
                               Navigator.push(
                                 context,
-                                iosPageRoute(context,
+                                iosPageRoute(
+                                  context,
                                   builder: (context) => const SpoofScreen(),
                                 ),
                               );
@@ -768,7 +795,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              iosPageRoute(context,
+                              iosPageRoute(
+                                context,
                                 settings: const RouteSettings(
                                   name: 'SecurityScreen',
                                 ),
@@ -783,7 +811,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              iosPageRoute(context,
+                              iosPageRoute(
+                                context,
                                 builder: (context) => const DevicesScreen(),
                               ),
                             );
@@ -831,7 +860,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                                     onTap: () {
                                       Navigator.push(
                                         context,
-                                        iosPageRoute(context,
+                                        iosPageRoute(
+                                          context,
                                           builder: (context) =>
                                               const DebugMenuScreen(),
                                         ),
@@ -874,7 +904,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onTap: () {
                             Navigator.push(
                               context,
-                              iosPageRoute(context,
+                              iosPageRoute(
+                                context,
                                 builder: (context) =>
                                     const KometSettingsScreen(),
                               ),
@@ -936,7 +967,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     String name,
     String phone,
   ) {
-    final online = KometSettings.selfOnlineCheck.value && SelfPresence.isOnline.value;
+    final online =
+        KometSettings.selfOnlineCheck.value && SelfPresence.isOnline.value;
     final seen = SelfPresence.lastSeenSeconds.value;
     final status = !KometSettings.selfOnlineCheck.value
         ? ''
@@ -965,6 +997,9 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               topInset: MediaQuery.paddingOf(context).top,
               sections: _nativeSettingsSections(context, l10n, others),
               onTap: (id) => _onNativeSettingsTap(context, id),
+              onToggle: (id, value) {
+                if (id == 'haptics') unawaited(_setHaptics(value));
+              },
               onHeader: _onNativeSettingsHeader,
             ),
           ),
@@ -1018,16 +1053,34 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       ],
       const [
         NativeSettingsRow(id: 'theme', title: 'Тема', symbol: 'moon'),
-        NativeSettingsRow(id: 'appearance', title: 'Внешний вид', symbol: 'paintbrush'),
+        NativeSettingsRow(
+          id: 'appearance',
+          title: 'Внешний вид',
+          symbol: 'paintbrush',
+        ),
         NativeSettingsRow(id: 'wallpaper', title: 'Фон чатов', symbol: 'photo'),
         NativeSettingsRow(id: 'fonts', title: 'Шрифты', symbol: 'textformat'),
-        NativeSettingsRow(id: 'actions', title: 'Меню действий', symbol: 'ellipsis.circle'),
-        NativeSettingsRow(id: 'icon', title: 'Иконка приложения', symbol: 'app.badge'),
+        NativeSettingsRow(
+          id: 'actions',
+          title: 'Меню действий',
+          symbol: 'ellipsis.circle',
+        ),
+        NativeSettingsRow(
+          id: 'icon',
+          title: 'Иконка приложения',
+          symbol: 'app.badge',
+        ),
       ],
       const [
         NativeSettingsRow(id: 'folders', title: 'Папки', symbol: 'folder'),
       ],
       [
+        NativeSettingsRow(
+          id: 'haptics',
+          title: 'Тактильный отклик',
+          symbol: 'waveform',
+          switchValue: _hapticsEnabled,
+        ),
         const NativeSettingsRow(
           id: 'notifications',
           title: 'Уведомления',
@@ -1043,15 +1096,27 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
           title: 'Облачное хранилище [BETA]',
           symbol: 'cloud',
         ),
-        const NativeSettingsRow(id: 'proxy', title: 'Прокси', symbol: 'network'),
+        const NativeSettingsRow(
+          id: 'proxy',
+          title: 'Прокси',
+          symbol: 'network',
+        ),
         if (BuildProfile.spoofUi)
           NativeSettingsRow(
             id: 'spoof',
             title: l10n.profileMenuSpoof,
             symbol: 'lock.shield',
           ),
-        const NativeSettingsRow(id: 'security', title: 'Безопасность', symbol: 'lock'),
-        const NativeSettingsRow(id: 'devices', title: 'Устройства', symbol: 'iphone'),
+        const NativeSettingsRow(
+          id: 'security',
+          title: 'Безопасность',
+          symbol: 'lock',
+        ),
+        const NativeSettingsRow(
+          id: 'devices',
+          title: 'Устройства',
+          symbol: 'iphone',
+        ),
       ],
       if (_debugMenuVisible)
         const [
@@ -1065,11 +1130,17 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         if (BuildProfile.selfUpdate)
           NativeSettingsRow(
             id: 'update',
-            title: _isCheckingForUpdates ? l10n.updateChecking : l10n.updateCheck,
+            title: _isCheckingForUpdates
+                ? l10n.updateChecking
+                : l10n.updateCheck,
             symbol: 'arrow.down.circle',
             enabled: !_isCheckingForUpdates,
           ),
-        const NativeSettingsRow(id: 'komet', title: 'Komet', symbol: 'sparkles'),
+        const NativeSettingsRow(
+          id: 'komet',
+          title: 'Komet',
+          symbol: 'sparkles',
+        ),
         const NativeSettingsRow(
           id: 'logout',
           title: 'Выйти из аккаунта',
@@ -1124,7 +1195,10 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       case 'theme':
         Navigator.push(
           context,
-          iosPageRoute(context, builder: (context) => const ThemeSettingsScreen()),
+          iosPageRoute(
+            context,
+            builder: (context) => const ThemeSettingsScreen(),
+          ),
         );
       case 'appearance':
         Navigator.push(
@@ -1142,7 +1216,10 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       case 'fonts':
         Navigator.push(
           context,
-          iosPageRoute(context, builder: (context) => const FontSettingsScreen()),
+          iosPageRoute(
+            context,
+            builder: (context) => const FontSettingsScreen(),
+          ),
         );
       case 'actions':
         Navigator.push(
@@ -1163,17 +1240,14 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
           iosPageRoute(context, builder: (context) => const FoldersScreen()),
         );
       case 'notifications':
+        _openNotifications();
+      case 'media':
         Navigator.push(
           context,
           iosPageRoute(
             context,
-            builder: (context) => const NotificationsScreen(),
+            builder: (context) => const MediaDevicesScreen(),
           ),
-        );
-      case 'media':
-        Navigator.push(
-          context,
-          iosPageRoute(context, builder: (context) => const MediaDevicesScreen()),
         );
       case 'cloud':
         unawaited(_openCloudStorage(context));
@@ -1215,7 +1289,10 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       case 'komet':
         Navigator.push(
           context,
-          iosPageRoute(context, builder: (context) => const KometSettingsScreen()),
+          iosPageRoute(
+            context,
+            builder: (context) => const KometSettingsScreen(),
+          ),
         );
       case 'logout':
         unawaited(_confirmLogout());
@@ -1246,7 +1323,10 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       case 'bio':
         Navigator.push(
           context,
-          iosPageRoute(context, builder: (context) => const EditProfileScreen()),
+          iosPageRoute(
+            context,
+            builder: (context) => const EditProfileScreen(),
+          ),
         );
       case 'version':
         _onVersionLabelTap();
@@ -1379,7 +1459,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: Icon(IosSymbols.qrCode(context),
+                      icon: Icon(
+                        IosSymbols.qrCode(context),
                         color: iconColor,
                         size: 26,
                         weight: 400,
@@ -1403,7 +1484,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       children: [
                         IconButton(
                           key: _avatarMenuKey,
-                          icon: Icon(IosSymbols.moreVert(context),
+                          icon: Icon(
+                            IosSymbols.moreVert(context),
                             color: iconColor,
                             size: 22,
                             weight: 400,
@@ -1413,7 +1495,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                               : _openAvatarMenu,
                         ),
                         IconButton(
-                          icon: Icon(IosSymbols.edit(context),
+                          icon: Icon(
+                            IosSymbols.edit(context),
                             color: iconColor,
                             size: 22,
                             weight: 400,
@@ -1421,7 +1504,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              iosPageRoute(context,
+                              iosPageRoute(
+                                context,
                                 builder: (context) => const EditProfileScreen(),
                               ),
                             );
@@ -1446,11 +1530,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                         style: TextStyle(
                           color: nameColor,
                           fontSize: IosGlass.of(context)
-                              ? lerpDouble(
-                                  IosTypography.headerTitle,
-                                  28,
-                                  pt,
-                                )
+                              ? lerpDouble(IosTypography.headerTitle, 28, pt)
                               : lerpDouble(20, 26, pt),
                           fontWeight: FontWeight.w700,
                           fontFamily: displayFontOf(context),
@@ -1686,7 +1766,10 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       child: GestureDetector(
         onTap: () => Navigator.push(
           context,
-          iosPageRoute(context, builder: (context) => const EditProfileScreen()),
+          iosPageRoute(
+            context,
+            builder: (context) => const EditProfileScreen(),
+          ),
         ),
         child: GlossyPill(
           color: cs.surfaceContainerHigh,
@@ -1707,7 +1790,9 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   bio,
                   style: TextStyle(
                     color: cs.onSurface,
-                    fontSize: IosGlass.of(context) ? IosTypography.listTitle : 16,
+                    fontSize: IosGlass.of(context)
+                        ? IosTypography.listTitle
+                        : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1741,7 +1826,9 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               child: Padding(
                 padding: const EdgeInsets.all(6),
                 child: Icon(
-                  alignLeft ? IosSymbols.chevronLeft(context) : IosSymbols.chevronRight(context),
+                  alignLeft
+                      ? IosSymbols.chevronLeft(context)
+                      : IosSymbols.chevronRight(context),
                   color: Colors.white,
                   size: 24,
                 ),
@@ -1787,7 +1874,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(IosSymbols.checkCircle(context),
+                    Icon(
+                      IosSymbols.checkCircle(context),
                       fill: 1,
                       size: 15,
                       color: online ? kSuccessGreen : cs.mutedText,
@@ -1797,7 +1885,9 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                       label,
                       style: TextStyle(
                         color: textColor ?? cs.onSurfaceVariant,
-                        fontSize: IosGlass.of(context) ? IosTypography.listSubtitle : 14,
+                        fontSize: IosGlass.of(context)
+                            ? IosTypography.listSubtitle
+                            : 14,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -1818,6 +1908,15 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     return SettingsCard(
       children: List.generate(items.length, (index) {
         final item = items[index];
+        if (item.onToggle != null && item.toggleValue != null) {
+          return SettingsToggleTile(
+            icon: item.icon ?? Symbols.vibration,
+            label: item.label,
+            subtitle: item.subtitle,
+            value: item.toggleValue!,
+            onChanged: item.onToggle!,
+          );
+        }
         final tile = SettingsNavTile(
           icon: item.icon,
           leading: item.leading,
@@ -1882,9 +1981,10 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
   }
 
   static String _accountName(ProfileData account) {
-    final name = [account.firstName, account.lastName ?? '']
-        .where((part) => part.trim().isNotEmpty)
-        .join(' ');
+    final name = [
+      account.firstName,
+      account.lastName ?? '',
+    ].where((part) => part.trim().isNotEmpty).join(' ');
     return name.isEmpty ? '+${account.phone}' : name;
   }
 
@@ -1938,7 +2038,10 @@ class _SettingsItem {
   final IconData? icon;
   final Widget? leading;
   final String label;
+  final String? subtitle;
   final VoidCallback? onTap;
+  final bool? toggleValue;
+  final ValueChanged<bool>? onToggle;
   final Color? tintColor;
   final Widget Function(Widget tile)? wrap;
 
@@ -1946,7 +2049,10 @@ class _SettingsItem {
     this.icon,
     this.leading,
     required this.label,
+    this.subtitle,
     this.onTap,
+    this.toggleValue,
+    this.onToggle,
     this.tintColor,
     this.wrap,
   });

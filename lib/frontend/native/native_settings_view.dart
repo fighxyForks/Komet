@@ -8,6 +8,7 @@ class NativeSettingsRow {
   final String symbol;
   final bool destructive;
   final bool enabled;
+  final bool? switchValue;
 
   const NativeSettingsRow({
     required this.id,
@@ -15,6 +16,7 @@ class NativeSettingsRow {
     required this.symbol,
     this.destructive = false,
     this.enabled = true,
+    this.switchValue,
   });
 
   Map<String, Object?> toMap() => {
@@ -23,6 +25,7 @@ class NativeSettingsRow {
     'symbol': symbol,
     'destructive': destructive,
     'enabled': enabled,
+    if (switchValue != null) 'switchValue': switchValue,
   };
 }
 
@@ -42,6 +45,7 @@ class NativeSettingsView extends StatefulWidget {
   final bool showMenu;
   final List<List<NativeSettingsRow>> sections;
   final void Function(String id) onTap;
+  final void Function(String id, bool value)? onToggle;
   final void Function(String action, Rect rect) onHeader;
 
   const NativeSettingsView({
@@ -61,6 +65,7 @@ class NativeSettingsView extends StatefulWidget {
     this.showMenu = true,
     required this.sections,
     required this.onTap,
+    this.onToggle,
     required this.onHeader,
   });
 
@@ -107,6 +112,10 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
         case 'tap':
           final id = args['id'];
           if (id is String) widget.onTap(id);
+        case 'toggle':
+          final id = args['id'];
+          final value = args['value'];
+          if (id is String && value is bool) widget.onToggle?.call(id, value);
         case 'header':
           final action = args['action'];
           if (action is String) widget.onHeader(action, _rect(args));

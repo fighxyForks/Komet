@@ -291,18 +291,36 @@ final class KometSettingsPlatformView: NSObject, FlutterPlatformView,
     cell.textLabel?.textColor = destructive ? .systemRed : (enabled ? .label : .secondaryLabel)
     cell.imageView?.image = UIImage(systemName: row["symbol"] as? String ?? "circle")
     cell.imageView?.tintColor = destructive ? .systemRed : .secondaryLabel
-    cell.accessoryType = destructive ? .none : .disclosureIndicator
-    cell.selectionStyle = enabled ? .default : .none
     cell.backgroundColor = .secondarySystemGroupedBackground
+    if let value = row["switchValue"] as? NSNumber, let id = row["id"] as? String {
+      let toggle = (cell.accessoryView as? KometSettingsSwitch) ?? KometSettingsSwitch()
+      toggle.rowId = id
+      toggle.isOn = value.boolValue
+      toggle.isEnabled = enabled
+      toggle.removeTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
+      toggle.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
+      cell.accessoryView = toggle
+      cell.accessoryType = .none
+      cell.selectionStyle = .none
+    } else {
+      cell.accessoryView = nil
+      cell.accessoryType = destructive ? .none : .disclosureIndicator
+      cell.selectionStyle = enabled ? .default : .none
+    }
     return cell
   }
 
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     tableView.deselectRow(at: indexPath, animated: true)
     let row = rows(indexPath.section)[indexPath.row]
+    if row["switchValue"] != nil { return }
     if (row["enabled"] as? NSNumber)?.boolValue == false { return }
     guard let id = row["id"] as? String else { return }
     channel.invokeMethod("tap", arguments: ["id": id])
+  }
+
+  @objc private func switchChanged(_ sender: KometSettingsSwitch) {
+    channel.invokeMethod("toggle", arguments: ["id": sender.rowId, "value": sender.isOn])
   }
 
   private func rows(_ section: Int) -> [[String: Any]] {
@@ -316,4 +334,8 @@ final class KometSettingsPlatformView: NSObject, FlutterPlatformView,
   @objc private func versionTapped() {
     channel.invokeMethod("header", arguments: ["action": "version"])
   }
+}
+
+private final class KometSettingsSwitch: UISwitch {
+  var rowId = ""
 }
