@@ -73,7 +73,7 @@ class _VideoNoteBubbleState extends State<VideoNoteBubble>
   Size _frameSize = Size.zero;
   VideoPlayerController? _controller;
   VideoPlayerController? _local;
-  Future<void>? _initializing;
+  Completer<VideoPlayerController?>? _readyGate;
   Duration? _pendingSeek;
   double? _lastAngle;
   bool _playing = false;
@@ -219,6 +219,9 @@ class _VideoNoteBubbleState extends State<VideoNoteBubble>
           ? (value.position.inMilliseconds / total).clamp(0.0, 1.0)
           : 0.0;
     }
+    if (_error && _ready) {
+      setState(() => _error = false);
+    }
     if (value.size != _frameSize || value.isPlaying != _playing) {
       setState(() {
         _frameSize = value.size;
@@ -269,40 +272,52 @@ class _VideoNoteBubbleState extends State<VideoNoteBubble>
       if (mounted) setState(() => _frameSize = live.value.size);
       return live;
     }
-    final running = _initializing;
-    if (running != null) {
-      try {
-        await running;
-      } catch (_) {}
-      return _controller;
-    }
+    final pending = _readyGate;
+    if (pending != null) return pending.future;
 
-    final controller = VideoPlayerController.file(file);
-    final future = controller.initialize();
-    _initializing = future;
+    final gate = Completer<VideoPlayerController?>();
+    _readyGate = gate;
+    VideoPlayerController? created;
     try {
-      await future;
+      created = VideoPlayerController.file(file);
+      await created.initialize();
+      if (created.value.hasError) {
+        logger.w('VideoNoteBubble: ${created.value.errorDescription}');
+        await created.dispose();
+        created = null;
+        gate.complete(null);
+        return null;
+      }
+      if (!mounted) {
+        await created.dispose();
+        created = null;
+        gate.complete(null);
+        return null;
+      }
+      _controller = created;
+      MediaPlayback.instance.holdVideoNote(created);
+      await created.setLooping(true);
+      await created.seekTo(Duration.zero);
+      created.addListener(_onTick);
+      _PreviewPool.register(this);
+      if (mounted) {
+        setState(() {
+          _frameSize = created!.value.size;
+          _error = false;
+        });
+      }
+      gate.complete(created);
+      return created;
     } catch (e) {
       logger.w('VideoNoteBubble: инициализация не удалась: $e');
-      await controller.dispose();
+      final failed = created;
+      created = null;
+      if (failed != null) await failed.dispose();
+      if (!gate.isCompleted) gate.complete(null);
       return null;
     } finally {
-      if (identical(_initializing, future)) _initializing = null;
+      if (identical(_readyGate, gate)) _readyGate = null;
     }
-
-    if (!mounted) {
-      await controller.dispose();
-      return null;
-    }
-
-    _controller = controller;
-    MediaPlayback.instance.holdVideoNote(controller);
-    await controller.setLooping(true);
-    await controller.seekTo(Duration.zero);
-    controller.addListener(_onTick);
-    _PreviewPool.register(this);
-    if (mounted) setState(() => _frameSize = controller.value.size);
-    return controller;
   }
 
   void _releasePreview() {
