@@ -36,6 +36,10 @@ class NativeSettingsView extends StatefulWidget {
   final bool canEditAvatar;
   final String version;
   final double topInset;
+  final bool showBack;
+  final bool showQr;
+  final bool showEdit;
+  final bool showMenu;
   final List<List<NativeSettingsRow>> sections;
   final void Function(String id) onTap;
   final void Function(String action, Rect rect) onHeader;
@@ -51,6 +55,10 @@ class NativeSettingsView extends StatefulWidget {
     required this.canEditAvatar,
     required this.version,
     required this.topInset,
+    this.showBack = false,
+    this.showQr = true,
+    this.showEdit = true,
+    this.showMenu = true,
     required this.sections,
     required this.onTap,
     required this.onHeader,
@@ -74,6 +82,10 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       'avatarUrl': widget.avatarUrl,
       'canEditAvatar': widget.canEditAvatar,
       'topInset': widget.topInset,
+      'showBack': widget.showBack,
+      'showQr': widget.showQr,
+      'showEdit': widget.showEdit,
+      'showMenu': widget.showMenu,
     },
     'version': widget.version,
     'sections': [
@@ -135,6 +147,10 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       'avatarUrl': view.avatarUrl,
       'canEditAvatar': view.canEditAvatar,
       'topInset': view.topInset,
+      'showBack': view.showBack,
+      'showQr': view.showQr,
+      'showEdit': view.showEdit,
+      'showMenu': view.showMenu,
     },
     'version': view.version,
     'sections': [

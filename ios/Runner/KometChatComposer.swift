@@ -50,7 +50,16 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
       name: "ru.komet.app/native_chat_composer/\(viewId)", binaryMessenger: messenger)
     super.init()
     root.frame = frame
-    root.backgroundColor = .secondarySystemBackground
+    if #available(iOS 26.0, *) {
+      root.backgroundColor = .clear
+      let glass = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
+      glass.frame = root.bounds
+      glass.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+      glass.isUserInteractionEnabled = false
+      root.insertSubview(glass, at: 0)
+    } else {
+      root.backgroundColor = .secondarySystemBackground
+    }
     replyLabel.font = .preferredFont(forTextStyle: .footnote)
     replyLabel.textColor = .secondaryLabel
     replyClose.setImage(UIImage(systemName: "xmark"), for: .normal)

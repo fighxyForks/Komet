@@ -39,6 +39,7 @@ import '../../widgets/formatted_message_text.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/chat_menu_overlay.dart';
 import '../../native/native_profile_actions.dart';
+import '../../native/native_settings_view.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
@@ -498,22 +499,247 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   }
 
   Widget _buildPlainScroll(ColorScheme cs) {
-    final topPad = MediaQuery.paddingOf(context).top;
-    final controller = _bodyScrollController ??= (ScrollController()
-      ..addListener(_onBodyScroll));
-    return CustomScrollView(
-      controller: controller,
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: topPad + _headerCollapsedBody,
-            child: _buildMorphHeader(context, cs, 0),
+    if (_isLoading) {
+      return const Center(child: IosActivityIndicator());
+    }
+    return NativeSettingsView(
+      name: _customName,
+      status: _subtitle(),
+      online: widget.chatType == 'DIALOG' && _isOnline,
+      phone: _profilePhone(),
+      bio: _profileBio(),
+      avatarUrl: widget.imageUrl,
+      canEditAvatar: _moreMenuEntries().isNotEmpty,
+      version: '',
+      topInset: MediaQuery.paddingOf(context).top,
+      showBack: true,
+      showQr: false,
+      showEdit: widget.chatType == 'DIALOG' && _isContact,
+      showMenu: _moreMenuEntries().isNotEmpty,
+      sections: _nativeProfileSections(),
+      onTap: _onNativeProfileRow,
+      onHeader: _onNativeProfileHeader,
+    );
+  }
+
+  String _profilePhone() {
+    if (widget.chatType != 'DIALOG' || _isBot) return '';
+    final phone = _contactData?.raw['phone'];
+    final phoneInt = phone is int ? phone : int.tryParse(phone?.toString() ?? '');
+    if (phoneInt == null || phoneInt <= 0) return '';
+    return formatPhone(phoneInt) ?? '';
+  }
+
+  String _profileBio() {
+    if (widget.chatType == 'DIALOG') {
+      final bio = (_contactData?.raw['description'] as String?) ??
+          (_contactData?.raw['about'] as String?);
+      return bio ?? '';
+    }
+    return _chatInfo?.description ?? '';
+  }
+
+  List<List<NativeSettingsRow>> _nativeProfileSections() {
+    final sections = <List<NativeSettingsRow>>[];
+    final actions = <NativeSettingsRow>[];
+    if (widget.chatType == 'DIALOG') {
+      actions.add(NativeSettingsRow(
+        id: 'chat',
+        title: l10n.contactProfileActionChat,
+        symbol: 'bubble.left',
+      ));
+      actions.add(NativeSettingsRow(
+        id: 'mute',
+        title: _isMuted ? l10n.chatInfoActionMuted : l10n.contactProfileActionSound,
+        symbol: _isMuted ? 'bell.slash' : 'bell',
+        enabled: !_muteBusy,
+      ));
+      if (!_isBot) {
+        actions.add(NativeSettingsRow(
+          id: 'call',
+          title: l10n.contactProfileActionCall,
+          symbol: 'phone',
+        ));
+      }
+    } else {
+      if (widget.chatType != 'CHANNEL') {
+        actions.add(NativeSettingsRow(
+          id: 'chat',
+          title: l10n.contactProfileActionChat,
+          symbol: 'bubble.left',
+        ));
+      }
+      actions.add(NativeSettingsRow(
+        id: 'mute',
+        title: _isMuted ? l10n.chatInfoActionMuted : l10n.contactProfileActionSound,
+        symbol: _isMuted ? 'bell.slash' : 'bell',
+        enabled: !_muteBusy,
+      ));
+      actions.add(NativeSettingsRow(
+        id: 'membership',
+        title: _notMember
+            ? (widget.chatType == 'CHANNEL'
+                ? l10n.chatInfoActionSubscribe
+                : l10n.chatInfoActionJoin)
+            : l10n.chatInfoActionLeave,
+        symbol: _notMember ? 'plus.circle' : 'rectangle.portrait.and.arrow.right',
+        destructive: !_notMember,
+        enabled: !(_notMember && _joining),
+      ));
+    }
+    if (_canAddContact) {
+      actions.add(NativeSettingsRow(
+        id: 'add',
+        title: l10n.contactProfileActionAddContact,
+        symbol: 'person.badge.plus',
+        enabled: !_addContactBusy,
+      ));
+    }
+    if (actions.isNotEmpty) sections.add(actions);
+
+    final library = <NativeSettingsRow>[
+      for (final tab in _tabs)
+        if (tab != l10n.chatInfoTabMembers && tab != l10n.chatInfoTabInfo)
+          NativeSettingsRow(id: 'tab:$tab', title: tab, symbol: 'photo'),
+    ];
+    if (library.isNotEmpty) sections.add(library);
+
+    if (widget.chatType == 'CHAT' || widget.chatType == 'CHANNEL') {
+      final people = <NativeSettingsRow>[
+        if (widget.chatType == 'CHAT')
+          NativeSettingsRow(
+            id: 'members-add',
+            title: l10n.chatInfoAddMember,
+            symbol: 'person.badge.plus',
+          ),
+        if (_inviteLink != null)
+          NativeSettingsRow(
+            id: 'members-invite',
+            title: l10n.chatInfoInviteByLink,
+            symbol: 'link',
+          ),
+        for (final member in _membersController.members.take(30))
+          NativeSettingsRow(
+            id: 'member:${member.id}',
+            title: member.name ??
+                ContactCache.get(member.id) ??
+                (member.isMe ? l10n.callParticipantYou : '${member.id}'),
+            symbol: member.isOwner
+                ? 'star'
+                : (member.isAdmin ? 'shield' : 'person'),
+          ),
+        if (_membersController.members.length > 30 ||
+            !_membersController.membersEnd)
+          NativeSettingsRow(
+            id: 'members-more',
+            title: l10n.chatInfoShowMore,
+            symbol: 'ellipsis',
+          ),
+      ];
+      if (people.isNotEmpty) sections.add(people);
+    }
+    return sections;
+  }
+
+  void _onNativeProfileRow(String id) {
+    if (id.startsWith('tab:')) {
+      _openNativeProfileTab(id.substring(4));
+      return;
+    }
+    if (id.startsWith('member:')) {
+      final memberId = int.tryParse(id.substring(7));
+      if (memberId == null) return;
+      MemberInfo? member;
+      for (final item in _membersController.members) {
+        if (item.id == memberId) member = item;
+      }
+      if (member == null || member.isMe) return;
+      openContactDialogProfile(
+        context,
+        contactId: member.id,
+        name: member.name ?? ContactCache.get(member.id) ?? '${member.id}',
+        avatarUrl: member.avatarUrl ?? ContactCache.getAvatar(member.id),
+      );
+      return;
+    }
+    switch (id) {
+      case 'chat':
+        _openChat();
+      case 'mute':
+        if (!_muteBusy) _toggleMute();
+      case 'call':
+        _confirmAndStartCall();
+      case 'add':
+        if (!_addContactBusy) _addToContacts();
+      case 'membership':
+        if (_notMember) {
+          if (!_joining) _joinChat();
+        } else {
+          _leaveChat();
+        }
+      case 'members-add':
+        unawaited(_openAddMembers());
+      case 'members-invite':
+        final link = _inviteLink;
+        if (link != null) _openInviteLink(link);
+      case 'members-more':
+        if (!_membersController.revealMoreMembers()) {
+          _membersController.fetchMembersPage();
+        }
+    }
+  }
+
+  void _openNativeProfileTab(String tab) {
+    setState(() => _selectedTab = tab);
+    final cs = Theme.of(context).colorScheme;
+    Navigator.of(context).push(
+      iosPageRoute(
+        context,
+        builder: (routeContext) => Scaffold(
+          backgroundColor: IosPalette.grouped(cs),
+          appBar: AppBar(
+            backgroundColor: IosPalette.grouped(cs),
+            elevation: 0,
+            title: Text(tab),
+          ),
+          body: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            children: [_buildTabContent(cs)],
           ),
         ),
-        SliverToBoxAdapter(child: _buildBody(cs)),
-      ],
+      ),
     );
+  }
+
+  void _onNativeProfileHeader(String action, Rect rect) {
+    switch (action) {
+      case 'back':
+        Navigator.of(context).pop();
+      case 'edit':
+        unawaited(_openEdit());
+      case 'menu':
+        final entries = _moreMenuEntries();
+        if (entries.isEmpty) return;
+        showChatMenu(
+          context: context,
+          anchorRect: rect,
+          items: [
+            for (final entry in entries)
+              ChatMenuItem(
+                icon: entry.icon,
+                label: entry.label,
+                destructive: entry.destructive,
+                onTap: entry.onTap,
+              ),
+          ],
+        );
+      case 'avatar':
+        if (_storyPreview != null) {
+          _openStories();
+        } else {
+          _openAvatarHistory();
+        }
+    }
   }
 
   void _syncHeaderDelta(double delta) {

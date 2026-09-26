@@ -301,6 +301,11 @@ final class KometChatMessageCell: UICollectionViewCell {
     bubble.backgroundColor = roundMedia ? .clear : (item.outgoing ? outgoingFill : incomingFill)
     playButton.isHidden = item.kind != "voice"
     waveView.isHidden = item.kind != "voice"
+    waveView.isUserInteractionEnabled = item.kind == "voice"
+    if waveView.gestureRecognizers?.isEmpty ?? true {
+      waveView.addGestureRecognizer(
+        UIPanGestureRecognizer(target: self, action: #selector(scrubWave(_:))))
+    }
     waveView.amps = item.wave
     waveView.progress = item.progress
     waveView.active = item.outgoing ? .white : accent
@@ -487,6 +492,7 @@ final class KometChatMessageCell: UICollectionViewCell {
       pollStack.addArrangedSubview(waiting)
       return
     }
+    let total = item.pollChoices.reduce(0) { $0 + $1.count }
     for choice in item.pollChoices {
       let button = UIButton(type: .system)
       button.tag = choice.id
@@ -506,7 +512,33 @@ final class KometChatMessageCell: UICollectionViewCell {
       button.setTitleColor(foreground, for: .normal)
       button.isEnabled = !item.pollVoted
       button.addTarget(self, action: #selector(tapPoll(_:)), for: .touchUpInside)
-      pollStack.addArrangedSubview(button)
+      if item.pollVoted && total > 0 {
+        let host = UIView()
+        host.layer.cornerRadius = 12
+        host.clipsToBounds = true
+        host.backgroundColor = UIColor.tertiarySystemFill
+        let fill = UIView()
+        fill.backgroundColor = accent.withAlphaComponent(0.28)
+        fill.translatesAutoresizingMaskIntoConstraints = false
+        button.backgroundColor = .clear
+        button.translatesAutoresizingMaskIntoConstraints = false
+        host.addSubview(fill)
+        host.addSubview(button)
+        let share = max(0.04, CGFloat(choice.count) / CGFloat(total))
+        NSLayoutConstraint.activate([
+          fill.leadingAnchor.constraint(equalTo: host.leadingAnchor),
+          fill.topAnchor.constraint(equalTo: host.topAnchor),
+          fill.bottomAnchor.constraint(equalTo: host.bottomAnchor),
+          fill.widthAnchor.constraint(equalTo: host.widthAnchor, multiplier: share),
+          button.leadingAnchor.constraint(equalTo: host.leadingAnchor),
+          button.trailingAnchor.constraint(equalTo: host.trailingAnchor),
+          button.topAnchor.constraint(equalTo: host.topAnchor),
+          button.bottomAnchor.constraint(equalTo: host.bottomAnchor),
+        ])
+        pollStack.addArrangedSubview(host)
+      } else {
+        pollStack.addArrangedSubview(button)
+      }
     }
     if item.pollMultiple && !item.pollVoted {
       let vote = UIButton(type: .system)
@@ -551,6 +583,14 @@ final class KometChatMessageCell: UICollectionViewCell {
   @objc private func tapVoice() {
     guard let id = item?.id else { return }
     onEvent?("voice", ["id": id])
+  }
+
+  @objc private func scrubWave(_ gesture: UIPanGestureRecognizer) {
+    guard item?.kind == "voice", let id = item?.id else { return }
+    let width = max(waveView.bounds.width, 1)
+    let fraction = min(1, max(0, gesture.location(in: waveView).x / width))
+    waveView.progress = fraction
+    onEvent?("voiceSeek", ["id": id, "fraction": fraction])
   }
 
   @objc private func tapTranscript() {
@@ -604,6 +644,10 @@ extension KometChatMessageCell: UIGestureRecognizerDelegate {
   }
 }
 
+extension NSAttributedString.Key {
+  static let kometQuote = NSAttributedString.Key("kometQuote")
+}
+
 final class KometChatTextView: UITextView {
   var preferredWidth: CGFloat = 240 {
     didSet { invalidateIntrinsicContentSize() }
@@ -623,6 +667,25 @@ final class KometChatTextView: UITextView {
   override var intrinsicContentSize: CGSize {
     let fitted = sizeThatFits(CGSize(width: preferredWidth, height: .greatestFiniteMagnitude))
     return CGSize(width: UIView.noIntrinsicMetric, height: max(20, ceil(fitted.height)))
+  }
+
+  override func draw(_ rect: CGRect) {
+    super.draw(rect)
+    guard textStorage.length > 0 else { return }
+    let full = NSRange(location: 0, length: textStorage.length)
+    textStorage.enumerateAttribute(.kometQuote, in: full) { value, range, _ in
+      guard value != nil else { return }
+      let glyphs = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+      layoutManager.enumerateEnclosingRects(
+        forGlyphRange: glyphs,
+        withinSelectedGlyphRange: NSRange(location: NSNotFound, length: 0),
+        in: textContainer
+      ) { line, _ in
+        let bar = CGRect(x: line.minX - 10, y: line.minY, width: 3, height: line.height)
+        UIColor.systemBlue.setFill()
+        UIBezierPath(roundedRect: bar, cornerRadius: 1.5).fill()
+      }
+    }
   }
 }
 
@@ -658,9 +721,11 @@ enum KometChatText {
       }
       if span.styles.contains("quote") {
         let paragraph = NSMutableParagraphStyle()
-        paragraph.headIndent = 12
-        paragraph.firstLineHeadIndent = 12
+        paragraph.headIndent = 14
+        paragraph.firstLineHeadIndent = 14
         attributes[.paragraphStyle] = paragraph
+        attributes[.kometQuote] = true
+        attributes[.backgroundColor] = accent.withAlphaComponent(0.12)
       }
       if span.styles.contains("underline") {
         attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue

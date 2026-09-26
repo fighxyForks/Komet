@@ -254,8 +254,12 @@ class ComposerArea extends StatelessWidget {
               AnimatedBuilder(
                 animation: stickers.anim,
                 builder: (context, _) {
-                  Widget bar({required bool opaque}) => useNativeComposer &&
-                          selectedCommand == null
+                  final allowNativeComposer = useNativeComposer &&
+                      selectedCommand == null &&
+                      !(chatType == 'CHANNEL' &&
+                          !canPostToChannel &&
+                          forwardMessages.value.isEmpty);
+                  Widget bar({required bool opaque}) => allowNativeComposer
                       ? ListenableBuilder(
                           listenable: Listenable.merge([
                             replyTo,
@@ -283,10 +287,10 @@ class ComposerArea extends StatelessWidget {
                                 : videoRecording
                                 ? (locked
                                       ? 'Кружок зафиксирован'
-                                      : 'Кружок · ${formatElapsed(elapsed)}')
+                                      : '← отмена · ↑ зафиксировать · ${formatElapsed(elapsed)}')
                                 : (locked
                                       ? 'Запись ${formatElapsed(elapsed)}'
-                                      : 'Влево — отмена · ${formatElapsed(elapsed)}');
+                                      : '← отмена · ↑ зафиксировать · ${formatElapsed(elapsed)}');
                             return NativeChatComposerView(
                               text: messageController,
                               reply: reply == null || reply.isEmpty

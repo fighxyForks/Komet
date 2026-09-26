@@ -30,6 +30,7 @@ private final class KometSettingsHeader: UIView {
   let phoneLabel = UILabel()
   let bioTitle = UILabel()
   let bioBody = UILabel()
+  let backButton = UIButton(type: .system)
   let qrButton = UIButton(type: .system)
   let menuButton = UIButton(type: .system)
   let editButton = UIButton(type: .system)
@@ -67,10 +68,12 @@ private final class KometSettingsHeader: UIView {
     bioCard.backgroundColor = .secondarySystemGroupedBackground
     bioCard.layer.cornerRadius = 12
     bioButton.addTarget(self, action: #selector(bioTapped), for: .touchUpInside)
+    configure(backButton, "chevron.backward", #selector(backTapped))
     configure(qrButton, "qrcode", #selector(qrTapped))
     configure(menuButton, "ellipsis", #selector(menuTapped))
     configure(editButton, "square.and.pencil", #selector(editTapped))
-    let tools = UIStackView(arrangedSubviews: [qrButton, UIView(), menuButton, editButton])
+    backButton.isHidden = true
+    let tools = UIStackView(arrangedSubviews: [backButton, qrButton, UIView(), menuButton, editButton])
     tools.axis = .horizontal
     tools.alignment = .center
     let text = UIStackView(arrangedSubviews: [nameLabel, statusLabel, phoneLabel])
@@ -98,6 +101,8 @@ private final class KometSettingsHeader: UIView {
       top,
       tools.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
       tools.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
+      backButton.widthAnchor.constraint(equalToConstant: 44),
+      backButton.heightAnchor.constraint(equalToConstant: 44),
       qrButton.widthAnchor.constraint(equalToConstant: 44),
       qrButton.heightAnchor.constraint(equalToConstant: 44),
       menuButton.widthAnchor.constraint(equalToConstant: 44),
@@ -148,6 +153,10 @@ private final class KometSettingsHeader: UIView {
     bioBottom?.isActive = showBio
     textBottom?.isActive = !showBio
     menuButton.isEnabled = (map["canEditAvatar"] as? NSNumber)?.boolValue ?? false
+    backButton.isHidden = !shown(map, "showBack", fallback: false)
+    qrButton.isHidden = !shown(map, "showQr", fallback: true)
+    editButton.isHidden = !shown(map, "showEdit", fallback: true)
+    menuButton.isHidden = !shown(map, "showMenu", fallback: true)
     let url = map["avatarUrl"] as? String ?? ""
     avatarTask?.cancel()
     if url.hasPrefix("http"), let imageUrl = URL(string: url) {
@@ -168,6 +177,12 @@ private final class KometSettingsHeader: UIView {
     button.addTarget(self, action: action, for: .touchUpInside)
   }
 
+  private func shown(_ map: [String: Any], _ key: String, fallback: Bool) -> Bool {
+    if let value = map[key] as? NSNumber { return value.boolValue }
+    return fallback
+  }
+
+  @objc private func backTapped() { send("back", from: backButton) }
   @objc private func qrTapped() { send("qr", from: qrButton) }
   @objc private func menuTapped() { send("menu", from: menuButton) }
   @objc private func editTapped() { send("edit", from: editButton) }

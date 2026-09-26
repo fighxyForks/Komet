@@ -5119,6 +5119,7 @@ class _ChatScreenState extends State<ChatScreen>
         onKeyboard: _onNativeKeyboard,
         onTranscribe: (id) => unawaited(_nativeTranscribe(id)),
         onVoice: _toggleNativeVoice,
+        onVoiceSeek: _seekNativeVoice,
         onComments: (id) {
           final message = _chatController.byId(id);
           if (message != null) _openComments(message);
@@ -5784,6 +5785,17 @@ class _ChatScreenState extends State<ChatScreen>
     _nativeVoiceProgress = next;
     _nativeVoicePlaying = playing;
     _bumpMessageRows();
+  }
+
+  void _seekNativeVoice(String id, double fraction) {
+    final audio = _nativeVoices[id];
+    if (audio == null) {
+      _toggleNativeVoice(id);
+      return;
+    }
+    final total = audio.duration.value;
+    if (total <= 0) return;
+    unawaited(audio.seekTo(total * fraction.clamp(0.0, 1.0)));
   }
 
   void _toggleNativeVoice(String id) {

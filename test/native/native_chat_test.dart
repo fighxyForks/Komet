@@ -46,6 +46,7 @@ NativeChatCallbacks _callbacks(List<Object> log) => NativeChatCallbacks(
   onKeyboard: (id, index) => log.add('key $id $index'),
   onTranscribe: (id) => log.add('transcribe $id'),
   onVoice: (id) => log.add('voice $id'),
+  onVoiceSeek: (id, fraction) => log.add('seek $id $fraction'),
   onComments: (id) => log.add('comments $id'),
   onSticker: (id) => log.add('sticker $id'),
   onAvatar: (id) => log.add('avatar $id'),

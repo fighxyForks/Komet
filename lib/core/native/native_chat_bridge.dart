@@ -511,6 +511,7 @@ class NativeChatCallbacks {
   final void Function(String id, int index) onKeyboard;
   final ValueChanged<String> onTranscribe;
   final ValueChanged<String> onVoice;
+  final void Function(String id, double fraction) onVoiceSeek;
   final ValueChanged<String> onComments;
   final ValueChanged<String> onSticker;
   final ValueChanged<int> onAvatar;
@@ -533,6 +534,7 @@ class NativeChatCallbacks {
     required this.onKeyboard,
     required this.onTranscribe,
     required this.onVoice,
+    required this.onVoiceSeek,
     required this.onComments,
     required this.onSticker,
     required this.onAvatar,
@@ -658,6 +660,11 @@ class NativeChatController {
         if (id is String) callbacks.onTranscribe(id);
       case 'voice':
         if (id is String) callbacks.onVoice(id);
+      case 'voiceSeek':
+        final fraction = args['fraction'];
+        if (id is String && fraction is num) {
+          callbacks.onVoiceSeek(id, fraction.toDouble());
+        }
       case 'comments':
         if (id is String) callbacks.onComments(id);
       case 'sticker':

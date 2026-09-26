@@ -274,7 +274,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                             child: SelectionTopBar(
                               cs: cs,
                               selected: selected,
-                              glossy: glossyChrome,
+                              glossy: useNativeHeader ? false : glossyChrome,
                               copyMsgs: copyableSelection(selected),
                               editMsg: singleEditable(selected),
                               onClear: onClearSelection,
