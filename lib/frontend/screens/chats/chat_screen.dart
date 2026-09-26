@@ -2764,6 +2764,7 @@ class _ChatScreenState extends State<ChatScreen>
       onForwardSelected: _forwardSelected,
       forwardDisabled: chat?.forwardDisabled ?? false,
       replyDisabled: !_canReply,
+      useNativeComposer: NativeChatBridge.isEligible,
       composerFrosted: _composerFrosted,
       scrollOpaque: _chatScrollActive,
     );

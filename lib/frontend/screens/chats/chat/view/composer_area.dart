@@ -18,6 +18,7 @@ import 'package:komet/frontend/screens/chats/chat/upload_status.dart'
     show UploadStatus;
 import 'package:komet/frontend/screens/chats/chat/video_note_controller.dart';
 import 'package:komet/frontend/screens/chats/chat/voice_record_controller.dart';
+import 'package:komet/frontend/native/native_chat_composer_view.dart';
 import 'package:komet/frontend/widgets/attachment_panel.dart';
 import 'package:komet/frontend/widgets/e2ee_banner.dart';
 import 'package:komet/frontend/widgets/rich_message_controller.dart';
@@ -105,6 +106,7 @@ class ComposerArea extends StatelessWidget {
   final bool forwardDisabled;
   final bool replyDisabled;
 
+  final bool useNativeComposer;
   final bool composerFrosted;
   final ValueListenable<bool>? scrollOpaque;
 
@@ -169,6 +171,7 @@ class ComposerArea extends StatelessWidget {
     required this.onForwardSelected,
     required this.forwardDisabled,
     this.replyDisabled = false,
+    this.useNativeComposer = false,
     required this.composerFrosted,
     this.scrollOpaque,
   });
@@ -249,7 +252,32 @@ class ComposerArea extends StatelessWidget {
               AnimatedBuilder(
                 animation: stickers.anim,
                 builder: (context, _) {
-                  Widget bar({required bool opaque}) => ComposerInputBar(
+                  Widget bar({required bool opaque}) => useNativeComposer &&
+                          selectedCommand == null
+                      ? ListenableBuilder(
+                          listenable: Listenable.merge([
+                            replyTo,
+                            voiceRec.isRecording,
+                          ]),
+                          builder: (context, _) {
+                            final reply = replyTo.value?.text?.trim();
+                            return NativeChatComposerView(
+                              text: messageController,
+                              reply: reply == null || reply.isEmpty ? '' : reply,
+                              recording: voiceRec.isRecording.value,
+                              onSend: onSendMessage,
+                              onAttach: onOpenAttach,
+                              onStickers: onToggleStickerPanel,
+                              onVoiceStart: () => unawaited(voiceRec.start()),
+                              onVoiceStop: () =>
+                                  unawaited(voiceRec.stop(cancel: false)),
+                              onVoiceCancel: () =>
+                                  unawaited(voiceRec.stop(cancel: true)),
+                              onReplyCancel: onCancelReply,
+                            );
+                          },
+                        )
+                      : ComposerInputBar(
                     bottomSafe: stickers.anim.value == 0,
                     chatType: commentsMode ? 'CHAT' : chatType,
                     chrome: chrome,
