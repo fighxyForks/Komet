@@ -9,8 +9,8 @@ import 'ios_metrics.dart';
 import 'ios_palette.dart';
 import 'ios_typography.dart';
 
-/// Nested-settings chrome for iOS mode: grouped background + collapsing large
-/// title with scroll-edge opacity. Off iOS mode keeps a Material [Scaffold] +
+/// Nested-settings chrome for iOS mode: grouped background and a compact
+/// centered title. Off iOS mode keeps a Material [Scaffold] +
 /// [AppBar] / [ConnectionTitleBar].
 ///
 /// Native [LiquidGlassNavigationBar] is intentionally not used here: nested

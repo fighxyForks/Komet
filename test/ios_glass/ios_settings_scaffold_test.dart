@@ -5,6 +5,7 @@ import 'package:komet/core/config/app_ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/glass/ios_settings_scaffold.dart';
+import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glass/glass_controls.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,7 +20,7 @@ void main() {
 
   tearDown(AppIosGlass.debugReset);
 
-  testWidgets('в iOS-режиме рисует large title и grouped фон', (
+  testWidgets('в iOS-режиме рисует компактный заголовок и grouped фон', (
     tester,
   ) async {
     AppIosGlass.debugSetSupported(true);
@@ -33,8 +34,12 @@ void main() {
         ),
       ),
     );
-    expect(find.byType(CupertinoSliverNavigationBar), findsOneWidget);
-    expect(find.text('Устройства'), findsWidgets);
+    expect(find.byType(CupertinoSliverNavigationBar), findsNothing);
+    expect(find.byType(NavigationToolbar), findsOneWidget);
+    expect(find.text('Устройства'), findsOneWidget);
+    final title = tester.widget<Text>(find.text('Устройства'));
+    expect(title.style?.fontSize, IosTypography.headerTitle);
+    expect(title.style?.fontWeight, IosTypography.semibold);
     expect(find.text('body'), findsOneWidget);
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
     final cs = ThemeData(brightness: Brightness.light).colorScheme;
@@ -86,10 +91,7 @@ void main() {
         home: Scaffold(
           body: IosSegmentedControl<int>(
             groupValue: 0,
-            children: const {
-              0: Text('A'),
-              1: Text('B'),
-            },
+            children: const {0: Text('A'), 1: Text('B')},
             onValueChanged: (_) {},
           ),
         ),
