@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:komet/core/config/build_profile.dart';
 import 'package:komet/core/plugins/plugin_availability.dart';
 import 'package:komet/core/plugins/plugin_cleanup.dart';
 import 'package:path/path.dart' as p;
@@ -11,7 +12,7 @@ void main() {
 
   test('KOMET_PLUGINS stays on unless the build sets it', () {
     const defined = bool.hasEnvironment('KOMET_PLUGINS');
-    if (defined) {
+    if (defined || BuildProfile.isAppStoreBuild) {
       expect(kPluginsCompiled, isFalse);
     } else {
       expect(kPluginsCompiled, isTrue);

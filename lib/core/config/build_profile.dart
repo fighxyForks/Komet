@@ -9,17 +9,25 @@ abstract final class BuildProfile {
   // #***! store сборка урезана, без самообновления дев инструментов и спуфа
   static const bool isStore = appFlavor == storeFlavor;
 
-  static const bool selfUpdate = !isStore;
+  // #***! отдельная пометка IPA для App Store, не flavor store
+  static const bool isAppStoreBuild = bool.fromEnvironment(
+    'KOMET_APPSTORE',
+    defaultValue: false,
+  );
+
+  static const bool _publicRelease = isStore || isAppStoreBuild;
+
+  static const bool selfUpdate = !_publicRelease;
   static const bool firebasePush = appFlavor == 'oneme';
-  static bool get spoofUi => !isStore && !IosClient.reportsRealDevice;
+  static bool get spoofUi => !_publicRelease && !IosClient.reportsRealDevice;
   static const bool tokenLogin = false;
   static const bool qrLogin = false;
-  static const bool devTools = !isStore;
-  static const bool insecureTransport = !isStore;
-  static const bool trafficCapture = !isStore;
-  static const bool pranks = !isStore;
-  static const bool hiddenContentViewers = !isStore;
-  static const bool digitalId = !isStore;
-  static const bool ipGeoLookup = !isStore;
-  static const bool sessionCityLookup = !isStore;
+  static const bool devTools = !_publicRelease;
+  static const bool insecureTransport = !_publicRelease;
+  static const bool trafficCapture = !_publicRelease;
+  static const bool pranks = !_publicRelease;
+  static const bool hiddenContentViewers = !_publicRelease;
+  static const bool digitalId = !_publicRelease;
+  static const bool ipGeoLookup = !_publicRelease;
+  static const bool sessionCityLookup = !_publicRelease;
 }
