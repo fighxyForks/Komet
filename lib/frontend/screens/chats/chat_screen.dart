@@ -130,6 +130,7 @@ import 'e2ee_screen.dart';
 import 'chat_wallpaper_preview_screen.dart';
 import 'profile_action_sheets.dart';
 import '../../../core/media/media_playback.dart';
+import '../../../core/media/video_note_preloader.dart';
 import '../../../core/media/voice_audio_controller.dart';
 import '../../../core/utils/file_download.dart';
 import '../../../core/config/app_shape.dart';
@@ -495,6 +496,9 @@ class _ChatScreenState extends State<ChatScreen>
   _ChatMessageList? _messageListWidget;
   final NativeChatCommands _nativeChatCommands = NativeChatCommands();
   final Map<String, VoiceAudioController> _nativeVoices = {};
+  final Map<String, String> _notePaths = {};
+  final Set<String> _noteLoads = {};
+  final Set<String> _noteMisses = {};
   double _nativeVoiceProgress = 0;
   String? _nativeVoiceId;
   bool _nativeVoicePlaying = false;
@@ -5027,6 +5031,7 @@ class _ChatScreenState extends State<ChatScreen>
     final type = _commentsMode ? 'CHAT' : (chat?.type ?? widget.chatType);
     final visible = _messages.take(_visibleMessageCount).toList(growable: false);
     _scheduleNativePollFetches(visible);
+    _scheduleNativeNotes(visible);
     final items = buildNativeChatItems(
       messages: visible,
       myId: _myId,
@@ -5060,6 +5065,7 @@ class _ChatScreenState extends State<ChatScreen>
       progressId: _nativeVoiceId,
       voiceProgress: _nativeVoiceProgress,
       pollOf: pollsModule.get,
+      notePathOf: (message) => _notePaths[message.id],
       commentsOf: (message) {
         final channel = !_commentsMode && type == 'CHANNEL' && !message.isControl;
         return channel ? _commentsLabelFor(message.id) : null;
@@ -5619,6 +5625,65 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _onNativePolls() {
     if (!mounted || !NativeChatBridge.isEligible) return;
+    _bumpMessageRows();
+  }
+
+  VideoAttachment? _videoNoteAttachment(CachedMessage message) {
+    for (final attachment in _nativeAttachments(message)) {
+      if (attachment is VideoAttachment && attachment.isNote) return attachment;
+    }
+    return null;
+  }
+
+  void _scheduleNativeNotes(List<CachedMessage> messages) {
+    for (final message in messages) {
+      if (_notePaths.containsKey(message.id) ||
+          _noteLoads.contains(message.id) ||
+          _noteMisses.contains(message.id)) {
+        continue;
+      }
+      final video = _videoNoteAttachment(message);
+      if (video == null) continue;
+      final local = video.localPath;
+      if (local != null && local.isNotEmpty && File(local).existsSync()) {
+        _notePaths[message.id] = local;
+        continue;
+      }
+      final videoId = video.videoId;
+      final token = video.videoToken;
+      if (videoId == null ||
+          token == null ||
+          token.isEmpty ||
+          !VideoNotePreloader.autoLoads(video.duration)) {
+        continue;
+      }
+      _noteLoads.add(message.id);
+      unawaited(_loadNativeNote(message, videoId, token));
+    }
+  }
+
+  Future<void> _loadNativeNote(
+    CachedMessage message,
+    int videoId,
+    String token,
+  ) async {
+    final file = await VideoNotePreloader.load(
+      'videonote_$videoId.mp4',
+      () => messagesModule.getVideoUrl(
+        messageId: message.id,
+        chatId: message.chatId,
+        token: token,
+        videoId: videoId,
+      ),
+      cancelled: () => !mounted,
+    );
+    _noteLoads.remove(message.id);
+    if (!mounted || file == null) {
+      if (file == null) _noteMisses.add(message.id);
+      return;
+    }
+    if (_notePaths[message.id] == file.path) return;
+    _notePaths[message.id] = file.path;
     _bumpMessageRows();
   }
 

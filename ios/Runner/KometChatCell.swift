@@ -1,3 +1,4 @@
+import AVFoundation
 import UIKit
 
 final class KometChatServiceCell: UICollectionViewCell {
@@ -209,8 +210,14 @@ final class KometChatMessageCell: UICollectionViewCell {
 
   required init?(coder: NSCoder) { nil }
 
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    KometNotePlayback.layout(mediaView)
+  }
+
   override func prepareForReuse() {
     super.prepareForReuse()
+    KometNotePlayback.stop(ifHost: mediaView)
     onEvent = nil
     item = nil
     mediaView.image = nil
@@ -280,6 +287,11 @@ final class KometChatMessageCell: UICollectionViewCell {
         guard self?.item?.id == item.id else { return }
         self?.mediaView.image = image
       }
+    }
+    if item.kind == "videoNote", let path = item.playUrl, !path.isEmpty {
+      KometNotePlayback.show(id: item.id, path: path, in: mediaView)
+    } else {
+      KometNotePlayback.stop(ifHost: mediaView)
     }
     bubble.backgroundColor = roundMedia ? .clear : (item.outgoing ? outgoingFill : incomingFill)
     playButton.isHidden = item.kind != "voice"
@@ -702,6 +714,59 @@ final class KometWaveView: UIView {
       (played ? active : inactive).setFill()
       path.fill()
     }
+  }
+}
+
+enum KometNotePlayback {
+  private static var player: AVPlayer?
+  private static var itemId: String?
+  private static weak var host: UIImageView?
+  private static var layer: AVPlayerLayer?
+  private static var loop: NSObjectProtocol?
+
+  static func show(id: String, path: String, in view: UIImageView) {
+    if itemId == id, host === view, player != nil {
+      layout(view)
+      return
+    }
+    stop()
+    let item = AVPlayerItem(url: URL(fileURLWithPath: path))
+    let next = AVPlayer(playerItem: item)
+    next.isMuted = true
+    let playerLayer = AVPlayerLayer(player: next)
+    playerLayer.videoGravity = .resizeAspectFill
+    playerLayer.frame = view.bounds
+    view.layer.addSublayer(playerLayer)
+    loop = NotificationCenter.default.addObserver(
+      forName: .AVPlayerItemDidPlayToEndTime,
+      object: item,
+      queue: .main
+    ) { _ in
+      next.seek(to: .zero)
+      next.play()
+    }
+    player = next
+    itemId = id
+    host = view
+    layer = playerLayer
+    next.play()
+  }
+
+  static func stop(ifHost view: UIImageView? = nil) {
+    if let view, host !== view { return }
+    if let loop { NotificationCenter.default.removeObserver(loop) }
+    loop = nil
+    player?.pause()
+    player = nil
+    layer?.removeFromSuperlayer()
+    layer = nil
+    itemId = nil
+    host = nil
+  }
+
+  static func layout(_ view: UIImageView) {
+    guard host === view else { return }
+    layer?.frame = view.bounds
   }
 }
 

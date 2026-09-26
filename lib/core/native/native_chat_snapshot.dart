@@ -57,6 +57,7 @@ List<NativeChatItem> buildNativeChatItems({
   Map<dynamic, dynamic>? Function(CachedMessage message)? reactionOf,
   NativeChatTranscript Function(String messageId)? transcriptOf,
   String? Function(CachedMessage message)? commentsOf,
+  String? Function(CachedMessage message)? notePathOf,
 }) {
   final names = nameOf ?? ((id) => 'Пользователь');
   final visible = <CachedMessage>[
@@ -94,6 +95,7 @@ List<NativeChatItem> buildNativeChatItems({
       reactionOf: reactionOf,
       transcriptOf: transcriptOf,
       commentsOf: commentsOf,
+      notePathOf: notePathOf,
       selected: selected.contains(message.id),
       highlighted: highlightId == message.id,
       canReply: canReply,
@@ -120,6 +122,7 @@ NativeChatItem? _messageItem(
   required Map<dynamic, dynamic>? Function(CachedMessage message)? reactionOf,
   required NativeChatTranscript Function(String messageId)? transcriptOf,
   required String? Function(CachedMessage message)? commentsOf,
+  required String? Function(CachedMessage message)? notePathOf,
   required bool selected,
   required bool highlighted,
   required bool canReply,
@@ -190,6 +193,7 @@ NativeChatItem? _messageItem(
         ? null
         : _named(forwarded.originalSenderName ?? names(forwarded.originalSenderId)),
     mediaUrl: _mediaUrl(message),
+    playUrl: kind == NativeChatKind.videoNote ? notePathOf?.call(message) : null,
     media: _mediaTiles(message),
     spans: _spans(message, body),
     pollId: pollAttachment?.pollId,

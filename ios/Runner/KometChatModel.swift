@@ -79,6 +79,7 @@ struct KometChatMessage {
   let replyText: String?
   let forwardAuthor: String?
   let mediaUrl: String?
+  let playUrl: String?
   let duration: String?
   let transcript: String?
   let transcriptOpen: Bool
@@ -136,6 +137,7 @@ struct KometChatMessage {
       replyText: map["replyText"] as? String,
       forwardAuthor: map["forwardAuthor"] as? String,
       mediaUrl: map["mediaUrl"] as? String,
+      playUrl: map["playUrl"] as? String,
       duration: map["duration"] as? String,
       transcript: map["transcript"] as? String,
       transcriptOpen: (map["transcriptOpen"] as? NSNumber)?.boolValue ?? false,

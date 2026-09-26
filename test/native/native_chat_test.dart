@@ -234,6 +234,33 @@ void main() {
       expect(items.last.wave.every((bar) => bar == 3), isTrue);
     });
 
+    test('кружок получает локальный файл для проигрывания', () {
+      final items = buildNativeChatItems(
+        now: _now,
+        myId: 1,
+        messages: [
+          _message(
+            id: 'note',
+            senderId: 2,
+            time: _now,
+            attachments: [
+              const VideoAttachment(
+                videoType: 1,
+                videoId: 4,
+                thumbnail: 'https://cdn.example/thumb.jpg',
+              ),
+            ],
+          ),
+        ],
+        notePathOf: (message) => '/tmp/${message.id}.mp4',
+      );
+      final note = items.last;
+      expect(note.kind, NativeChatKind.videoNote);
+      expect(note.playUrl, '/tmp/note.mp4');
+      expect(note.toMap()['playUrl'], '/tmp/note.mp4');
+      expect(note.mediaUrl, 'https://cdn.example/thumb.jpg');
+    });
+
     test('жирный отрезок, альбом и результаты опроса', () {
       final items = buildNativeChatItems(
         now: _now,

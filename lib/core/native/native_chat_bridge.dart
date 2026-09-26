@@ -217,6 +217,7 @@ class NativeChatItem {
   final String? replyText;
   final String? forwardAuthor;
   final String? mediaUrl;
+  final String? playUrl;
   final String? fileName;
   final String? duration;
   final String? transcript;
@@ -260,6 +261,7 @@ class NativeChatItem {
     this.replyText,
     this.forwardAuthor,
     this.mediaUrl,
+    this.playUrl,
     this.fileName,
     this.duration,
     this.transcript,
@@ -289,6 +291,7 @@ class NativeChatItem {
     bool? showAvatar,
     bool? showSender,
     String? senderName,
+    String? playUrl,
   }) => NativeChatItem(
     id: id,
     role: role,
@@ -315,6 +318,7 @@ class NativeChatItem {
     replyText: replyText,
     forwardAuthor: forwardAuthor,
     mediaUrl: mediaUrl,
+    playUrl: playUrl ?? this.playUrl,
     fileName: fileName,
     duration: duration,
     transcript: transcript,
@@ -360,6 +364,7 @@ class NativeChatItem {
       'replyText': replyText,
       'forwardAuthor': forwardAuthor,
       'mediaUrl': mediaUrl,
+      if (playUrl != null) 'playUrl': playUrl,
       'fileName': fileName,
       'duration': duration,
       'transcript': transcript,
@@ -407,6 +412,7 @@ class NativeChatItem {
         replyText == other.replyText &&
         forwardAuthor == other.forwardAuthor &&
         mediaUrl == other.mediaUrl &&
+        playUrl == other.playUrl &&
         fileName == other.fileName &&
         duration == other.duration &&
         transcript == other.transcript &&
@@ -448,6 +454,7 @@ class NativeChatItem {
     pollVoted,
     Object.hash(
       progress,
+      playUrl,
       Object.hashAll(wave),
       Object.hashAll(spans),
       Object.hashAll(media),
