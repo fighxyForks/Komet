@@ -270,7 +270,7 @@ class DebugFeatureTogglesSection extends StatelessWidget {
               icon: IosSymbols.chatBubble(context),
               title: 'Native chat',
               subtitle: (_) =>
-                  'Эксперимент: лента сообщений на UIKit. Шапка и поле ввода остаются прежними.',
+                  'Эксперимент: лента, шапка, поле ввода, поиск и закреплённое на UIKit.',
               valueListenable: AppNativeChatPrototype.enabled,
               onChanged: AppNativeChatPrototype.save,
             ),

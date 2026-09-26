@@ -445,6 +445,7 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   bool get _headerHasPhoto => widget.imageUrl.isNotEmpty && !_peerDeleted;
 
   Widget _buildScrollBody(ColorScheme cs) {
+    if (IosGlass.of(context)) return _buildPlainScroll(cs);
     return LayoutBuilder(
       builder: (context, viewport) {
         final media = MediaQuery.of(context);
@@ -493,6 +494,25 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildPlainScroll(ColorScheme cs) {
+    final topPad = MediaQuery.paddingOf(context).top;
+    final controller = _bodyScrollController ??= (ScrollController()
+      ..addListener(_onBodyScroll));
+    return CustomScrollView(
+      controller: controller,
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: topPad + _headerCollapsedBody,
+            child: _buildMorphHeader(context, cs, 0),
+          ),
+        ),
+        SliverToBoxAdapter(child: _buildBody(cs)),
+      ],
     );
   }
 
