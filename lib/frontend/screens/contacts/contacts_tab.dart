@@ -20,6 +20,7 @@ import '../../widgets/sheet_helpers.dart';
 import '../../widgets/small_spinner.dart';
 import '../../widgets/spectrum_tint.dart';
 import '../chats/chat_info_screen.dart';
+import 'native_contact_cards.dart';
 import 'nfc_exchange_sheet.dart';
 import 'open_contact_profile.dart';
 import '../../../core/config/app_frost.dart';
@@ -304,14 +305,21 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
           'loading': _isLoading,
           'emptyText': 'Нет контактов',
           'buttons': const [
-            {'id': 'find', 'symbol': 'person.badge.plus'},
+            {'id': 'find', 'symbol': 'magnifyingglass'},
+            {'id': 'add', 'symbol': 'person.badge.plus'},
           ],
           'accent': cs.primary.toARGB32(),
           'bottomInset': 100.0,
         },
         callbacks: NativeListCallbacks(
           onTap: _onNativeTap,
-          onButton: (id, _) => unawaited(_openSearchById()),
+          onButton: (id, _) {
+            if (id == 'add') {
+              unawaited(openNativeAddContact(context));
+            } else {
+              unawaited(openNativeContactLookup(context));
+            }
+          },
         ),
       ),
     );
@@ -369,7 +377,16 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
                     ),
                   ),
                   ContactsNfcExchangeButton(onPressed: _openNfcExchange),
-                  if (!ios)
+                  if (ios) ...[
+                    IconButton(
+                      icon: Icon(IosSymbols.search(context), color: cs.onSurface),
+                      onPressed: () => unawaited(openNativeContactLookup(context)),
+                    ),
+                    IconButton(
+                      icon: Icon(IosSymbols.personAdd(context), color: cs.onSurface),
+                      onPressed: () => unawaited(openNativeAddContact(context)),
+                    ),
+                  ] else
                     IconButton(
                       icon: Icon(IosSymbols.search(context), color: cs.onSurface),
                       onPressed: _openSearchById,
@@ -382,7 +399,7 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: IosFlatSearchBar(
                   hint: 'Поиск',
-                  onTap: _openSearchById,
+                  onTap: () => unawaited(openNativeContactLookup(context)),
                 ),
               ),
             Expanded(
