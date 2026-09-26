@@ -48,7 +48,7 @@ final class KometChatServiceCell: UICollectionViewCell {
   }
 }
 
-final class KometChatMessageCell: UICollectionViewCell {
+final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDelegate {
   static let reuseIdentifier = "KometChatMessageCell"
 
   var onEvent: ((String, [String: Any]) -> Void)?
@@ -634,10 +634,8 @@ final class KometChatMessageCell: UICollectionViewCell {
       break
     }
   }
-}
 
-extension KometChatMessageCell: UIGestureRecognizerDelegate {
-  func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+  override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
     guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
     let velocity = pan.velocity(in: contentView)
     return abs(velocity.x) > abs(velocity.y) && velocity.x < 0
