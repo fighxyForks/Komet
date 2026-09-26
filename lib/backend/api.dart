@@ -9,6 +9,7 @@ import '../core/cache/self_presence.dart';
 import '../core/config/config.dart';
 import '../core/config/countries.dart';
 import '../core/config/device_profile.dart';
+import '../core/config/ios_client.dart';
 import '../core/config/komet_settings.dart';
 import '../core/config/proxy_config.dart';
 import '../core/config/web_client_profile.dart';
@@ -444,14 +445,19 @@ class Api {
     ({String host, int port, bool trustMincifryCa}) endpoint,
   ) async {
     final device = await DeviceProfile.load();
+    final realIos = IosClient.reportsRealDevice;
 
-    String deviceType = 'ANDROID';
+    String deviceType = realIos ? IosClient.deviceType : 'ANDROID';
     String osVersion = device.osVersion;
     String deviceName = device.deviceName;
-    String architecture = SpoofingService.defaultArchitecture;
-    String appVersion = SpoofingService.hardcodedAppVersion;
+    String architecture = realIos
+        ? IosClient.architecture
+        : SpoofingService.defaultArchitecture;
+    String appVersion = realIos
+        ? IosClient.appVersion
+        : SpoofingService.hardcodedAppVersion;
     int buildNumber = SpoofingService.hardcodedBuildNumber;
-    String screen = '420dpi 420dpi 1080x2340';
+    String screen = realIos ? device.screen : '420dpi 420dpi 1080x2340';
 
     // #***! таймзона инициалализацириуется один раз
     if (!_tzInitialized) {
@@ -473,9 +479,9 @@ class Api {
 
     String? spoofUserAgent;
     // #***! включена подмена, накрываем реальные значения спуфом
-    final spoofed = await SpoofingService.getSpoofedSessionData(
-      scope: spoofScope,
-    );
+    final spoofed = realIos
+        ? null
+        : await SpoofingService.getSpoofedSessionData(scope: spoofScope);
     if (spoofed != null) {
       spoofUserAgent = spoofed['user_agent'] as String?;
       final sDeviceType = spoofed['device_type'] as String?;
@@ -521,7 +527,7 @@ class Api {
 
     // #***! до логина (сокет без токена) прикидываемся прошлой версией целиком,
     // перекрывая и дефолт, и спуф-профиль; при входе с токеном версию не трогаем
-    if (!_willAuthenticate) {
+    if (!_willAuthenticate && !realIos) {
       appVersion = SpoofingService.preLoginAppVersion;
       buildNumber = SpoofingService.preLoginBuildNumber;
     }

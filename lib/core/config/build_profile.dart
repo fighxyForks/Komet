@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart' show appFlavor;
 
+import 'ios_client.dart';
+
 // #***! что включено в сборке, всё считается на компиляции из flavor
 abstract final class BuildProfile {
   static const String storeFlavor = 'store';
@@ -9,7 +11,7 @@ abstract final class BuildProfile {
 
   static const bool selfUpdate = !isStore;
   static const bool firebasePush = appFlavor == 'oneme';
-  static const bool spoofUi = !isStore;
+  static bool get spoofUi => !isStore && !IosClient.reportsRealDevice;
   static const bool tokenLogin = false;
   static const bool qrLogin = false;
   static const bool devTools = !isStore;
