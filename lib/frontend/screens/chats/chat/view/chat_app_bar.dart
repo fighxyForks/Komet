@@ -10,6 +10,7 @@ import 'package:komet/frontend/widgets/glass/ios_glass.dart';
 import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 
 import '../../../../native/native_chat_header_view.dart';
+import '../../../../native/native_chat_search.dart';
 import 'chat_header.dart';
 import 'frosted_panel.dart';
 import 'search_view.dart';
@@ -292,13 +293,19 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                         opacity: s,
                         child: NativeGlassScope(
                           enabled: s == 1,
-                          child: SearchTopBar(
-                            cs: cs,
-                            glossy: glossyChrome,
-                            search: search,
-                            focusNode: searchFocusNode,
-                            onClose: onCloseSearch,
-                          ),
+                          child: useNativeHeader
+                              ? NativeChatSearchBar(
+                                  text: search.searchController,
+                                  onClose: onCloseSearch,
+                                  onSubmit: search.submit,
+                                )
+                              : SearchTopBar(
+                                  cs: cs,
+                                  glossy: glossyChrome,
+                                  search: search,
+                                  focusNode: searchFocusNode,
+                                  onClose: onCloseSearch,
+                                ),
                         ),
                       ),
                     ),

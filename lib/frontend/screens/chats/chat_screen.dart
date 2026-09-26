@@ -4838,6 +4838,7 @@ class _ChatScreenState extends State<ChatScreen>
                     onOpenSearchResult: _openSearchResult,
                     searchSenderName: _searchSenderName,
                     searchSenderAvatar: _searchSenderAvatar,
+                    useNativeSearch: NativeChatBridge.isEligible,
                     chromeVignette: _chromeVignette,
                     composerPaintsSurface: _composerPaintsSurface,
                     pinnedBannerTop: _pinnedBannerTop(),

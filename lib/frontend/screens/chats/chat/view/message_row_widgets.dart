@@ -11,6 +11,8 @@ import 'package:komet/core/config/app_show_extra_info.dart';
 import 'package:komet/core/config/app_fonts.dart';
 import 'package:komet/core/config/app_frost.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
+import 'package:komet/core/native/native_chat_bridge.dart';
+import 'package:komet/frontend/native/native_chat_search.dart';
 import 'package:komet/core/config/app_message_actions_style.dart';
 import 'package:komet/core/crypto/message_decryption_cache.dart';
 import 'package:komet/core/utils/haptics.dart';
@@ -210,6 +212,17 @@ class PinnedMessageBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final ios = IosGlass.of(context);
+    if (ios && NativeChatBridge.isEligible) {
+      final title = AppLocalizations.of(context)?.pinnedMessageTitle ?? 'Закреплённое';
+      final body = (text == null || text!.trim().isEmpty) ? '' : text!.trim();
+      return NativePinnedBanner(
+        title: title,
+        text: body,
+        canUnpin: onUnpin != null,
+        onTap: onTap,
+        onUnpin: onUnpin,
+      );
+    }
     final content = Material(
       color: ios
           ? Colors.transparent

@@ -47,6 +47,7 @@ class ChatBodyLayout extends StatelessWidget {
   final void Function(MessageSearchResult) onOpenSearchResult;
   final String Function(int senderId) searchSenderName;
   final String? Function(int senderId) searchSenderAvatar;
+  final bool useNativeSearch;
   final bool chromeVignette;
   final bool composerPaintsSurface;
   final double pinnedBannerTop;
@@ -79,6 +80,7 @@ class ChatBodyLayout extends StatelessWidget {
     required this.onOpenSearchResult,
     required this.searchSenderName,
     required this.searchSenderAvatar,
+    this.useNativeSearch = false,
     required this.chromeVignette,
     required this.composerPaintsSurface,
     required this.pinnedBannerTop,
@@ -167,6 +169,7 @@ class ChatBodyLayout extends StatelessWidget {
                   onOpenResult: onOpenSearchResult,
                   senderName: searchSenderName,
                   senderAvatar: searchSenderAvatar,
+                  useNative: useNativeSearch,
                 ),
               ],
             ),
@@ -191,6 +194,7 @@ class ChatBodyLayout extends StatelessWidget {
           onOpenResult: onOpenSearchResult,
           senderName: searchSenderName,
           senderAvatar: searchSenderAvatar,
+          useNative: useNativeSearch,
         ),
         if (!vignette && AppIosGlass.active.value) ...[
           Positioned(
