@@ -11,7 +11,8 @@ void main() {
     } else {
       expect(BuildProfile.isAppStoreBuild, isFalse);
       expect(BuildProfile.devTools, isTrue);
-      expect(BuildProfile.selfUpdate, isTrue);
+      const updatesRemoved = bool.hasEnvironment('KOMET_SELF_UPDATE');
+      expect(BuildProfile.selfUpdate, updatesRemoved ? isFalse : isTrue);
     }
   });
 }

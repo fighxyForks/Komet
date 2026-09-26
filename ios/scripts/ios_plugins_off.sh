@@ -4,10 +4,12 @@ set -eu
 mode="${1:?}"
 
 plugins_define="S09NRVRfUExVR0lOUz1mYWxzZQ=="
+update_define="S09NRVRfU0VMRl9VUERBVEU9ZmFsc2U="
+extra_defines="${plugins_define},${update_define}"
 if [ -n "${DART_DEFINES:-}" ]; then
-  DART_DEFINES="${DART_DEFINES},${plugins_define}"
+  DART_DEFINES="${DART_DEFINES},${extra_defines}"
 else
-  DART_DEFINES="${plugins_define}"
+  DART_DEFINES="${extra_defines}"
 fi
 export DART_DEFINES
 

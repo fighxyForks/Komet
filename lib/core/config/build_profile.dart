@@ -17,7 +17,10 @@ abstract final class BuildProfile {
 
   static const bool _publicRelease = isStore || isAppStoreBuild;
 
-  static const bool selfUpdate = !_publicRelease;
+  // #***! iOS-сборка дописывает KOMET_SELF_UPDATE=false, проверки там нет
+  static const bool selfUpdate =
+      !_publicRelease &&
+      bool.fromEnvironment('KOMET_SELF_UPDATE', defaultValue: true);
   static const bool firebasePush = appFlavor == 'oneme';
   static bool get spoofUi => !_publicRelease && !IosClient.reportsRealDevice;
   static const bool tokenLogin = false;
