@@ -34,6 +34,8 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
   private let formatButton = UIButton(type: .system)
   private let actionButton = UIButton(type: .system)
   private let statusLabel = UILabel()
+  private let placeholder = UILabel()
+  private var fieldHeight: NSLayoutConstraint?
   private var applying = false
   private var recording = false
   private var videoMode = false
@@ -57,7 +59,11 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
     field.backgroundColor = .clear
     field.textContainerInset = UIEdgeInsets(top: 8, left: 4, bottom: 8, right: 4)
     field.delegate = self
-    field.isScrollEnabled = false
+    field.isScrollEnabled = true
+    placeholder.text = "Сообщение"
+    placeholder.font = field.font
+    placeholder.textColor = .placeholderText
+    placeholder.isUserInteractionEnabled = false
     statusLabel.font = .preferredFont(forTextStyle: .subheadline)
     statusLabel.textColor = .secondaryLabel
     statusLabel.isHidden = true
@@ -75,6 +81,12 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
     actionButton.addGestureRecognizer(tap)
     let replyRow = UIStackView(arrangedSubviews: [replyLabel, replyClose])
     replyRow.axis = .horizontal
+    field.addSubview(placeholder)
+    placeholder.translatesAutoresizingMaskIntoConstraints = false
+    NSLayoutConstraint.activate([
+      placeholder.leadingAnchor.constraint(equalTo: field.leadingAnchor, constant: 8),
+      placeholder.topAnchor.constraint(equalTo: field.topAnchor, constant: 8),
+    ])
     let input = UIStackView(arrangedSubviews: [
       attachButton, field, statusLabel, stickerButton, formatButton, actionButton,
     ])
@@ -93,9 +105,17 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
       column.bottomAnchor.constraint(equalTo: root.safeAreaLayoutGuide.bottomAnchor, constant: -6),
       actionButton.widthAnchor.constraint(equalToConstant: 44),
       actionButton.heightAnchor.constraint(equalToConstant: 44),
-      attachButton.widthAnchor.constraint(equalToConstant: 36),
-      stickerButton.widthAnchor.constraint(equalToConstant: 36),
-      field.heightAnchor.constraint(greaterThanOrEqualToConstant: 36),
+      attachButton.widthAnchor.constraint(equalToConstant: 44),
+      attachButton.heightAnchor.constraint(equalToConstant: 44),
+      stickerButton.widthAnchor.constraint(equalToConstant: 44),
+      stickerButton.heightAnchor.constraint(equalToConstant: 44),
+      formatButton.widthAnchor.constraint(equalToConstant: 44),
+      formatButton.heightAnchor.constraint(equalToConstant: 44),
+      {
+        let height = field.heightAnchor.constraint(equalToConstant: 36)
+        fieldHeight = height
+        return height
+      }(),
     ])
     apply(arguments as? [String: Any])
     channel.setMethodCallHandler { [weak self] call, result in
@@ -137,6 +157,8 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
       applying = false
     }
     hasText = !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    placeholder.isHidden = !text.isEmpty
+    reportHeight()
     field.isEditable = !recording
     refreshAction()
   }
@@ -166,8 +188,21 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
   func textViewDidChange(_ textView: UITextView) {
     guard !applying else { return }
     hasText = !textView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    placeholder.isHidden = !(textView.text ?? "").isEmpty
     refreshAction()
+    reportHeight()
     channel.invokeMethod("text", arguments: ["text": textView.text ?? ""])
+  }
+
+  private func reportHeight() {
+    let width = max(field.bounds.width, 120)
+    let fitted = field.sizeThatFits(CGSize(width: width, height: 400)).height
+    let height = min(120, max(36, ceil(fitted)))
+    field.isScrollEnabled = fitted > 120
+    if fieldHeight?.constant != height {
+      fieldHeight?.constant = height
+      channel.invokeMethod("height", arguments: ["value": height])
+    }
   }
 
   func textViewDidChangeSelection(_ textView: UITextView) {

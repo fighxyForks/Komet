@@ -49,6 +49,7 @@ class _NativeChatComposerViewState extends State<NativeChatComposerView> {
   MethodChannel? _channel;
   String _last = '';
   bool _videoGesture = false;
+  double _fieldHeight = 36;
 
   Map<String, Object?> get _chrome => {
     'text': widget.text.text,
@@ -78,6 +79,11 @@ class _NativeChatComposerViewState extends State<NativeChatComposerView> {
           ? Map<String, Object?>.from(call.arguments as Map)
           : const <String, Object?>{};
       switch (call.method) {
+        case 'height':
+          final next = _double(args['value']).clamp(36, 120).toDouble();
+          if (next != _fieldHeight && mounted) {
+            setState(() => _fieldHeight = next);
+          }
         case 'text':
           final text = args['text'] as String? ?? '';
           if (text != widget.text.text) {
@@ -179,7 +185,7 @@ class _NativeChatComposerViewState extends State<NativeChatComposerView> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: widget.reply.isEmpty ? 56 : 84,
+      height: (widget.reply.isEmpty ? 20 : 48) + _fieldHeight,
       child: UiKitView(
         viewType: _type,
         creationParams: _chrome,

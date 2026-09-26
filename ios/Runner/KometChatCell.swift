@@ -640,14 +640,27 @@ enum KometChatText {
       guard end > start else { continue }
       let range = NSRange(location: start, length: end - start)
       var attributes: [NSAttributedString.Key: Any] = [:]
+      var face = font
+      if span.styles.contains("mono") {
+        face = UIFont.monospacedSystemFont(ofSize: font.pointSize, weight: .regular)
+      } else if span.styles.contains("heading") {
+        face = UIFont.preferredFont(forTextStyle: .headline)
+      }
+      var traits = face.fontDescriptor.symbolicTraits
       if span.styles.contains("strong") || span.styles.contains("heading") {
-        attributes[.font] = UIFont.preferredFont(forTextStyle: .headline)
+        traits.insert(.traitBold)
       }
       if span.styles.contains("emphasized") {
-        attributes[.font] = UIFont.italicSystemFont(ofSize: font.pointSize)
+        traits.insert(.traitItalic)
       }
-      if span.styles.contains("mono") {
-        attributes[.font] = UIFont.monospacedSystemFont(ofSize: font.pointSize, weight: .regular)
+      if let described = face.fontDescriptor.withSymbolicTraits(traits) {
+        attributes[.font] = UIFont(descriptor: described, size: face.pointSize)
+      }
+      if span.styles.contains("quote") {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.headIndent = 12
+        paragraph.firstLineHeadIndent = 12
+        attributes[.paragraphStyle] = paragraph
       }
       if span.styles.contains("underline") {
         attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
