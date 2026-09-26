@@ -321,7 +321,7 @@ class _CallsTabState extends State<CallsTab>
     });
   }
 
-  Future<void> _callBack(CallLogEntry call) async {
+  Future<void> _callBack(CallLogEntry call, {bool video = false}) async {
     if (call.peerId <= 0) {
       showCustomNotification(context, 'Не удалось определить собеседника');
       return;
@@ -344,7 +344,10 @@ class _CallsTabState extends State<CallsTab>
       return;
     }
     try {
-      final session = await CallController.instance.startOutgoing(call.peerId);
+      final session = await CallController.instance.startOutgoing(
+        call.peerId,
+        isVideo: video,
+      );
       if (!mounted) return;
       await navigator.push(
         iosPageRoute(context,
@@ -564,12 +567,18 @@ class _CallsTabState extends State<CallsTab>
                 avatarSeed: call.peerId,
                 avatarSymbol: call.isGroup ? 'person.2.fill' : null,
                 menu: [
-                  if (!call.isGroup)
+                  if (!call.isGroup) ...[
                     const NativeListAction(
-                      id: 'callback',
-                      title: 'Перезвонить',
+                      id: 'audio',
+                      title: 'Позвонить',
                       symbol: 'phone',
                     ),
+                    const NativeListAction(
+                      id: 'video',
+                      title: 'Видеозвонок',
+                      symbol: 'video',
+                    ),
+                  ],
                   const NativeListAction(
                     id: 'delete',
                     title: 'Удалить',
@@ -577,6 +586,7 @@ class _CallsTabState extends State<CallsTab>
                     destructive: true,
                   ),
                 ],
+                menuOnTap: !call.isGroup,
               ),
         ],
       ),
@@ -590,8 +600,7 @@ class _CallsTabState extends State<CallsTab>
       case 'action:join':
         unawaited(_joinGroupCall());
       default:
-        final call = _callById(rowId.substring('call:'.length));
-        if (call != null && !call.isGroup) unawaited(_callBack(call));
+        break;
     }
   }
 
@@ -600,7 +609,10 @@ class _CallsTabState extends State<CallsTab>
     if (call == null) return;
     switch (actionId) {
       case 'callback':
+      case 'audio':
         unawaited(_callBack(call));
+      case 'video':
+        unawaited(_callBack(call, video: true));
       case 'delete':
         _deleteCall(call);
         _onRemovalComplete(call.id);

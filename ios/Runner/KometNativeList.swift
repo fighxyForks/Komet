@@ -30,6 +30,7 @@ struct KometListRow {
   let avatarSymbol: String?
   let symbol: String?
   let menu: [KometListAction]
+  let menuOnTap: Bool
 
   init?(_ map: [String: Any]) {
     guard let id = map["id"] as? String else { return nil }
@@ -46,6 +47,7 @@ struct KometListRow {
     avatarSymbol = map["avatarSymbol"] as? String
     symbol = map["symbol"] as? String
     menu = (map["menu"] as? [[String: Any]] ?? []).compactMap(KometListAction.init)
+    menuOnTap = (map["menuOnTap"] as? NSNumber)?.boolValue ?? false
   }
 }
 
@@ -408,8 +410,30 @@ final class KometNativeListController: UIViewController, UITableViewDelegate,
 
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     tableView.deselectRow(at: indexPath, animated: true)
-    guard let id = dataSource.itemIdentifier(for: indexPath) else { return }
+    guard let id = dataSource.itemIdentifier(for: indexPath), let row = rows[id] else { return }
+    if row.menuOnTap && !row.menu.isEmpty {
+      presentRowMenu(row)
+      return
+    }
     onEvent?("tap", ["id": id])
+  }
+
+  private func presentRowMenu(_ row: KometListRow) {
+    let sheet = UIAlertController(title: row.title, message: nil, preferredStyle: .actionSheet)
+    for action in row.menu where !action.destructive {
+      sheet.addAction(UIAlertAction(
+        title: action.title,
+        style: action.destructive ? .destructive : .default
+      ) { [weak self] _ in
+        self?.onEvent?("menu", ["id": row.id, "action": action.id])
+      })
+    }
+    sheet.addAction(UIAlertAction(title: "Отмена", style: .cancel))
+    var presenter: UIViewController? = parent ?? view.window?.rootViewController
+    while let presented = presenter?.presentedViewController {
+      presenter = presented
+    }
+    presenter?.present(sheet, animated: true)
   }
 
   func tableView(_ tableView: UITableView,

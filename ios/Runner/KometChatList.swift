@@ -122,6 +122,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   private lazy var dataSource: UICollectionViewDiffableDataSource<Int, Int> = makeDataSource()
   private let header = KometChatListHeader()
   private let composeButton = UIButton(type: .system)
+  private let editButton = UIButton(type: .system)
   private let downloadsButton = UIButton(type: .system)
   private let lockButton = UIButton(type: .system)
   private let editBar = KometChatListEditBar()
@@ -153,6 +154,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   private var folders: [KometFolderItem] = []
   private var selectedFolder: String?
   private var storiesVisible = false
+  private var lastScrollOffset: CGFloat = 0
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -194,6 +196,15 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     collectionView.addSubview(header)
     layoutHeader()
 
+    editButton.frame = CGRect(x: 0, y: 0, width: 118, height: 44)
+    editButton.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+    editButton.titleLabel?.adjustsFontSizeToFitWidth = true
+    editButton.titleLabel?.minimumScaleFactor = 0.8
+    editButton.titleLabel?.lineBreakMode = .byClipping
+    editButton.addTarget(self, action: #selector(toggleEditing), for: .touchUpInside)
+    let peek = UILongPressGestureRecognizer(target: self, action: #selector(peekChat(_:)))
+    peek.minimumPressDuration = 0.35
+    collectionView.addGestureRecognizer(peek)
     setUpBarButton(composeButton, symbol: "square.and.pencil", action: #selector(openCompose))
     setUpBarButton(downloadsButton, symbol: "arrow.down.circle",
                    action: #selector(openDownloads))
@@ -362,11 +373,36 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     let previousTop = collectionView.contentInset.top
     header.frame = CGRect(x: 0, y: -height, width: width, height: height)
     guard previousTop != height else { return }
-    let atTop = collectionView.contentOffset.y <= -collectionView.adjustedContentInset.top + 1
     collectionView.contentInset.top = height
-    if atTop {
-      collectionView.contentOffset.y = -collectionView.adjustedContentInset.top
+    collectionView.contentOffset.y -= height - previousTop
+  }
+
+  private func updateStoriesCollapse(_ scrollView: UIScrollView) {
+    guard storiesVisible, header.hasStories else { return }
+    let top = -scrollView.adjustedContentInset.top
+    let offset = scrollView.contentOffset.y
+    let delta = offset - lastScrollOffset
+    lastScrollOffset = offset
+    if offset <= top - 8 {
+      header.setStoriesCollapsed(false)
+      layoutHeader()
+    } else if delta > 1, offset > top + 12 {
+      header.setStoriesCollapsed(true)
+      layoutHeader()
     }
+  }
+
+  @objc private func peekChat(_ gesture: UILongPressGestureRecognizer) {
+    guard gesture.state == .began, !editingList else { return }
+    let point = gesture.location(in: collectionView)
+    guard let indexPath = collectionView.indexPathForItem(at: point),
+          let id = dataSource.itemIdentifier(for: indexPath),
+          id != KometChatListController.archiveId,
+          let cell = collectionView.cellForItem(at: indexPath) else { return }
+    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    var arguments = rectArguments(cell)
+    arguments["id"] = id
+    onEvent?("peek", arguments)
   }
 
   private func updateQuery(_ text: String) {
@@ -393,6 +429,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   }
 
   func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    updateStoriesCollapse(scrollView)
     collapseArchiveIfScrolledPast(scrollView)
     guard archiveAwaitsPull, scrollView.isTracking else {
       archiveArmed = false
@@ -480,11 +517,8 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   }
 
   private func updateBarItems() {
-    let edit = UIBarButtonItem(
-      title: editingList ? strings.done : strings.edit,
-      style: editingList ? .done : .plain,
-      target: self, action: #selector(toggleEditing))
-    navigationItem.setLeftBarButton(edit, animated: false)
+    editButton.setTitle(editingList ? strings.done : strings.edit, for: .normal)
+    navigationItem.setLeftBarButton(UIBarButtonItem(customView: editButton), animated: false)
     var trailing: [UIBarButtonItem] = []
     if !editingList {
       trailing.append(UIBarButtonItem(customView: composeButton))
@@ -723,39 +757,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   }
 
   private func contextMenu(at indexPath: IndexPath) -> UIContextMenuConfiguration? {
-    guard !editingList, let id = dataSource.itemIdentifier(for: indexPath),
-          let row = contents[id]?.row else { return nil }
-    return UIContextMenuConfiguration(identifier: NSNumber(value: id), previewProvider: nil) {
-      [weak self] _ in
-      self?.menu(for: row)
-    }
-  }
-
-  private func menu(for row: KometChatRow) -> UIMenu {
-    func action(_ title: String, _ symbol: String, _ name: String,
-                destructive: Bool = false) -> UIAction {
-      UIAction(title: title, image: UIImage(systemName: symbol),
-               attributes: destructive ? .destructive : []) { [weak self] _ in
-        self?.onEvent?("action", ["id": row.id, "action": name])
-      }
-    }
-    var actions: [UIMenuElement] = []
-    if row.canMarkRead {
-      actions.append(action(strings.markRead, "envelope.open", "markRead"))
-    }
-    actions.append(row.pinned
-      ? action(strings.unpin, "pin.slash", "unpin")
-      : action(strings.pin, "pin", "pin"))
-    actions.append(row.muted
-      ? action(strings.unmute, "bell", "unmute")
-      : action(strings.mute, "bell.slash", "mute"))
-    actions.append(action(strings.archive, "archivebox", "archive"))
-    if row.canDelete {
-      actions.append(UIMenu(title: "", options: .displayInline, children: [
-        action(strings.delete, "trash", "delete", destructive: true),
-      ]))
-    }
-    return UIMenu(title: "", children: actions)
+    nil
   }
 
   func collectionView(_ collectionView: UICollectionView,

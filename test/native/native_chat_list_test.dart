@@ -29,6 +29,7 @@ NativeChatListCallbacks _callbacks(List<Object> log) => NativeChatListCallbacks(
   onArchive: () => log.add('archive'),
   onFolder: (id) => log.add('folder $id'),
   onFolderMenu: (id, rect) => log.add('folderMenu $id $rect'),
+  onPeek: (id) => log.add('peek $id'),
 );
 
 void main() {

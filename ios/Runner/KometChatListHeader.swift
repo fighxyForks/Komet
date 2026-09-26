@@ -68,6 +68,8 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
   private lazy var storiesView = UICollectionView(frame: .zero, collectionViewLayout: storiesLayout)
   private var items: [KometStoryItem] = []
   private(set) var showsStories = false
+  var storiesCollapsed = false
+  var hasStories: Bool { !items.isEmpty }
   var accent: UIColor = .systemBlue {
     didSet { storiesView.reloadData() }
   }
@@ -75,8 +77,19 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
   var showsFolders: Bool { folders.count > 1 }
 
   var preferredHeight: CGFloat {
-    (showsStories ? KometChatListHeader.storiesHeight : 0) + KometChatListHeader.searchHeight
+    storyBand + KometChatListHeader.searchHeight
       + (showsFolders ? KometChatListHeader.foldersHeight : 0)
+  }
+
+  private var storyBand: CGFloat {
+    showsStories && !storiesCollapsed ? KometChatListHeader.storiesHeight : 0
+  }
+
+  func setStoriesCollapsed(_ collapsed: Bool) {
+    guard collapsed != storiesCollapsed else { return }
+    storiesCollapsed = collapsed
+    storiesView.isHidden = collapsed || !showsStories
+    setNeedsLayout()
   }
 
   override init(frame: CGRect) {
@@ -124,7 +137,7 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    let storiesHeight = showsStories ? KometChatListHeader.storiesHeight : 0
+    let storiesHeight = storyBand
     storiesView.frame = CGRect(x: 0, y: 0, width: bounds.width, height: storiesHeight)
     searchBar.frame = CGRect(x: 8, y: storiesHeight, width: bounds.width - 16,
                              height: KometChatListHeader.searchHeight)

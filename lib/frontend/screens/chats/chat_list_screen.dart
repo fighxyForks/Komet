@@ -3728,6 +3728,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             (_) => const ChatListScreen(archiveMode: true),
           ),
           onFolder: (id) => _selectFolder(id),
+          onPeek: _peekNativeChat,
           onFolderMenu: (id, _) {
             for (final folder in _folders) {
               if (folder.id == id) {
@@ -4312,6 +4313,30 @@ class _ChatListScreenState extends State<ChatListScreen>
     final box = context.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return null;
     return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  void _peekNativeChat(int chatId) {
+    final chat = _chatById(chatId);
+    if (chat == null) return;
+    final facts = _rowFacts(chat);
+    unawaited(
+      showChatPreview(
+        context,
+        chatId: chatId,
+        name: facts.name,
+        imageUrl: facts.imageUrl,
+        chatType: facts.chatType,
+        hasUnread: facts.unreadCount > 0,
+        onOpen: () => _openChatFromList(
+          chatId.toString(),
+          facts.name,
+          facts.imageUrl,
+          facts.chatType,
+          animateIn: false,
+        ),
+        onMarkRead: () => _markChatRead(chatId),
+      ),
+    );
   }
 
   void _previewChat(

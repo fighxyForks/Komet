@@ -33,7 +33,7 @@ final class KometChatListEditBar: UIView {
       NSLayoutConstraint.activate([
         button.topAnchor.constraint(equalTo: topAnchor),
         button.bottomAnchor.constraint(equalTo: bottomAnchor),
-        button.heightAnchor.constraint(equalToConstant: 48),
+        button.heightAnchor.constraint(equalToConstant: 36),
       ])
     }
   }
@@ -76,7 +76,7 @@ final class KometChatListEditBar: UIView {
     } else {
       button = UIButton(type: .system)
       button.backgroundColor = .secondarySystemBackground
-      button.layer.cornerRadius = 24
+      button.layer.cornerRadius = 18
       button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
     }
     button.addTarget(self, action: #selector(tapped(_:)), for: .touchUpInside)
@@ -93,15 +93,20 @@ final class KometChatListEditBar: UIView {
   }
 
   private func setTitle(_ title: String, of button: UIButton, color: UIColor) {
-    let font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+    let font = UIFont.systemFont(ofSize: 15, weight: .semibold)
     if #available(iOS 15.0, *) {
       var attributed = AttributedString(title)
       attributed.font = font
       button.configuration?.attributedTitle = attributed
+      button.configuration?.titleLineBreakMode = .byClipping
       button.setNeedsUpdateConfiguration()
     } else {
       button.setTitle(title, for: .normal)
       button.titleLabel?.font = font
+      button.titleLabel?.numberOfLines = 1
+      button.titleLabel?.lineBreakMode = .byClipping
+      button.titleLabel?.adjustsFontSizeToFitWidth = true
+      button.titleLabel?.minimumScaleFactor = 0.75
       button.setTitleColor(color, for: .normal)
       button.setTitleColor(KometChatListStyle.secondary, for: .disabled)
     }

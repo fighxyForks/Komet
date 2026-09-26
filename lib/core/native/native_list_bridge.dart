@@ -45,6 +45,7 @@ class NativeListRow {
   final String? avatarSymbol;
   final String? symbol;
   final List<NativeListAction> menu;
+  final bool menuOnTap;
 
   const NativeListRow({
     required this.id,
@@ -60,6 +61,7 @@ class NativeListRow {
     this.avatarSymbol,
     this.symbol,
     this.menu = const [],
+    this.menuOnTap = false,
   });
 
   Map<String, Object?> toMap() => {
@@ -76,6 +78,7 @@ class NativeListRow {
     'avatarSymbol': avatarSymbol,
     'symbol': symbol,
     'menu': [for (final action in menu) action.toMap()],
+    'menuOnTap': menuOnTap,
   };
 
   String get _key => jsonEncode(toMap());
