@@ -283,6 +283,7 @@ class NativeChatListCallbacks {
   final ValueChanged<String> onFolder;
   final void Function(String id, Rect anchor) onFolderMenu;
   final ValueChanged<int> onPeek;
+  final VoidCallback onSearch;
 
   const NativeChatListCallbacks({
     required this.onOpen,
@@ -300,6 +301,7 @@ class NativeChatListCallbacks {
     required this.onFolder,
     required this.onFolderMenu,
     required this.onPeek,
+    required this.onSearch,
   });
 }
 
@@ -434,6 +436,8 @@ class NativeChatListController {
       case 'peek':
         final id = args['id'];
         if (id is int) callbacks.onPeek(id);
+      case 'search':
+        callbacks.onSearch();
     }
     return null;
   }

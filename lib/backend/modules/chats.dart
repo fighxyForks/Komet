@@ -1901,6 +1901,7 @@ class ChatsModule {
     Api api,
     String query, {
     int count = 20,
+    int from = 0,
   }) async {
     final term = query.trim();
     if (term.isEmpty) return const [];
@@ -1908,6 +1909,7 @@ class ChatsModule {
       final packet = await api.sendRequest(Opcode.publicSearch, {
         'type': 'ALL',
         'count': count,
+        'from': from,
         'query': term,
       });
       if (packet.isError) return const [];

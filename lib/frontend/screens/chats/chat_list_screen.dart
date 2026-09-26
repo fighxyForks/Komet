@@ -12,6 +12,7 @@ import 'package:flutter/gestures.dart';
 import 'chat_preview_card.dart';
 import 'chat_preview_overlay.dart';
 import 'chat_screen.dart';
+import 'native_search_page.dart';
 import 'search_screen.dart';
 import 'create_channel_flow.dart';
 import 'create_group_flow.dart';
@@ -3729,6 +3730,7 @@ class _ChatListScreenState extends State<ChatListScreen>
           ),
           onFolder: (id) => _selectFolder(id),
           onPeek: _peekNativeChat,
+          onSearch: _openSearch,
           onFolderMenu: (id, _) {
             for (final folder in _folders) {
               if (folder.id == id) {
@@ -5193,8 +5195,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
-  void _openSearch() =>
-      unawaited(pushSwipeable(context, (_) => const SearchScreen()));
+  void _openSearch() {
+    final page = IosGlass.of(context)
+        ? const NativeSearchPage()
+        : const SearchScreen();
+    unawaited(pushSwipeable(context, (_) => page));
+  }
 
   void _openSavedMessages() {
     CachedChat? self;

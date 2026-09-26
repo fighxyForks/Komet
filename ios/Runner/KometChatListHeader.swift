@@ -44,6 +44,7 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
   var onStory: ((KometStoryItem, CGRect) -> Void)?
   var onAddStory: (() -> Void)?
   var onQuery: ((String) -> Void)?
+  var onOpenSearch: (() -> Void)?
   var onFolder: ((String) -> Void)?
   var onFolderMenu: ((String, CGRect) -> Void)?
 
@@ -104,6 +105,7 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
     addSubview(storiesView)
 
     searchBar.searchBarStyle = .minimal
+    searchBar.backgroundImage = UIImage()
     searchBar.delegate = self
     searchBar.autocapitalizationType = .none
     addSubview(searchBar)
@@ -337,8 +339,8 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
   }
 
   func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
-    searchBar.setShowsCancelButton(true, animated: true)
-    return true
+    onOpenSearch?()
+    return false
   }
 
   func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {

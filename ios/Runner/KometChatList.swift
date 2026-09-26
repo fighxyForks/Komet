@@ -180,6 +180,7 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     header.accent = accent
     header.setStories(stories, visible: storiesVisible)
     header.onQuery = { [weak self] text in self?.updateQuery(text) }
+    header.onOpenSearch = { [weak self] in self?.onEvent?("search", nil) }
     header.onStory = { [weak self] item, rect in
       self?.onEvent?("story", ["ownerId": item.ownerId, "x": rect.minX, "y": rect.minY,
                                "width": rect.width, "height": rect.height])
