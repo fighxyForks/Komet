@@ -17,6 +17,7 @@ import '../../../core/cache/info_cache.dart';
 import '../../../core/calls/call_controller.dart';
 import '../../../core/config/app_show_extra_info.dart';
 import '../../../core/config/app_stories.dart';
+import '../../../core/native/native_chat_bridge.dart';
 import '../../../core/protocol/packet.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/storage/chat_members_store.dart';
@@ -37,6 +38,7 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/formatted_message_text.dart';
 import '../../widgets/reload_on_reconnect.dart';
 import '../../widgets/chat_menu_overlay.dart';
+import '../../native/native_profile_actions.dart';
 import '../../widgets/glass/glass_capsule.dart';
 import '../../widgets/glass/glass_controls.dart';
 import '../../widgets/glass/ios_glass.dart';
@@ -1321,7 +1323,92 @@ class _ChatInfoScreenState extends State<ChatInfoScreen>
   bool get _isGroupOrChannel =>
       widget.chatType == 'CHAT' || widget.chatType == 'CHANNEL';
 
+  Widget _nativeProfileActions() {
+    final rows = <NativeProfileAction>[];
+    final taps = <String, VoidCallback?>{};
+    void add(String id, String title, String symbol, VoidCallback? onTap,
+        {bool destructive = false}) {
+      rows.add(NativeProfileAction(
+        id: id,
+        title: title,
+        symbol: symbol,
+        destructive: destructive,
+      ));
+      taps[id] = onTap;
+    }
+
+    if (widget.chatType == 'DIALOG') {
+      add('chat', l10n.contactProfileActionChat, 'bubble.left', _openChat);
+      add(
+        'mute',
+        _isMuted ? l10n.chatInfoActionMuted : l10n.contactProfileActionSound,
+        _isMuted ? 'bell.slash' : 'bell',
+        _muteBusy ? null : _toggleMute,
+      );
+      if (!_isBot) {
+        add('call', l10n.contactProfileActionCall, 'phone', _confirmAndStartCall);
+      }
+      if (_canAddContact) {
+        add(
+          'add',
+          l10n.contactProfileActionAddContact,
+          'person.badge.plus',
+          _addContactBusy ? null : _addToContacts,
+        );
+      }
+    } else if (widget.chatType == 'CHANNEL') {
+      add(
+        'mute',
+        _isMuted ? l10n.chatInfoActionMuted : l10n.contactProfileActionSound,
+        _isMuted ? 'bell.slash' : 'bell',
+        _muteBusy ? null : _toggleMute,
+      );
+      add(
+        'membership',
+        _notMember ? l10n.chatInfoActionSubscribe : l10n.chatInfoActionLeave,
+        _notMember ? 'plus.circle' : 'rectangle.portrait.and.arrow.right',
+        _notMember ? (_joining ? null : _joinChat) : _leaveChat,
+        destructive: !_notMember,
+      );
+    } else {
+      add('chat', l10n.contactProfileActionChat, 'bubble.left', _openChat);
+      add(
+        'mute',
+        _isMuted ? l10n.chatInfoActionMuted : l10n.contactProfileActionSound,
+        _isMuted ? 'bell.slash' : 'bell',
+        _muteBusy ? null : _toggleMute,
+      );
+      add(
+        'membership',
+        _notMember ? l10n.chatInfoActionJoin : l10n.chatInfoActionLeave,
+        _notMember ? 'plus.circle' : 'rectangle.portrait.and.arrow.right',
+        _notMember ? (_joining ? null : _joinChat) : _leaveChat,
+        destructive: !_notMember,
+      );
+    }
+    for (final entry in _moreMenuEntries()) {
+      add(
+        'more:${entry.label}',
+        entry.label,
+        entry.destructive ? 'trash' : 'ellipsis',
+        entry.onTap,
+        destructive: entry.destructive,
+      );
+    }
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      height: rows.length * 52 + 24,
+      child: NativeProfileActions(
+        rows: rows,
+        onTap: (id) => taps[id]?.call(),
+      ),
+    );
+  }
+
   Widget _buildActions(ColorScheme cs) {
+    if (NativeChatBridge.isEligible && IosGlass.of(context)) {
+      return _nativeProfileActions();
+    }
     final muteBtn = (
       icon: IosSymbols.notifications(context),
       slashedIcon: IosSymbols.notificationsOff(context),
