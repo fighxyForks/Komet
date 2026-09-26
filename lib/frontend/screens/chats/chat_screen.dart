@@ -495,6 +495,9 @@ class _ChatScreenState extends State<ChatScreen>
   _ChatMessageList? _messageListWidget;
   final NativeChatCommands _nativeChatCommands = NativeChatCommands();
   final Map<String, VoiceAudioController> _nativeVoices = {};
+  double _nativeVoiceProgress = 0;
+  String? _nativeVoiceId;
+  bool _nativeVoicePlaying = false;
   final Set<String> _deletingIds = {};
 
   static const double _avgMessageHeight = 72.0;
@@ -2210,6 +2213,7 @@ class _ChatScreenState extends State<ChatScreen>
     pollsModule.removeListener(_onNativePolls);
     for (final audio in _nativeVoices.values) {
       audio.playing.removeListener(_onNativeVoiceTick);
+      audio.position.removeListener(_onNativeVoiceTick);
       MediaPlayback.instance.releaseVoice(audio);
     }
     _nativeVoices.clear();
@@ -5046,6 +5050,8 @@ class _ChatScreenState extends State<ChatScreen>
         );
       },
       playingId: _nativePlayingVoiceId(),
+      progressId: _nativeVoiceId,
+      voiceProgress: _nativeVoiceProgress,
       pollOf: pollsModule.get,
       commentsOf: (message) {
         final channel = !_commentsMode && type == 'CHANNEL' && !message.isControl;
@@ -5658,6 +5664,21 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _onNativeVoiceTick() {
     if (!mounted || !NativeChatBridge.isEligible) return;
+    final playingId = _nativePlayingVoiceId();
+    if (playingId != null) _nativeVoiceId = playingId;
+    final id = _nativeVoiceId;
+    final audio = id == null ? null : _nativeVoices[id];
+    final playing = audio?.playing.value ?? false;
+    final total = audio?.duration.value ?? 0;
+    final next = audio == null || total <= 0
+        ? 0.0
+        : (audio.position.value / total).clamp(0.0, 1.0);
+    if ((next - _nativeVoiceProgress).abs() < 0.04 &&
+        playing == _nativeVoicePlaying) {
+      return;
+    }
+    _nativeVoiceProgress = next;
+    _nativeVoicePlaying = playing;
     _bumpMessageRows();
   }
 
@@ -5685,6 +5706,7 @@ class _ChatScreenState extends State<ChatScreen>
         fallbackDuration: Duration(milliseconds: durationMs),
       );
       created.playing.addListener(_onNativeVoiceTick);
+      created.position.addListener(_onNativeVoiceTick);
       return created;
     });
     MediaPlayback.instance.activateVoice(

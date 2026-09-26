@@ -48,6 +48,8 @@ List<NativeChatItem> buildNativeChatItems({
   int? otherReadMillis,
   String unreadLabel = 'Новые сообщения',
   String? playingId,
+  String? progressId,
+  double voiceProgress = 0,
   Poll? Function(int pollId)? pollOf,
   NativeChatName? nameOf,
   String? Function(int senderId)? avatarOf,
@@ -98,6 +100,7 @@ List<NativeChatItem> buildNativeChatItems({
       withSeconds: withSeconds,
       otherReadMillis: otherReadMillis,
       playing: playingId == message.id,
+      voiceProgress: progressId == message.id ? voiceProgress : 0,
       pollOf: pollOf,
     );
     if (built != null) {
@@ -123,6 +126,7 @@ NativeChatItem? _messageItem(
   required bool withSeconds,
   required int? otherReadMillis,
   required bool playing,
+  required double voiceProgress,
   required Poll? Function(int pollId)? pollOf,
 }) {
   final control = message.controlAttachment;
@@ -159,7 +163,10 @@ NativeChatItem? _messageItem(
     role: NativeChatRole.message,
     kind: kind,
     outgoing: outgoing,
-    text: body,
+    text: (kind == NativeChatKind.sticker || kind == NativeChatKind.videoNote) &&
+            (message.text == null || message.text!.trim().isEmpty)
+        ? ''
+        : body,
     time: edited ? '$clock ред.' : clock,
     delivery: outgoing
         ? _delivery(
@@ -203,6 +210,8 @@ NativeChatItem? _messageItem(
     duration: _duration(message),
     audioId: _audioId(message),
     playing: playing && kind == NativeChatKind.voice,
+    progress: kind == NativeChatKind.voice ? voiceProgress.clamp(0.0, 1.0) : 0,
+    wave: kind == NativeChatKind.voice ? _wave(message) : const [],
     transcript: transcript?.text,
     transcriptOpen: transcript?.expanded ?? false,
     comments: commentsOf?.call(message),
@@ -479,17 +488,21 @@ String _callLabel(CachedMessage message) {
   return 'Звонок';
 }
 
+String? _remote(String? url) {
+  if (url == null) return null;
+  if (url.startsWith('http') || url.startsWith('file')) return url;
+  return null;
+}
+
 String? _mediaUrl(CachedMessage message) {
   for (final attachment in _attachments(message)) {
     final url = switch (attachment) {
-      PhotoAttachment() => attachment.localPath ?? attachment.baseUrl,
-      VideoAttachment() => attachment.thumbnail ?? attachment.previewData,
-      StickerAttachment() => attachment.previewData ?? attachment.baseUrl,
+      PhotoAttachment() => _remote(attachment.localPath) ?? _remote(attachment.baseUrl),
+      VideoAttachment() => _remote(attachment.thumbnail) ?? _remote(attachment.previewData),
+      StickerAttachment() => _remote(attachment.baseUrl) ?? _remote(attachment.previewData),
       _ => null,
     };
-    if (url != null && (url.startsWith('http') || url.startsWith('file'))) {
-      return url;
-    }
+    if (url != null) return url;
   }
   return null;
 }
@@ -506,6 +519,26 @@ String? _duration(CachedMessage message) {
     }
   }
   return null;
+}
+
+List<int> _wave(CachedMessage message) {
+  String? raw;
+  for (final attachment in _attachments(message)) {
+    if (attachment is AudioAttachment &&
+        attachment.waveform != null &&
+        attachment.waveform!.isNotEmpty) {
+      raw = attachment.waveform;
+    }
+  }
+  if (raw == null) return const [];
+  final amps = raw.codeUnits;
+  const maxBars = 48;
+  if (amps.length <= maxBars) return amps;
+  final step = amps.length / maxBars;
+  return [
+    for (var i = 0; i < maxBars; i++)
+      amps[(i * step).floor().clamp(0, amps.length - 1)],
+  ];
 }
 
 int? _audioId(CachedMessage message) {

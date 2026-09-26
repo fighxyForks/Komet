@@ -209,6 +209,7 @@ class NativeChatItem {
   final bool showSender;
   final bool transcriptOpen;
   final bool playing;
+  final double progress;
   final String? senderName;
   final String? avatarUrl;
   final String? replyId;
@@ -226,6 +227,7 @@ class NativeChatItem {
   final int? pollTotal;
   final bool pollMultiple;
   final bool pollVoted;
+  final List<int> wave;
   final List<NativeChatSpan> spans;
   final List<NativeChatMedia> media;
   final List<NativeChatPollChoice> pollChoices;
@@ -250,6 +252,7 @@ class NativeChatItem {
     this.showSender = false,
     this.transcriptOpen = false,
     this.playing = false,
+    this.progress = 0,
     this.senderName,
     this.avatarUrl,
     this.replyId,
@@ -267,6 +270,7 @@ class NativeChatItem {
     this.pollTotal,
     this.pollMultiple = false,
     this.pollVoted = false,
+    this.wave = const [],
     this.spans = const [],
     this.media = const [],
     this.pollChoices = const [],
@@ -303,6 +307,7 @@ class NativeChatItem {
     showSender: showSender ?? this.showSender,
     transcriptOpen: transcriptOpen,
     playing: playing,
+    progress: progress,
     senderName: senderName ?? this.senderName,
     avatarUrl: avatarUrl,
     replyId: replyId,
@@ -320,6 +325,7 @@ class NativeChatItem {
     pollTotal: pollTotal,
     pollMultiple: pollMultiple,
     pollVoted: pollVoted,
+    wave: wave,
     spans: spans,
     media: media,
     pollChoices: pollChoices,
@@ -346,6 +352,7 @@ class NativeChatItem {
       'showSender': showSender,
       'transcriptOpen': transcriptOpen,
       'playing': playing,
+      'progress': progress,
       'senderName': senderName,
       'avatarUrl': avatarUrl,
       'replyId': replyId,
@@ -363,6 +370,7 @@ class NativeChatItem {
       'pollTotal': pollTotal,
       'pollMultiple': pollMultiple,
       'pollVoted': pollVoted,
+      'wave': wave,
       'spans': [for (final span in spans) span.toMap()],
       'media': [for (final tile in media) tile.toMap()],
       'pollChoices': [for (final choice in pollChoices) choice.toMap()],
@@ -391,6 +399,7 @@ class NativeChatItem {
         showSender == other.showSender &&
         transcriptOpen == other.transcriptOpen &&
         playing == other.playing &&
+        progress == other.progress &&
         senderName == other.senderName &&
         avatarUrl == other.avatarUrl &&
         replyId == other.replyId &&
@@ -408,6 +417,7 @@ class NativeChatItem {
         pollTotal == other.pollTotal &&
         pollMultiple == other.pollMultiple &&
         pollVoted == other.pollVoted &&
+        listEquals(wave, other.wave) &&
         listEquals(spans, other.spans) &&
         listEquals(media, other.media) &&
         listEquals(pollChoices, other.pollChoices) &&
@@ -437,6 +447,8 @@ class NativeChatItem {
     pollId,
     pollVoted,
     Object.hash(
+      progress,
+      Object.hashAll(wave),
       Object.hashAll(spans),
       Object.hashAll(media),
       Object.hashAll(pollChoices),

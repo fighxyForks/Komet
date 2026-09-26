@@ -83,6 +83,8 @@ struct KometChatMessage {
   let transcript: String?
   let transcriptOpen: Bool
   let playing: Bool
+  let progress: CGFloat
+  let wave: [Int]
   let comments: String?
   let senderId: Int?
   let pollId: Int?
@@ -138,6 +140,8 @@ struct KometChatMessage {
       transcript: map["transcript"] as? String,
       transcriptOpen: (map["transcriptOpen"] as? NSNumber)?.boolValue ?? false,
       playing: (map["playing"] as? NSNumber)?.boolValue ?? false,
+      progress: CGFloat((map["progress"] as? NSNumber)?.doubleValue ?? 0),
+      wave: (map["wave"] as? [Any])?.compactMap { ($0 as? NSNumber)?.intValue } ?? [],
       comments: map["comments"] as? String,
       senderId: (map["senderId"] as? NSNumber)?.intValue,
       pollId: (map["pollId"] as? NSNumber)?.intValue,

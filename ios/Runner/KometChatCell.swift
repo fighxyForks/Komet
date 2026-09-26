@@ -69,6 +69,7 @@ final class KometChatMessageCell: UICollectionViewCell {
   private let durationLabel = UILabel()
   private let buttonStack = UIStackView()
   private let playButton = UIButton(type: .system)
+  private let waveView = KometWaveView()
   private let transcriptPill = UIButton(type: .system)
   private let transcriptLabel = UILabel()
   private let commentsButton = UIButton(type: .system)
@@ -129,6 +130,7 @@ final class KometChatMessageCell: UICollectionViewCell {
     playButton.backgroundColor = .white.withAlphaComponent(0.18)
     playButton.layer.cornerRadius = 22
     playButton.addTarget(self, action: #selector(tapVoice), for: .touchUpInside)
+    waveView.isHidden = true
     transcriptPill.layer.cornerRadius = 16
     transcriptPill.layer.cornerCurve = .continuous
     transcriptPill.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
@@ -148,7 +150,7 @@ final class KometChatMessageCell: UICollectionViewCell {
     metaRow.alignment = .center
     metaRow.addArrangedSubview(metaLabel)
     metaRow.addArrangedSubview(statusView)
-    for view in [playButton, senderLabel, forwardLabel, replyButton, bodyView, albumStack, mediaView, pollStack, durationLabel,
+    for view in [playButton, waveView, senderLabel, forwardLabel, replyButton, bodyView, albumStack, mediaView, pollStack, durationLabel,
                  buttonStack, transcriptPill, transcriptLabel, commentsButton, metaRow, reactionStack] {
       stack.addArrangedSubview(view)
     }
@@ -170,6 +172,9 @@ final class KometChatMessageCell: UICollectionViewCell {
     avatarWidth = avatarW
     let mediaH = mediaView.heightAnchor.constraint(equalToConstant: 180)
     mediaHeight = mediaH
+    let mediaW = mediaView.widthAnchor.constraint(equalToConstant: 180)
+    mediaW.isActive = false
+    mediaView.tag = 0
     NSLayoutConstraint.activate([
       selectionMark.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
       selectionMark.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
@@ -259,16 +264,31 @@ final class KometChatMessageCell: UICollectionViewCell {
     }
     fillAlbum(item)
     fillPoll(item, foreground: foreground, accent: accent)
-    let showsMedia = item.kind != "album" && item.mediaUrl != nil && (item.kind == "photo" || item.kind == "video" || item.kind == "sticker")
+    let roundMedia = item.kind == "videoNote" || item.kind == "sticker"
+    let showsMedia = item.kind != "album" && item.mediaUrl != nil &&
+      (item.kind == "photo" || item.kind == "video" || roundMedia)
     mediaView.isHidden = !showsMedia
-    mediaHeight?.constant = showsMedia ? (item.kind == "sticker" ? 140 : 180) : 0
+    let side: CGFloat = item.kind == "sticker" ? 150 : 180
+    mediaHeight?.constant = showsMedia ? (roundMedia ? side : 180) : 0
+    if let widthConstraint = mediaView.constraints.first(where: { $0.firstAttribute == .width }) {
+      widthConstraint.constant = side
+      widthConstraint.isActive = roundMedia && showsMedia
+    }
+    mediaView.layer.cornerRadius = item.kind == "videoNote" ? side / 2 : 12
     if showsMedia, let url = item.mediaUrl.flatMap(URL.init(string:)) {
       KometChatImages.load(url) { [weak self] image in
         guard self?.item?.id == item.id else { return }
         self?.mediaView.image = image
       }
     }
+    bubble.backgroundColor = roundMedia ? .clear : (item.outgoing ? outgoingFill : incomingFill)
     playButton.isHidden = item.kind != "voice"
+    waveView.isHidden = item.kind != "voice"
+    waveView.amps = item.wave
+    waveView.progress = item.progress
+    waveView.active = item.outgoing ? .white : accent
+    waveView.inactive = (item.outgoing ? UIColor.white : accent).withAlphaComponent(0.35)
+    waveView.setNeedsDisplay()
     if item.kind == "voice" {
       let symbol = item.playing ? "pause.fill" : "play.fill"
       playButton.setImage(UIImage(systemName: symbol), for: .normal)
@@ -639,6 +659,49 @@ extension KometChatMessageCell: UITextViewDelegate {
       onEvent?("link", ["url": url.absoluteString])
     }
     return false
+  }
+}
+
+final class KometWaveView: UIView {
+  var amps: [Int] = [] { didSet { setNeedsDisplay() } }
+  var progress: CGFloat = 0 { didSet { setNeedsDisplay() } }
+  var active = UIColor.white { didSet { setNeedsDisplay() } }
+  var inactive = UIColor.white.withAlphaComponent(0.35) { didSet { setNeedsDisplay() } }
+
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    isOpaque = false
+    backgroundColor = .clear
+    contentMode = .redraw
+  }
+
+  required init?(coder: NSCoder) { nil }
+
+  override var intrinsicContentSize: CGSize {
+    CGSize(width: UIView.noIntrinsicMetric, height: 22)
+  }
+
+  override func draw(_ rect: CGRect) {
+    let barWidth: CGFloat = 2.5
+    let gap: CGFloat = 1.75
+    let slot = barWidth + gap
+    let count = max(amps.count, 1)
+    let maxBars = max(1, Int(bounds.width / slot))
+    let bars = min(maxBars, count)
+    let maxAmp = max(amps.max() ?? 1, 1)
+    let step = CGFloat(count) / CGFloat(bars)
+    for index in 0..<bars {
+      let ampIndex = min(count - 1, Int(CGFloat(index) * step))
+      let amp = amps.isEmpty ? 0 : amps[ampIndex]
+      let height = amp <= 0 ? 3 : max(3, min(bounds.height, CGFloat(amp) / CGFloat(maxAmp) * bounds.height))
+      let x = CGFloat(index) * slot
+      let played = (CGFloat(index) + 0.5) / CGFloat(bars) <= progress
+      let path = UIBezierPath(
+        roundedRect: CGRect(x: x, y: bounds.height - height, width: barWidth, height: height),
+        cornerRadius: barWidth / 2)
+      (played ? active : inactive).setFill()
+      path.fill()
+    }
   }
 }
 

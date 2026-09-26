@@ -189,12 +189,20 @@ void main() {
         now: _now,
         myId: 1,
         playingId: 'v',
+        progressId: 'v',
+        voiceProgress: 0.4,
         messages: [
           _message(
             id: 'v',
             senderId: 2,
             time: DateTime(2026, 9, 26, 13),
-            attachments: const [AudioAttachment(duration: 5000, audioId: 9)],
+            attachments: [
+              AudioAttachment(
+                duration: 5000,
+                audioId: 9,
+                waveform: String.fromCharCodes(const [1, 4, 9]),
+              ),
+            ],
           ),
         ],
       );
@@ -203,6 +211,27 @@ void main() {
       expect(voice.duration, '0:05');
       expect(voice.audioId, 9);
       expect(voice.playing, isTrue);
+      expect(voice.wave, [1, 4, 9]);
+      expect(voice.progress, 0.4);
+    });
+
+    test('длинная волна сжимается до 48 столбиков', () {
+      final items = buildNativeChatItems(
+        now: _now,
+        myId: 1,
+        messages: [
+          _message(
+            id: 'long',
+            senderId: 2,
+            time: DateTime(2026, 9, 26, 13, 1),
+            attachments: [
+              AudioAttachment(duration: 1000, waveform: String.fromCharCodes(List.filled(96, 3))),
+            ],
+          ),
+        ],
+      );
+      expect(items.last.wave, hasLength(48));
+      expect(items.last.wave.every((bar) => bar == 3), isTrue);
     });
 
     test('жирный отрезок, альбом и результаты опроса', () {
