@@ -56,6 +56,7 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       registerNativeContactCard(messenger)
       registerNativeEmoji(messenger)
       registerNativeProfileActions(messenger)
+      registerNativeStoryEditor(messenger)
       registerNativeList(messenger, host: controller)
       method("ru.komet.app/native_alert", messenger) { call, result in
         KometNativeAlert.shared.handle(call, result: result)
@@ -280,6 +281,12 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
     registrar(forPlugin: "KometProfileActions")?.register(
       KometProfileActionsViewFactory(messenger: messenger),
       withId: "ru.komet.app/native_profile_actions")
+  }
+
+  private func registerNativeStoryEditor(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometStoryEditor")?.register(
+      KometStoryEditorViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_story_editor")
   }
 
   private func registerNativeList(_ messenger: FlutterBinaryMessenger, host: UIViewController) {

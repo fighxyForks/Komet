@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:komet/backend/modules/messages.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -117,6 +119,7 @@ import '../../widgets/attachment/attachment_sheet.dart';
 import '../../widgets/spectrum_background.dart';
 import '../../widgets/spectrum_tint.dart';
 import '../../widgets/update_dialog.dart';
+import '../stories/native_story_editor_page.dart';
 import '../stories/story_composer_screen.dart';
 import '../stories/story_owner_info.dart';
 import '../../../backend/modules/webapp.dart';
@@ -3400,6 +3403,10 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   Future<void> _composeStory() async {
+    if (IosGlass.of(context)) {
+      await _composeStoryNative();
+      return;
+    }
     await showAttachmentSheet(
       context,
       title: 'Новая история',
@@ -3430,6 +3437,65 @@ class _ChatListScreenState extends State<ChatListScreen>
           ),
         );
       },
+    );
+  }
+
+  Future<void> _composeStoryNative() async {
+    final choice = await showCupertinoModalPopup<String>(
+      context: context,
+      builder: (sheetContext) => CupertinoActionSheet(
+        title: const Text('Новая история'),
+        actions: [
+          if (storiesModule.previewFor(_profile?.id ?? 0)?.isEmpty == false)
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.of(sheetContext).pop('view'),
+              child: const Text('Смотреть'),
+            ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop('gallery-photo'),
+            child: const Text('Выбрать фото'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop('gallery-video'),
+            child: const Text('Выбрать видео'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop('camera-photo'),
+            child: const Text('Снять фото'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop('camera-video'),
+            child: const Text('Снять видео'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(sheetContext).pop(),
+          child: const Text('Отмена'),
+        ),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    if (choice == 'view') {
+      _openStoriesForOwner(_profile?.id ?? 0);
+      return;
+    }
+    final picker = ImagePicker();
+    final video = choice.endsWith('video');
+    final camera = choice.startsWith('camera');
+    final picked = video
+        ? await picker.pickVideo(
+            source: camera ? ImageSource.camera : ImageSource.gallery,
+          )
+        : await picker.pickImage(
+            source: camera ? ImageSource.camera : ImageSource.gallery,
+          );
+    if (!mounted || picked == null) return;
+    await pushSwipeable(
+      context,
+      (_) => NativeStoryEditorPage(
+        file: File(picked.path),
+        isVideo: video,
+      ),
     );
   }
 
@@ -3721,8 +3787,13 @@ class _ChatListScreenState extends State<ChatListScreen>
           onSelection: (_) {},
           onBulk: _onNativeBulk,
           onReorderPinned: (ids) => unawaited(_reorderPinned(ids)),
-          onStory: (ownerId, avatar) =>
-              _openStoriesForOwner(ownerId, avatar.center),
+          onStory: (ownerId, avatar) {
+            if (ownerId == _profile?.id) {
+              unawaited(_composeStory());
+              return;
+            }
+            _openStoriesForOwner(ownerId, avatar.center);
+          },
           onAddStory: () => unawaited(_composeStory()),
           onArchive: () => pushSwipeable(
             context,
