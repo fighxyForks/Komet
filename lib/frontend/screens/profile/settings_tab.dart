@@ -65,7 +65,14 @@ import 'notifications_screen.dart';
 import 'profile_qr_sheet.dart';
 import 'security_screen.dart';
 import 'spoof_screen.dart';
+import '../../native/native_settings_view.dart';
 import '../../widgets/media_playback_pill.dart';
+import 'app_icon_screen.dart';
+import 'appearance_screen.dart';
+import 'chat_background_screen.dart';
+import 'font_settings_screen.dart';
+import 'message_actions_screen.dart';
+import 'theme_settings_screen.dart';
 import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
@@ -540,6 +547,22 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     return ValueListenableBuilder<bool>(
       valueListenable: KometSettings.selfOnlineCheck,
       builder: (context, statusEnabled, _) {
+        if (IosGlass.of(context)) {
+          return ListenableBuilder(
+            listenable: Listenable.merge([
+              SelfPresence.isOnline,
+              SelfPresence.lastSeenSeconds,
+              AppShowExtraInfo.current,
+            ]),
+            builder: (context, _) => _nativeSettingsScaffold(
+              context,
+              cs,
+              l10n,
+              fullName,
+              phone,
+            ),
+          );
+        }
         final collapsedH = topPad + (statusEnabled ? 268.0 : 242.0);
         final expandedH = hasPhoto
             ? math.max(collapsedH, math.min(size.width, size.height * 0.65))
@@ -904,6 +927,330 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         );
       },
     );
+  }
+
+  Widget _nativeSettingsScaffold(
+    BuildContext context,
+    ColorScheme cs,
+    AppLocalizations l10n,
+    String name,
+    String phone,
+  ) {
+    final online = KometSettings.selfOnlineCheck.value && SelfPresence.isOnline.value;
+    final seen = SelfPresence.lastSeenSeconds.value;
+    final status = !KometSettings.selfOnlineCheck.value
+        ? ''
+        : online
+        ? 'онлайн'
+        : (seen != null ? 'Был(-а) ${_formatSelfSeen(seen)}' : 'офлайн');
+    final others = [
+      for (final account in _accounts)
+        if (account.id != _profile?.id) account,
+    ];
+    return Scaffold(
+      backgroundColor: IosPalette.grouped(cs),
+      body: Column(
+        children: [
+          const MediaPlaybackPill(margin: EdgeInsets.fromLTRB(16, 8, 16, 0)),
+          Expanded(
+            child: NativeSettingsView(
+              name: name,
+              status: status,
+              online: online,
+              phone: phone,
+              bio: _profile?.description ?? '',
+              avatarUrl: _profile?.baseUrl ?? '',
+              canEditAvatar: _currentAvatar != null,
+              version: _appVersionLabel ?? '',
+              topInset: MediaQuery.paddingOf(context).top,
+              sections: _nativeSettingsSections(context, l10n, others),
+              onTap: (id) => _onNativeSettingsTap(context, id),
+              onHeader: _onNativeSettingsHeader,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<List<NativeSettingsRow>> _nativeSettingsSections(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<ProfileData> others,
+  ) {
+    final showExtra = AppShowExtraInfo.current.value;
+    final account = others.isEmpty
+        ? const NativeSettingsRow(
+            id: 'account',
+            title: 'Добавить профиль',
+            symbol: 'person.badge.plus',
+          )
+        : NativeSettingsRow(
+            id: 'account',
+            title: _accountName(others.first),
+            symbol: 'person.crop.circle',
+          );
+    return [
+      [
+        if (BuildProfile.digitalId)
+          const NativeSettingsRow(
+            id: 'digital-id',
+            title: 'Цифровой ID',
+            symbol: 'person.text.rectangle',
+          ),
+        const NativeSettingsRow(
+          id: 'sferum',
+          title: 'Войти в Сферум',
+          symbol: 'globe',
+        ),
+        const NativeSettingsRow(
+          id: 'saved',
+          title: 'Избранное',
+          symbol: 'bookmark',
+        ),
+        account,
+        if (showExtra)
+          NativeSettingsRow(
+            id: 'info',
+            title: l10n.infoTitle,
+            symbol: 'info.circle',
+          ),
+      ],
+      const [
+        NativeSettingsRow(id: 'theme', title: 'Тема', symbol: 'moon'),
+        NativeSettingsRow(id: 'appearance', title: 'Внешний вид', symbol: 'paintbrush'),
+        NativeSettingsRow(id: 'wallpaper', title: 'Фон чатов', symbol: 'photo'),
+        NativeSettingsRow(id: 'fonts', title: 'Шрифты', symbol: 'textformat'),
+        NativeSettingsRow(id: 'actions', title: 'Меню действий', symbol: 'ellipsis.circle'),
+        NativeSettingsRow(id: 'icon', title: 'Иконка приложения', symbol: 'app.badge'),
+      ],
+      const [
+        NativeSettingsRow(id: 'folders', title: 'Папки', symbol: 'folder'),
+      ],
+      [
+        const NativeSettingsRow(
+          id: 'notifications',
+          title: 'Уведомления',
+          symbol: 'bell',
+        ),
+        const NativeSettingsRow(
+          id: 'media',
+          title: 'Камера и микрофон',
+          symbol: 'video',
+        ),
+        const NativeSettingsRow(
+          id: 'cloud',
+          title: 'Облачное хранилище [BETA]',
+          symbol: 'cloud',
+        ),
+        const NativeSettingsRow(id: 'proxy', title: 'Прокси', symbol: 'network'),
+        if (BuildProfile.spoofUi)
+          NativeSettingsRow(
+            id: 'spoof',
+            title: l10n.profileMenuSpoof,
+            symbol: 'lock.shield',
+          ),
+        const NativeSettingsRow(id: 'security', title: 'Безопасность', symbol: 'lock'),
+        const NativeSettingsRow(id: 'devices', title: 'Устройства', symbol: 'iphone'),
+      ],
+      if (_debugMenuVisible)
+        const [
+          NativeSettingsRow(
+            id: 'developers',
+            title: 'Для разработчиков',
+            symbol: 'hammer',
+          ),
+        ],
+      [
+        if (BuildProfile.selfUpdate)
+          NativeSettingsRow(
+            id: 'update',
+            title: _isCheckingForUpdates ? l10n.updateChecking : l10n.updateCheck,
+            symbol: 'arrow.down.circle',
+            enabled: !_isCheckingForUpdates,
+          ),
+        const NativeSettingsRow(id: 'komet', title: 'Komet', symbol: 'sparkles'),
+        const NativeSettingsRow(
+          id: 'logout',
+          title: 'Выйти из аккаунта',
+          symbol: 'rectangle.portrait.and.arrow.right',
+          destructive: true,
+        ),
+      ],
+    ];
+  }
+
+  void _onNativeSettingsTap(BuildContext context, String id) {
+    switch (id) {
+      case 'digital-id':
+        Navigator.push(
+          context,
+          iosPageRoute(
+            context,
+            builder: (context) =>
+                AppDigitalIdNative.current.value || !webViewSupported
+                ? const DigitalIdScreen()
+                : const DigitalIdWebScreen(),
+          ),
+        );
+      case 'sferum':
+        Navigator.push(
+          context,
+          iosPageRoute(
+            context,
+            builder: (context) => WebAppScreen(
+              title: 'Сферум',
+              entryPoint: WebAppEntryPoint.settings,
+              loader: () => webAppModule.fetchSferum(),
+            ),
+          ),
+        );
+      case 'saved':
+        _openSavedMessages();
+      case 'account':
+        if (_accounts.where((account) => account.id != _profile?.id).isEmpty) {
+          unawaited(startAddAccount(context));
+        } else {
+          showAccountSwitcherAt(
+            context,
+            MediaQuery.sizeOf(context).center(Offset.zero),
+          );
+        }
+      case 'info':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const InfoScreen()),
+        );
+      case 'theme':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const ThemeSettingsScreen()),
+        );
+      case 'appearance':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const AppearanceScreen()),
+        );
+      case 'wallpaper':
+        Navigator.push(
+          context,
+          iosPageRoute(
+            context,
+            builder: (context) => const ChatBackgroundScreen(),
+          ),
+        );
+      case 'fonts':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const FontSettingsScreen()),
+        );
+      case 'actions':
+        Navigator.push(
+          context,
+          iosPageRoute(
+            context,
+            builder: (context) => const MessageActionsScreen(),
+          ),
+        );
+      case 'icon':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const AppIconScreen()),
+        );
+      case 'folders':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const FoldersScreen()),
+        );
+      case 'notifications':
+        Navigator.push(
+          context,
+          iosPageRoute(
+            context,
+            builder: (context) => const NotificationsScreen(),
+          ),
+        );
+      case 'media':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const MediaDevicesScreen()),
+        );
+      case 'cloud':
+        unawaited(_openCloudStorage(context));
+      case 'proxy':
+        final cs = Theme.of(context).colorScheme;
+        showIosSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: cs.surfaceContainerHigh,
+          shape: kSheetShape,
+          builder: (_) => const SafeArea(child: ProxySettingsSheet()),
+        );
+      case 'spoof':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const SpoofScreen()),
+        );
+      case 'security':
+        Navigator.push(
+          context,
+          iosPageRoute(
+            context,
+            settings: const RouteSettings(name: 'SecurityScreen'),
+            builder: (context) => const SecurityScreen(),
+          ),
+        );
+      case 'devices':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const DevicesScreen()),
+        );
+      case 'developers':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const DebugMenuScreen()),
+        );
+      case 'update':
+        unawaited(_checkForUpdates());
+      case 'komet':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const KometSettingsScreen()),
+        );
+      case 'logout':
+        unawaited(_confirmLogout());
+    }
+  }
+
+  void _onNativeSettingsHeader(String action, Rect rect) {
+    switch (action) {
+      case 'qr':
+        showProfileQrSheet(
+          context,
+          name: _fullName,
+          avatarUrl: _profile?.baseUrl,
+        );
+      case 'avatar':
+        unawaited(_openAvatarViewer());
+      case 'menu':
+        final current = _currentAvatar;
+        if (current == null) return;
+        final id = current.id;
+        showAvatarMenu(
+          context: context,
+          anchorRect: rect,
+          onSave: () => saveAvatarPhoto(context, current.url),
+          onDelete: id == null ? null : () => _deleteAvatar(id),
+        );
+      case 'edit':
+      case 'bio':
+        Navigator.push(
+          context,
+          iosPageRoute(context, builder: (context) => const EditProfileScreen()),
+        );
+      case 'version':
+        _onVersionLabelTap();
+    }
   }
 
   Widget _buildHeader(
