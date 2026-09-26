@@ -9,7 +9,6 @@ import '../../widgets/custom_notification.dart';
 import '../../widgets/glossy_pill.dart';
 import '../../widgets/primary_loading_button.dart';
 import '../../widgets/small_spinner.dart';
-import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../backend/modules/account/account_models.dart';
 import '../../widgets/glass/ios_route.dart';
@@ -147,7 +146,7 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(child: _buildAppBar(context, cs)),
+            SliverToBoxAdapter(child: _buildAppBar(context)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -160,31 +159,9 @@ class _PasswordEntryScreenState extends State<PasswordEntryScreen> {
     );
   }
 
-  Widget _buildAppBar(BuildContext context, ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(IosSymbols.chevronBack(context),
-              color: cs.onSurface,
-              size: 24,
-              weight: 400,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            AppLocalizations.of(context)!.securityPasswordTitle,
-            style: TextStyle(
-              color: cs.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              fontFamily: displayFontOf(context),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildAppBar(BuildContext context) {
+    return IosSettingsInlineBar(
+      title: AppLocalizations.of(context)!.securityPasswordTitle,
     );
   }
 
@@ -644,23 +621,17 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: iosSettingsBackground(context),
-      appBar: AppBar(
-        backgroundColor: iosSettingsBackground(context),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          AppLocalizations.of(context)!.passwordEntrySetupTitle,
-          style: TextStyle(
-            color: cs.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: IosSettingsInlineBar(
+              title: AppLocalizations.of(context)!.passwordEntrySetupTitle,
+            ),
           ),
-        ),
+          Expanded(child: _buildStepContent(cs)),
+        ],
       ),
-      body: _buildStepContent(cs),
     );
   }
 
@@ -1024,23 +995,16 @@ class _TwoFactorPasswordChangeScreenState
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: iosSettingsBackground(context),
-      appBar: AppBar(
-        backgroundColor: iosSettingsBackground(context),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          l10n.passwordEntryChangePasswordAction,
-          style: TextStyle(
-            color: cs.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: IosSettingsInlineBar(
+              title: l10n.passwordEntryChangePasswordAction,
+            ),
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
+          Expanded(
+            child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1109,6 +1073,9 @@ class _TwoFactorPasswordChangeScreenState
             ),
           ],
         ),
+      ),
+          ),
+        ],
       ),
     );
   }
@@ -1202,23 +1169,16 @@ class _TwoFactorEmailChangeScreenState
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: iosSettingsBackground(context),
-      appBar: AppBar(
-        backgroundColor: iosSettingsBackground(context),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          l10n.passwordEntryChangeEmailAction,
-          style: TextStyle(
-            color: cs.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: IosSettingsInlineBar(
+              title: l10n.passwordEntryChangeEmailAction,
+            ),
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
+          Expanded(
+            child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1306,6 +1266,9 @@ class _TwoFactorEmailChangeScreenState
           ],
         ),
       ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1362,23 +1325,16 @@ class _TwoFactorRemoveScreenState extends State<TwoFactorRemoveScreen> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: iosSettingsBackground(context),
-      appBar: AppBar(
-        backgroundColor: iosSettingsBackground(context),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(IosSymbols.chevronBack(context), color: cs.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          l10n.passwordEntryRemoveTitle,
-          style: TextStyle(
-            color: cs.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: IosSettingsInlineBar(
+              title: l10n.passwordEntryRemoveTitle,
+            ),
           ),
-        ),
-      ),
-      body: SingleChildScrollView(
+          Expanded(
+            child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1428,6 +1384,9 @@ class _TwoFactorRemoveScreenState extends State<TwoFactorRemoveScreen> {
             ),
           ],
         ),
+      ),
+          ),
+        ],
       ),
     );
   }
