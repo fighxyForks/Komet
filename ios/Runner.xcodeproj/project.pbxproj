@@ -35,6 +35,7 @@
 		AA11BB22CC33DD44EE550118 /* KometEmojiPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550018 /* KometEmojiPanel.swift */; };
 		AA11BB22CC33DD44EE550119 /* KometProfileActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550019 /* KometProfileActions.swift */; };
 		AA11BB22CC33DD44EE55011A /* KometStoryEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55001A /* KometStoryEditor.swift */; };
+		AA11BB22CC33DD44EE55011B /* KometStoryViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55001B /* KometStoryViewer.swift */; };
 		AA11BB22CC33DD44EE550112 /* KometChatCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550012 /* KometChatCell.swift */; };
 		AA11BB22CC33DD44EE550113 /* KometChatModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550013 /* KometChatModel.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -104,6 +105,7 @@
 		AA11BB22CC33DD44EE550018 /* KometEmojiPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometEmojiPanel.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE550019 /* KometProfileActions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometProfileActions.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55001A /* KometStoryEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometStoryEditor.swift; sourceTree = "<group>"; };
+		AA11BB22CC33DD44EE55001B /* KometStoryViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometStoryViewer.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE550012 /* KometChatCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometChatCell.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE550013 /* KometChatModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometChatModel.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE550004 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
@@ -231,6 +233,7 @@
 				AA11BB22CC33DD44EE550018 /* KometEmojiPanel.swift */,
 				AA11BB22CC33DD44EE550019 /* KometProfileActions.swift */,
 				AA11BB22CC33DD44EE55001A /* KometStoryEditor.swift */,
+				AA11BB22CC33DD44EE55001B /* KometStoryViewer.swift */,
 				AA11BB22CC33DD44EE550012 /* KometChatCell.swift */,
 				AA11BB22CC33DD44EE550013 /* KometChatModel.swift */,
 				AA11BB22CC33DD44EE550004 /* Runner.entitlements */,
@@ -496,6 +499,7 @@
 				AA11BB22CC33DD44EE550118 /* KometEmojiPanel.swift in Sources */,
 				AA11BB22CC33DD44EE550119 /* KometProfileActions.swift in Sources */,
 				AA11BB22CC33DD44EE55011A /* KometStoryEditor.swift in Sources */,
+				AA11BB22CC33DD44EE55011B /* KometStoryViewer.swift in Sources */,
 				AA11BB22CC33DD44EE550112 /* KometChatCell.swift in Sources */,
 				AA11BB22CC33DD44EE550113 /* KometChatModel.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,

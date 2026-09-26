@@ -8,6 +8,7 @@ import '../../core/protocol/packet.dart';
 import '../../core/storage/app_database.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/utils/logger.dart';
+import '../../core/stories/story_playback.dart';
 import '../../models/story.dart';
 import '../api.dart';
 
@@ -494,6 +495,32 @@ class StoriesModule {
       _bump();
       unawaited(_persistPreviews());
       unawaited(_persistPeers());
+    }
+  }
+
+  /// Ставит эмодзи-реакцию. Тело запроса совпадает с [StoryReaction.toMap].
+  Future<bool> react(StoryOwner owner, int storyId, StoryReaction reaction) async {
+    if (storyId == 0 || reaction.id.isEmpty) return false;
+    if (_api.state != SessionState.online) return false;
+    try {
+      final ok = await _api.sendRequestOk(
+        Opcode.storiesReact,
+        storyReactRequest(owner: owner, storyId: storyId, reaction: reaction),
+      );
+      if (!ok) return false;
+      final list = _peerStories[owner.ownerId];
+      if (list != null) {
+        final index = list.indexWhere((story) => story.id == storyId);
+        if (index >= 0) {
+          list[index] = list[index].copyWith(reaction: reaction);
+          _bump();
+          unawaited(_persistPeers());
+        }
+      }
+      return true;
+    } catch (e) {
+      logger.w('StoriesModule.react: $e');
+      return false;
     }
   }
 
