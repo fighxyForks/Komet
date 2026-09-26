@@ -1028,6 +1028,16 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             symbol: 'person.crop.circle',
           );
     return [
+      const NativeSettingsSection(
+        rows: [
+          NativeSettingsRow(
+            id: 'saved',
+            title: 'Избранное',
+            symbol: 'bookmark',
+          ),
+        ],
+      ),
+      NativeSettingsSection(rows: [account]),
       NativeSettingsSection(
         rows: [
           if (BuildProfile.digitalId)
@@ -1050,16 +1060,10 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             keywords: ['сессии'],
           ),
           const NativeSettingsRow(
-            id: 'saved',
-            title: 'Избранное',
-            symbol: 'bookmark',
-          ),
-          const NativeSettingsRow(
             id: 'sferum',
             title: 'Войти в Сферум',
             symbol: 'globe',
           ),
-          account,
           if (showExtra)
             NativeSettingsRow(
               id: 'info',

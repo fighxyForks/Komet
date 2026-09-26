@@ -137,8 +137,16 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
     collection.reloadData()
   }
 
+  private func showsHeader(at index: Int, headers: Bool) -> Bool {
+    guard headers, query.isEmpty else { return false }
+    if index == 0 { return false }
+    let blockIndex = index - 1
+    guard sections.indices.contains(blockIndex) else { return false }
+    return !sections[blockIndex].header.isEmpty
+  }
+
   private func makeLayout(headers: Bool) -> UICollectionViewLayout {
-    let layout = UICollectionViewCompositionalLayout { _, _ in
+    let layout = UICollectionViewCompositionalLayout { [weak self] index, _ in
       let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(
         widthDimension: .fractionalWidth(1), heightDimension: .estimated(60)))
       let group = NSCollectionLayoutGroup.vertical(
@@ -150,7 +158,7 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
       let card = NSCollectionLayoutDecorationItem.background(elementKind: "card")
       card.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 18, trailing: 20)
       section.decorationItems = [card]
-      if headers {
+      if self?.showsHeader(at: index, headers: headers) == true {
         let header = NSCollectionLayoutBoundarySupplementaryItem(
           layoutSize: NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1), heightDimension: .estimated(32)),
