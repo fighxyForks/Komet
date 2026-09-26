@@ -12,6 +12,7 @@ import '../../core/config/app_show_extra_info.dart';
 import '../../core/config/app_stories.dart';
 import '../../core/config/app_native_sheet_prototype.dart';
 import '../../core/config/app_native_chat_list_prototype.dart';
+import '../../core/config/app_native_chat_prototype.dart';
 import '../../core/config/app_native_lists_prototype.dart';
 import '../../core/config/app_native_tab_minimize_prototype.dart';
 import '../../core/config/app_ios_glass.dart';
@@ -261,6 +262,17 @@ class DebugFeatureTogglesSection extends StatelessWidget {
               subtitle: (_) => 'Эксперимент: список чатов на UIKit',
               valueListenable: AppNativeChatListPrototype.enabled,
               onChanged: AppNativeChatListPrototype.save,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: DebugToggleTile(
+              icon: IosSymbols.chatBubble(context),
+              title: 'Native chat',
+              subtitle: (_) =>
+                  'Эксперимент: лента сообщений на UIKit. Шапка и поле ввода остаются прежними.',
+              valueListenable: AppNativeChatPrototype.enabled,
+              onChanged: AppNativeChatPrototype.save,
             ),
           ),
           Padding(

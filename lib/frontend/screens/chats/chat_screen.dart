@@ -87,6 +87,11 @@ import 'chat/view/composer_area.dart';
 import 'chat/view/chat_body_layout.dart';
 import 'chat/view/shimmer_loading.dart';
 import '../../../core/config/app_ios_glass.dart';
+import '../../../core/config/app_message_actions_style.dart';
+import '../../../core/native/native_chat_bridge.dart';
+import '../../../core/native/native_chat_snapshot.dart';
+import '../../../core/utils/link_opener.dart';
+import '../../../core/utils/webview_support.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/mesh_gradient_background.dart';
 import '../../../core/config/app_visual_style.dart';
@@ -103,7 +108,12 @@ import '../../widgets/call_link_handler.dart';
 import '../../widgets/connection_status.dart';
 import '../../widgets/message_bubble.dart';
 import '../../widgets/photo_viewer.dart';
+import '../../native/native_chat_view.dart';
 import '../../widgets/message_actions_overlay.dart';
+import '../../widgets/share_unopenable_file.dart';
+import '../../widgets/text_entity_actions.dart';
+import '../webapp/web_app_bridge.dart';
+import '../webapp/web_app_screen.dart';
 import '../../widgets/lottie_image.dart';
 import '../../widgets/no_chat_access_card.dart';
 import '../../widgets/attachment/attachment_sheet.dart';
@@ -120,6 +130,8 @@ import 'e2ee_screen.dart';
 import 'chat_wallpaper_preview_screen.dart';
 import 'profile_action_sheets.dart';
 import '../../../core/media/media_playback.dart';
+import '../../../core/media/voice_audio_controller.dart';
+import '../../../core/utils/file_download.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_sheet.dart';
@@ -366,6 +378,7 @@ class _ChatScreenState extends State<ChatScreen>
       payload['reactionInfo'] = info;
     }
     _chatController.setMessageAt(idx, _messages[idx].copyWith(payload: payload));
+    if (NativeChatBridge.isEligible) _bumpMessageRows();
   }
 
   Map<String, dynamic>? _applyLocalReaction(
@@ -480,6 +493,8 @@ class _ChatScreenState extends State<ChatScreen>
 
   final GlobalKey _messageListKey = GlobalKey();
   _ChatMessageList? _messageListWidget;
+  final NativeChatCommands _nativeChatCommands = NativeChatCommands();
+  final Map<String, VoiceAudioController> _nativeVoices = {};
   final Set<String> _deletingIds = {};
 
   static const double _avgMessageHeight = 72.0;
@@ -805,6 +820,9 @@ class _ChatScreenState extends State<ChatScreen>
       initialMessageTimeOf: () => widget.initialMessageTime,
       onNavigated: _maybeLoadMoreHistory,
     );
+    _scrollNav.nativeScrollToEnd = () {
+      unawaited(_nativeChatCommands.scrollToEnd());
+    };
     _scrollController.addListener(_scrollNav.updateScrollDownVisible);
 
     unawaited(_fastPreloadCache());
@@ -2188,6 +2206,11 @@ class _ChatScreenState extends State<ChatScreen>
     AppVisualStyle.current.removeListener(_onVisualStyleChanged);
     AppIosGlass.active.removeListener(_onVisualStyleChanged);
     if (!widget.preview) MediaPlayback.instance.leaveChat(widget.chatId);
+    for (final audio in _nativeVoices.values) {
+      audio.playing.removeListener(_onNativeVoiceTick);
+      MediaPlayback.instance.releaseVoice(audio);
+    }
+    _nativeVoices.clear();
     AppChatChrome.current.removeListener(_onVisualStyleChanged);
     AppComposerStyle.current.removeListener(_onVisualStyleChanged);
     AppComposerBackground.current.removeListener(_onVisualStyleChanged);
@@ -4960,8 +4983,130 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  Widget _buildMessagesList() =>
-      _messageListWidget ??= _ChatMessageList(this, key: _messageListKey);
+  Widget _buildMessagesList() {
+    return ListenableBuilder(
+      listenable: NativeChatBridge.eligibility,
+      builder: (context, _) {
+        if (!IosGlass.of(context) ||
+            !NativeChatBridge.isEligible ||
+            widget.preview) {
+          return _messageListWidget ??= _ChatMessageList(
+            this,
+            key: _messageListKey,
+          );
+        }
+        return ListenableBuilder(
+          listenable: Listenable.merge([
+            _messagesRev,
+            _otherReadTime,
+            _selectedIds,
+            _composerHeight,
+            _scrollNav.highlightMessageId,
+            KometSettings.fullTimestamp,
+          ]),
+          builder: (context, _) => _buildNativeTranscript(),
+        );
+      },
+    );
+  }
+
+  Widget _buildNativeTranscript() {
+    final type = _commentsMode ? 'CHAT' : (chat?.type ?? widget.chatType);
+    final visible = _messages.take(_visibleMessageCount).toList(growable: false);
+    final items = buildNativeChatItems(
+      messages: visible,
+      myId: _myId,
+      now: DateTime.now(),
+      unreadAnchorMillis: _unreadAnchorTime,
+      selected: _selectedIds.value,
+      highlightId: _scrollNav.highlightMessageId.value,
+      showSenders: type != 'DIALOG',
+      canReply: _canReply && type != 'CHANNEL',
+      withSeconds: KometSettings.fullTimestamp.value,
+      otherReadMillis: _otherReadTime.value,
+      nameOf: (id) {
+        if (id == _myId) return 'Вы';
+        final cached = ContactCache.get(id);
+        if (cached != null && cached.isNotEmpty) return cached;
+        if (type == 'DIALOG') return widget.name;
+        return '';
+      },
+      avatarOf: ContactCache.getAvatar,
+      statusOf: _effectiveStatus,
+      reactionOf: (message) => _reactionNotifierFor(message).value,
+      transcriptOf: (id) {
+        final cached = TranscriptionCache.get(id);
+        if (cached == null) return null;
+        return (
+          text: cached.text ?? '',
+          expanded: TranscriptionCache.isExpanded(id),
+        );
+      },
+      playingId: _nativePlayingVoiceId(),
+      commentsOf: (message) {
+        final channel = !_commentsMode && type == 'CHANNEL' && !message.isControl;
+        return channel ? _commentsLabelFor(message.id) : null;
+      },
+    );
+    return NativeChatView(
+      items: items,
+      highlightId: _scrollNav.highlightMessageId.value,
+      commands: _nativeChatCommands,
+      chrome: {
+        'accent': Theme.of(context).colorScheme.primary.toARGB32(),
+        'bottomInset': _composerHeight.value,
+        'selecting': _selectionMode,
+      },
+      callbacks: NativeChatCallbacks(
+        onOpen: _onNativeOpen,
+        onLongPress: _showNativeMessageActions,
+        onReply: (id) {
+          final message = _chatController.byId(id);
+          if (message != null) _textSend.startReply(message);
+        },
+        onReaction: (id, emoji) {
+          final message = _chatController.byId(id);
+          if (message != null) _reactToMessage(message, emoji);
+        },
+        onSelect: (id) {
+          final message = _chatController.byId(id);
+          if (message == null) return;
+          if (_selectionMode) {
+            _toggleSelection(message);
+          } else {
+            _enterSelection(message);
+          }
+        },
+        onReplyJump: (id) {
+          final message = _chatController.byId(id);
+          unawaited(_scrollNav.goTo(id, time: message?.time ?? 0));
+        },
+        onMedia: _openNativeMedia,
+        onKeyboard: _onNativeKeyboard,
+        onTranscribe: (id) => unawaited(_nativeTranscribe(id)),
+        onVoice: _toggleNativeVoice,
+        onComments: (id) {
+          final message = _chatController.byId(id);
+          if (message != null) _openComments(message);
+        },
+        onSticker: _openNativeSticker,
+        onAvatar: _openSenderProfile,
+        onLoadOlder: _nativeLoadOlder,
+        onLoadNewer: () {
+          if (_chatController.hasNewer && !_chatController.isLoadingNewer) {
+            unawaited(_loadNewerHistory());
+          }
+        },
+        onNearBottom: (atBottom) {
+          _scrollNav.nativeNearBottom = atBottom;
+          if (!atBottom) _userDidScroll = true;
+          _scrollNav.updateScrollDownVisible();
+          if (atBottom) _readMarker.flush();
+        },
+        onVisible: _markVisibleNative,
+      ),
+    );
+  }
 
   EdgeInsets _messagesListPadding(BuildContext context) {
     if (AppChatChrome.current.value == ChatChromeStyle.color) {
@@ -5325,6 +5470,450 @@ class _ChatScreenState extends State<ChatScreen>
       filename: picked.name,
       size: picked.size,
       scheduledTime: scheduledTime,
+    );
+  }
+
+  void _nativeLoadOlder() {
+    if (_historyAutoloadSuppressed || _scrollNav.busy || _isLoading) return;
+    if (_commentsMode) {
+      if (!_commentsLoadingMore && _commentsHasMore && _messages.isNotEmpty) {
+        unawaited(_loadMoreComments());
+      }
+      return;
+    }
+    if (_isLoadingMore || !_hasMoreHistory || _messages.isEmpty) return;
+    unawaited(_loadMoreHistory());
+  }
+
+  void _markVisibleNative(List<String> ids) {
+    if (_commentsMode || widget.preview) return;
+    if (!mounted || _myId == 0 || ids.isEmpty) return;
+    if (_awaitingPosition || !_initialPositionDone) return;
+    if (_readMarker.held) return;
+    CachedMessage? candidate;
+    for (final id in ids) {
+      final message = _chatController.byId(id);
+      if (message == null || message.isControl) continue;
+      if (candidate == null || message.time > candidate.time) candidate = message;
+    }
+    if (candidate == null) return;
+    if (candidate.id == _messages.last.id &&
+        _unreadAnchorTime != null &&
+        _userDidScroll) {
+      _unreadAnchorTime = null;
+      _bumpMessages();
+    }
+    if (candidate.time <= _readMarkTime) return;
+    _readMarkTime = candidate.time;
+    var remaining = _messages
+        .where((message) => message.time > _readMarkTime && message.senderId != _myId)
+        .length;
+    if (_chatController.hasNewer) {
+      remaining = math.max(remaining, chat?.unreadCount ?? 0);
+    }
+    unawaited(
+      chats.markReadUpTo(
+        api,
+        _myId,
+        widget.chatId,
+        candidate.id,
+        candidate.time,
+        remaining: remaining,
+      ),
+    );
+  }
+
+  void _onNativeOpen(String id) {
+    final message = _chatController.byId(id);
+    if (message == null) return;
+    if (_selectionMode) {
+      _toggleSelection(message);
+      return;
+    }
+    if (message.isControl) {
+      final userId = message.controlAttachment?.userId ?? message.senderId;
+      if (userId != 0) _openSenderProfile(userId);
+      return;
+    }
+    final kind = _nativeKind(message);
+    if (kind == NativeChatKind.photo) {
+      _openNativeMedia(id);
+    } else if (kind == NativeChatKind.video || kind == NativeChatKind.videoNote) {
+      unawaited(_openNativeVideo(message));
+    } else if (kind == NativeChatKind.file) {
+      unawaited(_openNativeFile(message));
+    } else if (kind == NativeChatKind.location) {
+      _openNativeLocation(message);
+    } else if (kind == NativeChatKind.sticker) {
+      _openNativeSticker(id);
+    } else if (kind == NativeChatKind.voice) {
+      _toggleNativeVoice(id);
+    }
+  }
+
+  NativeChatKind _nativeKind(CachedMessage message) {
+    final items = buildNativeChatItems(
+      messages: [message],
+      myId: _myId,
+      now: DateTime.now(),
+    );
+    for (final item in items) {
+      if (item.role == NativeChatRole.message) return item.kind;
+    }
+    return NativeChatKind.text;
+  }
+
+  void _openNativeMedia(String id) {
+    final message = _chatController.byId(id);
+    if (message == null || !mounted) return;
+    final photos = <PhotoAttachment>[
+      for (final attachment in message.attachments ?? const <MessageAttachment>[])
+        if (attachment is PhotoAttachment) attachment,
+    ];
+    if (photos.isEmpty) return;
+    Navigator.of(context).push(
+      iosPageRoute(
+        context,
+        builder: (_) => PhotoViewerScreen(
+          photos: photos,
+          chatId: widget.chatId,
+          message: message,
+          actions: _photoActions,
+          sourceName: widget.name,
+          videoUserAgentProvider: () => api.session?.userAgent(),
+        ),
+      ),
+    );
+  }
+
+  void _openNativeSticker(String id) {
+    final message = _chatController.byId(id);
+    if (message == null) return;
+    final attachments = [
+      ...?message.attachments,
+      ...?message.forwardedAttachment?.originalAttachments,
+    ];
+    for (final attachment in attachments) {
+      if (attachment is StickerAttachment) {
+        _openStickerPack(attachment);
+        return;
+      }
+    }
+  }
+
+  String? _nativePlayingVoiceId() {
+    for (final entry in _nativeVoices.entries) {
+      if (entry.value.playing.value) return entry.key;
+    }
+    return null;
+  }
+
+  void _onNativeVoiceTick() {
+    if (!mounted || !NativeChatBridge.isEligible) return;
+    _bumpMessageRows();
+  }
+
+  void _toggleNativeVoice(String id) {
+    final message = _chatController.byId(id);
+    if (message == null) return;
+    AudioAttachment? audio;
+    for (final attachment in _nativeAttachments(message)) {
+      if (attachment is AudioAttachment) audio = attachment;
+    }
+    var url = audio?.fileUrl ?? audio?.baseUrl ?? '';
+    var durationMs = audio?.duration ?? 0;
+    if (durationMs == 0 && url.isEmpty) {
+      final voice = message.payload?['voice'];
+      if (voice is Map) {
+        final raw = voice['duration'];
+        if (raw is int) durationMs = raw;
+        url = voice['url']?.toString() ?? url;
+      }
+    }
+    final controller = _nativeVoices.putIfAbsent(id, () {
+      final created = MediaPlayback.instance.acquireVoice(
+        cacheName: '${audio?.audioId ?? id}.ogg',
+        resolveUrl: () async => url.isEmpty ? null : url,
+        fallbackDuration: Duration(milliseconds: durationMs),
+      );
+      created.playing.addListener(_onNativeVoiceTick);
+      return created;
+    });
+    MediaPlayback.instance.activateVoice(
+      VoiceTrack(
+        cacheName: '${audio?.audioId ?? id}.ogg',
+        chatId: message.chatId,
+        messageId: message.id,
+        senderId: message.senderId,
+        isMe: message.senderId == _myId,
+        time: message.time,
+        audio: controller,
+      ),
+    );
+    unawaited(controller.toggle());
+  }
+
+  List<MessageAttachment> _nativeAttachments(CachedMessage message) => [
+    ...?message.attachments,
+    ...?message.forwardedAttachment?.originalAttachments,
+  ];
+
+  Future<void> _openNativeVideo(CachedMessage message) async {
+    VideoAttachment? video;
+    for (final attachment in _nativeAttachments(message)) {
+      if (attachment is VideoAttachment) video = attachment;
+    }
+    final token = video?.videoToken;
+    final videoId = video?.videoId;
+    if (video == null || token == null || videoId == null) {
+      if (mounted) showCustomNotification(context, 'Не удалось открыть видео');
+      return;
+    }
+    final sources = await messagesModule.getVideoSources(
+      messageId: message.id,
+      chatId: message.chatId,
+      token: token,
+      videoId: videoId,
+    );
+    if (!mounted) return;
+    if (sources.isEmpty) {
+      showCustomNotification(context, 'Не удалось получить видео');
+      return;
+    }
+    Navigator.of(context).push(
+      iosPageRoute(
+        context,
+        fullscreenDialog: true,
+        builder: (_) => PhotoViewerScreen.video(
+          attachment: video!,
+          initialVideoSources: sources,
+          chatId: message.chatId,
+          message: message,
+          actions: _photoActions,
+          sourceName: widget.name,
+          videoUserAgentProvider: () => api.session?.userAgent(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openNativeFile(CachedMessage message) async {
+    FileAttachment? file;
+    for (final attachment in _nativeAttachments(message)) {
+      if (attachment is FileAttachment) file = attachment;
+    }
+    final fileId = file?.fileId;
+    if (file == null || fileId == null) {
+      if (mounted) showCustomNotification(context, 'Не удалось определить файл');
+      return;
+    }
+    final name = file.name?.trim();
+    final title = name == null || name.isEmpty ? 'Файл' : name;
+    final result = await openCachedFile(
+      '${fileId}_$title',
+      () => messagesModule.getFileUrl(
+        messageId: message.id,
+        chatId: message.chatId,
+        fileId: fileId,
+      ),
+    );
+    if (!mounted) return;
+    final path = result.path;
+    if (result.noAppToOpen && path != null) {
+      await shareUnopenableFile(context, path);
+      return;
+    }
+    if (!result.ok) {
+      showCustomNotification(
+        context,
+        'Ошибка загрузки: ${result.error ?? 'не удалось открыть'}',
+      );
+    }
+  }
+
+  void _openNativeLocation(CachedMessage message) {
+    for (final attachment in _nativeAttachments(message)) {
+      if (attachment is! LocationAttachment) continue;
+      final latitude = attachment.latitude;
+      final longitude = attachment.longitude;
+      if (latitude == null || longitude == null) return;
+      unawaited(openLocationOnMap(context, latitude, longitude, zoom: attachment.zoom));
+      return;
+    }
+  }
+
+  Future<void> _nativeTranscribe(String id) async {
+    if (TranscriptionCache.has(id)) {
+      TranscriptionCache.setExpanded(id, !TranscriptionCache.isExpanded(id));
+      _bumpMessageRows();
+      return;
+    }
+    final message = _chatController.byId(id);
+    AudioAttachment? audio;
+    for (final attachment in message?.attachments ?? const <MessageAttachment>[]) {
+      if (attachment is AudioAttachment) audio = attachment;
+    }
+    final audioId = audio?.audioId;
+    if (audioId == null) return;
+    try {
+      final result = await messagesModule.requestTranscription(
+        widget.chatId,
+        int.tryParse(id) ?? 0,
+        audioId,
+      );
+      TranscriptionCache.put(id, result, expanded: result.status == 1);
+    } catch (error) {
+      logger.w('native transcribe: $error');
+    }
+    if (mounted) _bumpMessageRows();
+  }
+
+  Future<void> _onNativeKeyboard(String id, int index) async {
+    final message = _chatController.byId(id);
+    if (message == null || !mounted) return;
+    var cursor = 0;
+    for (final attachment in message.attachments ?? const <MessageAttachment>[]) {
+      if (attachment is! InlineKeyboardAttachment) continue;
+      for (final row in attachment.rows) {
+        for (final button in row) {
+          if (button.text.isEmpty) continue;
+          if (cursor != index) {
+            cursor++;
+            continue;
+          }
+          await _invokeNativeButton(message, attachment, button);
+          return;
+        }
+      }
+    }
+  }
+
+  Future<void> _invokeNativeButton(
+    CachedMessage message,
+    InlineKeyboardAttachment keyboard,
+    InlineKeyboardButton button,
+  ) async {
+    switch (button.type) {
+      case 'LINK':
+        final url = button.url;
+        if (url != null && url.isNotEmpty) await openExternalUrl(context, url);
+        return;
+      case 'CLIPBOARD':
+        final payload = button.payload;
+        if (payload == null || payload.isEmpty) return;
+        await copyTextEntity(context, payload, 'Скопировано');
+        return;
+      case 'OPEN_APP':
+        await _openNativeMiniApp(message, button);
+        return;
+      default:
+        final callbackId = keyboard.callbackId;
+        if (callbackId == null || callbackId.isEmpty) {
+          showCustomNotification(context, 'Кнопка не поддерживается');
+          return;
+        }
+        final answer = await messagesModule.sendButtonCallback(
+          chatId: message.chatId,
+          messageId: message.id,
+          callbackId: callbackId,
+          payload: button.payload,
+        );
+        if (!mounted) return;
+        final url = answer?['url']?.toString();
+        if (url != null && url.isNotEmpty) {
+          await openExternalUrl(context, url);
+          return;
+        }
+        final text = answer?['text']?.toString();
+        if (text != null && text.isNotEmpty) {
+          showCustomNotification(context, text);
+        }
+    }
+  }
+
+  Future<void> _openNativeMiniApp(
+    CachedMessage message,
+    InlineKeyboardButton button,
+  ) async {
+    if (!webViewSupported) {
+      showCustomNotification(context, 'На вашей платформе это недоступно');
+      return;
+    }
+    final deeplink = button.webApp != null ? Uri.tryParse(button.webApp!) : null;
+    final startParam =
+        button.payload ??
+        deeplink?.queryParameters['startapp'] ??
+        deeplink?.queryParameters['startApp'];
+    final chatId =
+        int.tryParse(deeplink?.queryParameters['chat_id'] ?? '') ?? message.chatId;
+    final botId = button.contactId;
+    if (botId == null) {
+      showCustomNotification(context, 'Не удалось открыть приложение');
+      return;
+    }
+    if (!mounted) return;
+    Navigator.of(context).push(
+      iosPageRoute(
+        context,
+        builder: (_) => WebAppScreen(
+          title: button.text,
+          entryPoint: WebAppEntryPoint.inlineButton,
+          loader: () => webAppModule.fetchLaunch(
+            botId,
+            startParam: startParam,
+            chatId: chatId,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNativeMessageActions(String id, Rect origin) {
+    final message = _chatController.byId(id);
+    if (message == null || !mounted || message.isControl) return;
+    if (_selectionMode) {
+      _toggleSelection(message);
+      return;
+    }
+    final isMe = message.senderId == _myId;
+    final canReport = !isMe;
+    final reportTypeId = _complaintTypeId(chat?.type ?? widget.chatType);
+    final controller = MessageActionsController();
+    showMessageActions(
+      context: context,
+      originRect: origin,
+      tapPoint: origin.center,
+      isMe: isMe,
+      bottomReservedSpace: _composerHeight.value,
+      messageText: message.text,
+      copyText: MessageDecryptionCache.instance.readableText(message),
+      controller: controller,
+      style: AppMessageActionsStyle.current.value,
+      interaction: MessageActionsInteraction.tap,
+      editHistory: message.editHistory,
+      loadReadBy: _canShowReadBy(message) ? () => _loadReadBy(message) : null,
+      onReaderTap: _openSenderProfile,
+      loadReportReasons: canReport ? () => _loadReportReasons(reportTypeId) : null,
+      onReport: canReport
+          ? (reasonId) => _reportMessage(message, reportTypeId, reasonId)
+          : null,
+      onDelete: () => _confirmDeleteMessage(message.id, isMe),
+      allowDelete: isMe ||
+          chat?.type != 'CHANNEL' ||
+          (chat?.iAmAdmin(_myId) ?? false),
+      allowCopy: !(chat?.copyDisabled ?? false),
+      onEdit: _canEditMessage(message) ? () => _startEditMessage(message) : null,
+      onReply: _canReply ? () => _textSend.startReply(message) : null,
+      onForward: (chat?.forwardDisabled ?? false)
+          ? null
+          : () => _forwardMessages([message]),
+      onMarkUnread: () => _markMessageUnread(message),
+      onPin: _canPinMessage(message) ? () => _togglePinMessage(message) : null,
+      onCopyLink: _canLinkMessage(message) ? () => _copyMessageLink(message) : null,
+      isPinned: chat?.pinnedMsgId == int.tryParse(message.id),
+      onReact: (emoji) => _reactToMessage(message, emoji),
+      selectedReaction: _reactionNotifierFor(message).value?['yourReaction']?.toString(),
+      onDispose: controller.dispose,
     );
   }
 }

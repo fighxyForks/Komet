@@ -58,6 +58,7 @@ import 'core/config/app_pill_gradient.dart';
 import 'core/config/app_ios_glass.dart';
 import 'core/config/app_native_sheet_prototype.dart';
 import 'core/config/app_native_chat_list_prototype.dart';
+import 'core/config/app_native_chat_prototype.dart';
 import 'core/config/app_native_lists_prototype.dart';
 import 'core/config/app_native_tab_minimize_prototype.dart';
 import 'core/config/app_visual_style.dart';
@@ -260,6 +261,7 @@ void main(List<String> args) async {
   final nativeSheetProtoFuture = AppNativeSheetPrototype.load();
   final nativeTabProtoFuture = AppNativeTabMinimizePrototype.load();
   final nativeChatListProtoFuture = AppNativeChatListPrototype.load();
+  final nativeChatProtoFuture = AppNativeChatPrototype.load();
   final nativeListsProtoFuture = AppNativeListsPrototype.load();
   final liquidGlassFuture = LiquidGlass.load();
   final meshGradientFuture = MeshGradient.load();
@@ -338,6 +340,7 @@ void main(List<String> args) async {
     nativeSheetProtoFuture,
     nativeTabProtoFuture,
     nativeChatListProtoFuture,
+    nativeChatProtoFuture,
     nativeListsProtoFuture,
     liquidGlassFuture,
     meshGradientFuture,
