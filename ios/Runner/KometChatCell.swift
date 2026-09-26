@@ -61,8 +61,11 @@ final class KometChatMessageCell: UICollectionViewCell {
   private let senderLabel = UILabel()
   private let forwardLabel = UILabel()
   private let replyButton = UIButton(type: .system)
-  private let bodyLabel = UILabel()
+  private let bodyView = KometChatTextView()
   private let mediaView = UIImageView()
+  private let albumStack = UIStackView()
+  private let pollStack = UIStackView()
+  private var pollSelection = Set<Int>()
   private let durationLabel = UILabel()
   private let buttonStack = UIStackView()
   private let playButton = UIButton(type: .system)
@@ -106,9 +109,12 @@ final class KometChatMessageCell: UICollectionViewCell {
     replyButton.titleLabel?.numberOfLines = 2
     replyButton.contentHorizontalAlignment = .leading
     replyButton.addTarget(self, action: #selector(tapReply), for: .touchUpInside)
-    bodyLabel.font = UIFont.preferredFont(forTextStyle: .body)
-    bodyLabel.adjustsFontForContentSizeCategory = true
-    bodyLabel.numberOfLines = 0
+    bodyView.delegate = self
+    bodyView.preferredWidth = 240
+    albumStack.axis = .vertical
+    albumStack.spacing = 2
+    pollStack.axis = .vertical
+    pollStack.spacing = 6
     mediaView.contentMode = .scaleAspectFill
     mediaView.clipsToBounds = true
     mediaView.layer.cornerRadius = 12
@@ -142,11 +148,11 @@ final class KometChatMessageCell: UICollectionViewCell {
     metaRow.alignment = .center
     metaRow.addArrangedSubview(metaLabel)
     metaRow.addArrangedSubview(statusView)
-    for view in [playButton, senderLabel, forwardLabel, replyButton, bodyLabel, mediaView, durationLabel,
+    for view in [playButton, senderLabel, forwardLabel, replyButton, bodyView, albumStack, mediaView, pollStack, durationLabel,
                  buttonStack, transcriptPill, transcriptLabel, commentsButton, metaRow, reactionStack] {
       stack.addArrangedSubview(view)
     }
-    stack.setCustomSpacing(2, after: bodyLabel)
+    stack.setCustomSpacing(2, after: bodyView)
     bubble.addSubview(stack)
     contentView.addSubview(selectionMark)
     contentView.addSubview(avatar)
@@ -203,10 +209,13 @@ final class KometChatMessageCell: UICollectionViewCell {
     onEvent = nil
     item = nil
     mediaView.image = nil
+    pollSelection.removeAll()
     dragX = 0
     bubble.transform = .identity
     buttonStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
     reactionStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+    albumStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+    pollStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
   }
 
   func apply(_ item: KometChatMessage, accent: UIColor, selecting: Bool, width: CGFloat) {
@@ -217,7 +226,6 @@ final class KometChatMessageCell: UICollectionViewCell {
     let outgoingFill = accent
     bubble.backgroundColor = item.outgoing ? outgoingFill : incomingFill
     let foreground: UIColor = item.outgoing ? .white : .label
-    bodyLabel.textColor = foreground
     senderLabel.textColor = accent
     metaLabel.textColor = item.outgoing ? UIColor.white.withAlphaComponent(0.78) : .secondaryLabel
     statusView.tintColor = metaLabel.textColor
@@ -243,9 +251,15 @@ final class KometChatMessageCell: UICollectionViewCell {
     replyButton.isHidden = quote.isEmpty
     replyButton.setTitle(quote.joined(separator: "\n"), for: .normal)
     replyButton.setTitleColor(item.outgoing ? UIColor.white.withAlphaComponent(0.9) : accent, for: .normal)
-    bodyLabel.isHidden = item.text.isEmpty || item.kind == "sticker"
-    bodyLabel.text = item.text
-    let showsMedia = item.mediaUrl != nil && (item.kind == "photo" || item.kind == "video" || item.kind == "sticker")
+    let showsText = !item.text.isEmpty && item.kind != "sticker"
+    bodyView.isHidden = !showsText
+    bodyView.preferredWidth = max(120, width * 0.78 - 48)
+    if showsText {
+      bodyView.attributedText = KometChatText.make(item, foreground: foreground, accent: accent)
+    }
+    fillAlbum(item)
+    fillPoll(item, foreground: foreground, accent: accent)
+    let showsMedia = item.kind != "album" && item.mediaUrl != nil && (item.kind == "photo" || item.kind == "video" || item.kind == "sticker")
     mediaView.isHidden = !showsMedia
     mediaHeight?.constant = showsMedia ? (item.kind == "sticker" ? 140 : 180) : 0
     if showsMedia, let url = item.mediaUrl.flatMap(URL.init(string:)) {
@@ -368,12 +382,117 @@ final class KometChatMessageCell: UICollectionViewCell {
   }
 
   @objc private func tapMedia() {
+    openMedia(index: 0)
+  }
+
+  @objc private func tapAlbum(_ sender: UIButton) {
+    openMedia(index: sender.tag)
+  }
+
+  private func openMedia(index: Int) {
     guard let item = item else { return }
     if item.kind == "sticker" {
       onEvent?("sticker", ["id": item.id])
     } else {
-      onEvent?("media", ["id": item.id])
+      onEvent?("media", ["id": item.id, "index": index])
     }
+  }
+
+  private func fillAlbum(_ item: KometChatMessage) {
+    albumStack.isHidden = item.kind != "album" || item.media.isEmpty
+    guard item.kind == "album" else { return }
+    let tiles = Array(item.media.prefix(4))
+    var row: UIStackView?
+    for (offset, tile) in tiles.enumerated() {
+      if offset % 2 == 0 {
+        let line = UIStackView()
+        line.axis = .horizontal
+        line.spacing = 2
+        line.distribution = .fillEqually
+        line.heightAnchor.constraint(equalToConstant: 96).isActive = true
+        albumStack.addArrangedSubview(line)
+        row = line
+      }
+      let button = UIButton(type: .custom)
+      button.tag = offset
+      button.imageView?.contentMode = .scaleAspectFill
+      button.clipsToBounds = true
+      button.layer.cornerRadius = 8
+      button.addTarget(self, action: #selector(tapAlbum(_:)), for: .touchUpInside)
+      if offset == 3 && item.media.count > 4 {
+        button.setTitle("+\(item.media.count - 3)", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor.black.withAlphaComponent(0.45)
+      }
+      row?.addArrangedSubview(button)
+      if let url = URL(string: tile.url) {
+        KometChatImages.load(url) { [weak button] image in
+          button?.setImage(image, for: .normal)
+        }
+      }
+    }
+  }
+
+  private func fillPoll(_ item: KometChatMessage, foreground: UIColor, accent: UIColor) {
+    pollStack.isHidden = item.kind != "poll"
+    guard item.kind == "poll" else { return }
+    if item.pollChoices.isEmpty {
+      let waiting = UILabel()
+      waiting.text = "Загрузка опроса…"
+      waiting.font = UIFont.preferredFont(forTextStyle: .footnote)
+      waiting.textColor = foreground.withAlphaComponent(0.7)
+      pollStack.addArrangedSubview(waiting)
+      return
+    }
+    for choice in item.pollChoices {
+      let button = UIButton(type: .system)
+      button.tag = choice.id
+      let title = item.pollVoted ? "\(choice.text)  \(choice.count)" : choice.text
+      button.setTitle(title, for: .normal)
+      button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .subheadline)
+      button.titleLabel?.numberOfLines = 2
+      button.contentHorizontalAlignment = .leading
+      button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+      button.layer.cornerRadius = 12
+      button.layer.cornerCurve = .continuous
+      button.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+      let marked = choice.mine || pollSelection.contains(choice.id)
+      button.backgroundColor = marked
+        ? accent.withAlphaComponent(0.22)
+        : UIColor.tertiarySystemFill
+      button.setTitleColor(foreground, for: .normal)
+      button.isEnabled = !item.pollVoted
+      button.addTarget(self, action: #selector(tapPoll(_:)), for: .touchUpInside)
+      pollStack.addArrangedSubview(button)
+    }
+    if item.pollMultiple && !item.pollVoted {
+      let vote = UIButton(type: .system)
+      vote.tag = -1
+      vote.setTitle("Проголосовать", for: .normal)
+      vote.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+      vote.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+      vote.addTarget(self, action: #selector(tapPoll(_:)), for: .touchUpInside)
+      pollStack.addArrangedSubview(vote)
+    }
+  }
+
+  @objc private func tapPoll(_ sender: UIButton) {
+    guard let item = item else { return }
+    if sender.tag == -1 {
+      onEvent?("poll", ["id": item.id, "answers": Array(pollSelection).sorted()])
+      return
+    }
+    if item.pollMultiple {
+      if pollSelection.contains(sender.tag) {
+        pollSelection.remove(sender.tag)
+      } else {
+        pollSelection.insert(sender.tag)
+      }
+      pollStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+      fillPoll(item, foreground: item.outgoing ? .white : .label, accent: accent)
+      return
+    }
+    onEvent?("poll", ["id": item.id, "answers": [sender.tag]])
   }
 
   @objc private func tapAvatar() {
@@ -439,6 +558,87 @@ extension KometChatMessageCell: UIGestureRecognizerDelegate {
     guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
     let velocity = pan.velocity(in: contentView)
     return abs(velocity.x) > abs(velocity.y) && velocity.x < 0
+  }
+}
+
+final class KometChatTextView: UITextView {
+  var preferredWidth: CGFloat = 240 {
+    didSet { invalidateIntrinsicContentSize() }
+  }
+
+  override init(frame: CGRect, textContainer: NSTextContainer?) {
+    super.init(frame: frame, textContainer: textContainer)
+    isEditable = false
+    isScrollEnabled = false
+    backgroundColor = .clear
+    textContainerInset = .zero
+    self.textContainer.lineFragmentPadding = 0
+  }
+
+  required init?(coder: NSCoder) { nil }
+
+  override var intrinsicContentSize: CGSize {
+    let fitted = sizeThatFits(CGSize(width: preferredWidth, height: .greatestFiniteMagnitude))
+    return CGSize(width: UIView.noIntrinsicMetric, height: max(20, ceil(fitted.height)))
+  }
+}
+
+enum KometChatText {
+  static func make(_ item: KometChatMessage, foreground: UIColor, accent: UIColor) -> NSAttributedString {
+    let font = UIFont.preferredFont(forTextStyle: .body)
+    let text = NSMutableAttributedString(string: item.text, attributes: [
+      .font: font,
+      .foregroundColor: foreground,
+    ])
+    let limit = (item.text as NSString).length
+    for span in item.spans {
+      let start = min(max(span.start, 0), limit)
+      let end = min(start + max(span.length, 0), limit)
+      guard end > start else { continue }
+      let range = NSRange(location: start, length: end - start)
+      var attributes: [NSAttributedString.Key: Any] = [:]
+      if span.styles.contains("strong") || span.styles.contains("heading") {
+        attributes[.font] = UIFont.preferredFont(forTextStyle: .headline)
+      }
+      if span.styles.contains("emphasized") {
+        attributes[.font] = UIFont.italicSystemFont(ofSize: font.pointSize)
+      }
+      if span.styles.contains("mono") {
+        attributes[.font] = UIFont.monospacedSystemFont(ofSize: font.pointSize, weight: .regular)
+      }
+      if span.styles.contains("underline") {
+        attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
+      }
+      if span.styles.contains("strike") {
+        attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+      }
+      if span.styles.contains("link"), let raw = span.url, let link = URL(string: raw) {
+        attributes[.link] = link
+      }
+      if span.styles.contains("mention"), let userId = span.userId,
+         let link = URL(string: "komet-user://\(userId)") {
+        attributes[.link] = link
+        attributes[.foregroundColor] = accent
+      }
+      if !attributes.isEmpty { text.addAttributes(attributes, range: range) }
+    }
+    return text
+  }
+}
+
+extension KometChatMessageCell: UITextViewDelegate {
+  func textView(
+    _ textView: UITextView,
+    shouldInteractWith url: URL,
+    in characterRange: NSRange,
+    interaction: UITextItemInteraction
+  ) -> Bool {
+    if url.scheme == "komet-user", let host = url.host, let userId = Int(host) {
+      onEvent?("mention", ["userId": userId])
+    } else {
+      onEvent?("link", ["url": url.absoluteString])
+    }
+    return false
   }
 }
 

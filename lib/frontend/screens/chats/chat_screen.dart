@@ -823,6 +823,7 @@ class _ChatScreenState extends State<ChatScreen>
     _scrollNav.nativeScrollToEnd = () {
       unawaited(_nativeChatCommands.scrollToEnd());
     };
+    pollsModule.addListener(_onNativePolls);
     _scrollController.addListener(_scrollNav.updateScrollDownVisible);
 
     unawaited(_fastPreloadCache());
@@ -2206,6 +2207,7 @@ class _ChatScreenState extends State<ChatScreen>
     AppVisualStyle.current.removeListener(_onVisualStyleChanged);
     AppIosGlass.active.removeListener(_onVisualStyleChanged);
     if (!widget.preview) MediaPlayback.instance.leaveChat(widget.chatId);
+    pollsModule.removeListener(_onNativePolls);
     for (final audio in _nativeVoices.values) {
       audio.playing.removeListener(_onNativeVoiceTick);
       MediaPlayback.instance.releaseVoice(audio);
@@ -5013,6 +5015,7 @@ class _ChatScreenState extends State<ChatScreen>
   Widget _buildNativeTranscript() {
     final type = _commentsMode ? 'CHAT' : (chat?.type ?? widget.chatType);
     final visible = _messages.take(_visibleMessageCount).toList(growable: false);
+    _scheduleNativePollFetches(visible);
     final items = buildNativeChatItems(
       messages: visible,
       myId: _myId,
@@ -5043,6 +5046,7 @@ class _ChatScreenState extends State<ChatScreen>
         );
       },
       playingId: _nativePlayingVoiceId(),
+      pollOf: pollsModule.get,
       commentsOf: (message) {
         final channel = !_commentsMode && type == 'CHANNEL' && !message.isControl;
         return channel ? _commentsLabelFor(message.id) : null;
@@ -5082,6 +5086,9 @@ class _ChatScreenState extends State<ChatScreen>
           unawaited(_scrollNav.goTo(id, time: message?.time ?? 0));
         },
         onMedia: _openNativeMedia,
+        onLink: (url) => unawaited(openExternalUrl(context, url)),
+        onMention: _openSenderProfile,
+        onPoll: (id, answers) => unawaited(_voteNativePoll(id, answers)),
         onKeyboard: _onNativeKeyboard,
         onTranscribe: (id) => unawaited(_nativeTranscribe(id)),
         onVoice: _toggleNativeVoice,
@@ -5563,19 +5570,30 @@ class _ChatScreenState extends State<ChatScreen>
     return NativeChatKind.text;
   }
 
-  void _openNativeMedia(String id) {
+  void _openNativeMedia(String id, [int index = 0]) {
     final message = _chatController.byId(id);
     if (message == null || !mounted) return;
-    final photos = <PhotoAttachment>[
-      for (final attachment in message.attachments ?? const <MessageAttachment>[])
-        if (attachment is PhotoAttachment) attachment,
+    final visuals = [
+      for (final attachment in _nativeAttachments(message))
+        if (attachment is PhotoAttachment ||
+            (attachment is VideoAttachment && !attachment.isNote))
+          attachment,
     ];
+    if (index >= 0 && index < visuals.length && visuals[index] is VideoAttachment) {
+      unawaited(_openNativeVideo(message));
+      return;
+    }
+    final photos = visuals.whereType<PhotoAttachment>().toList(growable: false);
     if (photos.isEmpty) return;
+    final photoIndex = visuals[index] is PhotoAttachment
+        ? photos.indexOf(visuals[index] as PhotoAttachment)
+        : 0;
     Navigator.of(context).push(
       iosPageRoute(
         context,
         builder: (_) => PhotoViewerScreen(
           photos: photos,
+          initialIndex: photoIndex < 0 ? 0 : photoIndex,
           chatId: widget.chatId,
           message: message,
           actions: _photoActions,
@@ -5584,6 +5602,36 @@ class _ChatScreenState extends State<ChatScreen>
         ),
       ),
     );
+  }
+
+  void _onNativePolls() {
+    if (!mounted || !NativeChatBridge.isEligible) return;
+    _bumpMessageRows();
+  }
+
+  void _scheduleNativePollFetches(List<CachedMessage> messages) {
+    for (final message in messages) {
+      for (final attachment in message.attachments ?? const <MessageAttachment>[]) {
+        if (attachment is! PollAttachment || attachment.pollId == 0) continue;
+        if (pollsModule.get(attachment.pollId) != null) continue;
+        unawaited(pollsModule.fetch(widget.chatId, message.id, attachment.pollId));
+      }
+    }
+  }
+
+  Future<void> _voteNativePoll(String id, List<int> answers) async {
+    if (answers.isEmpty) return;
+    final message = _chatController.byId(id);
+    if (message == null) return;
+    PollAttachment? poll;
+    for (final attachment in _nativeAttachments(message)) {
+      if (attachment is PollAttachment) poll = attachment;
+    }
+    if (poll == null) return;
+    final ok = await pollsModule.vote(widget.chatId, id, poll.pollId, answers);
+    if (!ok && mounted) {
+      showCustomNotification(context, 'Не удалось проголосовать');
+    }
   }
 
   void _openNativeSticker(String id) {

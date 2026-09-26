@@ -6,6 +6,7 @@ import 'package:komet/core/config/app_native_chat_prototype.dart';
 import 'package:komet/core/native/native_chat_bridge.dart';
 import 'package:komet/core/native/native_chat_snapshot.dart';
 import 'package:komet/models/attachment.dart';
+import 'package:komet/models/poll.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _now = DateTime(2026, 9, 26, 15);
@@ -39,7 +40,10 @@ NativeChatCallbacks _callbacks(List<Object> log) => NativeChatCallbacks(
   onReaction: (id, emoji) => log.add('react $id $emoji'),
   onSelect: (id) => log.add('select $id'),
   onReplyJump: (id) => log.add('jump $id'),
-  onMedia: (id) => log.add('media $id'),
+  onMedia: (id, index) => log.add('media $id $index'),
+  onLink: (url) => log.add('link $url'),
+  onMention: (id) => log.add('mention $id'),
+  onPoll: (id, answers) => log.add('poll $id $answers'),
   onKeyboard: (id, index) => log.add('key $id $index'),
   onTranscribe: (id) => log.add('transcribe $id'),
   onVoice: (id) => log.add('voice $id'),
@@ -199,6 +203,64 @@ void main() {
       expect(voice.duration, '0:05');
       expect(voice.audioId, 9);
       expect(voice.playing, isTrue);
+    });
+
+    test('жирный отрезок, альбом и результаты опроса', () {
+      final items = buildNativeChatItems(
+        now: _now,
+        myId: 1,
+        pollOf: (id) => id == 3
+            ? const Poll(
+                pollId: 3,
+                title: 'Вопрос',
+                total: 2,
+                answers: [
+                  PollAnswer(answerId: 1, text: 'Да', voteCount: 2, mine: true),
+                ],
+              )
+            : null,
+        messages: [
+          _message(
+            id: 'fmt',
+            senderId: 2,
+            time: DateTime(2026, 9, 26, 14),
+            text: 'привет мир',
+            payload: {
+              'elements': [
+                {'type': 'STRONG', 'from': 0, 'length': 6},
+              ],
+            },
+          ),
+          _message(
+            id: 'album',
+            senderId: 2,
+            time: DateTime(2026, 9, 26, 14, 1),
+            attachments: const [
+              PhotoAttachment(baseUrl: 'https://cdn/a.jpg'),
+              PhotoAttachment(baseUrl: 'https://cdn/b.jpg'),
+            ],
+          ),
+          _message(
+            id: 'poll',
+            senderId: 2,
+            time: DateTime(2026, 9, 26, 14, 2),
+            attachments: const [PollAttachment(pollId: 3, title: 'Вопрос')],
+          ),
+        ],
+      );
+      final formatted = items.firstWhere((item) => item.id == 'fmt');
+      expect(formatted.spans.single.styles, ['strong']);
+      expect(formatted.spans.single.length, 6);
+      final album = items.firstWhere((item) => item.id == 'album');
+      expect(album.kind, NativeChatKind.album);
+      expect(album.media.map((tile) => tile.url), [
+        'https://cdn/a.jpg',
+        'https://cdn/b.jpg',
+      ]);
+      final poll = items.firstWhere((item) => item.id == 'poll');
+      expect(poll.kind, NativeChatKind.poll);
+      expect(poll.pollVoted, isTrue);
+      expect(poll.pollChoices.single.text, 'Да');
     });
 
     test('служебная строка собирается из события', () {

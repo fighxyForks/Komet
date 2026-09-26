@@ -29,6 +29,7 @@ enum NativeChatKind {
   share,
   control,
   forward,
+  album,
 }
 
 enum NativeChatCluster { single, top, middle, bottom }
@@ -103,6 +104,93 @@ class NativeChatButton {
 }
 
 @immutable
+class NativeChatSpan {
+  final int start;
+  final int length;
+  final List<String> styles;
+  final String? url;
+  final int? userId;
+
+  const NativeChatSpan({
+    required this.start,
+    required this.length,
+    this.styles = const [],
+    this.url,
+    this.userId,
+  });
+
+  Map<String, Object?> toMap() => {
+    'start': start,
+    'length': length,
+    'styles': styles,
+    'url': url,
+    'userId': userId,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeChatSpan &&
+      other.start == start &&
+      other.length == length &&
+      listEquals(other.styles, styles) &&
+      other.url == url &&
+      other.userId == userId;
+
+  @override
+  int get hashCode => Object.hash(start, length, Object.hashAll(styles), url, userId);
+}
+
+@immutable
+class NativeChatMedia {
+  final String url;
+  final String kind;
+
+  const NativeChatMedia({required this.url, required this.kind});
+
+  Map<String, Object?> toMap() => {'url': url, 'kind': kind};
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeChatMedia && other.url == url && other.kind == kind;
+
+  @override
+  int get hashCode => Object.hash(url, kind);
+}
+
+@immutable
+class NativeChatPollChoice {
+  final int id;
+  final String text;
+  final int count;
+  final bool mine;
+
+  const NativeChatPollChoice({
+    required this.id,
+    required this.text,
+    this.count = 0,
+    this.mine = false,
+  });
+
+  Map<String, Object?> toMap() => {
+    'id': id,
+    'text': text,
+    'count': count,
+    'mine': mine,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is NativeChatPollChoice &&
+      other.id == id &&
+      other.text == text &&
+      other.count == count &&
+      other.mine == mine;
+
+  @override
+  int get hashCode => Object.hash(id, text, count, mine);
+}
+
+@immutable
 class NativeChatItem {
   final String id;
   final NativeChatRole role;
@@ -134,6 +222,13 @@ class NativeChatItem {
   final String? comments;
   final int? audioId;
   final int? senderId;
+  final int? pollId;
+  final int? pollTotal;
+  final bool pollMultiple;
+  final bool pollVoted;
+  final List<NativeChatSpan> spans;
+  final List<NativeChatMedia> media;
+  final List<NativeChatPollChoice> pollChoices;
   final List<NativeChatReaction> reactions;
   final List<NativeChatButton> buttons;
 
@@ -168,6 +263,13 @@ class NativeChatItem {
     this.comments,
     this.audioId,
     this.senderId,
+    this.pollId,
+    this.pollTotal,
+    this.pollMultiple = false,
+    this.pollVoted = false,
+    this.spans = const [],
+    this.media = const [],
+    this.pollChoices = const [],
     this.reactions = const [],
     this.buttons = const [],
   });
@@ -214,6 +316,13 @@ class NativeChatItem {
     comments: comments,
     audioId: audioId,
     senderId: senderId,
+    pollId: pollId,
+    pollTotal: pollTotal,
+    pollMultiple: pollMultiple,
+    pollVoted: pollVoted,
+    spans: spans,
+    media: media,
+    pollChoices: pollChoices,
     reactions: reactions,
     buttons: buttons,
   );
@@ -250,6 +359,13 @@ class NativeChatItem {
       'comments': comments,
       'audioId': audioId,
       'senderId': senderId,
+      'pollId': pollId,
+      'pollTotal': pollTotal,
+      'pollMultiple': pollMultiple,
+      'pollVoted': pollVoted,
+      'spans': [for (final span in spans) span.toMap()],
+      'media': [for (final tile in media) tile.toMap()],
+      'pollChoices': [for (final choice in pollChoices) choice.toMap()],
       'reactions': [for (final reaction in reactions) reaction.toMap()],
       'buttons': [for (final button in buttons) button.toMap()],
     },
@@ -288,6 +404,13 @@ class NativeChatItem {
         comments == other.comments &&
         audioId == other.audioId &&
         senderId == other.senderId &&
+        pollId == other.pollId &&
+        pollTotal == other.pollTotal &&
+        pollMultiple == other.pollMultiple &&
+        pollVoted == other.pollVoted &&
+        listEquals(spans, other.spans) &&
+        listEquals(media, other.media) &&
+        listEquals(pollChoices, other.pollChoices) &&
         listEquals(reactions, other.reactions) &&
         listEquals(buttons, other.buttons);
   }
@@ -311,8 +434,15 @@ class NativeChatItem {
     playing,
     replyText,
     senderId,
-    Object.hashAll(reactions),
-    Object.hashAll(buttons),
+    pollId,
+    pollVoted,
+    Object.hash(
+      Object.hashAll(spans),
+      Object.hashAll(media),
+      Object.hashAll(pollChoices),
+      Object.hashAll(reactions),
+      Object.hashAll(buttons),
+    ),
   );
 }
 
@@ -356,7 +486,10 @@ class NativeChatCallbacks {
   final void Function(String id, String emoji) onReaction;
   final ValueChanged<String> onSelect;
   final ValueChanged<String> onReplyJump;
-  final ValueChanged<String> onMedia;
+  final void Function(String id, int index) onMedia;
+  final ValueChanged<String> onLink;
+  final ValueChanged<int> onMention;
+  final void Function(String id, List<int> answers) onPoll;
   final void Function(String id, int index) onKeyboard;
   final ValueChanged<String> onTranscribe;
   final ValueChanged<String> onVoice;
@@ -376,6 +509,9 @@ class NativeChatCallbacks {
     required this.onSelect,
     required this.onReplyJump,
     required this.onMedia,
+    required this.onLink,
+    required this.onMention,
+    required this.onPoll,
     required this.onKeyboard,
     required this.onTranscribe,
     required this.onVoice,
@@ -467,7 +603,15 @@ class NativeChatController {
       case 'replyJump':
         if (id is String) callbacks.onReplyJump(id);
       case 'media':
-        if (id is String) callbacks.onMedia(id);
+        if (id is String) callbacks.onMedia(id, args['index'] is int ? args['index'] as int : 0);
+      case 'link':
+        final url = args['url'];
+        if (url is String && url.isNotEmpty) callbacks.onLink(url);
+      case 'mention':
+        final userId = args['userId'];
+        if (userId is int) callbacks.onMention(userId);
+      case 'poll':
+        if (id is String) callbacks.onPoll(id, _intIdsOf(args));
       case 'keyboard':
         final index = args['index'];
         if (id is String && index is int) callbacks.onKeyboard(id, index);
@@ -492,6 +636,15 @@ class NativeChatController {
         callbacks.onVisible(_idsOf(args));
     }
     return null;
+  }
+
+  static List<int> _intIdsOf(Map<String, Object?> args) {
+    final raw = args['answers'];
+    if (raw is! List) return const [];
+    return [
+      for (final value in raw)
+        if (value is int) value,
+    ];
   }
 
   static List<String> _idsOf(Map<String, Object?> args) {

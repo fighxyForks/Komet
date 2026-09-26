@@ -19,6 +19,26 @@ struct KometChatChrome {
   }
 }
 
+struct KometChatSpan {
+  let start: Int
+  let length: Int
+  let styles: [String]
+  let url: String?
+  let userId: Int?
+}
+
+struct KometChatMediaTile {
+  let url: String
+  let kind: String
+}
+
+struct KometChatPollChoice {
+  let id: Int
+  let text: String
+  let count: Int
+  let mine: Bool
+}
+
 struct KometChatReaction {
   let emoji: String
   let count: Int
@@ -65,6 +85,13 @@ struct KometChatMessage {
   let playing: Bool
   let comments: String?
   let senderId: Int?
+  let pollId: Int?
+  let pollTotal: Int?
+  let pollMultiple: Bool
+  let pollVoted: Bool
+  let spans: [KometChatSpan]
+  let media: [KometChatMediaTile]
+  let pollChoices: [KometChatPollChoice]
   let reactions: [KometChatReaction]
   let buttons: [KometChatButton]
 
@@ -81,6 +108,9 @@ struct KometChatMessage {
     }
     let reactionMaps = map["reactions"] as? [[String: Any]] ?? []
     let buttonMaps = map["buttons"] as? [[String: Any]] ?? []
+    let spanMaps = map["spans"] as? [[String: Any]] ?? []
+    let mediaMaps = map["media"] as? [[String: Any]] ?? []
+    let choiceMaps = map["pollChoices"] as? [[String: Any]] ?? []
     return KometChatMessage(
       id: id,
       role: role,
@@ -110,6 +140,32 @@ struct KometChatMessage {
       playing: (map["playing"] as? NSNumber)?.boolValue ?? false,
       comments: map["comments"] as? String,
       senderId: (map["senderId"] as? NSNumber)?.intValue,
+      pollId: (map["pollId"] as? NSNumber)?.intValue,
+      pollTotal: (map["pollTotal"] as? NSNumber)?.intValue,
+      pollMultiple: (map["pollMultiple"] as? NSNumber)?.boolValue ?? false,
+      pollVoted: (map["pollVoted"] as? NSNumber)?.boolValue ?? false,
+      spans: spanMaps.compactMap { raw in
+        guard let start = (raw["start"] as? NSNumber)?.intValue,
+              let length = (raw["length"] as? NSNumber)?.intValue, length > 0 else { return nil }
+        return KometChatSpan(
+          start: start,
+          length: length,
+          styles: (raw["styles"] as? [Any])?.compactMap { $0 as? String } ?? [],
+          url: raw["url"] as? String,
+          userId: (raw["userId"] as? NSNumber)?.intValue)
+      },
+      media: mediaMaps.compactMap { raw in
+        guard let url = raw["url"] as? String, !url.isEmpty else { return nil }
+        return KometChatMediaTile(url: url, kind: raw["kind"] as? String ?? "photo")
+      },
+      pollChoices: choiceMaps.compactMap { raw in
+        guard let text = raw["text"] as? String else { return nil }
+        return KometChatPollChoice(
+          id: (raw["id"] as? NSNumber)?.intValue ?? 0,
+          text: text,
+          count: (raw["count"] as? NSNumber)?.intValue ?? 0,
+          mine: (raw["mine"] as? NSNumber)?.boolValue ?? false)
+      },
       reactions: reactionMaps.compactMap { raw in
         guard let emoji = raw["emoji"] as? String, !emoji.isEmpty else { return nil }
         return KometChatReaction(
