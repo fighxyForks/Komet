@@ -18,7 +18,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'backend/api.dart';
 import 'core/cache/info_cache.dart';
-import 'core/plugins/plugin_store.dart';
+import 'core/plugins/plugin_bootstrap.dart';
 import 'core/config/build_profile.dart';
 import 'core/utils/app_foreground.dart';
 import 'core/utils/logger.dart';
@@ -296,7 +296,7 @@ void main(List<String> args) async {
   E2eeService.instance.attach(messagesModule);
   await KometSettings.load();
   await AppLock.instance.load();
-  await PluginStore.instance.load();
+  await loadPlugins();
   CommandRegistry.instance.initialize();
   if (KometSettings.ghostMode.value) SelfPresence.markOffline();
   await ContactCache.load();

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../widgets/glass/ios_settings_scaffold.dart';
 import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 
-
 import '../../../core/config/build_profile.dart';
 import '../../../core/config/komet_settings.dart';
+import '../../../core/plugins/plugin_availability.dart';
 import '../../../main.dart';
 import '../../widgets/section_header.dart';
 import '../../widgets/settings_card.dart';
@@ -16,7 +16,6 @@ class KometSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return IosSettingsScaffold(
       title: 'Komet',
       body: SafeArea(
@@ -32,14 +31,18 @@ class KometSettingsScreen extends StatelessWidget {
             ),
             SettingsCard(
               children: [
-                SettingsNavTile(
-                  icon: IosSymbols.extension(context),
-                  label: 'Плагины',
-                  onTap: () => Navigator.push(
-                    context,
-                    iosPageRoute(context, builder: (_) => const PluginsScreen()),
+                if (kPluginsCompiled)
+                  SettingsNavTile(
+                    icon: IosSymbols.extension(context),
+                    label: 'Плагины',
+                    onTap: () => Navigator.push(
+                      context,
+                      iosPageRoute(
+                        context,
+                        builder: (_) => const PluginsScreen(),
+                      ),
+                    ),
                   ),
-                ),
                 if (BuildProfile.hiddenContentViewers) ...[
                   ValueListenableBuilder<bool>(
                     valueListenable: KometSettings.viewDeleted,

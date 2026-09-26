@@ -2,12 +2,14 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'plugin_availability.dart';
+
 class PluginStorage {
   PluginStorage(this.pluginId);
 
   final String pluginId;
 
-  String get _key => 'plugin_storage_v1_$pluginId';
+  String get _key => '$kPluginStoragePrefix$pluginId';
 
   Future<Map<String, dynamic>> _readAll() async {
     final prefs = await SharedPreferences.getInstance();

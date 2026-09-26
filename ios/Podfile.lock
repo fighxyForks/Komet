@@ -44,9 +44,6 @@ PODS:
   - file_picker (0.0.1):
     - DKImagePickerController/PhotoGallery
     - Flutter
-  - fjs (3.3.0):
-    - Flutter
-    - FlutterMacOS
   - Flutter (1.0.0)
   - flutter_contacts (0.0.1):
     - Flutter
@@ -129,7 +126,6 @@ DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
-  - fjs (from `.symlinks/plugins/fjs/darwin`)
   - Flutter (from `Flutter`)
   - flutter_contacts (from `.symlinks/plugins/flutter_contacts/ios`)
   - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
@@ -180,8 +176,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/device_info_plus/ios"
   file_picker:
     :path: ".symlinks/plugins/file_picker/ios"
-  fjs:
-    :path: ".symlinks/plugins/fjs/darwin"
   Flutter:
     :path: Flutter
   flutter_contacts:
@@ -246,7 +240,6 @@ SPEC CHECKSUMS:
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
   file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
-  fjs: d716489ab0d8e581c40075a32a6652f6fd696f1a
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_contacts: 5383945387e7ca37cf963d4be57c21f2fc15ca9f
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
@@ -279,6 +272,6 @@ SPEC CHECKSUMS:
   wakelock_plus: e29112ab3ef0b318e58cfa5c32326458be66b556
   WebRTC-SDK: e6006119cd730d6315d875e4a421b6cc8bb88833
 
-PODFILE CHECKSUM: c862eaa263a897310473433b9f171964a10360d6
+PODFILE CHECKSUM: fb19fe17dc8b25d63a1d86669ea88dbcc8ffd7cc
 
 COCOAPODS: 1.16.2

@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../storage/app_instance.dart';
+import 'plugin_availability.dart';
 import 'plugin_manifest.dart';
 import 'plugin_models.dart';
 import 'plugin_package.dart';
@@ -17,7 +18,7 @@ class PluginStore {
   PluginStore._();
 
   static final PluginStore instance = PluginStore._();
-  static const _stateKey = 'plugins_state_v1';
+  static const _stateKey = kPluginStateKey;
   static const _bundled = <String>[
     'assets/plugins/info',
     'assets/plugins/nekos',
