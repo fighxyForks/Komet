@@ -8,9 +8,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../core/stories/story_playback.dart';
 import '../../../core/utils/haptics.dart';
 import '../../../core/media/video_request_headers.dart';
 import '../../../main.dart' show api, storiesModule;
+import '../../widgets/glass/ios_glass.dart';
+import 'native_story_viewer_page.dart';
 import '../../../models/story.dart';
 import '../../widgets/komet_avatar.dart';
 import '../../widgets/small_spinner.dart';
@@ -37,17 +40,30 @@ Future<void> openStoryViewer(
   Map<int, StoryOwnerInfo> ownerOverrides = const {},
   Offset? origin,
 }) {
+  final native = IosGlass.of(context);
   return Navigator.of(context).push(
     PageRouteBuilder(
       opaque: false,
-      transitionDuration: const Duration(milliseconds: 420),
-      reverseTransitionDuration: const Duration(milliseconds: 320),
-      pageBuilder: (_, _, _) => StoryViewerScreen(
-        previews: previews,
-        initialIndex: initialIndex,
-        ownerOverrides: ownerOverrides,
-      ),
+      transitionDuration: native
+          ? Duration.zero
+          : const Duration(milliseconds: 420),
+      reverseTransitionDuration: native
+          ? Duration.zero
+          : const Duration(milliseconds: 320),
+      pageBuilder: (_, _, _) => native
+          ? NativeStoryViewerPage(
+              previews: previews,
+              initialIndex: initialIndex,
+              ownerOverrides: ownerOverrides,
+              origin: origin,
+            )
+          : StoryViewerScreen(
+              previews: previews,
+              initialIndex: initialIndex,
+              ownerOverrides: ownerOverrides,
+            ),
       transitionsBuilder: (context, animation, _, child) {
+        if (native) return child;
         return AnimatedBuilder(
           animation: animation,
           child: child,
@@ -193,15 +209,12 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
   }
 
   int _resumeIndex(int index, List<Story> stories) {
-    if (stories.isEmpty) return 0;
     final preview = widget.previews[index];
-    final read = preview.readCount;
-    final firstUnread = (read > 0 && read < stories.length) ? read : 0;
-    final savedId = storiesModule.lastViewedStoryId(preview.owner.ownerId);
-    if (savedId == null) return firstUnread;
-    final saved = stories.indexWhere((s) => s.id == savedId);
-    if (saved <= firstUnread || saved >= stories.length - 1) return firstUnread;
-    return saved;
+    return storyResumeIndex(
+      readCount: preview.readCount,
+      storyIds: [for (final story in stories) story.id],
+      savedId: storiesModule.lastViewedStoryId(preview.owner.ownerId),
+    );
   }
 
   void _startStory(int index) {
@@ -730,14 +743,8 @@ class _TopScrim extends StatelessWidget {
   }
 }
 
-String _timeAgo(int epochTime) {
-  final ms = epochTime < 1000000000000 ? epochTime * 1000 : epochTime;
-  final diff = (DateTime.now().millisecondsSinceEpoch - ms) ~/ 1000;
-  if (diff < 60) return 'только что';
-  if (diff < 3600) return '${diff ~/ 60} мин';
-  if (diff < 86400) return '${diff ~/ 3600} ч';
-  return '${diff ~/ 86400} дн';
-}
+String _timeAgo(int epochTime) =>
+    storyTimeLabel(epochTime, DateTime.now().millisecondsSinceEpoch);
 
 // #***! превью декодируется один раз на историю: вертикальный свайп гонит
 // setState каждый кадр, а новый MemoryImage заставлял бы заново раскодировать

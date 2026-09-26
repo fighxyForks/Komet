@@ -12,7 +12,6 @@ import '../../../core/protocol/packet.dart';
 import '../../../core/transport/traffic_monitor.dart';
 import '../../../core/utils/format.dart';
 import '../../widgets/custom_notification.dart';
-import '../../../core/config/app_fonts.dart';
 import '../../../core/config/app_shape.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/glass_controls.dart';
@@ -139,33 +138,10 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
   }
 
   Widget _topBar(ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(IosSymbols.chevronBack(context),
-              color: cs.onSurface,
-              size: 24,
-              weight: 400,
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              'Монитор трафика',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: cs.onSurface,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                fontFamily: displayFontOf(context),
-              ),
-            ),
-          ),
-          AnimatedBuilder(
+    return IosSettingsInlineBar(
+      title: 'Монитор трафика',
+      trailing: [
+        AnimatedBuilder(
             animation: _monitor,
             builder: (context, _) {
               final empty = _monitor.entries.isEmpty;
@@ -198,8 +174,7 @@ class _TrafficMonitorScreenState extends State<TrafficMonitorScreen> {
               );
             },
           ),
-        ],
-      ),
+      ],
     );
   }
 

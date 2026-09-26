@@ -99,4 +99,4 @@ jobs:
       - name: Build iOS (no codesign)
         run: |
           flutter config --no-enable-swift-package-manager
-          flutter build ios --release --no-codesign --obfuscate --split-debug-info=build/ios-symbols
+          flutter build ios --release --no-codesign --obfuscate --split-debug-info=build/ios-symbols --dart-define=KOMET_PLUGINS=false --dart-define=KOMET_APPSTORE=true --dart-define=KOMET_SELF_UPDATE=false

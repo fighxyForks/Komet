@@ -97,6 +97,11 @@ class ChatScrollNavigator {
 
   bool _scrollDownVisible = false;
   final ValueNotifier<int> newMessageCount = ValueNotifier(0);
+
+  /// Set while the UIKit transcript reports its own edge. Ignored once the
+  /// Flutter list attaches a scroll position.
+  bool? nativeNearBottom;
+  VoidCallback? nativeScrollToEnd;
   bool _clearCountScheduled = false;
 
   bool get busy => _busy > 0;
@@ -372,6 +377,19 @@ class ChatScrollNavigator {
   }
 
   void scrollToBottom() {
+    if (nativeNearBottom != null && !scrollController.hasClients) {
+      flushDeferredMessages();
+      _returnStack.clear();
+      newMessageCount.value = 0;
+      if (chatController.hasNewer) {
+        unawaited(_returnToLatest());
+        return;
+      }
+      nativeScrollToEnd?.call();
+      nativeNearBottom = true;
+      updateScrollDownVisible();
+      return;
+    }
     flushDeferredMessages();
     _returnStack.clear();
     newMessageCount.value = 0;
@@ -465,6 +483,9 @@ class ChatScrollNavigator {
   }
 
   bool isNearBottom() {
+    if (nativeNearBottom != null && !scrollController.hasClients) {
+      return nativeNearBottom! && !chatController.hasNewer;
+    }
     if (chatController.hasNewer) return false;
     if (!scrollController.hasClients) return true;
     final pos = scrollController.position;
@@ -478,6 +499,19 @@ class ChatScrollNavigator {
   }
 
   void updateScrollDownVisible() {
+    if (nativeNearBottom != null && !scrollController.hasClients) {
+      final atBottom = nativeNearBottom!;
+      if (atBottom && (newMessageCount.value > 0 || hasDeferredMessages())) {
+        clearNewMessageCountSoon();
+      }
+      _setScrollDownVisible(
+        !atBottom ||
+            chatController.hasNewer ||
+            _returnStack.isNotEmpty ||
+            newMessageCount.value > 0,
+      );
+      return;
+    }
     if (!scrollController.hasClients) {
       _setScrollDownVisible(
         newMessageCount.value > 0 || chatController.hasNewer,

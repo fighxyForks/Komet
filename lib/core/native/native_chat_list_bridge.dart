@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../config/app_ios_glass.dart';
-import '../config/app_native_chat_list_prototype.dart';
 
 enum NativeChatAction { markRead, pin, unpin, mute, unmute, archive, delete }
 
@@ -282,6 +281,8 @@ class NativeChatListCallbacks {
   final VoidCallback onArchive;
   final ValueChanged<String> onFolder;
   final void Function(String id, Rect anchor) onFolderMenu;
+  final ValueChanged<int> onPeek;
+  final VoidCallback onSearch;
 
   const NativeChatListCallbacks({
     required this.onOpen,
@@ -298,6 +299,8 @@ class NativeChatListCallbacks {
     required this.onArchive,
     required this.onFolder,
     required this.onFolderMenu,
+    required this.onPeek,
+    required this.onSearch,
   });
 }
 
@@ -429,6 +432,11 @@ class NativeChatListController {
       case 'folderMenu':
         final id = args['id'];
         if (id is String) callbacks.onFolderMenu(id, _rectOf(args));
+      case 'peek':
+        final id = args['id'];
+        if (id is int) callbacks.onPeek(id);
+      case 'search':
+        callbacks.onSearch();
     }
     return null;
   }
@@ -463,7 +471,7 @@ class NativeChatListBridge {
       if (kIsWeb) return false;
       if (defaultTargetPlatform != TargetPlatform.iOS) return false;
     }
-    return AppNativeChatListPrototype.enabled.value && AppIosGlass.active.value;
+    return AppIosGlass.active.value;
   }
 
   @visibleForTesting
@@ -471,8 +479,5 @@ class NativeChatListBridge {
     debugAvailable = null;
   }
 
-  static Listenable get eligibility => Listenable.merge([
-    AppNativeChatListPrototype.enabled,
-    AppIosGlass.active,
-  ]);
+  static Listenable get eligibility => AppIosGlass.active;
 }

@@ -126,11 +126,25 @@ enum KometChatListStyle {
       withConfiguration: UIImage.SymbolConfiguration(pointSize: size, weight: weight))
   }
 
+  static func kindImage(_ kind: String?) -> UIImage? {
+    if kind == "bot", let source = UIImage(named: "BotIcon") {
+      let side: CGFloat = 13
+      let format = UIGraphicsImageRendererFormat()
+      format.opaque = false
+      let rendered = UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format)
+        .image { _ in
+          source.draw(in: CGRect(x: 0, y: 0, width: side, height: side))
+        }
+      return rendered.withRenderingMode(.alwaysTemplate)
+    }
+    return kindSymbol(kind).flatMap { symbol($0, size: 13, weight: .semibold) }
+  }
+
   static func kindSymbol(_ kind: String?) -> String? {
     switch kind {
     case "channel": return "megaphone.fill"
     case "group": return "person.2.fill"
-    case "bot": return "cpu"
+    case "bot": return nil
     default: return nil
     }
   }

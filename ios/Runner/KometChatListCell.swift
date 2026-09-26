@@ -150,9 +150,7 @@ final class KometChatListCell: UICollectionViewCell {
       }
     }
 
-    kindIcon.image = KometChatListStyle.kindSymbol(row.kind).flatMap {
-      KometChatListStyle.symbol($0, size: 13, weight: .semibold)
-    }
+    kindIcon.image = KometChatListStyle.kindImage(row.kind)
     kindIcon.isHidden = kindIcon.image == nil
     titleLabel.text = row.title
     mutedIcon.isHidden = !row.muted

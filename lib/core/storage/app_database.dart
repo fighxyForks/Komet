@@ -1220,11 +1220,15 @@ class AppDatabase {
     );
   }
 
+  static String foldSearch(String value) =>
+      value.toLowerCase().replaceAll('ё', 'е');
+
   static bool contactMatches(Map<String, dynamic> row, String foldedTerm) {
     final first = (row['first_name'] as String?)?.trim() ?? '';
     final last = (row['last_name'] as String?)?.trim() ?? '';
-    return '$first $last'.toLowerCase().contains(foldedTerm) ||
-        '$last $first'.toLowerCase().contains(foldedTerm) ||
+    final folded = foldSearch(foldedTerm);
+    return foldSearch('$first $last').contains(folded) ||
+        foldSearch('$last $first').contains(folded) ||
         (row['phone']?.toString() ?? '').contains(foldedTerm);
   }
 
@@ -1259,8 +1263,31 @@ class AppDatabase {
       whereArgs: [accountId],
       orderBy: 'last_event_time DESC',
     );
+    final folded = foldSearch(term);
     return rows
-        .where((row) => (row['title'] as String).toLowerCase().contains(term))
+        .where((row) => foldSearch(row['title'] as String).contains(folded))
+        .take(limit)
+        .toList();
+  }
+
+  static Future<List<Map<String, dynamic>>> searchLocalMessages(
+    int accountId,
+    String query, {
+    int limit = 30,
+  }) async {
+    final folded = foldSearch(query.trim());
+    if (folded.isEmpty) return const [];
+    final db = await _instance;
+    final rows = await db.query(
+      'messages',
+      columns: ['id', 'chat_id', 'text', 'time', 'sender_id'],
+      where: 'account_id = ? AND deleted = 0 AND text IS NOT NULL',
+      whereArgs: [accountId],
+      orderBy: 'time DESC',
+      limit: 400,
+    );
+    return rows
+        .where((row) => foldSearch(row['text'] as String? ?? '').contains(folded))
         .take(limit)
         .toList();
   }

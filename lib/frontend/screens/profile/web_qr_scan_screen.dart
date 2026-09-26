@@ -72,11 +72,10 @@ class _WebQrScanScreenState extends State<WebQrScanScreen> {
           icon: Icon(IosSymbols.chevronLeft(context), size: 28),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           'QR для веба и ПК',
           style: TextStyle(
-            fontFamily: displayFontOf(context),
-            fontSize: 20,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),

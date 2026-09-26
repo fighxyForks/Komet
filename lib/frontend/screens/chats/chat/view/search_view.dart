@@ -17,6 +17,7 @@ import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/komet_avatar.dart';
 import 'package:komet/frontend/widgets/small_spinner.dart';
 import 'package:komet/frontend/screens/chats/chat/chat_search_controller.dart';
+import 'package:komet/frontend/native/native_chat_search.dart';
 import 'package:komet/frontend/screens/chats/chat/message_search_result.dart';
 import '../../../../../core/config/app_fonts.dart';
 
@@ -178,6 +179,7 @@ class SearchOverlay extends StatelessWidget {
     required this.onOpenResult,
     required this.senderName,
     required this.senderAvatar,
+    this.useNative = false,
   });
 
   final ColorScheme cs;
@@ -186,6 +188,7 @@ class SearchOverlay extends StatelessWidget {
   final void Function(MessageSearchResult) onOpenResult;
   final String Function(int) senderName;
   final String? Function(int) senderAvatar;
+  final bool useNative;
 
   @override
   Widget build(BuildContext context) {
@@ -222,6 +225,14 @@ class SearchOverlay extends StatelessWidget {
           ValueListenableBuilder<List<MessageSearchResult>>(
             valueListenable: search.results,
             builder: (context, results, _) {
+              if (useNative) {
+                return NativeChatSearchResults(
+                  search: search,
+                  senderName: senderName,
+                  senderAvatar: senderAvatar,
+                  onOpen: onOpenResult,
+                );
+              }
               if (results.isNotEmpty) {
                 return ListView.builder(
                   keyboardDismissBehavior:

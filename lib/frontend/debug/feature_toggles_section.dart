@@ -10,11 +10,7 @@ import '../../core/config/app_phonebook_names.dart';
 import '../../core/config/app_pranks.dart';
 import '../../core/config/app_show_extra_info.dart';
 import '../../core/config/app_stories.dart';
-import '../../core/config/app_native_sheet_prototype.dart';
-import '../../core/config/app_native_chat_list_prototype.dart';
-import '../../core/config/app_native_lists_prototype.dart';
-import '../../core/config/app_native_tab_minimize_prototype.dart';
-import '../../core/config/app_ios_glass.dart';
+
 import '../../core/config/app_swipe_back_desktop.dart';
 import '../../core/config/app_video_note_quality.dart';
 import '../../core/contacts/device_contacts_service.dart';
@@ -230,50 +226,6 @@ class DebugFeatureTogglesSection extends StatelessWidget {
             onChanged: AppStories.save,
           ),
         ),
-        if (AppIosGlass.supported) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: DebugToggleTile(
-              icon: IosSymbols.layers(context),
-              title: 'Native attachment sheet',
-              subtitle: (_) =>
-                  'Эксперимент: UISheetPresentationController (iOS 26+)',
-              valueListenable: AppNativeSheetPrototype.enabled,
-              onChanged: AppNativeSheetPrototype.save,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: DebugToggleTile(
-              icon: IosSymbols.animation(context),
-              title: 'Native tab minimize',
-              subtitle: (_) =>
-                  'Эксперимент: сворачивание таб-бара + полоска звонка',
-              valueListenable: AppNativeTabMinimizePrototype.enabled,
-              onChanged: AppNativeTabMinimizePrototype.save,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: DebugToggleTile(
-              icon: IosSymbols.chatBubble(context),
-              title: 'Native chat list',
-              subtitle: (_) => 'Эксперимент: список чатов на UIKit',
-              valueListenable: AppNativeChatListPrototype.enabled,
-              onChanged: AppNativeChatListPrototype.save,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: DebugToggleTile(
-              icon: IosSymbols.phone(context),
-              title: 'Native calls & contacts',
-              subtitle: (_) => 'Эксперимент: звонки и контакты на UIKit',
-              valueListenable: AppNativeListsPrototype.enabled,
-              onChanged: AppNativeListsPrototype.save,
-            ),
-          ),
-        ],
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Material(

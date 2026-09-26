@@ -23,6 +23,11 @@ void main() {
     expect(AppDatabase.contactMatches(masha, '9990000001'), isTrue);
   });
 
+  test('ё and е match the same name', () {
+    expect(AppDatabase.contactMatches(_contact('Пётр', 'Ёлкин', 1), 'петр елкин'), isTrue);
+    expect(AppDatabase.contactMatches(_contact('Петр', 'Елкин', 1), 'пётр'), isTrue);
+  });
+
   test('unrelated query does not match', () {
     expect(AppDatabase.contactMatches(masha, 'пётр'), isFalse);
   });

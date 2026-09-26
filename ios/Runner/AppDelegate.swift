@@ -47,8 +47,18 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
       registerAppearance(messenger)
       registerAccessibility(messenger)
       registerNativeSheet(messenger)
-      registerNativeTabChrome(messenger)
       registerNativeChatList(messenger, host: controller)
+      registerNativeChat(messenger, host: controller)
+      registerNativeSearch(messenger)
+      registerNativeChatHeader(messenger)
+      registerNativeChatComposer(messenger)
+      registerNativeContactCard(messenger)
+      registerNativeEmoji(messenger)
+      registerNativeProfileActions(messenger)
+      registerNativeStoryEditor(messenger)
+      registerNativeStoryViewer(messenger)
+      registerNativeSettings(messenger)
+      registerNativeChatSearch(messenger)
       registerNativeList(messenger, host: controller)
       method("ru.komet.app/native_alert", messenger) { call, result in
         KometNativeAlert.shared.handle(call, result: result)
@@ -214,22 +224,84 @@ final class KometStreamHandler: NSObject, FlutterStreamHandler {
     }
   }
 
-  private func registerNativeTabChrome(_ messenger: FlutterBinaryMessenger) {
-    method("ru.komet.app/native_tab_chrome", messenger) { call, result in
-      KometTabChrome.shared.handle(call, result: result)
-    }
-    KometTabChrome.shared.bindMessenger(messenger)
-    let factory = KometTabChromeViewFactory(messenger: messenger)
-    registrar(forPlugin: "KometTabChrome")?.register(
-      factory,
-      withId: "ru.komet.app/native_tab_chrome_view")
-  }
-
   private func registerNativeChatList(_ messenger: FlutterBinaryMessenger,
                                       host: UIViewController) {
     registrar(forPlugin: "KometChatList")?.register(
       KometChatListViewFactory(messenger: messenger, host: host),
       withId: "ru.komet.app/native_chat_list")
+  }
+
+  private func registerNativeChat(_ messenger: FlutterBinaryMessenger,
+                                  host: UIViewController) {
+    registrar(forPlugin: "KometChat")?.register(
+      KometChatViewFactory(messenger: messenger, host: host),
+      withId: "ru.komet.app/native_chat")
+  }
+
+  private func registerNativeSearch(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometSearch")?.register(
+      KometSearchViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_search")
+  }
+
+  private func registerNativeChatHeader(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometChatHeader")?.register(
+      KometChatHeaderViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_chat_header")
+  }
+
+  private func registerNativeChatComposer(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometChatComposer")?.register(
+      KometChatComposerViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_chat_composer")
+  }
+
+  private func registerNativeContactCard(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometContactCard")?.register(
+      KometContactCardViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_contact_card")
+  }
+
+  private func registerNativeEmoji(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometEmoji")?.register(
+      KometEmojiPanelViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_emoji")
+  }
+
+  private func registerNativeProfileActions(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometProfileActions")?.register(
+      KometProfileActionsViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_profile_actions")
+  }
+
+  private func registerNativeStoryEditor(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometStoryEditor")?.register(
+      KometStoryEditorViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_story_editor")
+  }
+
+  private func registerNativeStoryViewer(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometStoryViewer")?.register(
+      KometStoryViewerViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_story_viewer")
+  }
+
+  private func registerNativeSettings(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometSettings")?.register(
+      KometSettingsViewFactory(messenger: messenger),
+      withId: "ru.komet.app/native_settings")
+  }
+
+  private func registerNativeChatSearch(_ messenger: FlutterBinaryMessenger) {
+    registrar(forPlugin: "KometChatSearchBar")?.register(
+      KometChatSearchBarFactory(messenger: messenger),
+      withId: "ru.komet.app/native_chat_search_bar")
+    registrar(forPlugin: "KometChatSearchResults")?.register(
+      KometChatSearchResultsFactory(messenger: messenger),
+      withId: "ru.komet.app/native_chat_search_results")
+    registrar(forPlugin: "KometPinnedBanner")?.register(
+      KometPinnedBannerFactory(messenger: messenger),
+      withId: "ru.komet.app/native_chat_pinned")
   }
 
   private func registerNativeList(_ messenger: FlutterBinaryMessenger, host: UIViewController) {

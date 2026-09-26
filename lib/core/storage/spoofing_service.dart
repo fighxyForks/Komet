@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/device_presets.dart';
+import '../config/ios_client.dart';
 import '../../models/spoof_profile.dart';
 import 'token_storage.dart';
 import '../utils/ids.dart';
@@ -91,6 +92,9 @@ class SpoofingService {
   static Future<SpoofProfile> prepareNewAccountSpoof(
     List<int> existingAccountIds,
   ) async {
+    if (IosClient.reportsRealDevice) {
+      return const SpoofProfile(enabled: false);
+    }
     final prefs = await SharedPreferences.getInstance();
 
     final used = <String>{};
@@ -142,6 +146,7 @@ class SpoofingService {
   static Future<Map<String, dynamic>?> getSpoofedSessionData({
     String? scope,
   }) async {
+    if (IosClient.reportsRealDevice) return null;
     final prefs = await SharedPreferences.getInstance();
     final profile = await _read(prefs, scope ?? await activeScope());
     if (profile == null || !profile.enabled) return null;
@@ -171,6 +176,7 @@ class SpoofingService {
 
   // #***! вебвью должно быть тем же устройством что и сокет
   static Future<String?> getWebViewUserAgent() async {
+    if (IosClient.reportsRealDevice) return null;
     final prefs = await SharedPreferences.getInstance();
     final profile = await _read(prefs, await activeScope());
     if (profile == null || !profile.enabled) return null;

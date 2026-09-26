@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../config/app_ios_glass.dart';
-import '../config/app_native_sheet_prototype.dart';
 import '../config/ios_reduce_transparency.dart';
 import '../../frontend/widgets/glass/ios_glass.dart';
 
@@ -27,7 +26,6 @@ class NativeSheetBridge {
       if (kIsWeb) return false;
       if (defaultTargetPlatform != TargetPlatform.iOS) return false;
     }
-    if (!AppNativeSheetPrototype.enabled.value) return false;
     if (!AppIosGlass.active.value) return false;
     if (!AppIosGlass.nativeViews) return false;
     if (IosReduceTransparency.value) return false;

@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:komet/backend/modules/messages.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -12,6 +14,7 @@ import 'package:flutter/gestures.dart';
 import 'chat_preview_card.dart';
 import 'chat_preview_overlay.dart';
 import 'chat_screen.dart';
+import 'native_search_page.dart';
 import 'search_screen.dart';
 import 'create_channel_flow.dart';
 import 'create_group_flow.dart';
@@ -26,14 +29,9 @@ import '../../widgets/encryption_lock_badge.dart';
 import '../../widgets/online_dot.dart';
 import '../../widgets/custom_notification.dart';
 import '../../widgets/chat_menu_overlay.dart';
-import '../../../core/calls/active_call.dart';
-import '../calls/call_screen.dart';
 import '../../../core/config/app_ios_glass.dart';
-import '../../../core/config/app_native_tab_minimize_prototype.dart';
-import '../../native/native_tab_chrome.dart';
 import '../../../core/native/native_chat_list_bridge.dart';
 import '../../../core/native/native_list_bridge.dart';
-import '../../../core/native/native_tab_chrome_bridge.dart';
 import '../../native/native_chat_list_view.dart';
 import '../../../core/utils/perf_trace.dart';
 import '../../widgets/glass/glass_capsule.dart';
@@ -116,6 +114,7 @@ import '../../widgets/attachment/attachment_sheet.dart';
 import '../../widgets/spectrum_background.dart';
 import '../../widgets/spectrum_tint.dart';
 import '../../widgets/update_dialog.dart';
+import '../stories/native_story_editor_page.dart';
 import '../stories/story_composer_screen.dart';
 import '../stories/story_owner_info.dart';
 import '../../../backend/modules/webapp.dart';
@@ -131,7 +130,6 @@ import '../../../core/config/app_fonts.dart';
 import '../lock/lock_glyph.dart';
 import '../../../core/security/app_lock.dart';
 import '../../widgets/glass/ios_sheet.dart';
-import '../../widgets/glass/ios_route.dart';
 import '../../widgets/glass/ios_symbols.dart';
 
 const String _savedWelcomeKey = 'welcome.saved.dialog.message';
@@ -1768,10 +1766,6 @@ class _ChatListScreenState extends State<ChatListScreen>
       if (!_listScrollActive.value) {
         _listScrollActive.value = true;
       }
-      if (n is ScrollUpdateNotification &&
-          AppNativeTabMinimizePrototype.enabled.value) {
-        NativeTabChromeBridge.onScrollDelta(n.scrollDelta ?? 0);
-      }
     } else if (ending) {
       _listScrollOpaqueHold?.cancel();
       _listScrollOpaqueHold = Timer(const Duration(milliseconds: 120), () {
@@ -2615,39 +2609,6 @@ class _ChatListScreenState extends State<ChatListScreen>
   ) {
     final ios = IosGlass.of(context);
     final badges = ios ? [_iosChatsBadge()] : const <String?>[];
-    if (ios &&
-        AppIosGlass.nativeViews &&
-        AppNativeTabMinimizePrototype.enabled.value) {
-      return AnimatedPositioned(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        left: 0,
-        right: 0,
-        bottom: _hidesBottomNav ? -140 : bottomInset,
-        child: NativeTabChromeHost(
-          items: _iosNavItems,
-          currentIndex: _currentNavIndex,
-          height: 96,
-          onTap: _onNavTabSelected,
-          onCallAccessoryTap: () {
-            final active = ActiveCall.instance.current.value;
-            if (active == null) return;
-            final nav = Navigator.of(context, rootNavigator: true);
-            nav.push(
-              iosPageRoute(
-                context,
-                builder: (_) => CallScreen(
-                  name: active.name,
-                  avatarUrl: active.avatarUrl,
-                  session: active.session,
-                  isGroup: active.isGroup,
-                ),
-              ),
-            );
-          },
-        ),
-      );
-    }
     if (ios && AppIosGlass.nativeViews) {
       return AnimatedPositioned(
         duration: const Duration(milliseconds: 300),
@@ -3399,6 +3360,10 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   Future<void> _composeStory() async {
+    if (IosGlass.of(context)) {
+      await _composeStoryNative();
+      return;
+    }
     await showAttachmentSheet(
       context,
       title: 'Новая история',
@@ -3429,6 +3394,65 @@ class _ChatListScreenState extends State<ChatListScreen>
           ),
         );
       },
+    );
+  }
+
+  Future<void> _composeStoryNative() async {
+    final choice = await showCupertinoModalPopup<String>(
+      context: context,
+      builder: (sheetContext) => CupertinoActionSheet(
+        title: const Text('Новая история'),
+        actions: [
+          if (storiesModule.previewFor(_profile?.id ?? 0)?.isEmpty == false)
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.of(sheetContext).pop('view'),
+              child: const Text('Смотреть'),
+            ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop('gallery-photo'),
+            child: const Text('Выбрать фото'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop('gallery-video'),
+            child: const Text('Выбрать видео'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop('camera-photo'),
+            child: const Text('Снять фото'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop('camera-video'),
+            child: const Text('Снять видео'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(sheetContext).pop(),
+          child: const Text('Отмена'),
+        ),
+      ),
+    );
+    if (!mounted || choice == null) return;
+    if (choice == 'view') {
+      _openStoriesForOwner(_profile?.id ?? 0);
+      return;
+    }
+    final picker = ImagePicker();
+    final video = choice.endsWith('video');
+    final camera = choice.startsWith('camera');
+    final picked = video
+        ? await picker.pickVideo(
+            source: camera ? ImageSource.camera : ImageSource.gallery,
+          )
+        : await picker.pickImage(
+            source: camera ? ImageSource.camera : ImageSource.gallery,
+          );
+    if (!mounted || picked == null) return;
+    await pushSwipeable(
+      context,
+      (_) => NativeStoryEditorPage(
+        file: File(picked.path),
+        isVideo: video,
+      ),
     );
   }
 
@@ -3720,14 +3744,21 @@ class _ChatListScreenState extends State<ChatListScreen>
           onSelection: (_) {},
           onBulk: _onNativeBulk,
           onReorderPinned: (ids) => unawaited(_reorderPinned(ids)),
-          onStory: (ownerId, avatar) =>
-              _openStoriesForOwner(ownerId, avatar.center),
+          onStory: (ownerId, avatar) {
+            if (ownerId == _profile?.id) {
+              unawaited(_composeStory());
+              return;
+            }
+            _openStoriesForOwner(ownerId, avatar.center);
+          },
           onAddStory: () => unawaited(_composeStory()),
           onArchive: () => pushSwipeable(
             context,
             (_) => const ChatListScreen(archiveMode: true),
           ),
           onFolder: (id) => _selectFolder(id),
+          onPeek: _peekNativeChat,
+          onSearch: _openSearch,
           onFolderMenu: (id, _) {
             for (final folder in _folders) {
               if (folder.id == id) {
@@ -4312,6 +4343,30 @@ class _ChatListScreenState extends State<ChatListScreen>
     final box = context.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return null;
     return box.localToGlobal(Offset.zero) & box.size;
+  }
+
+  void _peekNativeChat(int chatId) {
+    final chat = _chatById(chatId);
+    if (chat == null) return;
+    final facts = _rowFacts(chat);
+    unawaited(
+      showChatPreview(
+        context,
+        chatId: chatId,
+        name: facts.name,
+        imageUrl: facts.imageUrl,
+        chatType: facts.chatType,
+        hasUnread: facts.unreadCount > 0,
+        onOpen: () => _openChatFromList(
+          chatId.toString(),
+          facts.name,
+          facts.imageUrl,
+          facts.chatType,
+          animateIn: false,
+        ),
+        onMarkRead: () => _markChatRead(chatId),
+      ),
+    );
   }
 
   void _previewChat(
@@ -5168,8 +5223,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
-  void _openSearch() =>
-      unawaited(pushSwipeable(context, (_) => const SearchScreen()));
+  void _openSearch() {
+    final page = IosGlass.of(context)
+        ? const NativeSearchPage()
+        : const SearchScreen();
+    unawaited(pushSwipeable(context, (_) => page));
+  }
 
   void _openSavedMessages() {
     CachedChat? self;

@@ -18,7 +18,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'backend/api.dart';
 import 'core/cache/info_cache.dart';
-import 'core/plugins/plugin_store.dart';
+import 'core/plugins/plugin_bootstrap.dart';
 import 'core/config/build_profile.dart';
 import 'core/utils/app_foreground.dart';
 import 'core/utils/logger.dart';
@@ -56,10 +56,6 @@ import 'core/config/app_media_cache.dart';
 import 'core/config/app_video_note_quality.dart';
 import 'core/config/app_pill_gradient.dart';
 import 'core/config/app_ios_glass.dart';
-import 'core/config/app_native_sheet_prototype.dart';
-import 'core/config/app_native_chat_list_prototype.dart';
-import 'core/config/app_native_lists_prototype.dart';
-import 'core/config/app_native_tab_minimize_prototype.dart';
 import 'core/config/app_visual_style.dart';
 import 'core/config/app_chat_chrome.dart';
 import 'core/config/app_composer_background.dart';
@@ -257,10 +253,6 @@ void main(List<String> args) async {
   final pillGradientFuture = AppPillGradient.load();
   final visualStyleFuture = AppVisualStyle.load();
   final iosGlassFuture = AppIosGlass.load();
-  final nativeSheetProtoFuture = AppNativeSheetPrototype.load();
-  final nativeTabProtoFuture = AppNativeTabMinimizePrototype.load();
-  final nativeChatListProtoFuture = AppNativeChatListPrototype.load();
-  final nativeListsProtoFuture = AppNativeListsPrototype.load();
   final liquidGlassFuture = LiquidGlass.load();
   final meshGradientFuture = MeshGradient.load();
   final chatChromeFuture = AppChatChrome.load();
@@ -304,7 +296,7 @@ void main(List<String> args) async {
   E2eeService.instance.attach(messagesModule);
   await KometSettings.load();
   await AppLock.instance.load();
-  await PluginStore.instance.load();
+  await loadPlugins();
   CommandRegistry.instance.initialize();
   if (KometSettings.ghostMode.value) SelfPresence.markOffline();
   await ContactCache.load();
@@ -335,10 +327,6 @@ void main(List<String> args) async {
     pillGradientFuture,
     visualStyleFuture,
     iosGlassFuture,
-    nativeSheetProtoFuture,
-    nativeTabProtoFuture,
-    nativeChatListProtoFuture,
-    nativeListsProtoFuture,
     liquidGlassFuture,
     meshGradientFuture,
     chatChromeFuture,

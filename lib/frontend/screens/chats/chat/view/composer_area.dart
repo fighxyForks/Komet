@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:komet/backend/modules/messages.dart'
@@ -18,8 +19,10 @@ import 'package:komet/frontend/screens/chats/chat/upload_status.dart'
     show UploadStatus;
 import 'package:komet/frontend/screens/chats/chat/video_note_controller.dart';
 import 'package:komet/frontend/screens/chats/chat/voice_record_controller.dart';
+import 'package:komet/frontend/native/native_chat_composer_view.dart';
 import 'package:komet/frontend/widgets/attachment_panel.dart';
 import 'package:komet/frontend/widgets/e2ee_banner.dart';
+import 'package:komet/core/utils/text_format.dart';
 import 'package:komet/frontend/widgets/rich_message_controller.dart';
 import 'package:komet/l10n/app_localizations.dart';
 
@@ -105,6 +108,7 @@ class ComposerArea extends StatelessWidget {
   final bool forwardDisabled;
   final bool replyDisabled;
 
+  final bool useNativeComposer;
   final bool composerFrosted;
   final ValueListenable<bool>? scrollOpaque;
 
@@ -169,6 +173,7 @@ class ComposerArea extends StatelessWidget {
     required this.onForwardSelected,
     required this.forwardDisabled,
     this.replyDisabled = false,
+    this.useNativeComposer = false,
     required this.composerFrosted,
     this.scrollOpaque,
   });
@@ -249,7 +254,89 @@ class ComposerArea extends StatelessWidget {
               AnimatedBuilder(
                 animation: stickers.anim,
                 builder: (context, _) {
-                  Widget bar({required bool opaque}) => ComposerInputBar(
+                  final allowNativeComposer = useNativeComposer &&
+                      selectedCommand == null &&
+                      !(chatType == 'CHANNEL' &&
+                          !canPostToChannel &&
+                          forwardMessages.value.isEmpty);
+                  Widget bar({required bool opaque}) => allowNativeComposer
+                      ? ListenableBuilder(
+                          listenable: Listenable.merge([
+                            replyTo,
+                            voiceRec.isRecording,
+                            voiceRec.locked,
+                            voiceRec.elapsedMs,
+                            note.videoNoteMode,
+                            note.isRecording,
+                            note.locked,
+                            note.elapsedMs,
+                          ]),
+                          builder: (context, _) {
+                            final reply = replyTo.value?.text?.trim();
+                            final videoRecording = note.isRecording.value;
+                            final voiceRecording = voiceRec.isRecording.value;
+                            final recording = videoRecording || voiceRecording;
+                            final locked = videoRecording
+                                ? note.locked.value
+                                : voiceRec.locked.value;
+                            final elapsed = videoRecording
+                                ? note.elapsedMs.value
+                                : voiceRec.elapsedMs.value;
+                            final status = !recording
+                                ? ''
+                                : videoRecording
+                                ? (locked
+                                      ? 'Кружок зафиксирован'
+                                      : '← отмена · ↑ зафиксировать · ${formatElapsed(elapsed)}')
+                                : (locked
+                                      ? 'Запись ${formatElapsed(elapsed)}'
+                                      : '← отмена · ↑ зафиксировать · ${formatElapsed(elapsed)}');
+                            return NativeChatComposerView(
+                              text: messageController,
+                              reply: reply == null || reply.isEmpty
+                                  ? ''
+                                  : reply,
+                              status: status,
+                              recording: recording,
+                              videoMode: note.videoNoteMode.value,
+                              locked: locked,
+                              onSend: onSendMessage,
+                              onAttach: onOpenAttach,
+                              onStickers: onToggleStickerPanel,
+                              onToggleVideo: () => unawaited(note.toggleMode()),
+                              onRecordStart: () {
+                                if (note.videoNoteMode.value) {
+                                  unawaited(note.start());
+                                } else {
+                                  unawaited(voiceRec.start());
+                                }
+                              },
+                              onRecordDrag: (video, offset) {
+                                if (video) {
+                                  note.handleDrag(offset);
+                                } else {
+                                  voiceRec.handleDrag(offset);
+                                }
+                              },
+                              onRecordEnd: (video) {
+                                if (video) {
+                                  note.handleEnd();
+                                } else {
+                                  voiceRec.handleEnd();
+                                }
+                              },
+                              onSchedule: onScheduleMessage,
+                              onFormat: () => unawaited(
+                                _showComposerFormats(
+                                  context,
+                                  messageController,
+                                ),
+                              ),
+                              onReplyCancel: onCancelReply,
+                            );
+                          },
+                        )
+                      : ComposerInputBar(
                     bottomSafe: stickers.anim.value == 0,
                     chatType: commentsMode ? 'CHAT' : chatType,
                     chrome: chrome,
@@ -396,4 +483,49 @@ class ComposerArea extends StatelessWidget {
       },
     );
   }
+}
+
+Future<void> _showComposerFormats(
+  BuildContext context,
+  RichMessageController controller,
+) async {
+  final selection = controller.selection;
+  if (!selection.isValid || selection.isCollapsed) return;
+  final picked = await showCupertinoModalPopup<TextFormat>(
+    context: context,
+    builder: (sheetContext) => CupertinoActionSheet(
+      title: const Text('Формат'),
+      actions: [
+        for (final format in composerFormats)
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(sheetContext).pop(format),
+            child: Text(
+              controller.isFormatActive(format)
+                  ? '✓ ${_composerFormatName(format)}'
+                  : _composerFormatName(format),
+            ),
+          ),
+      ],
+      cancelButton: CupertinoActionSheetAction(
+        onPressed: () => Navigator.of(sheetContext).pop(),
+        child: const Text('Отмена'),
+      ),
+    ),
+  );
+  if (picked != null) controller.toggleFormat(picked);
+}
+
+String _composerFormatName(TextFormat format) {
+  return switch (format) {
+    TextFormat.strong => 'Жирный',
+    TextFormat.emphasized => 'Курсив',
+    TextFormat.underline => 'Подчёркнутый',
+    TextFormat.strikethrough => 'Зачёркнутый',
+    TextFormat.quote => 'Цитата',
+    TextFormat.heading => 'Заголовок',
+    TextFormat.monospaced => 'Моноширинный',
+    TextFormat.link => 'Ссылка',
+    TextFormat.animoji => 'Animoji',
+    TextFormat.userMention => 'Упоминание',
+  };
 }
