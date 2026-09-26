@@ -18,7 +18,6 @@
 		AA11BB22CC33DD44EE550105 /* KometClipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550005 /* KometClipboard.swift */; };
 		AA11BB22CC33DD44EE550106 /* KometAccessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550006 /* KometAccessibility.swift */; };
 		AA11BB22CC33DD44EE550107 /* KometNativeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550007 /* KometNativeSheet.swift */; };
-		AA11BB22CC33DD44EE550108 /* KometTabChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550008 /* KometTabChrome.swift */; };
 		AA11BB22CC33DD44EE550109 /* KometChatList.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550009 /* KometChatList.swift */; };
 		AA11BB22CC33DD44EE55010A /* KometChatListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55000A /* KometChatListCell.swift */; };
 		AA11BB22CC33DD44EE55010B /* KometChatListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55000B /* KometChatListModel.swift */; };
@@ -90,7 +89,6 @@
 		AA11BB22CC33DD44EE550005 /* KometClipboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometClipboard.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE550006 /* KometAccessibility.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometAccessibility.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE550007 /* KometNativeSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometNativeSheet.swift; sourceTree = "<group>"; };
-		AA11BB22CC33DD44EE550008 /* KometTabChrome.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometTabChrome.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE550009 /* KometChatList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometChatList.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55000A /* KometChatListCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometChatListCell.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55000B /* KometChatListModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KometChatListModel.swift; sourceTree = "<group>"; };
@@ -220,7 +218,6 @@
 				AA11BB22CC33DD44EE550005 /* KometClipboard.swift */,
 				AA11BB22CC33DD44EE550006 /* KometAccessibility.swift */,
 				AA11BB22CC33DD44EE550007 /* KometNativeSheet.swift */,
-				AA11BB22CC33DD44EE550008 /* KometTabChrome.swift */,
 				AA11BB22CC33DD44EE550009 /* KometChatList.swift */,
 				AA11BB22CC33DD44EE55000A /* KometChatListCell.swift */,
 				AA11BB22CC33DD44EE55000B /* KometChatListModel.swift */,
@@ -488,7 +485,6 @@
 				AA11BB22CC33DD44EE550105 /* KometClipboard.swift in Sources */,
 				AA11BB22CC33DD44EE550106 /* KometAccessibility.swift in Sources */,
 				AA11BB22CC33DD44EE550107 /* KometNativeSheet.swift in Sources */,
-				AA11BB22CC33DD44EE550108 /* KometTabChrome.swift in Sources */,
 				AA11BB22CC33DD44EE550109 /* KometChatList.swift in Sources */,
 				AA11BB22CC33DD44EE55010A /* KometChatListCell.swift in Sources */,
 				AA11BB22CC33DD44EE55010B /* KometChatListModel.swift in Sources */,
