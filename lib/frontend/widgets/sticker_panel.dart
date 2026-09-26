@@ -17,6 +17,8 @@ import 'small_spinner.dart';
 import 'lottie_image.dart';
 import 'sticker_peek.dart';
 import '../../core/config/app_frost.dart';
+import '../../core/native/native_chat_bridge.dart';
+import '../native/native_emoji_panel.dart';
 import 'liquid_glass.dart';
 
 class _DragScrollBehavior extends MaterialScrollBehavior {
@@ -268,10 +270,12 @@ class _StickerPanelState extends State<StickerPanel>
               if (widget.onResize != null) _buildResizeHandle(cs),
               Expanded(
                 child: _mode == _modeEmoji && widget.onEmojiTap != null
-                    ? EmojiPanel(
-                        onEmojiTap: widget.onEmojiTap!,
-                        onPlainEmojiTap: widget.onPlainEmojiTap,
-                      )
+                    ? NativeChatBridge.isEligible && widget.onPlainEmojiTap != null
+                        ? NativeEmojiPanel(onPick: widget.onPlainEmojiTap!)
+                        : EmojiPanel(
+                            onEmojiTap: widget.onEmojiTap!,
+                            onPlainEmojiTap: widget.onPlainEmojiTap,
+                          )
                     : _buildStickerBody(cs),
               ),
               if (widget.onEmojiTap != null) _buildToggleBar(cs),
