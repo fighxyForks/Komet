@@ -6,6 +6,7 @@ import '../../core/native/native_search_session.dart';
 
 class NativeSearchView extends StatefulWidget {
   final List<NativeSearchHit> hits;
+  final bool loading;
   final ValueChanged<String> onQuery;
   final VoidCallback onClose;
   final ValueChanged<String> onOpen;
@@ -14,6 +15,7 @@ class NativeSearchView extends StatefulWidget {
   const NativeSearchView({
     super.key,
     required this.hits,
+    this.loading = false,
     required this.onQuery,
     required this.onClose,
     required this.onOpen,
@@ -54,13 +56,17 @@ class _NativeSearchViewState extends State<NativeSearchView> {
   @override
   void didUpdateWidget(NativeSearchView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!listEquals(oldWidget.hits, widget.hits)) _push(widget.hits);
+    if (oldWidget.loading != widget.loading ||
+        !listEquals(oldWidget.hits, widget.hits)) {
+      _push(widget.hits);
+    }
   }
 
   Future<void> _push(List<NativeSearchHit> hits) async {
     try {
       await _channel?.invokeMethod<void>('apply', {
         'hits': [for (final hit in hits) hit.toMap()],
+        'loading': widget.loading,
       });
     } on MissingPluginException {
       return;

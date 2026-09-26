@@ -29,7 +29,9 @@ final class KometSearchPlatformView: NSObject, FlutterPlatformView, UITableViewD
   private let searchBar = UISearchBar()
   private let closeButton = UIButton(type: .system)
   private let table = UITableView(frame: .zero, style: .insetGrouped)
+  private let spinner = UIActivityIndicatorView(style: .medium)
   private var hits: [[String: Any]] = []
+  private var avatars: [String: UIImage] = [:]
 
   init(frame: CGRect, viewId: Int64, messenger: FlutterBinaryMessenger) {
     channel = FlutterMethodChannel(
@@ -48,6 +50,9 @@ final class KometSearchPlatformView: NSObject, FlutterPlatformView, UITableViewD
     table.delegate = self
     table.keyboardDismissMode = .onDrag
     table.backgroundColor = .systemGroupedBackground
+    spinner.hidesWhenStopped = true
+    spinner.translatesAutoresizingMaskIntoConstraints = false
+    root.addSubview(spinner)
     for view in [searchBar, closeButton, table] {
       view.translatesAutoresizingMaskIntoConstraints = false
       root.addSubview(view)
@@ -64,12 +69,20 @@ final class KometSearchPlatformView: NSObject, FlutterPlatformView, UITableViewD
       table.trailingAnchor.constraint(equalTo: root.trailingAnchor),
       table.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 4),
       table.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+      spinner.centerXAnchor.constraint(equalTo: table.centerXAnchor),
+      spinner.centerYAnchor.constraint(equalTo: table.centerYAnchor),
     ])
     channel.setMethodCallHandler { [weak self] call, result in
       guard let self = self else { return }
       if call.method == "apply" {
         let map = call.arguments as? [String: Any] ?? [:]
         self.hits = map["hits"] as? [[String: Any]] ?? []
+        let loading = (map["loading"] as? NSNumber)?.boolValue ?? false
+        if loading && self.hits.isEmpty {
+          self.spinner.startAnimating()
+        } else {
+          self.spinner.stopAnimating()
+        }
         self.table.reloadData()
         result(nil)
       } else {
@@ -111,6 +124,25 @@ final class KometSearchPlatformView: NSObject, FlutterPlatformView, UITableViewD
     cell.selectionStyle = kind == "header" ? .none : .default
     cell.accessoryType = kind == "more" ? .disclosureIndicator : .none
     cell.backgroundColor = kind == "header" ? .clear : .secondarySystemGroupedBackground
+    let avatar = hit["avatarUrl"] as? String ?? ""
+    if kind == "header" || kind == "more" || avatar.isEmpty {
+      cell.imageView?.image = nil
+    } else if let cached = avatars[avatar] {
+      cell.imageView?.image = cached
+    } else {
+      cell.imageView?.image = UIImage(systemName: "person.crop.circle")
+      cell.imageView?.tintColor = .secondaryLabel
+      if avatar.hasPrefix("http"), let url = URL(string: avatar) {
+        URLSession.shared.dataTask(with: url) { [weak self, weak cell] data, _, _ in
+          guard let self, let data, let image = UIImage(data: data) else { return }
+          DispatchQueue.main.async {
+            self.avatars[avatar] = image
+            cell?.imageView?.image = image
+            cell?.setNeedsLayout()
+          }
+        }.resume()
+      }
+    }
     return cell
   }
 

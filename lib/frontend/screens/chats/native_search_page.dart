@@ -26,6 +26,7 @@ class _NativeSearchPageState extends State<NativeSearchPage> {
           chats.searchPublic(api, query, from: from, count: count),
       serverMessages: (query) => chats.searchMessages(api, query),
       localMessages: AppDatabase.searchLocalMessages,
+      chatsByIds: AppDatabase.loadChatsByIds,
     ),
   );
 
@@ -58,7 +59,9 @@ class _NativeSearchPageState extends State<NativeSearchPage> {
       context,
       (_) => ChatScreen(
           chatId: target,
-          name: selected.kind == NativeSearchKind.message ? 'Чат' : selected.title,
+          name: selected.kind == NativeSearchKind.message
+              ? (selected.subtitle.isEmpty ? 'Чат' : selected.subtitle)
+              : selected.title,
           imageUrl: selected.avatarUrl,
           chatType: selected.type.isEmpty ? 'CHAT' : selected.type,
           initialMessageId: selected.messageId,
@@ -74,6 +77,7 @@ class _NativeSearchPageState extends State<NativeSearchPage> {
         listenable: _session,
         builder: (context, _) => NativeSearchView(
           hits: _session.snapshot.hits,
+          loading: _session.snapshot.loading,
           onQuery: _session.setQuery,
           onClose: () => Navigator.of(context).pop(),
           onOpen: (id) => _open(id),

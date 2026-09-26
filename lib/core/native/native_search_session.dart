@@ -44,10 +44,14 @@ class NativeSearchHit {
 
   @override
   bool operator ==(Object other) =>
-      other is NativeSearchHit && other.id == id && other.title == title && other.subtitle == subtitle;
+      other is NativeSearchHit &&
+          other.id == id &&
+          other.title == title &&
+          other.subtitle == subtitle &&
+          other.avatarUrl == avatarUrl;
 
   @override
-  int get hashCode => Object.hash(id, title, subtitle);
+  int get hashCode => Object.hash(id, title, subtitle, avatarUrl);
 }
 
 @immutable
@@ -74,6 +78,8 @@ class NativeSearchSources {
   final Future<List<MessageSearchHit>> Function(String query) serverMessages;
   final Future<List<Map<String, dynamic>>> Function(int accountId, String query)
       localMessages;
+  final Future<List<Map<String, dynamic>>> Function(int accountId, List<int> ids)?
+      chatsByIds;
 
   const NativeSearchSources({
     required this.accountId,
@@ -82,7 +88,34 @@ class NativeSearchSources {
     required this.publicChannels,
     required this.serverMessages,
     required this.localMessages,
+    this.chatsByIds,
   });
+}
+
+List<NativeSearchHit> nativeSearchNamedMessages(
+  List<NativeSearchHit> messages,
+  Map<int, Map<String, dynamic>> chats,
+) {
+  if (chats.isEmpty) return messages;
+  return [
+    for (final hit in messages)
+      if (hit.kind == NativeSearchKind.message &&
+          hit.targetId != null &&
+          chats[hit.targetId] != null)
+        NativeSearchHit(
+          id: hit.id,
+          kind: hit.kind,
+          title: hit.title,
+          subtitle: (chats[hit.targetId]!['title'] as String?)?.trim() ?? '',
+          avatarUrl: (chats[hit.targetId]!['icon_url'] as String?) ?? '',
+          targetId: hit.targetId,
+          messageId: hit.messageId,
+          messageTime: hit.messageTime,
+          type: (chats[hit.targetId]!['type'] as String?) ?? hit.type,
+        )
+      else
+        hit,
+  ];
 }
 
 class NativeSearchSession extends ChangeNotifier {
@@ -179,7 +212,20 @@ class NativeSearchSession extends ChangeNotifier {
       _channels = _uniqueChannels([...channels, ...extraChannels]);
     }
 
-    final messages = _mergeMessages(serverMessages, localMessages);
+    var messages = _mergeMessages(serverMessages, localMessages);
+    final lookup = sources.chatsByIds;
+    if (account != null && lookup != null && messages.isNotEmpty) {
+      final ids = [
+        for (final hit in messages)
+          if (hit.targetId != null) hit.targetId!,
+      ];
+      final rows = await lookup(account, ids.toSet().toList());
+      if (token != _token) return;
+      messages = nativeSearchNamedMessages(messages, {
+        for (final row in rows)
+          if (row['id'] is int) row['id'] as int: row,
+      });
+    }
     if (token != _token) return;
     snapshot = NativeSearchSnapshot(
       query: query,

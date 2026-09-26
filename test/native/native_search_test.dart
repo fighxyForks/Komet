@@ -87,4 +87,25 @@ void main() {
 
     expect(session.snapshot.hits.map((hit) => hit.title), ['Чаты', 'Новый']);
   });
+
+  test('сообщение получает имя чата из кэша', () {
+    final named = nativeSearchNamedMessages(
+      const [
+        NativeSearchHit(
+          id: 'message:2:m',
+          kind: NativeSearchKind.message,
+          title: 'привет',
+          targetId: 2,
+          messageId: 'm',
+        ),
+      ],
+      const {
+        2: {'id': 2, 'title': 'Личный', 'icon_url': 'https://cdn/a.jpg', 'type': 'DIALOG'},
+      },
+    );
+    expect(named.single.subtitle, 'Личный');
+    expect(named.single.avatarUrl, 'https://cdn/a.jpg');
+    expect(named.single.type, 'DIALOG');
+    expect(named.single.title, 'привет');
+  });
 }
