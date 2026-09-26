@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
-import 'package:komet/core/config/app_native_lists_prototype.dart';
 import 'package:komet/core/native/native_list_bridge.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,13 +26,11 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     AppIosGlass.debugReset();
-    AppNativeListsPrototype.debugReset();
     NativeListBridge.debugReset();
   });
 
   tearDown(() {
     AppIosGlass.debugReset();
-    AppNativeListsPrototype.debugReset();
     NativeListBridge.debugReset();
   });
 
@@ -189,18 +186,15 @@ void main() {
   });
 
   group('доступность', () {
-    test('нужны флаг и iOS-стиль', () async {
+    test('нужен iOS-стиль', () {
       NativeListBridge.debugAvailable = true;
-      expect(NativeListBridge.isEligible, isFalse);
-      await AppNativeListsPrototype.save(true);
       expect(NativeListBridge.isEligible, isFalse);
       AppIosGlass.debugSetSupported(true);
       expect(NativeListBridge.isEligible, isTrue);
     });
 
-    test('вне iOS прототип выключен', () async {
+    test('вне iOS списки выключены', () {
       NativeListBridge.debugAvailable = false;
-      await AppNativeListsPrototype.save(true);
       AppIosGlass.debugSetSupported(true);
       expect(NativeListBridge.isEligible, isFalse);
     });

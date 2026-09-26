@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
-import 'package:komet/core/config/app_native_sheet_prototype.dart';
 import 'package:komet/core/config/app_native_tab_minimize_prototype.dart';
 import 'package:komet/core/config/ios_reduce_transparency.dart';
 import 'package:komet/core/native/native_sheet_bridge.dart';
@@ -24,7 +23,6 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     AppIosGlass.debugReset();
-    AppNativeSheetPrototype.debugReset();
     AppNativeTabMinimizePrototype.debugReset();
     IosReduceTransparency.debugReset();
     NativeSheetBridge.debugReset();
@@ -33,7 +31,6 @@ void main() {
 
   tearDown(() {
     AppIosGlass.debugReset();
-    AppNativeSheetPrototype.debugReset();
     AppNativeTabMinimizePrototype.debugReset();
     IosReduceTransparency.debugReset();
     NativeSheetBridge.debugReset();
@@ -41,12 +38,6 @@ void main() {
   });
 
   group('flags', () {
-    test('sheet prototype defaults off and persists', () async {
-      expect(AppNativeSheetPrototype.enabled.value, isFalse);
-      await AppNativeSheetPrototype.save(true);
-      expect(AppNativeSheetPrototype.enabled.value, isTrue);
-    });
-
     test('tab minimize prototype defaults off and persists', () async {
       expect(AppNativeTabMinimizePrototype.enabled.value, isFalse);
       await AppNativeTabMinimizePrototype.save(true);
@@ -55,11 +46,9 @@ void main() {
   });
 
   group('eligibility', () {
-    test('sheet requires flag + style + nativeViews + no RT', () async {
+    test('sheet requires style + nativeViews + no RT', () async {
       await _enableIos26Glass();
       NativeSheetBridge.debugAvailable = true;
-      expect(NativeSheetBridge.isEligible, isFalse);
-      await AppNativeSheetPrototype.save(true);
       expect(NativeSheetBridge.isEligible, isTrue);
       IosReduceTransparency.debugOverride = true;
       expect(NativeSheetBridge.isEligible, isFalse);
@@ -116,7 +105,6 @@ void main() {
     test('present failure returns false so showAttachmentSheet can fall back',
         () async {
       await _enableIos26Glass();
-      await AppNativeSheetPrototype.save(true);
       NativeSheetBridge.debugAvailable = true;
       var called = false;
       NativeSheetBridge.debugPresent = (_) async {
@@ -130,7 +118,6 @@ void main() {
 
     testWidgets('uses native path when present succeeds', (tester) async {
       await _enableIos26Glass();
-      await AppNativeSheetPrototype.save(true);
       NativeSheetBridge.debugAvailable = true;
       var presented = false;
       NativeSheetBridge.debugPresent = (_) async {

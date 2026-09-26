@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../config/app_ios_glass.dart';
-import '../config/app_native_chat_prototype.dart';
 
 /// Display model for one row in the UIKit transcript.
 ///
@@ -717,7 +716,7 @@ class NativeChatBridge {
       if (kIsWeb) return false;
       if (defaultTargetPlatform != TargetPlatform.iOS) return false;
     }
-    return AppNativeChatPrototype.enabled.value && AppIosGlass.active.value;
+    return AppIosGlass.active.value;
   }
 
   @visibleForTesting
@@ -725,8 +724,5 @@ class NativeChatBridge {
     debugAvailable = null;
   }
 
-  static Listenable get eligibility => Listenable.merge([
-    AppNativeChatPrototype.enabled,
-    AppIosGlass.active,
-  ]);
+  static Listenable get eligibility => AppIosGlass.active;
 }

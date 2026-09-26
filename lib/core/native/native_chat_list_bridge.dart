@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../config/app_ios_glass.dart';
-import '../config/app_native_chat_list_prototype.dart';
 
 enum NativeChatAction { markRead, pin, unpin, mute, unmute, archive, delete }
 
@@ -472,7 +471,7 @@ class NativeChatListBridge {
       if (kIsWeb) return false;
       if (defaultTargetPlatform != TargetPlatform.iOS) return false;
     }
-    return AppNativeChatListPrototype.enabled.value && AppIosGlass.active.value;
+    return AppIosGlass.active.value;
   }
 
   @visibleForTesting
@@ -480,8 +479,5 @@ class NativeChatListBridge {
     debugAvailable = null;
   }
 
-  static Listenable get eligibility => Listenable.merge([
-    AppNativeChatListPrototype.enabled,
-    AppIosGlass.active,
-  ]);
+  static Listenable get eligibility => AppIosGlass.active;
 }

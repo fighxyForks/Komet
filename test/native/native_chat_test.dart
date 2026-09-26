@@ -2,7 +2,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/backend/modules/messages.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
-import 'package:komet/core/config/app_native_chat_prototype.dart';
 import 'package:komet/core/native/native_chat_bridge.dart';
 import 'package:komet/core/native/native_chat_snapshot.dart';
 import 'package:komet/models/attachment.dart';
@@ -64,13 +63,11 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     AppIosGlass.debugReset();
-    AppNativeChatPrototype.debugReset();
     NativeChatBridge.debugReset();
   });
 
   tearDown(() {
     AppIosGlass.debugReset();
-    AppNativeChatPrototype.debugReset();
     NativeChatBridge.debugReset();
   });
 
@@ -441,11 +438,10 @@ void main() {
     });
   });
 
-  test('эксперимент выключен, пока его не включили', () {
+  test('нативный чат включён вместе со стеклом', () {
     NativeChatBridge.debugAvailable = true;
-    AppIosGlass.debugSetSupported(true);
     expect(NativeChatBridge.isEligible, isFalse);
-    AppNativeChatPrototype.enabled.value = true;
+    AppIosGlass.debugSetSupported(true);
     expect(NativeChatBridge.isEligible, isTrue);
   });
 }

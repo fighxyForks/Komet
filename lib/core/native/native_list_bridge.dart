@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../config/app_ios_glass.dart';
-import '../config/app_native_lists_prototype.dart';
 
 enum NativeListRowStyle { item, action }
 
@@ -245,11 +244,10 @@ class NativeListBridge {
       if (kIsWeb) return false;
       if (defaultTargetPlatform != TargetPlatform.iOS) return false;
     }
-    return AppNativeListsPrototype.enabled.value && AppIosGlass.active.value;
+    return AppIosGlass.active.value;
   }
 
-  static Listenable get eligibility =>
-      Listenable.merge([AppNativeListsPrototype.enabled, AppIosGlass.active]);
+  static Listenable get eligibility => AppIosGlass.active;
 
   @visibleForTesting
   static void debugReset() {

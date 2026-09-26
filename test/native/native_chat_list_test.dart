@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:komet/core/config/app_ios_glass.dart';
-import 'package:komet/core/config/app_native_chat_list_prototype.dart';
 import 'package:komet/core/native/native_chat_list_bridge.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,13 +40,11 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     AppIosGlass.debugReset();
-    AppNativeChatListPrototype.debugReset();
     NativeChatListBridge.debugReset();
   });
 
   tearDown(() {
     AppIosGlass.debugReset();
-    AppNativeChatListPrototype.debugReset();
     NativeChatListBridge.debugReset();
   });
 
@@ -374,11 +371,8 @@ void main() {
   });
 
   group('доступность', () {
-    test('нужны флаг и iOS-стиль', () async {
+    test('нужен iOS-стиль', () {
       NativeChatListBridge.debugAvailable = true;
-      expect(NativeChatListBridge.isEligible, isFalse);
-
-      await AppNativeChatListPrototype.save(true);
       expect(NativeChatListBridge.isEligible, isFalse);
 
       AppIosGlass.debugSetSupported(true);
@@ -386,15 +380,10 @@ void main() {
       expect(NativeChatListBridge.isEligible, isTrue);
     });
 
-    test('вне iOS прототип выключен', () async {
+    test('вне iOS список выключен', () {
       NativeChatListBridge.debugAvailable = false;
-      await AppNativeChatListPrototype.save(true);
       AppIosGlass.debugSetSupported(true);
       expect(NativeChatListBridge.isEligible, isFalse);
-    });
-
-    test('флаг по умолчанию выключен', () {
-      expect(AppNativeChatListPrototype.enabled.value, isFalse);
     });
   });
 }
