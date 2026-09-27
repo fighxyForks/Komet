@@ -144,6 +144,77 @@ List<NativeChatItem> nativeChatFixtures() {
       senderName: 'Собеседник',
       showAvatar: true,
     ),
+    const NativeChatItem(
+      id: 'contact',
+      role: NativeChatRole.message,
+      kind: NativeChatKind.contact,
+      time: '12:14',
+      units: [
+        {'kind': 'contact', 'name': 'Синтетический контакт', 'hasPhone': false, 'contactId': 7},
+      ],
+      rev: 'contactrev',
+    ),
+    const NativeChatItem(
+      id: 'file',
+      role: NativeChatRole.message,
+      kind: NativeChatKind.file,
+      time: '12:15',
+      units: [
+        {'kind': 'file', 'name': 'заметка.txt', 'size': 128, 'extension': 'txt'},
+      ],
+    ),
+    const NativeChatItem(
+      id: 'location',
+      role: NativeChatRole.message,
+      kind: NativeChatKind.location,
+      time: '12:16',
+      units: [
+        {'kind': 'location', 'latitude': 55.75, 'longitude': 37.62},
+      ],
+    ),
+    const NativeChatItem(
+      id: 'link',
+      role: NativeChatRole.message,
+      kind: NativeChatKind.share,
+      time: '12:17',
+      units: [
+        {
+          'kind': 'linkPreview',
+          'title': 'Пример',
+          'description': 'Описание',
+          'url': 'https://example.test/a',
+        },
+      ],
+    ),
+    const NativeChatItem(
+      id: 'keyboard-rows',
+      role: NativeChatRole.message,
+      text: 'Ряды',
+      time: '12:18',
+      units: [
+        {
+          'kind': 'botKeyboard',
+          'rows': [
+            [
+              {'text': 'Один', 'row': 0, 'column': 0},
+              {'text': 'Два', 'row': 0, 'column': 1},
+            ],
+            [
+              {'text': 'Три', 'row': 1, 'column': 0},
+            ],
+          ],
+        },
+      ],
+    ),
+    const NativeChatItem(
+      id: 'animoji',
+      role: NativeChatRole.message,
+      text: '😀',
+      time: '12:19',
+      spans: [
+        NativeChatSpan(start: 0, length: 2, styles: ['animoji']),
+      ],
+    ),
     const NativeChatItem.date('date:1', '27 сентября'),
     const NativeChatItem.unread('Новые сообщения'),
     const NativeChatItem(
