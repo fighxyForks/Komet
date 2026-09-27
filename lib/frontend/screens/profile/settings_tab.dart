@@ -974,6 +974,9 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               topInset: MediaQuery.paddingOf(context).top,
               detail: phone,
               layout: 'settings',
+              showClose: false,
+              maskPhone: _profile?.phone != 0 && !_isPhoneVisible,
+              bottomInset: MediaQuery.paddingOf(context).bottom + 56,
               sections: _nativeSettingsSections(context, l10n, others),
               onTap: (id) => _onNativeSettingsTap(context, id),
               onHeader: _onNativeSettingsHeader,
@@ -1353,6 +1356,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             builder: (context) => const EditProfileScreen(),
           ),
         );
+      case 'revealPhone':
+        setState(() => _isPhoneVisible = !_isPhoneVisible);
       case 'version':
         _onVersionLabelTap();
       case 'close':
