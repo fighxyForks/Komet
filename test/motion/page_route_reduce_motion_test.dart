@@ -132,4 +132,14 @@ void main() {
     expect(route, isA<MaterialPageRoute<void>>());
     expect(route, isNot(isA<IosCupertinoPageRoute<void>>()));
   });
+
+  test('startup handoff does not slide', () {
+    final route = instantPageRoute<void>(
+      builder: (_) => const SizedBox.shrink(),
+    );
+    expect(route, isA<PageRoute<void>>());
+    final page = route as PageRoute<void>;
+    expect(page.transitionDuration, Duration.zero);
+    expect(page.reverseTransitionDuration, Duration.zero);
+  });
 }

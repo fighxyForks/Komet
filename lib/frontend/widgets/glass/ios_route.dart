@@ -36,6 +36,20 @@ Route<T> iosPageRoute<T>(
   );
 }
 
+/// Replaces the startup screen. The shell and the login screen are the root,
+/// so they appear in place instead of sliding in like a pushed page.
+Route<T> instantPageRoute<T>({
+  required WidgetBuilder builder,
+  RouteSettings? settings,
+}) {
+  return PageRouteBuilder<T>(
+    settings: settings,
+    pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+  );
+}
+
 /// Push with [iosPageRoute].
 Future<T?> iosPush<T extends Object?>(
   BuildContext context,

@@ -1326,7 +1326,7 @@ class _StartupScreenState extends State<_StartupScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        iosPageRoute(context, builder: (_) => const AdaptiveShell()),
+        instantPageRoute(builder: (_) => const AdaptiveShell()),
       );
       KometApp.stateOf(context)?.markShellReady();
       return;
@@ -1351,7 +1351,7 @@ class _StartupScreenState extends State<_StartupScreen> {
 
     Navigator.pushReplacement(
       context,
-      iosPageRoute(context, builder: (_) => const AdaptiveShell()),
+      instantPageRoute(builder: (_) => const AdaptiveShell()),
     );
     KometApp.stateOf(context)?.markShellReady();
   }
@@ -1373,7 +1373,7 @@ class _StartupScreenState extends State<_StartupScreen> {
     if (mounted) {
       Navigator.pushReplacement(
         context,
-        iosPageRoute(context, builder: (_) => const LoginScreen()),
+        instantPageRoute(builder: (_) => const LoginScreen()),
       );
       KometApp.stateOf(context)?.markShellReady();
     }
