@@ -1161,6 +1161,16 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
           ),
         ],
       ),
+      if (_appVersionLabel != null)
+        NativeSettingsSection(
+          rows: [
+            NativeSettingsRow(
+              id: 'version',
+              title: _appVersionLabel!,
+              symbol: '',
+            ),
+          ],
+        ),
     ];
   }
 
@@ -1299,6 +1309,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
         );
       case 'update':
         unawaited(_checkForUpdates());
+      case 'version':
+        _onVersionLabelTap();
       case 'komet':
         Navigator.push(
           context,

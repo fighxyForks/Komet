@@ -6,7 +6,13 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   private let channel: FlutterMethodChannel
   private let root = UIView()
   private let collection: UICollectionView
-  private let searchWrap = UIVisualEffectView()
+  private let searchWrap = UIView()
+  private var showsClose = false
+  private var tabInset: CGFloat = 0
+  private var titleTop: NSLayoutConstraint?
+  private var collectionBelowClose: NSLayoutConstraint?
+  private var collectionBelowTitle: NSLayoutConstraint?
+  private var searchBottom: NSLayoutConstraint?
   private let searchField = UITextField()
   private let closeButton = UIButton(type: .system)
   private let titleLabel = UILabel()
@@ -14,6 +20,9 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   private var all: [SettingsBlock] = []
   private var profileName = ""
   private var profileDetail = ""
+  private var profileStatus = ""
+  private var profileOnline = false
+  private var maskPhone = false
   private var avatarURL = ""
   private var avatarTask: URLSessionDataTask?
   private var query = ""
@@ -64,13 +73,19 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
     searchField.leftView = icon
     searchField.leftViewMode = .always
     searchField.accessibilityLabel = "Поиск по настройкам"
-    styleGlass(searchWrap, radius: 22)
+    searchWrap.backgroundColor = .tertiarySystemFill
+    searchWrap.layer.cornerRadius = 22
+    searchWrap.layer.cornerCurve = .continuous
     for view in [collection, closeButton, titleLabel, searchWrap] {
       view.translatesAutoresizingMaskIntoConstraints = false
       root.addSubview(view)
     }
     searchField.translatesAutoresizingMaskIntoConstraints = false
-    searchWrap.contentView.addSubview(searchField)
+    searchWrap.addSubview(searchField)
+    titleTop = titleLabel.topAnchor.constraint(equalTo: root.safeAreaLayoutGuide.topAnchor, constant: 12)
+    collectionBelowClose = collection.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8)
+    collectionBelowTitle = collection.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8)
+    searchBottom = searchWrap.bottomAnchor.constraint(equalTo: root.safeAreaLayoutGuide.bottomAnchor, constant: -12)
     NSLayoutConstraint.activate([
       closeButton.leadingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.leadingAnchor, constant: 16),
       closeButton.topAnchor.constraint(equalTo: root.safeAreaLayoutGuide.topAnchor, constant: 8),
@@ -79,13 +94,13 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
       titleLabel.centerXAnchor.constraint(equalTo: root.centerXAnchor),
       titleLabel.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
       titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: closeButton.trailingAnchor, constant: 8),
-      collection.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8),
+      collectionBelowClose!,
       collection.leadingAnchor.constraint(equalTo: root.leadingAnchor),
       collection.trailingAnchor.constraint(equalTo: root.trailingAnchor),
       collection.bottomAnchor.constraint(equalTo: root.bottomAnchor),
-      searchWrap.leadingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-      searchWrap.trailingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.trailingAnchor, constant: -20),
-      searchWrap.bottomAnchor.constraint(equalTo: root.safeAreaLayoutGuide.bottomAnchor, constant: -12),
+      searchWrap.leadingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+      searchWrap.trailingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+      searchBottom!,
       searchWrap.heightAnchor.constraint(equalToConstant: 44),
       searchField.leadingAnchor.constraint(equalTo: searchWrap.leadingAnchor, constant: 12),
       searchField.trailingAnchor.constraint(equalTo: searchWrap.trailingAnchor, constant: -12),
@@ -113,9 +128,27 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
     let header = map?["header"] as? [String: Any] ?? [:]
     profileName = header["name"] as? String ?? ""
     profileDetail = header["detail"] as? String ?? ""
+    profileStatus = header["status"] as? String ?? ""
+    profileOnline = (header["online"] as? NSNumber)?.boolValue ?? false
+    maskPhone = (header["maskPhone"] as? NSNumber)?.boolValue ?? false
     avatarURL = header["avatarUrl"] as? String ?? ""
+    let layout = map?["layout"] as? String ?? "profile"
+    showsClose = (header["showClose"] as? NSNumber)?.boolValue ?? (layout != "settings")
+    tabInset = CGFloat((header["bottomInset"] as? NSNumber)?.doubleValue ?? 0)
+    applyChrome()
     all = (map?["sections"] as? [[String: Any]] ?? []).compactMap(SettingsBlock.init(map:))
     reloadVisible()
+  }
+
+  private func applyChrome() {
+    closeButton.isHidden = !showsClose
+    titleTop?.isActive = !showsClose
+    collectionBelowClose?.isActive = showsClose
+    collectionBelowTitle?.isActive = !showsClose
+    searchBottom?.constant = -(12 + tabInset)
+    let searchSpace = 44 + 16 + tabInset + 12
+    collection.contentInset.bottom = searchSpace
+    collection.verticalScrollIndicatorInsets.bottom = searchSpace
   }
 
   private func reloadVisible() {
@@ -135,6 +168,13 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
     }
     collection.setCollectionViewLayout(makeLayout(headers: needle.isEmpty), animated: false)
     collection.reloadData()
+  }
+
+  private func isVersionSection(_ index: Int) -> Bool {
+    guard query.isEmpty, index > 0 else { return false }
+    let blockIndex = index - 1
+    guard sections.indices.contains(blockIndex) else { return false }
+    return sections[blockIndex].rows.count == 1 && sections[blockIndex].rows[0].id == "version"
   }
 
   private func showsHeader(at index: Int, headers: Bool) -> Bool {
@@ -157,7 +197,9 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
       section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 18, trailing: 20)
       let card = NSCollectionLayoutDecorationItem.background(elementKind: "card")
       card.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 18, trailing: 20)
-      section.decorationItems = [card]
+      if self?.isVersionSection(index) != true {
+        section.decorationItems = [card]
+      }
       if self?.showsHeader(at: index, headers: headers) == true {
         let header = NSCollectionLayoutBoundarySupplementaryItem(
           layoutSize: NSCollectionLayoutSize(
@@ -185,7 +227,17 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     if query.isEmpty && indexPath.section == 0 {
       let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "profile", for: indexPath) as! SettingsProfileCell
-      cell.apply(name: profileName, detail: profileDetail, url: avatarURL, task: &avatarTask)
+      cell.onReveal = { [weak self] in
+        self?.channel.invokeMethod("header", arguments: ["action": "revealPhone"])
+      }
+      cell.apply(
+        name: profileName,
+        detail: profileDetail,
+        status: profileStatus,
+        online: profileOnline,
+        maskPhone: maskPhone,
+        url: avatarURL,
+        task: &avatarTask)
       return cell
     }
     let block = sections[indexPath.section - (query.isEmpty ? 1 : 0)]
@@ -345,8 +397,11 @@ private final class SettingsHeader: UICollectionReusableView {
 private final class SettingsProfileCell: UICollectionViewCell {
   private let avatar = UIImageView()
   private let name = UILabel()
+  private let status = UILabel()
   private let detail = UILabel()
+  private let eye = UIButton(type: .system)
   private let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
+  var onReveal: (() -> Void)?
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -360,8 +415,21 @@ private final class SettingsProfileCell: UICollectionViewCell {
     detail.adjustsFontForContentSizeCategory = true
     detail.textColor = .secondaryLabel
     detail.numberOfLines = 2
+    status.font = .preferredFont(forTextStyle: .subheadline)
+    status.adjustsFontForContentSizeCategory = true
+    status.numberOfLines = 1
+    eye.addTarget(self, action: #selector(revealPhone), for: .touchUpInside)
+    eye.accessibilityLabel = "Показать номер"
     chevron.tintColor = .tertiaryLabel
-    let text = UIStackView(arrangedSubviews: [name, detail])
+    chevron.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+    chevron.contentMode = .scaleAspectFit
+    chevron.setContentHuggingPriority(.required, for: .horizontal)
+    chevron.setContentCompressionResistancePriority(.required, for: .horizontal)
+    let phoneRow = UIStackView(arrangedSubviews: [detail, eye])
+    phoneRow.axis = .horizontal
+    phoneRow.alignment = .center
+    phoneRow.spacing = 4
+    let text = UIStackView(arrangedSubviews: [name, status, phoneRow])
     text.axis = .vertical
     text.spacing = 2
     let row = UIStackView(arrangedSubviews: [avatar, text, chevron])
@@ -373,6 +441,10 @@ private final class SettingsProfileCell: UICollectionViewCell {
     NSLayoutConstraint.activate([
       avatar.widthAnchor.constraint(equalToConstant: 56),
       avatar.heightAnchor.constraint(equalToConstant: 56),
+      chevron.widthAnchor.constraint(equalToConstant: 13),
+      chevron.heightAnchor.constraint(equalToConstant: 18),
+      eye.widthAnchor.constraint(equalToConstant: 44),
+      eye.heightAnchor.constraint(equalToConstant: 44),
       row.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
       row.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
       row.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
@@ -383,11 +455,31 @@ private final class SettingsProfileCell: UICollectionViewCell {
   }
   required init?(coder: NSCoder) { nil }
 
-  func apply(name: String, detail: String, url: String, task: inout URLSessionDataTask?) {
+  @objc private func revealPhone() { onReveal?() }
+
+  func apply(
+    name: String,
+    detail: String,
+    status: String,
+    online: Bool,
+    maskPhone: Bool,
+    url: String,
+    task: inout URLSessionDataTask?
+  ) {
     self.name.text = name
-    self.detail.text = detail
+    self.status.text = status
+    self.status.isHidden = status.isEmpty
+    self.status.textColor = online ? UIColor.systemGreen : .secondaryLabel
+    let shown = maskPhone && !detail.isEmpty ? String(repeating: "•", count: detail.count) : detail
+    self.detail.text = shown
     self.detail.isHidden = detail.isEmpty
-    accessibilityLabel = detail.isEmpty ? name : "\(name), \(detail)"
+    eye.isHidden = detail.isEmpty
+    let symbol = maskPhone ? "eye" : "eye.slash"
+    eye.setImage(UIImage(systemName: symbol, withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)), for: .normal)
+    eye.tintColor = .secondaryLabel
+    accessibilityLabel = [name, status, maskPhone ? "номер скрыт" : detail]
+      .filter { !$0.isEmpty }
+      .joined(separator: ", ")
     task?.cancel()
     if url.hasPrefix("http"), let imageURL = URL(string: url) {
       task = URLSession.shared.dataTask(with: imageURL) { [weak self] data, _, _ in
@@ -429,6 +521,12 @@ private final class SettingsRowCell: UICollectionViewCell {
     trailing.adjustsFontForContentSizeCategory = true
     trailing.textColor = .secondaryLabel
     chevron.tintColor = .tertiaryLabel
+    chevron.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+    chevron.contentMode = .scaleAspectFit
+    chevron.setContentHuggingPriority(.required, for: .horizontal)
+    chevron.setContentCompressionResistancePriority(.required, for: .horizontal)
+    trailing.setContentHuggingPriority(.required, for: .horizontal)
+    trailing.setContentCompressionResistancePriority(.required, for: .horizontal)
     separator.backgroundColor = .separator
     toggle.addTarget(self, action: #selector(toggled), for: .valueChanged)
     let text = UIStackView(arrangedSubviews: [title, section])
@@ -445,6 +543,8 @@ private final class SettingsRowCell: UICollectionViewCell {
     NSLayoutConstraint.activate([
       icon.widthAnchor.constraint(equalToConstant: 22),
       icon.heightAnchor.constraint(equalToConstant: 22),
+      chevron.widthAnchor.constraint(equalToConstant: 13),
+      chevron.heightAnchor.constraint(equalToConstant: 18),
       row.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
       row.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
       row.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
@@ -460,18 +560,26 @@ private final class SettingsRowCell: UICollectionViewCell {
 
   func apply(row: SettingsRow, showsSection: Bool, isLast: Bool, onToggle: @escaping (Bool) -> Void) {
     self.onToggle = onToggle
-    icon.image = UIImage(systemName: row.symbol)
+    let version = row.id == "version"
+    icon.image = version ? nil : UIImage(systemName: row.symbol)
+    icon.isHidden = version
     title.text = row.title
-    title.textColor = row.destructive ? .systemRed : (row.enabled ? .label : .secondaryLabel)
+    title.textAlignment = version ? .center : .natural
+    title.font = version
+      ? .systemFont(ofSize: 13, weight: .regular)
+      : .preferredFont(forTextStyle: .body)
+    title.textColor = version
+      ? .secondaryLabel
+      : (row.destructive ? .systemRed : (row.enabled ? .label : .secondaryLabel))
     icon.tintColor = row.destructive ? .systemRed : .label
     section.text = row.section
     section.isHidden = !showsSection || row.section.isEmpty
     trailing.text = row.trailing
     trailing.isHidden = row.trailing.isEmpty || row.switchValue != nil
-    chevron.isHidden = row.destructive || row.switchValue != nil
+    chevron.isHidden = version || row.destructive || row.switchValue != nil
     toggle.isHidden = row.switchValue == nil
     if let value = row.switchValue { toggle.isOn = value }
-    separator.isHidden = isLast
+    separator.isHidden = version || isLast
     accessibilityLabel = showsSection && !row.section.isEmpty
       ? "\(row.title), \(row.section)"
       : row.title

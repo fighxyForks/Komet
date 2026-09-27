@@ -58,6 +58,9 @@ class NativeSettingsView extends StatefulWidget {
   final bool showQr;
   final bool showEdit;
   final bool showMenu;
+  final bool showClose;
+  final bool maskPhone;
+  final double bottomInset;
   final List<NativeSettingsSection> sections;
   final void Function(String id) onTap;
   final void Function(String id, bool value)? onToggle;
@@ -79,6 +82,9 @@ class NativeSettingsView extends StatefulWidget {
     this.showQr = true,
     this.showEdit = true,
     this.showMenu = true,
+    this.showClose = false,
+    this.maskPhone = false,
+    this.bottomInset = 0,
     this.layout = 'profile',
     required this.sections,
     required this.onTap,
@@ -109,6 +115,9 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       'showQr': widget.showQr,
       'showEdit': widget.showEdit,
       'showMenu': widget.showMenu,
+      'showClose': widget.showClose,
+      'maskPhone': widget.maskPhone,
+      'bottomInset': widget.bottomInset,
     },
     'version': widget.version,
     'layout': widget.layout,
@@ -181,6 +190,9 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       'showQr': view.showQr,
       'showEdit': view.showEdit,
       'showMenu': view.showMenu,
+      'showClose': view.showClose,
+      'maskPhone': view.maskPhone,
+      'bottomInset': view.bottomInset,
     },
     'version': view.version,
     'layout': view.layout,
