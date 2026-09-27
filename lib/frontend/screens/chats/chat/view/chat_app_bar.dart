@@ -45,7 +45,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String imageUrl;
   final String chatType;
   final bool isOfficial;
-  final bool encrypted;
+  final ValueListenable<bool> encrypted;
   final bool verified;
   final int myId;
   final ValueNotifier<String> headerStatus;
@@ -186,7 +186,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: SizedBox(
         height: height,
         child: AnimatedBuilder(
-          animation: Listenable.merge([selectionAnim, searchAnim]),
+          animation: Listenable.merge([selectionAnim, searchAnim, encrypted]),
           builder: (context, _) {
             final t = Curves.easeOut.transform(
               selectionAnim.value.clamp(0.0, 1.0),
@@ -245,7 +245,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                               imageUrl: imageUrl,
                               chatType: chatType,
                               isOfficial: isOfficial,
-                              encrypted: encrypted,
+                              encrypted: encrypted.value,
                               verified: verified,
                               myId: myId,
                               headerStatus: headerStatus,

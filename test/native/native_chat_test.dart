@@ -50,6 +50,9 @@ NativeChatCallbacks _callbacks(List<Object> log) => NativeChatCallbacks(
   onComments: (id) => log.add('comments $id'),
   onSticker: (id) => log.add('sticker $id'),
   onAvatar: (id) => log.add('avatar $id'),
+  onContact: (id, contactId) => log.add('contact $id $contactId'),
+  onFile: (id) => log.add('file $id'),
+  onLocation: (id) => log.add('location $id'),
   onLoadOlder: () => log.add('older'),
   onLoadNewer: () => log.add('newer'),
   onNearBottom: (on) => log.add('bottom $on'),
@@ -468,6 +471,9 @@ void main() {
           );
 
       await send('open', {'id': 'm'});
+      await send('contact', {'id': 'm', 'contactId': 7});
+      await send('file', {'id': 'm'});
+      await send('location', {'id': 'm'});
       await send('reaction', {'id': 'm', 'emoji': '👍'});
       await send('keyboard', {'id': 'm', 'index': 1});
       await send('nearBottom', {'on': false});
@@ -477,6 +483,9 @@ void main() {
       await send('loadOlder');
       expect(log, [
         'open m',
+        'contact m 7',
+        'file m',
+        'location m',
         'react m 👍',
         'key m 1',
         'bottom false',

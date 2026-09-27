@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:komet/backend/modules/chats.dart' show CachedChat;
 import 'package:komet/core/config/app_chat_chrome.dart';
@@ -52,7 +53,7 @@ class ChatBodyLayout extends StatelessWidget {
   final bool composerPaintsSurface;
   final double pinnedBannerTop;
   final double defaultEdgeVignetteHeight;
-  final ChatWallpaper? wallpaper;
+  final ValueListenable<ChatWallpaper?> wallpaper;
 
   const ChatBodyLayout({
     super.key,
@@ -134,7 +135,16 @@ class ChatBodyLayout extends StatelessWidget {
       onHeight: (value) => composerHeight.value = value,
       child: Builder(builder: composerAreaBuilder),
     );
+    return ValueListenableBuilder<ChatWallpaper?>(
+      valueListenable: wallpaper,
+      builder: (context, current, _) {
+        final wallpaper = current;
+        return _buildStacked(wallpaper, composer);
+      },
+    );
+  }
 
+  Widget _buildStacked(ChatWallpaper? wallpaper, Widget composer) {
     if (!underlap) {
       final callBanner = _callBanner(floating: false);
       final banner = _pinnedBanner(floating: false);
@@ -148,7 +158,9 @@ class ChatBodyLayout extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 if (wallpaper != null)
-                  Positioned.fill(child: ChatWallpaperView(wallpaper: wallpaper!)),
+                  Positioned.fill(
+                    child: ChatWallpaperView(wallpaper: wallpaper),
+                  ),
                 Positioned.fill(child: messagesArea),
                 ValueListenableBuilder<double>(
                   valueListenable: composerHeight,
@@ -179,13 +191,13 @@ class ChatBodyLayout extends StatelessWidget {
       );
     }
 
-    final vignette = chromeVignette;
+    final vignette = chromeVignette && wallpaper == null;
     final callBanner = _callBanner(floating: true);
     return Stack(
       fit: StackFit.expand,
       children: [
         if (wallpaper != null)
-          Positioned.fill(child: ChatWallpaperView(wallpaper: wallpaper!)),
+          Positioned.fill(child: ChatWallpaperView(wallpaper: wallpaper)),
         Positioned.fill(child: messagesArea),
         SearchOverlay(
           cs: cs,
