@@ -267,25 +267,30 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     replyButton.setTitleColor(item.outgoing ? UIColor.white.withAlphaComponent(0.9) : accent, for: .normal)
     let showsText = !item.text.isEmpty && item.kind != "sticker"
     bodyView.isHidden = !showsText
-    bodyView.preferredWidth = max(120, width * 0.78 - 48)
+    let roundMedia = item.kind == "videoNote" || item.kind == "sticker"
+    let showsMedia = item.kind == "sticker" || (
+      item.kind != "album" && item.mediaUrl != nil &&
+      (item.kind == "photo" || item.kind == "video" || item.kind == "videoNote"))
+    var contentWidth = max(120, width * 0.78 - 48)
+    if showsMedia && !roundMedia {
+      contentWidth = max(contentWidth, min(280, max(180, width * 0.72)))
+    }
+    bodyView.preferredWidth = contentWidth
     if showsText {
       bodyView.attributedText = KometChatText.make(item, foreground: foreground, accent: accent)
     }
     fillAlbum(item)
     fillPoll(item, foreground: foreground, accent: accent)
-    let roundMedia = item.kind == "videoNote" || item.kind == "sticker"
-    let showsMedia = item.kind == "sticker" || (
-      item.kind != "album" && item.mediaUrl != nil &&
-      (item.kind == "photo" || item.kind == "video" || item.kind == "videoNote"))
     mediaView.contentMode = item.kind == "sticker" ? .scaleAspectFit : .scaleAspectFill
     mediaView.isHidden = !showsMedia
-    let side: CGFloat = item.kind == "sticker" ? 150 : 180
-    mediaHeight?.constant = showsMedia ? (roundMedia ? side : 180) : 0
+    let roundSide: CGFloat = item.kind == "sticker" ? 150 : 180
+    let mediaSide = roundMedia ? roundSide : contentWidth
+    mediaHeight?.constant = showsMedia ? (roundMedia ? roundSide : min(220, mediaSide * 0.75)) : 0
     if let widthConstraint = mediaView.constraints.first(where: { $0.firstAttribute == .width }) {
-      widthConstraint.constant = side
-      widthConstraint.isActive = roundMedia && showsMedia
+      widthConstraint.constant = mediaSide
+      widthConstraint.isActive = showsMedia
     }
-    mediaView.layer.cornerRadius = item.kind == "videoNote" ? side / 2 : 12
+    mediaView.layer.cornerRadius = item.kind == "videoNote" ? roundSide / 2 : 12
     let token = stickerToken
     if showsMedia, let url = item.mediaUrl.flatMap(URL.init(string:)) {
       KometChatImages.load(url) { [weak self] image in
@@ -663,8 +668,11 @@ final class KometChatTextView: UITextView {
   required init?(coder: NSCoder) { nil }
 
   override var intrinsicContentSize: CGSize {
-    let fitted = sizeThatFits(CGSize(width: preferredWidth, height: .greatestFiniteMagnitude))
-    return CGSize(width: UIView.noIntrinsicMetric, height: max(20, ceil(fitted.height)))
+    let limit = max(preferredWidth, 44)
+    let fitted = sizeThatFits(CGSize(width: limit, height: .greatestFiniteMagnitude))
+    let single = sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: 40))
+    let width = min(limit, max(44, ceil(single.width)))
+    return CGSize(width: width, height: max(20, ceil(fitted.height)))
   }
 
   override func draw(_ rect: CGRect) {
@@ -690,9 +698,13 @@ final class KometChatTextView: UITextView {
 enum KometChatText {
   static func make(_ item: KometChatMessage, foreground: UIColor, accent: UIColor) -> NSAttributedString {
     let font = UIFont.preferredFont(forTextStyle: .body)
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.hyphenationFactor = 0
+    paragraph.lineBreakMode = .byWordWrapping
     let text = NSMutableAttributedString(string: item.text, attributes: [
       .font: font,
       .foregroundColor: foreground,
+      .paragraphStyle: paragraph,
     ])
     let limit = (item.text as NSString).length
     for span in item.spans {
@@ -719,6 +731,8 @@ enum KometChatText {
       }
       if span.styles.contains("quote") {
         let paragraph = NSMutableParagraphStyle()
+        paragraph.hyphenationFactor = 0
+        paragraph.lineBreakMode = .byWordWrapping
         paragraph.headIndent = 14
         paragraph.firstLineHeadIndent = 14
         attributes[.paragraphStyle] = paragraph
