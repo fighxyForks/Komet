@@ -67,6 +67,7 @@ final class KometChatListPlatformView: NSObject, FlutterPlatformView {
   }
 
   deinit {
+    list.stopStoriesAnimation()
     channel.setMethodCallHandler(nil)
     navigation.willMove(toParent: nil)
     navigation.removeFromParent()
@@ -376,19 +377,60 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
     guard previousTop != height else { return }
     collectionView.contentInset.top = height
     collectionView.contentOffset.y -= height - previousTop
+    lastScrollOffset = collectionView.contentOffset.y
   }
 
+  private var storiesAnimating = false
+  private var storiesLink: CADisplayLink?
+  private var storiesFrom: CGFloat = 1
+  private var storiesTo: CGFloat = 1
+  private var storiesStarted: CFTimeInterval = 0
+  private let storiesDuration: CFTimeInterval = 0.32
+
   private func updateStoriesCollapse(_ scrollView: UIScrollView) {
-    guard storiesVisible, header.hasStories else { return }
+    guard storiesVisible, header.hasStories, !storiesAnimating else { return }
     let top = -scrollView.adjustedContentInset.top
     let offset = scrollView.contentOffset.y
     let delta = offset - lastScrollOffset
     lastScrollOffset = offset
     if offset <= top - 8 {
-      header.setStoriesCollapsed(false)
-      layoutHeader()
+      animateStories(to: 1)
     } else if delta > 1, offset > top + 12 {
-      header.setStoriesCollapsed(true)
+      animateStories(to: 0)
+    }
+  }
+
+  func stopStoriesAnimation() {
+    storiesLink?.invalidate()
+    storiesLink = nil
+    storiesAnimating = false
+  }
+
+  private func animateStories(to progress: CGFloat) {
+    let target = min(1, max(0, progress))
+    guard abs(header.storyProgress - target) > 0.01 else { return }
+    storiesFrom = header.storyProgress
+    storiesTo = target
+    storiesStarted = CACurrentMediaTime()
+    storiesAnimating = true
+    if storiesLink == nil {
+      let link = CADisplayLink(target: self, selector: #selector(stepStories))
+      link.add(to: .main, forMode: .common)
+      storiesLink = link
+    }
+  }
+
+  @objc private func stepStories() {
+    let raw = min(1, (CACurrentMediaTime() - storiesStarted) / storiesDuration)
+    let eased = 1 - pow(1 - raw, 3)
+    let progress = storiesFrom + (storiesTo - storiesFrom) * CGFloat(eased)
+    header.setStoryProgress(progress)
+    layoutHeader()
+    if raw >= 1 {
+      storiesLink?.invalidate()
+      storiesLink = nil
+      storiesAnimating = false
+      header.setStoryProgress(storiesTo)
       layoutHeader()
     }
   }

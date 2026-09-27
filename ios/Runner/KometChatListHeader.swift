@@ -69,7 +69,9 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
   private lazy var storiesView = UICollectionView(frame: .zero, collectionViewLayout: storiesLayout)
   private var items: [KometStoryItem] = []
   private(set) var showsStories = false
-  var storiesCollapsed = false
+  /// 1 shows the story row, 0 hides it. Values in between size the row.
+  var storyProgress: CGFloat = 1
+  var storiesCollapsed: Bool { storyProgress <= 0.001 }
   var hasStories: Bool { !items.isEmpty }
   var accent: UIColor = .systemBlue {
     didSet { storiesView.reloadData() }
@@ -83,14 +85,22 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
   }
 
   private var storyBand: CGFloat {
-    showsStories && !storiesCollapsed ? KometChatListHeader.storiesHeight : 0
+    guard showsStories else { return 0 }
+    return KometChatListHeader.storiesHeight * min(1, max(0, storyProgress))
+  }
+
+  func setStoryProgress(_ progress: CGFloat) {
+    let next = min(1, max(0, progress))
+    storyProgress = next
+    storiesView.isHidden = !showsStories || next <= 0.001
+    storiesView.alpha = next
+    storiesView.clipsToBounds = true
+    setNeedsLayout()
+    layoutIfNeeded()
   }
 
   func setStoriesCollapsed(_ collapsed: Bool) {
-    guard collapsed != storiesCollapsed else { return }
-    storiesCollapsed = collapsed
-    storiesView.isHidden = collapsed || !showsStories
-    setNeedsLayout()
+    setStoryProgress(collapsed ? 0 : 1)
   }
 
   override init(frame: CGRect) {
