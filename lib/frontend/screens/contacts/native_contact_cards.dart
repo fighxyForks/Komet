@@ -15,13 +15,18 @@ import '../chats/chat_info_screen.dart';
 import 'open_contact_profile.dart';
 
 class NativeContactLookupPage extends StatelessWidget {
-  const NativeContactLookupPage({super.key});
+  final bool scrim;
+  final VoidCallback? onDismiss;
+
+  const NativeContactLookupPage({super.key, this.scrim = false, this.onDismiss});
 
   @override
   Widget build(BuildContext context) {
     return _NativeContactCard(
       mode: 'lookup',
-      onFind: (mode, query) => _lookup(context, mode, query),
+      scrim: scrim,
+      onDismiss: onDismiss,
+      onFind: (mode, query) => _lookup(context, mode, query, onDismiss),
     );
   }
 }
@@ -40,10 +45,18 @@ class NativeAddContactPage extends StatelessWidget {
 
 class _NativeContactCard extends StatefulWidget {
   final String mode;
+  final bool scrim;
+  final VoidCallback? onDismiss;
   final Future<String?> Function(String mode, String query)? onFind;
   final Future<String?> Function(String phone, String first, String last)? onSave;
 
-  const _NativeContactCard({required this.mode, this.onFind, this.onSave});
+  const _NativeContactCard({
+    required this.mode,
+    this.scrim = false,
+    this.onDismiss,
+    this.onFind,
+    this.onSave,
+  });
 
   @override
   State<_NativeContactCard> createState() => _NativeContactCardState();
@@ -75,7 +88,12 @@ class _NativeContactCardState extends State<_NativeContactCard> {
           : const <String, Object?>{};
       switch (call.method) {
         case 'close':
-          if (mounted) Navigator.of(context).pop();
+          final dismiss = widget.onDismiss;
+          if (dismiss != null) {
+            dismiss();
+          } else if (mounted) {
+            Navigator.of(context).pop();
+          }
         case 'find':
           final error = await widget.onFind?.call(
             args['mode'] as String? ?? 'phone',
@@ -103,10 +121,12 @@ class _NativeContactCardState extends State<_NativeContactCard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black54,
+      backgroundColor: widget.mode == 'lookup'
+          ? Colors.transparent
+          : Theme.of(context).colorScheme.surface,
       body: UiKitView(
         viewType: _type,
-        creationParams: {'mode': widget.mode},
+        creationParams: {'mode': widget.mode, 'scrim': widget.scrim},
         creationParamsCodec: const StandardMessageCodec(),
         onPlatformViewCreated: _created,
       ),
@@ -114,7 +134,12 @@ class _NativeContactCardState extends State<_NativeContactCard> {
   }
 }
 
-Future<String?> _lookup(BuildContext context, String mode, String query) async {
+Future<String?> _lookup(
+  BuildContext context,
+  String mode,
+  String query,
+  VoidCallback? onDismiss,
+) async {
   if (mode == 'id') {
     final id = int.tryParse(query.trim());
     if (id == null) return 'Введите числовой ID';
@@ -133,6 +158,7 @@ Future<String?> _lookup(BuildContext context, String mode, String query) async {
         id: id,
         name: ContactCache.get(id) ?? info.displayName,
         avatarUrl: info.avatarUrl,
+        onDismiss: onDismiss,
       );
       return null;
     } catch (_) {
@@ -149,15 +175,21 @@ Future<String?> _lookup(BuildContext context, String mode, String query) async {
     id: result.id,
     name: ContactCache.get(result.id) ?? result.name,
     avatarUrl: result.avatarUrl,
+    onDismiss: onDismiss,
   );
   return null;
 }
+
+/// Dim over the contacts list. Light theme stays in the 0.2–0.4 range.
+Color contactLookupScrim(Brightness brightness) =>
+    Colors.black.withValues(alpha: brightness == Brightness.dark ? 0.5 : 0.32);
 
 Future<void> _openFound(
   BuildContext context, {
   required int id,
   required String? name,
   required String? avatarUrl,
+  VoidCallback? onDismiss,
 }) async {
   final navigator = Navigator.of(context);
   final accountId = await TokenStorage.getActiveAccountId();
@@ -166,7 +198,11 @@ Future<void> _openFound(
       : await AppDatabase.findDialogChatByParticipant(accountId, id);
   final chatId = existing ?? ((accountId ?? 0) ^ id);
   if (!context.mounted) return;
-  navigator.pop();
+  if (onDismiss != null) {
+    onDismiss();
+  } else {
+    navigator.pop();
+  }
   navigator.push(
     iosPageRoute(
       context,
@@ -219,7 +255,13 @@ Future<String?> _save(
 }
 
 Future<void> openNativeContactLookup(BuildContext context) {
-  return pushSwipeable(context, (_) => const NativeContactLookupPage());
+  return showGeneralDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Найти',
+    barrierColor: contactLookupScrim(Theme.of(context).brightness),
+    pageBuilder: (_, _, _) => const NativeContactLookupPage(),
+  );
 }
 
 Future<void> openNativeAddContact(BuildContext context) {
