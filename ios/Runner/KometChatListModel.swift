@@ -128,7 +128,7 @@ enum KometChatListStyle {
 
   static func kindImage(_ kind: String?) -> UIImage? {
     if kind == "bot", let source = UIImage(named: "BotIcon") {
-      let side: CGFloat = 13
+      let side: CGFloat = 17
       let format = UIGraphicsImageRendererFormat()
       format.opaque = false
       let rendered = UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format)
