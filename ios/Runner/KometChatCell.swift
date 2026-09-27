@@ -55,6 +55,8 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   private var item: KometChatMessage?
   private var accent = UIColor.systemBlue
   private var stickerToken = 0
+  private var mediaFailed = false
+  private var animojiFrame: UIImage?
 
   private let selectionMark = UIImageView()
   private let avatar = UIImageView()
@@ -286,7 +288,10 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     stickerToken += 1
     onEvent = nil
     item = nil
+    mediaFailed = false
+    animojiFrame = nil
     mediaView.image = nil
+    mediaView.contentMode = .scaleAspectFill
     pollSelection.removeAll()
     dragX = 0
     bubble.transform = .identity
@@ -333,16 +338,25 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   func bindContent() {
     guard let item else { return }
     let token = stickerToken
-    if item.showAvatar, let url = item.avatarUrl.flatMap(URL.init(string:)) {
-      KometChatImages.load(url) { [weak self] image in
-        guard let self, self.item?.id == item.id, self.stickerToken == token else { return }
-        self.avatar.image = image
+    mediaFailed = false
+    mediaView.backgroundColor = UIColor.tertiarySystemFill
+    if item.showAvatar, let raw = item.avatarUrl {
+      loadImage(raw, token: token) { [weak self] image in
+        self?.avatar.image = image
       }
     }
-    if showsMedia, let url = mediaURL(item.mediaUrl) {
-      KometChatImages.load(url) { [weak self] image in
-        guard let self, self.item?.id == item.id, self.stickerToken == token else { return }
-        self.mediaView.image = image
+    if showsMedia, let raw = item.mediaUrl {
+      loadImage(raw, token: token) { [weak self] image in
+        guard let self else { return }
+        if let image {
+          self.mediaFailed = false
+          self.mediaView.image = image
+          self.mediaView.backgroundColor = .clear
+        } else {
+          self.mediaFailed = true
+          self.mediaView.image = UIImage(systemName: "arrow.clockwise")
+          self.mediaView.contentMode = .center
+        }
       }
     }
     if item.kind == "videoNote", let path = item.playUrl, !path.isEmpty, window != nil {
@@ -351,11 +365,34 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
       KometNotePlayback.stop(ifHost: mediaView)
     }
     for (offset, button) in albumButtons.enumerated() {
-      guard offset < albumTiles.count, let url = mediaURL(albumTiles[offset]["url"] as? String) else { continue }
-      KometChatImages.load(url) { [weak self, weak button] image in
-        guard let self, self.item?.id == item.id, self.stickerToken == token else { return }
-        button?.setImage(image, for: .normal)
+      guard offset < albumTiles.count, let raw = albumTiles[offset]["url"] as? String else { continue }
+      button.accessibilityIdentifier = nil
+      loadImage(raw, token: token) { [weak button] image in
+        Self.paint(button, image)
       }
+    }
+  }
+
+  private func loadImage(_ raw: String, token: Int, done: @escaping (UIImage?) -> Void) {
+    let itemId = item?.id
+    KometChatImages.load(raw) { [weak self] image in
+      guard let self, self.item?.id == itemId, self.stickerToken == token else { return }
+      done(image)
+    }
+  }
+
+  private static func paint(_ button: UIButton?, _ image: UIImage?) {
+    guard let button else { return }
+    if let image {
+      button.setImage(image, for: .normal)
+      button.accessibilityIdentifier = nil
+      button.accessibilityLabel = nil
+      button.tintColor = nil
+    } else {
+      button.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
+      button.accessibilityIdentifier = "retry-image"
+      button.accessibilityLabel = "Повторить загрузку"
+      button.tintColor = .white
     }
   }
 
@@ -431,6 +468,11 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     senderLabel.text = item.senderName
     forwardLabel.isHidden = item.forwardAuthor == nil
     forwardLabel.text = item.forwardAuthor.map { "Переслано от \($0)" }
+    forwardLabel.isUserInteractionEnabled = item.forwardAuthor != nil
+    if forwardLabel.gestureRecognizers?.isEmpty ?? true {
+      forwardLabel.addGestureRecognizer(
+        UITapGestureRecognizer(target: self, action: #selector(tapForward)))
+    }
     let quote = [item.replyAuthor, item.replyText].compactMap { $0 }.filter { !$0.isEmpty }
     replyButton.isHidden = quote.isEmpty
     replyButton.setTitle(quote.joined(separator: "\n"), for: .normal)
@@ -438,7 +480,8 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     bodyView.isHidden = !showsText
     bodyView.preferredWidth = contentWidth
     if showsText {
-      bodyView.attributedText = KometChatText.make(item, foreground: foreground, accent: accent)
+      bodyView.attributedText = KometChatText.make(
+        item, foreground: foreground, accent: accent, animoji: animojiFrame)
     }
     fillAlbum(item, contentWidth: contentWidth)
     fillCards(item)
@@ -639,9 +682,18 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   }
 
   func showStickerFrame(_ image: UIImage, id: String) {
-    guard item?.id == id, item?.kind == "sticker" else { return }
-    stickerToken += 1
-    mediaView.image = image
+    guard item?.id == id else { return }
+    if item?.kind == "sticker" {
+      mediaView.image = image
+      return
+    }
+    let animated = item?.spans.contains { $0.styles.contains("animoji") } == true
+    guard animated else { return }
+    if UIAccessibility.isReduceMotionEnabled, animojiFrame != nil { return }
+    animojiFrame = image
+    guard showsText, let item, !UIAccessibility.isVoiceOverRunning else { return }
+    bodyView.attributedText = KometChatText.make(
+      item, foreground: bodyView.textColor ?? .label, accent: tintColor, animoji: image)
   }
 
   @objc private func tapRow() {
@@ -667,12 +719,40 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     onEvent?("replyJump", ["id": id])
   }
 
+  @objc private func tapForward() {
+    guard let id = item?.id else { return }
+    onEvent?("forwardSource", ["id": id])
+  }
+
   @objc private func tapMedia() {
+    if mediaFailed {
+      mediaFailed = false
+      bindContent()
+      return
+    }
     openMedia(index: 0)
   }
 
   @objc private func tapAlbum(_ sender: UIButton) {
+    if sender.accessibilityIdentifier == "retry-image" {
+      sender.accessibilityIdentifier = nil
+      sender.setImage(nil, for: .normal)
+      guard sender.tag < albumTiles.count,
+            let raw = albumTiles[sender.tag]["url"] as? String else { return }
+      loadImage(raw, token: stickerToken) { [weak sender] image in
+        Self.paint(sender, image)
+      }
+      return
+    }
     openMedia(index: sender.tag)
+  }
+
+  func applyPlayback(playing: Bool, progress: CGFloat) {
+    guard item?.kind == "voice" else { return }
+    waveView.progress = progress
+    waveView.setNeedsDisplay()
+    let symbol = playing ? "pause.fill" : "play.fill"
+    playButton.setImage(UIImage(systemName: symbol), for: .normal)
   }
 
   private func openMedia(index: Int) {
@@ -1026,7 +1106,12 @@ final class KometChatTextView: UITextView {
 }
 
 enum KometChatText {
-  static func make(_ item: KometChatMessage, foreground: UIColor, accent: UIColor) -> NSAttributedString {
+  static func make(
+    _ item: KometChatMessage,
+    foreground: UIColor,
+    accent: UIColor,
+    animoji: UIImage? = nil
+  ) -> NSAttributedString {
     let font = UIFont.preferredFont(forTextStyle: .body)
     let paragraph = NSMutableParagraphStyle()
     paragraph.hyphenationFactor = 0
@@ -1037,6 +1122,7 @@ enum KometChatText {
       .paragraphStyle: paragraph,
     ])
     let limit = (item.text as NSString).length
+    var animojiRanges: [NSRange] = []
     for span in item.spans {
       let start = min(max(span.start, 0), limit)
       let end = min(start + max(span.length, 0), limit)
@@ -1058,6 +1144,9 @@ enum KometChatText {
       }
       if span.styles.contains("animoji") {
         face = UIFont.preferredFont(forTextStyle: .body)
+        if animoji != nil && !UIAccessibility.isVoiceOverRunning {
+          animojiRanges.append(range)
+        }
       }
       if let described = face.fontDescriptor.withSymbolicTraits(traits) {
         attributes[.font] = UIFont(descriptor: described, size: face.pointSize)
@@ -1087,6 +1176,16 @@ enum KometChatText {
         attributes[.foregroundColor] = accent
       }
       if !attributes.isEmpty { text.addAttributes(attributes, range: range) }
+    }
+    if let animoji {
+      let side = font.lineHeight
+      for range in animojiRanges.reversed() {
+        guard range.location + range.length <= text.length else { continue }
+        let attachment = NSTextAttachment()
+        attachment.image = animoji
+        attachment.bounds = CGRect(x: 0, y: -2, width: side, height: side)
+        text.replaceCharacters(in: range, with: NSAttributedString(attachment: attachment))
+      }
     }
     return text
   }
@@ -1253,19 +1352,58 @@ final class KometReactionFlow: UIView {
 }
 
 enum KometChatImages {
-  private static let cache = NSCache<NSURL, UIImage>()
+  private static let cache = NSCache<NSString, UIImage>()
+  private static var inflight: [String: [(UIImage?) -> Void]] = [:]
   static var loads = 0
 
-  static func load(_ url: URL, done: @escaping (UIImage) -> Void) {
-    loads += 1
-    if let cached = cache.object(forKey: url as NSURL) {
+  static func load(_ raw: String, done: @escaping (UIImage?) -> Void) {
+    let key = raw as NSString
+    if let cached = cache.object(forKey: key) {
+      loads += 1
       done(cached)
       return
     }
-    URLSession.shared.dataTask(with: url) { data, _, _ in
-      guard let data = data, let image = UIImage(data: data) else { return }
-      cache.setObject(image, forKey: url as NSURL)
-      DispatchQueue.main.async { done(image) }
-    }.resume()
+    if inflight[raw] != nil {
+      inflight[raw]?.append(done)
+      return
+    }
+    inflight[raw] = [done]
+    loads += 1
+    DispatchQueue.global(qos: .userInitiated).async {
+      let image = decode(raw)
+      DispatchQueue.main.async {
+        if let image { cache.setObject(image, forKey: key) }
+        let waiters = inflight.removeValue(forKey: raw) ?? []
+        waiters.forEach { $0(image) }
+      }
+    }
+  }
+
+  private static func decode(_ raw: String) -> UIImage? {
+    if raw.hasPrefix("data:image") {
+      guard let comma = raw.firstIndex(of: ","),
+            let data = Data(base64Encoded: String(raw[raw.index(after: comma)...])) else { return nil }
+      return downsample(data)
+    }
+    if raw.hasPrefix("/") || raw.hasPrefix("file:") {
+      let path = raw.hasPrefix("file:") ? URL(string: raw)?.path ?? raw : raw
+      guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
+      return downsample(data)
+    }
+    guard let url = URL(string: raw), let data = try? Data(contentsOf: url) else { return nil }
+    return downsample(data)
+  }
+
+  private static func downsample(_ data: Data) -> UIImage? {
+    let source = CGImageSourceCreateWithData(data as CFData, nil)
+    let options: [CFString: Any] = [
+      kCGImageSourceCreateThumbnailFromImageAlways: true,
+      kCGImageSourceThumbnailMaxPixelSize: 1280,
+      kCGImageSourceCreateThumbnailWithTransform: true,
+    ]
+    if let source, let cg = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) {
+      return UIImage(cgImage: cg)
+    }
+    return UIImage(data: data)
   }
 }

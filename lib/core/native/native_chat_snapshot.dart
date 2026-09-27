@@ -4,6 +4,7 @@ import '../../models/poll.dart';
 import '../../models/reaction_info.dart';
 import '../chat/chat_content_unit.dart';
 import '../chat/content_unit_mapper.dart';
+import '../chat/native_parity.dart';
 import '../chat/layout_revision.dart';
 import '../chat/message_cluster.dart';
 import '../utils/format.dart';
@@ -221,7 +222,13 @@ NativeChatItem? _messageItem(
       message.status == 'EDITED' ||
       (message.editHistory != null && message.editHistory!.isNotEmpty);
   final clock = formatClock(stamp, withSeconds: withSeconds);
-  final body = _body(message, kind);
+  final visible = nativeVisibleText(
+    accountId: message.accountId,
+    chatId: message.chatId,
+    messageId: message.id,
+    stored: message.text,
+  );
+  final body = _body(message, kind, visible);
   final pollAttachment = _pollAttachment(message);
   final poll = pollAttachment == null ? null : pollOf?.call(pollAttachment.pollId);
   return NativeChatItem(
@@ -254,14 +261,21 @@ NativeChatItem? _messageItem(
     avatarUrl: avatarOf?.call(message.senderId),
     replyId: reply?.messageId,
     replyAuthor: reply == null ? null : _named(names(reply.senderId)),
-    replyText: reply?.previewText(),
+    replyText: reply == null
+        ? null
+        : nativeVisibleText(
+            accountId: message.accountId,
+            chatId: message.chatId,
+            messageId: reply.messageId,
+            stored: reply.previewText(),
+          ).text,
     forwardAuthor: forwarded == null
         ? null
         : _named(forwarded.originalSenderName ?? names(forwarded.originalSenderId)),
     mediaUrl: _mediaUrl(message),
     playUrl: kind == NativeChatKind.videoNote ? notePathOf?.call(message) : null,
     media: _mediaTiles(message),
-    spans: _spans(message, body),
+    spans: visible.hideFormats ? const [] : _spans(message, body),
     pollId: pollAttachment?.pollId,
     pollTotal: poll?.total,
     pollMultiple: poll?.isMultiple ?? false,
@@ -431,11 +445,21 @@ NativeChatKind nativeMessageKind(CachedMessage message) {
   return NativeChatKind.text;
 }
 
-String _body(CachedMessage message, NativeChatKind kind) {
-  final own = message.text?.trim();
-  if (own != null && own.isNotEmpty) return own;
-  final forwarded = message.forwardedAttachment?.originalText?.trim();
-  if (forwarded != null && forwarded.isNotEmpty) return forwarded;
+String _body(
+  CachedMessage message,
+  NativeChatKind kind,
+  NativeVisibleText visible,
+) {
+  final own = visible.text.trim();
+  if (own.isNotEmpty) return own;
+  final forwarded = message.forwardedAttachment;
+  final original = nativeVisibleText(
+    accountId: message.accountId,
+    chatId: forwarded?.originalChatId ?? message.chatId,
+    messageId: forwarded?.originalMessageId,
+    stored: forwarded?.originalText,
+  ).text.trim();
+  if (original.isNotEmpty) return original;
   return switch (kind) {
     NativeChatKind.album => '',
     NativeChatKind.photo => 'Фото',
@@ -467,7 +491,8 @@ List<NativeChatMedia> _mediaTiles(CachedMessage message) {
   final tiles = <NativeChatMedia>[];
   for (final attachment in _attachments(message)) {
     if (attachment is PhotoAttachment) {
-      final url = attachment.localPath ?? attachment.baseUrl;
+      final url =
+          attachment.localPath ?? attachment.baseUrl ?? attachment.previewData;
       if (_usableMediaPath(url) case final path?) {
         tiles.add(
           NativeChatMedia(
@@ -479,9 +504,17 @@ List<NativeChatMedia> _mediaTiles(CachedMessage message) {
         );
       }
     } else if (attachment is VideoAttachment && !attachment.isNote) {
-      final url = attachment.thumbnail ?? attachment.previewData;
-      if (url != null && url.startsWith('http')) {
-        tiles.add(NativeChatMedia(url: url, kind: 'video'));
+      final url =
+          attachment.localPath ?? attachment.thumbnail ?? attachment.previewData;
+      if (_usableMediaPath(url) case final path?) {
+        tiles.add(
+          NativeChatMedia(
+            url: path,
+            kind: 'video',
+            width: attachment.width,
+            height: attachment.height,
+          ),
+        );
       }
     }
   }
@@ -501,7 +534,7 @@ List<NativeChatSpan> _spans(CachedMessage message, String text) {
           start: segment.start,
           length: segment.end - segment.start,
           styles: [for (final format in segment.formats) _styleName(format)],
-          url: segment.url,
+          url: segment.url ?? segment.animojiUrl,
           userId: segment.mentionId,
         ),
   ];
@@ -520,7 +553,7 @@ String _styleName(TextFormat format) => switch (format) {
 };
 
 PollAttachment? _pollAttachment(CachedMessage message) {
-  for (final attachment in message.attachments ?? const <MessageAttachment>[]) {
+  for (final attachment in _attachments(message)) {
     if (attachment is PollAttachment) return attachment;
   }
   return null;
@@ -557,7 +590,10 @@ String _callLabel(CachedMessage message) {
 
 String? _usableMediaPath(String? url) {
   if (url == null || url.isEmpty) return null;
-  if (url.startsWith('http') || url.startsWith('file') || url.startsWith('/')) {
+  if (url.startsWith('http') ||
+      url.startsWith('file') ||
+      url.startsWith('/') ||
+      url.startsWith('data:image')) {
     return url;
   }
   return null;

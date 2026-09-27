@@ -89,6 +89,14 @@ final class KometChatPlatformView: NSObject, FlutterPlatformView {
     case "scrollToEnd":
       chat.scrollToEnd(animated: true)
       result(nil)
+    case "playback":
+      if let id = arguments["id"] as? String {
+        chat.setPlayback(
+          id: id,
+          playing: (arguments["playing"] as? NSNumber)?.boolValue ?? false,
+          progress: CGFloat((arguments["progress"] as? NSNumber)?.doubleValue ?? 0))
+      }
+      result(nil)
     case "stickerFrame":
       if let id = arguments["id"] as? String,
          let bytes = arguments["bytes"] as? FlutterStandardTypedData,
@@ -121,6 +129,7 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
 
   private var contents: [String: KometChatMessage] = [:]
   private var stickerFrames: [String: UIImage] = [:]
+  private var playback: [String: (playing: Bool, progress: CGFloat)] = [:]
   private var order: [String] = []
   private var chrome = KometChatChrome()
   private var nearBottom = true
@@ -250,6 +259,14 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     guard let index = order.firstIndex(of: id) else { return }
     collectionView.scrollToItem(
       at: IndexPath(item: index, section: 0), at: .centeredVertically, animated: true)
+  }
+
+  func setPlayback(id: String, playing: Bool, progress: CGFloat) {
+    playback[id] = (playing, progress)
+    guard let index = order.firstIndex(of: id),
+          let cell = collectionView.cellForItem(at: IndexPath(item: index, section: 0))
+            as? KometChatMessageCell else { return }
+    cell.applyPlayback(playing: playing, progress: progress)
   }
 
   func stickerFrame(id: String, bytes: Data, width: Int, height: Int) {
@@ -437,6 +454,9 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
       cell.apply(
         item, accent: self.chrome.accent, selecting: self.chrome.selecting,
         width: collectionView.bounds.width)
+      if let play = self.playback[id] {
+        cell.applyPlayback(playing: play.playing, progress: play.progress)
+      }
       if item.kind == "sticker", let frame = self.stickerFrames[id] {
         cell.showStickerFrame(frame, id: id)
       }
