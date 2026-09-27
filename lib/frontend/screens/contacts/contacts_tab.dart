@@ -51,6 +51,7 @@ class ContactsTab extends StatefulWidget {
 class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
   List<CachedContact> _contacts = [];
   bool _isLoading = true;
+  bool _lookupOpen = false;
 
   @override
   void initState() {
@@ -294,7 +295,9 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
   Widget _buildNative(ColorScheme cs) {
     return Scaffold(
       backgroundColor: IosPalette.background(cs),
-      body: NativeListView(
+      body: Stack(
+        children: [
+          NativeListView(
         sections: _isLoading ? const [] : _nativeSections(),
         chrome: {
           'title': 'Контакты',
@@ -316,11 +319,22 @@ class _ContactsTabState extends State<ContactsTab> with SpectrumSurface {
           onButton: (id, _) {
             if (id == 'add') {
               unawaited(openNativeAddContact(context));
-            } else {
-              unawaited(openNativeContactLookup(context));
+            } else if (mounted) {
+              setState(() => _lookupOpen = true);
             }
           },
         ),
+      ),
+          if (_lookupOpen)
+            Positioned.fill(
+              child: NativeContactLookupPage(
+                scrim: true,
+                onDismiss: () {
+                  if (mounted) setState(() => _lookupOpen = false);
+                },
+              ),
+            ),
+        ],
       ),
     );
   }

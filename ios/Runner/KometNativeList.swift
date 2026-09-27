@@ -303,6 +303,7 @@ final class KometNativeListController: UIViewController, UITableViewDelegate,
     let controller = UISearchController(searchResultsController: nil)
     controller.searchResultsUpdater = self
     controller.obscuresBackgroundDuringPresentation = false
+    KometNavigationChrome.flattenSearch(controller.searchBar)
     navigationItem.searchController = controller
     KometNavigationChrome.pinSearchToTop(navigationItem)
     definesPresentationContext = true
@@ -471,6 +472,7 @@ final class KometNativeListController: UIViewController, UITableViewDelegate,
   }
 
   func updateSearchResults(for searchController: UISearchController) {
+    KometNavigationChrome.flattenSearch(searchController.searchBar)
     let text = searchController.searchBar.text?
       .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     guard text != query else { return }

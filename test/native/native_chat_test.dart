@@ -335,6 +335,53 @@ void main() {
       expect(items.last.text, 'Ира закрепил(а) сообщение');
       expect(items.last.kind, NativeChatKind.control);
     });
+
+    test('посты канала без подписи отправителя и на всю ширину', () {
+      final items = buildNativeChatItems(
+        now: _now,
+        myId: 10,
+        showSenders: false,
+        wide: true,
+        messages: [
+          _message(
+            id: 'post',
+            senderId: 4,
+            time: _now,
+            text: 'Новость',
+          ),
+        ],
+      );
+      final post = items.last;
+      expect(post.wide, isTrue);
+      expect(post.showSender, isFalse);
+      expect(post.showAvatar, isFalse);
+    });
+
+    test('локальное фото передаёт путь и размер', () {
+      final items = buildNativeChatItems(
+        now: _now,
+        myId: 10,
+        messages: [
+          _message(
+            id: 'photo',
+            senderId: 10,
+            time: _now,
+            attachments: const [
+              PhotoAttachment(
+                localPath: '/tmp/logo.jpg',
+                width: 800,
+                height: 400,
+              ),
+            ],
+          ),
+        ],
+      );
+      final photo = items.last;
+      expect(photo.mediaUrl, '/tmp/logo.jpg');
+      expect(photo.mediaWidth, 800);
+      expect(photo.mediaHeight, 400);
+      expect(photo.toMap()['mediaWidth'], 800);
+    });
   });
 
   group('разница строк', () {

@@ -50,16 +50,8 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
       name: "ru.komet.app/native_chat_composer/\(viewId)", binaryMessenger: messenger)
     super.init()
     root.frame = frame
-    if #available(iOS 26.0, *) {
-      root.backgroundColor = .clear
-      let glass = UIVisualEffectView(effect: UIGlassEffect(style: .regular))
-      glass.frame = root.bounds
-      glass.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-      glass.isUserInteractionEnabled = false
-      root.insertSubview(glass, at: 0)
-    } else {
-      root.backgroundColor = .secondarySystemBackground
-    }
+    root.backgroundColor = .clear
+    root.clipsToBounds = false
     replyLabel.font = .preferredFont(forTextStyle: .footnote)
     replyLabel.textColor = .secondaryLabel
     replyClose.setImage(UIImage(systemName: "xmark"), for: .normal)
@@ -76,9 +68,9 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
     statusLabel.font = .preferredFont(forTextStyle: .subheadline)
     statusLabel.textColor = .secondaryLabel
     statusLabel.isHidden = true
-    configure(attachButton, "paperclip", #selector(attach))
-    configure(stickerButton, "face.smiling", #selector(stickers))
-    configure(formatButton, "textformat", #selector(formatText))
+    configure(attachButton, "paperclip", #selector(attach), tint: .label)
+    configure(stickerButton, "face.smiling", #selector(stickers), tint: .secondaryLabel)
+    configure(formatButton, "textformat", #selector(formatText), tint: .secondaryLabel)
     actionButton.tintColor = .white
     actionButton.backgroundColor = .systemBlue
     actionButton.layer.cornerRadius = 22
@@ -96,9 +88,26 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
       placeholder.leadingAnchor.constraint(equalTo: field.leadingAnchor, constant: 8),
       placeholder.topAnchor.constraint(equalTo: field.topAnchor, constant: 8),
     ])
-    let input = UIStackView(arrangedSubviews: [
-      attachButton, field, statusLabel, stickerButton, formatButton, actionButton,
+    let capsule = UIView()
+    capsule.backgroundColor = .tertiarySystemFill
+    capsule.layer.cornerRadius = 22
+    capsule.layer.cornerCurve = .continuous
+    capsule.clipsToBounds = true
+    let tools = UIStackView(arrangedSubviews: [
+      field, statusLabel, stickerButton, formatButton,
     ])
+    tools.axis = .horizontal
+    tools.alignment = .bottom
+    tools.spacing = 0
+    tools.translatesAutoresizingMaskIntoConstraints = false
+    capsule.addSubview(tools)
+    NSLayoutConstraint.activate([
+      tools.leadingAnchor.constraint(equalTo: capsule.leadingAnchor, constant: 6),
+      tools.trailingAnchor.constraint(equalTo: capsule.trailingAnchor, constant: -2),
+      tools.topAnchor.constraint(equalTo: capsule.topAnchor, constant: 4),
+      tools.bottomAnchor.constraint(equalTo: capsule.bottomAnchor, constant: -4),
+    ])
+    let input = UIStackView(arrangedSubviews: [attachButton, capsule, actionButton])
     input.axis = .horizontal
     input.alignment = .bottom
     input.spacing = 6
@@ -108,10 +117,10 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
     column.translatesAutoresizingMaskIntoConstraints = false
     root.addSubview(column)
     NSLayoutConstraint.activate([
-      column.leadingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.leadingAnchor, constant: 8),
-      column.trailingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.trailingAnchor, constant: -8),
-      column.topAnchor.constraint(equalTo: root.topAnchor, constant: 6),
-      column.bottomAnchor.constraint(equalTo: root.safeAreaLayoutGuide.bottomAnchor, constant: -6),
+      column.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 8),
+      column.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -8),
+      column.topAnchor.constraint(equalTo: root.topAnchor, constant: 4),
+      column.bottomAnchor.constraint(equalTo: root.safeAreaLayoutGuide.bottomAnchor, constant: -4),
       actionButton.widthAnchor.constraint(equalToConstant: 44),
       actionButton.heightAnchor.constraint(equalToConstant: 44),
       attachButton.widthAnchor.constraint(equalToConstant: 44),
@@ -140,9 +149,10 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
   deinit { channel.setMethodCallHandler(nil) }
   func view() -> UIView { root }
 
-  private func configure(_ button: UIButton, _ symbol: String, _ action: Selector) {
-    button.setImage(UIImage(systemName: symbol), for: .normal)
-    button.tintColor = .secondaryLabel
+  private func configure(_ button: UIButton, _ symbol: String, _ action: Selector, tint: UIColor) {
+    let symbolConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+    button.setImage(UIImage(systemName: symbol, withConfiguration: symbolConfig), for: .normal)
+    button.tintColor = tint
     button.addTarget(self, action: action, for: .touchUpInside)
   }
 
@@ -159,6 +169,8 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
     statusLabel.text = status
     statusLabel.isHidden = status.isEmpty
     field.isHidden = !status.isEmpty
+    stickerButton.isHidden = !status.isEmpty
+    formatButton.isHidden = !status.isEmpty
     let text = map["text"] as? String ?? ""
     if field.text != text {
       applying = true
@@ -188,7 +200,9 @@ final class KometChatComposerPlatformView: NSObject, FlutterPlatformView, UIText
     } else {
       symbol = "mic.fill"
     }
-    actionButton.setImage(UIImage(systemName: symbol), for: .normal)
+    let symbolConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+    actionButton.setImage(
+      UIImage(systemName: symbol, withConfiguration: symbolConfig), for: .normal)
     let filled = recording || locked || hasText
     actionButton.backgroundColor = recording || locked ? .systemRed : (hasText ? .systemBlue : .tertiarySystemFill)
     actionButton.tintColor = filled ? .white : .label

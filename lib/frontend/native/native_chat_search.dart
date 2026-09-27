@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 import '../../core/utils/format.dart';
 import '../screens/chats/chat/chat_search_controller.dart';
@@ -232,6 +232,7 @@ class _NativePinnedBannerState extends State<NativePinnedBanner> {
     'title': widget.title,
     'text': widget.text,
     'canUnpin': widget.canUnpin,
+    'accent': Theme.of(context).colorScheme.primary.toARGB32(),
   };
 
   void _created(int viewId) {
@@ -269,6 +270,7 @@ class _NativePinnedBannerState extends State<NativePinnedBanner> {
     'title': view.title,
     'text': view.text,
     'canUnpin': view.canUnpin,
+    'accent': Theme.of(context).colorScheme.primary.toARGB32(),
   };
 
   @override

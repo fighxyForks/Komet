@@ -30,8 +30,7 @@ struct KometFolderItem: Equatable {
   }
 }
 
-final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectionViewDelegate,
-  UISearchBarDelegate {
+final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectionViewDelegate {
   static let storiesHeight: CGFloat = 100
   static let searchHeight: CGFloat = 52
   static let foldersHeight: CGFloat = 46
@@ -57,7 +56,10 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
   private var selectedFolder: String?
   private var usesSegments = true
 
-  let searchBar = UISearchBar()
+  private let searchCapsule = UIControl()
+  private let searchIcon = UIImageView()
+  private let searchTitle = UILabel()
+  private var searchEnabled = true
   private let storiesLayout: UICollectionViewFlowLayout = {
     let layout = UICollectionViewFlowLayout()
     layout.scrollDirection = .horizontal
@@ -114,11 +116,32 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
     storiesView.isHidden = true
     addSubview(storiesView)
 
-    searchBar.searchBarStyle = .minimal
-    searchBar.backgroundImage = UIImage()
-    searchBar.delegate = self
-    searchBar.autocapitalizationType = .none
-    addSubview(searchBar)
+    searchCapsule.backgroundColor = .tertiarySystemFill
+    searchCapsule.layer.cornerRadius = 18
+    searchCapsule.layer.cornerCurve = .continuous
+    searchCapsule.addTarget(self, action: #selector(searchTapped), for: .touchUpInside)
+    searchIcon.image = UIImage(
+      systemName: "magnifyingglass",
+      withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .regular))
+    searchIcon.tintColor = .secondaryLabel
+    searchIcon.contentMode = .scaleAspectFit
+    searchTitle.font = .systemFont(ofSize: 17)
+    searchTitle.textColor = .secondaryLabel
+    searchTitle.text = "Поиск"
+    let searchRow = UIStackView(arrangedSubviews: [searchIcon, searchTitle])
+    searchRow.axis = .horizontal
+    searchRow.alignment = .center
+    searchRow.spacing = 6
+    searchRow.isUserInteractionEnabled = false
+    searchRow.translatesAutoresizingMaskIntoConstraints = false
+    searchCapsule.addSubview(searchRow)
+    NSLayoutConstraint.activate([
+      searchRow.centerXAnchor.constraint(equalTo: searchCapsule.centerXAnchor),
+      searchRow.centerYAnchor.constraint(equalTo: searchCapsule.centerYAnchor),
+      searchIcon.widthAnchor.constraint(equalToConstant: 18),
+      searchIcon.heightAnchor.constraint(equalToConstant: 18),
+    ])
+    addSubview(searchCapsule)
 
     folderSegments.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
     folderSegments.addGestureRecognizer(
@@ -151,8 +174,12 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
     super.layoutSubviews()
     let storiesHeight = storyBand
     storiesView.frame = CGRect(x: 0, y: 0, width: bounds.width, height: storiesHeight)
-    searchBar.frame = CGRect(x: 8, y: storiesHeight, width: bounds.width - 16,
-                             height: KometChatListHeader.searchHeight)
+    let searchHeight: CGFloat = 36
+    searchCapsule.frame = CGRect(
+      x: 16,
+      y: storiesHeight + (KometChatListHeader.searchHeight - searchHeight) / 2,
+      width: bounds.width - 32,
+      height: searchHeight)
     layoutFolders(top: storiesHeight + KometChatListHeader.searchHeight)
   }
 
@@ -306,21 +333,18 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
   }
 
   func setPlaceholder(_ text: String) {
-    searchBar.placeholder = text
+    searchTitle.text = text
   }
 
   func setSearchEnabled(_ enabled: Bool) {
-    if !enabled { endSearch() }
-    searchBar.isUserInteractionEnabled = enabled
-    searchBar.alpha = enabled ? 1 : 0.5
+    searchEnabled = enabled
+    searchCapsule.isUserInteractionEnabled = enabled
+    searchCapsule.alpha = enabled ? 1 : 0.5
   }
 
-  func endSearch() {
-    guard searchBar.isFirstResponder || !(searchBar.text ?? "").isEmpty else { return }
-    searchBar.text = ""
-    searchBar.setShowsCancelButton(false, animated: true)
-    searchBar.resignFirstResponder()
-    onQuery?("")
+  @objc private func searchTapped() {
+    guard searchEnabled else { return }
+    onOpenSearch?()
   }
 
   func collectionView(_ collectionView: UICollectionView,
@@ -348,22 +372,6 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
     onStory?(item, cell.avatarFrame(in: nil))
   }
 
-  func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
-    onOpenSearch?()
-    return false
-  }
-
-  func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-    onQuery?(searchText.trimmingCharacters(in: .whitespacesAndNewlines))
-  }
-
-  func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-    searchBar.resignFirstResponder()
-  }
-
-  func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-    endSearch()
-  }
 }
 
 final class KometStoryCell: UICollectionViewCell {

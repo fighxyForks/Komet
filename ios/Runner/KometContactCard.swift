@@ -23,9 +23,11 @@ final class KometContactCardViewFactory: NSObject, FlutterPlatformViewFactory {
   }
 }
 
-final class KometContactCardPlatformView: NSObject, FlutterPlatformView, UITextFieldDelegate {
+final class KometContactCardPlatformView: NSObject, FlutterPlatformView, UITextFieldDelegate,
+  UIGestureRecognizerDelegate {
   private let channel: FlutterMethodChannel
   private let card = UIView()
+  private let panel = UIView()
   private let titleLabel = UILabel()
   private let closeButton = UIButton(type: .system)
   private let segments = UISegmentedControl(items: ["По номеру", "По ID"])
@@ -44,8 +46,12 @@ final class KometContactCardPlatformView: NSObject, FlutterPlatformView, UITextF
       name: "ru.komet.app/native_contact_card/\(viewId)", binaryMessenger: messenger)
     super.init()
     card.frame = frame
-    card.backgroundColor = .clear
-    let panel = UIView()
+    let paintsScrim = (args["scrim"] as? NSNumber)?.boolValue ?? false
+    card.backgroundColor = paintsScrim
+      ? UIColor { traits in
+        UIColor.black.withAlphaComponent(traits.userInterfaceStyle == .dark ? 0.5 : 0.32)
+      }
+      : .clear
     panel.backgroundColor = .secondarySystemGroupedBackground
     panel.layer.cornerRadius = 22
     panel.layer.cornerCurve = .continuous
@@ -98,6 +104,9 @@ final class KometContactCardPlatformView: NSObject, FlutterPlatformView, UITextF
       closeButton.widthAnchor.constraint(equalToConstant: 44),
       closeButton.heightAnchor.constraint(equalToConstant: 44),
     ])
+    let backgroundTap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+    backgroundTap.delegate = self
+    card.addGestureRecognizer(backgroundTap)
     channel.setMethodCallHandler { [weak self] call, result in
       if call.method == "status" {
         let map = call.arguments as? [String: Any] ?? [:]
@@ -117,10 +126,24 @@ final class KometContactCardPlatformView: NSObject, FlutterPlatformView, UITextF
 
   private func style(_ field: UITextField, _ placeholder: String) {
     field.placeholder = placeholder
-    field.borderStyle = .roundedRect
+    field.borderStyle = .none
+    field.backgroundColor = .tertiarySystemFill
+    field.layer.cornerRadius = 12
+    field.layer.cornerCurve = .continuous
     field.font = .preferredFont(forTextStyle: .body)
     field.clearButtonMode = .whileEditing
-    field.heightAnchor.constraint(greaterThanOrEqualToConstant: 44).isActive = true
+    field.clipsToBounds = true
+    field.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 44))
+    field.leftViewMode = .always
+    field.heightAnchor.constraint(equalToConstant: 44).isActive = true
+  }
+
+  func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+    !panel.bounds.contains(touch.location(in: panel))
+  }
+
+  @objc private func backgroundTapped() {
+    close()
   }
 
   @objc private func close() { channel.invokeMethod("close", arguments: nil) }

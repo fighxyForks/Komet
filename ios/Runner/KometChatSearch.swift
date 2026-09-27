@@ -62,7 +62,7 @@ private final class KometChatSearchBarView: NSObject, FlutterPlatformView, UITex
     close.tintColor = .label
     close.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
     let capsule = UIView()
-    capsule.backgroundColor = .secondarySystemFill
+    capsule.backgroundColor = .tertiarySystemFill
     capsule.layer.cornerRadius = 18
     let icon = UIImageView(image: UIImage(systemName: "magnifyingglass"))
     icon.tintColor = .secondaryLabel
@@ -317,6 +317,7 @@ private extension UIFont {
 private final class KometPinnedBannerView: NSObject, FlutterPlatformView {
   private let channel: FlutterMethodChannel
   private let root = UIView()
+  private let accentBar = UIView()
   private let titleLabel = UILabel()
   private let bodyLabel = UILabel()
   private let close = UIButton(type: .system)
@@ -329,11 +330,10 @@ private final class KometPinnedBannerView: NSObject, FlutterPlatformView {
     root.backgroundColor = .secondarySystemGroupedBackground
     root.layer.cornerRadius = 16
     root.clipsToBounds = true
-    let bar = UIView()
-    bar.backgroundColor = .systemBlue
-    bar.layer.cornerRadius = 1.5
+    accentBar.backgroundColor = .label
+    accentBar.layer.cornerRadius = 1.5
     titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
-    titleLabel.textColor = .systemBlue
+    titleLabel.textColor = .label
     bodyLabel.font = .preferredFont(forTextStyle: .subheadline)
     bodyLabel.textColor = .secondaryLabel
     bodyLabel.numberOfLines = 1
@@ -345,16 +345,16 @@ private final class KometPinnedBannerView: NSObject, FlutterPlatformView {
     let column = UIStackView(arrangedSubviews: [titleLabel, bodyLabel])
     column.axis = .vertical
     column.spacing = 1
-    for view in [bar, column, close] {
+    for view in [accentBar, column, close] {
       view.translatesAutoresizingMaskIntoConstraints = false
       root.addSubview(view)
     }
     NSLayoutConstraint.activate([
-      bar.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 12),
-      bar.centerYAnchor.constraint(equalTo: root.centerYAnchor),
-      bar.widthAnchor.constraint(equalToConstant: 3),
-      bar.heightAnchor.constraint(equalToConstant: 28),
-      column.leadingAnchor.constraint(equalTo: bar.trailingAnchor, constant: 10),
+      accentBar.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 12),
+      accentBar.centerYAnchor.constraint(equalTo: root.centerYAnchor),
+      accentBar.widthAnchor.constraint(equalToConstant: 3),
+      accentBar.heightAnchor.constraint(equalToConstant: 28),
+      column.leadingAnchor.constraint(equalTo: accentBar.trailingAnchor, constant: 10),
       column.trailingAnchor.constraint(equalTo: close.leadingAnchor, constant: -8),
       column.centerYAnchor.constraint(equalTo: root.centerYAnchor),
       close.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -4),
@@ -378,11 +378,24 @@ private final class KometPinnedBannerView: NSObject, FlutterPlatformView {
 
   private func apply(_ map: [String: Any]?) {
     let map = map ?? [:]
-    titleLabel.text = map["title"] as? String ?? "Закреплённое"
+    titleLabel.text = map["title"] as? String ?? "Закреплённое сообщение"
     bodyLabel.text = map["text"] as? String ?? ""
     close.isHidden = !((map["canUnpin"] as? NSNumber)?.boolValue ?? false)
+    let accent = Self.color(map["accent"])
+    titleLabel.textColor = accent
+    accentBar.backgroundColor = accent
   }
 
   @objc private func tapped() { channel.invokeMethod("open", arguments: nil) }
   @objc private func unpin() { channel.invokeMethod("unpin", arguments: nil) }
+
+  private static func color(_ value: Any?) -> UIColor {
+    guard let number = value as? NSNumber else { return .label }
+    let argb = UInt32(truncatingIfNeeded: number.intValue)
+    return UIColor(
+      red: CGFloat((argb >> 16) & 0xFF) / 255,
+      green: CGFloat((argb >> 8) & 0xFF) / 255,
+      blue: CGFloat(argb & 0xFF) / 255,
+      alpha: CGFloat((argb >> 24) & 0xFF) / 255)
+  }
 }
