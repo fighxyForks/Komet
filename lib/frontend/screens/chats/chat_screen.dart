@@ -109,6 +109,8 @@ import '../../widgets/connection_status.dart';
 import '../../widgets/message_bubble.dart';
 import '../../widgets/photo_viewer.dart';
 import '../../native/native_chat_view.dart';
+import '../../native/native_history_status.dart';
+import '../../../core/native/native_transcript_insets.dart';
 import '../../native/native_sticker_playback.dart';
 import '../../widgets/message_actions_overlay.dart';
 import '../../widgets/share_unopenable_file.dart';
@@ -260,6 +262,8 @@ class _ChatScreenState extends State<ChatScreen>
   Map<String, TextEditingController> _commandArgumentControllers = {};
   Map<String, FocusNode> _commandArgumentFocusNodes = {};
   bool _isLoading = true;
+  bool _historyFailed = false;
+  bool _olderFailed = false;
   bool _encryptionEnabled = false;
   final ValueNotifier<bool> _showAttachmentPanel = ValueNotifier(false);
   bool _pastePending = false;
@@ -713,6 +717,10 @@ class _ChatScreenState extends State<ChatScreen>
       valueOf: () => _messageController.value,
       onSelected: _onMentionSelected,
     );
+    _composerHeight.addListener(_pushNativeChrome);
+    _pinnedBannerHeight.addListener(_pushNativeChrome);
+    _mentionPanel.anim.addListener(_pushNativeChrome);
+    _commandPanel.anim.addListener(_pushNativeChrome);
     _selectionAnim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 260),
@@ -1741,8 +1749,13 @@ class _ChatScreenState extends State<ChatScreen>
       onLoadingFinished: () {
         setState(() {
           _isLoading = false;
+          _historyFailed = false;
           _onLoadingFinished();
         });
+      },
+      onFailed: () {
+        if (!mounted) return;
+        setState(() => _historyFailed = true);
       },
       onPreview: () => _previewChat = true,
       onSenderNames: () {
@@ -1952,6 +1965,7 @@ class _ChatScreenState extends State<ChatScreen>
       persist: persist,
       onLoadingStarted: _bumpMessages,
       onLoaded: (added) {
+        _olderFailed = false;
         if (added > 0) _syncReactionNotifiersFromMessages();
         _bumpMessages();
         if (resolveSenderNames) {
@@ -1962,6 +1976,7 @@ class _ChatScreenState extends State<ChatScreen>
       onError: (_) {
         if (mounted) {
           _isLoadingMore = false;
+          _olderFailed = true;
           _bumpMessages();
         }
       },
@@ -2267,6 +2282,10 @@ class _ChatScreenState extends State<ChatScreen>
     AppChatChrome.current.removeListener(_onVisualStyleChanged);
     AppComposerStyle.current.removeListener(_onVisualStyleChanged);
     AppComposerBackground.current.removeListener(_onVisualStyleChanged);
+    _composerHeight.removeListener(_pushNativeChrome);
+    _pinnedBannerHeight.removeListener(_pushNativeChrome);
+    _mentionPanel.anim.removeListener(_pushNativeChrome);
+    _commandPanel.anim.removeListener(_pushNativeChrome);
     _composerHeight.dispose();
     _pinnedBannerHeight.dispose();
     _floatingDateTimer?.cancel();
@@ -4955,6 +4974,29 @@ class _ChatScreenState extends State<ChatScreen>
         ),
         if (showShimmer)
           Positioned.fill(child: ShimmerLoading(shimmer: _shimmerController)),
+        if (_showNativeHistoryError)
+          Positioned.fill(
+            child: NativeHistoryRetry(
+              onRetry: () {
+                setState(() => _historyFailed = false);
+                unawaited(_loadHistory());
+              },
+            ),
+          ),
+        if (_showNativeOlderError)
+          Positioned(
+            top: 8,
+            left: 0,
+            right: 0,
+            child: NativeHistoryRetry(
+              inline: true,
+              title: 'Не удалось загрузить более ранние',
+              onRetry: () {
+                setState(() => _olderFailed = false);
+                unawaited(_loadMoreHistory());
+              },
+            ),
+          ),
         Positioned.fill(
           child: ValueListenableBuilder<int>(
             valueListenable: _messagesRev,
@@ -5010,7 +5052,6 @@ class _ChatScreenState extends State<ChatScreen>
             _messagesRev,
             _otherReadTime,
             _selectedIds,
-            _composerHeight,
             _scrollNav.highlightMessageId,
             KometSettings.fullTimestamp,
           ]),
@@ -5018,6 +5059,44 @@ class _ChatScreenState extends State<ChatScreen>
         );
       },
     );
+  }
+
+  bool get _nativeTranscriptOn =>
+      IosGlass.of(context) && NativeChatBridge.isEligible && !widget.preview;
+
+  bool get _showNativeHistoryError =>
+      _nativeTranscriptOn && _historyFailed && _messages.isEmpty && !_isLoading;
+
+  bool get _showNativeOlderError => _nativeTranscriptOn && _olderFailed;
+
+  void _pushNativeChrome() {
+    if (!mounted || !IosGlass.of(context) || !NativeChatBridge.isEligible) {
+      return;
+    }
+    if (widget.preview) return;
+    _nativeChatCommands.setChrome(_nativeChrome(context));
+  }
+
+  Map<String, Object?> _nativeChrome(BuildContext context) {
+    final underlap = _effectiveChrome != ChatChromeStyle.color;
+    final insets = NativeTranscriptInsets.compute(
+      underlap: underlap,
+      statusBar: MediaQuery.paddingOf(context).top,
+      header: ChatAppBar.headerHeight(glossy: _glossyChrome, ios: true),
+      pinned: underlap ? _pinnedBannerHeight.value : 0,
+      callBanner: underlap && !_commentsMode && chat?.activeCall != null
+          ? 64
+          : 0,
+      composer: _composerHeight.value,
+      panels:
+          _mentionPanel.anim.value * 220 + _commandPanel.anim.value * 220,
+    );
+    return {
+      'accent': Theme.of(context).colorScheme.primary.toARGB32(),
+      'topInset': insets.top,
+      'bottomInset': insets.bottom,
+      'selecting': _selectionMode,
+    };
   }
 
   Widget _buildNativeTranscript() {
@@ -5072,11 +5151,7 @@ class _ChatScreenState extends State<ChatScreen>
       items: items,
       highlightId: _scrollNav.highlightMessageId.value,
       commands: _nativeChatCommands,
-      chrome: {
-        'accent': Theme.of(context).colorScheme.primary.toARGB32(),
-        'bottomInset': _composerHeight.value,
-        'selecting': _selectionMode,
-      },
+      chrome: _nativeChrome(context),
       callbacks: NativeChatCallbacks(
         onOpen: _onNativeOpen,
         onLongPress: _showNativeMessageActions,

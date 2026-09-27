@@ -82,7 +82,7 @@ In iOS mode call buttons use Flutter-drawn glass (tint + rim + shadow) and `IosT
 
 ## Checklist before merging glass UI
 
-- [ ] Platform-view count on the target screen is ≤ 2, none per row
+- [ ] No platform view per row or cell; floating capsules may each be their own native glass (no per-screen limit)
 - [ ] Scroll paths do not keep live blur over moving content
 - [ ] New icons go through `IosSymbols` / `adapt` when painted in iOS mode
 - [ ] Icon-only chrome has VoiceOver labels

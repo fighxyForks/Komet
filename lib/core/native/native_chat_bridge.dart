@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -596,6 +598,9 @@ class NativeChatCommands {
 
   Future<void> scrollToEnd() async => _controller?.scrollToEnd();
 
+  Future<void> setChrome(Map<String, Object?> chrome) async =>
+      _controller?.setChrome(chrome);
+
   Future<void> stickerFrame(
     String id,
     Uint8List rgba,
@@ -616,14 +621,66 @@ class NativeChatController {
   NativeChatCallbacks callbacks;
   List<NativeChatItem> _sent = const [];
   bool _disposed = false;
+  List<NativeChatItem>? _queued;
+  Future<void>? _active;
+  Completer<void>? _activeGate;
+  bool _resync = false;
+  int _revision = 0;
 
   void seed(List<NativeChatItem> items) => _sent = items;
 
-  Future<void> update(List<NativeChatItem> items) async {
-    final update = NativeChatUpdate.between(_sent, items);
-    _sent = items;
-    if (update.isEmpty) return;
-    await _invoke('apply', update.toMap());
+  @visibleForTesting
+  List<NativeChatItem> get debugSent => _sent;
+
+  Future<void> update(List<NativeChatItem> items) {
+    if (_disposed) return Future<void>.value();
+    _queued = items;
+    if (_active != null) return _active!;
+    final gate = Completer<void>();
+    _active = gate.future;
+    _activeGate = gate;
+    scheduleMicrotask(_drainQueued);
+    return gate.future;
+  }
+
+  Future<void> _drainQueued() async {
+    final gate = _activeGate;
+    try {
+      while (_queued != null && !_disposed) {
+        final next = _queued!;
+        _queued = null;
+        final full = _resync;
+        final update = full
+            ? NativeChatUpdate(
+                order: [for (final item in next) item.id],
+                items: next,
+              )
+            : NativeChatUpdate.between(_sent, next);
+        if (update.isEmpty) continue;
+        _revision += 1;
+        try {
+          await channel.invokeMethod<void>('apply', {
+            ...update.toMap(),
+            'revision': _revision,
+          });
+          if (_disposed) return;
+          _sent = next;
+          _resync = false;
+        } on MissingPluginException {
+          return;
+        } on PlatformException {
+          _resync = true;
+        }
+      }
+    } finally {
+      if (_queued != null && !_disposed) {
+        scheduleMicrotask(_drainQueued);
+      } else {
+        _active = null;
+        _activeGate = null;
+        if (gate != null && !gate.isCompleted) gate.complete();
+      }
+    }
   }
 
   Future<void> setChrome(Map<String, Object?> chrome) =>
