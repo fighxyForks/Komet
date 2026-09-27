@@ -25,7 +25,7 @@ class KometSettings {
   static final ValueNotifier<bool> selfOnlineCheck = ValueNotifier(true);
   static final ValueNotifier<bool> hideAllChatsFolder = ValueNotifier(false);
   static final ValueNotifier<bool> showHiddenChats = ValueNotifier(false);
-  static final ValueNotifier<bool> archiveOnPull = ValueNotifier(false);
+  static final ValueNotifier<bool> archiveOnPull = ValueNotifier(true);
   static final ValueNotifier<bool> recordDebugLogs = ValueNotifier(true);
 
   // #***! читаем всё разом на старте
@@ -44,7 +44,7 @@ class KometSettings {
     selfOnlineCheck.value = prefs.getBool(_kSelfOnlineCheck) ?? true;
     hideAllChatsFolder.value = prefs.getBool(_kHideAllChatsFolder) ?? false;
     showHiddenChats.value = prefs.getBool(_kShowHiddenChats) ?? false;
-    archiveOnPull.value = prefs.getBool(_kArchiveOnPull) ?? false;
+    archiveOnPull.value = prefs.getBool(_kArchiveOnPull) ?? true;
     recordDebugLogs.value = prefs.getBool(_kRecordDebugLogs) ?? true;
   }
 

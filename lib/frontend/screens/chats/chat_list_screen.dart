@@ -676,8 +676,10 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
     final kind = cats.single;
 
-    final choice =
-        await (confirm ?? _showDeleteConfirmDialog)(selectedAfter, kind);
+    final choice = await (confirm ?? _showDeleteConfirmDialog)(
+      selectedAfter,
+      kind,
+    );
     if (!mounted || choice == null) return false;
 
     final errors = <String>[];
@@ -733,7 +735,11 @@ class _ChatListScreenState extends State<ChatListScreen>
             ? 'Удалить чат «${single.title ?? ''}» у всех?'
             : 'Удалить ${selected.length} групп у всех?';
         actions = const [
-          NativeSheetAction(id: 'all', title: 'Удалить у всех', destructive: true),
+          NativeSheetAction(
+            id: 'all',
+            title: 'Удалить у всех',
+            destructive: true,
+          ),
         ];
       case _DeleteKind.blocked:
         return null;
@@ -1596,7 +1602,8 @@ class _ChatListScreenState extends State<ChatListScreen>
       if (_storiesDockedOpen || _storiesRevealController.isAnimating) {
         return;
       }
-      final disarm = offset > StoriesScrollHysteresis.disarmOverscrollAbove &&
+      final disarm =
+          offset > StoriesScrollHysteresis.disarmOverscrollAbove &&
           _storiesOverscrollRevealArmed;
       final clearPull = StoriesScrollHysteresis.shouldClearPullRatio(
         offset: offset,
@@ -1758,7 +1765,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     if (_currentNavIndex != 0) return false;
 
     final ending = n is ScrollEndNotification;
-    final dragging = n is ScrollUpdateNotification ||
+    final dragging =
+        n is ScrollUpdateNotification ||
         n is ScrollStartNotification ||
         n is OverscrollNotification;
     if (dragging) {
@@ -2102,7 +2110,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                                                     ),
                                                     visualDensity:
                                                         VisualDensity.compact,
-                                                    icon: Icon(IosSymbols.back(context),
+                                                    icon: Icon(
+                                                      IosSymbols.back(context),
                                                       color: cs.onSurface,
                                                       weight: 500,
                                                     ),
@@ -2195,7 +2204,10 @@ class _ChatListScreenState extends State<ChatListScreen>
                                             tooltip: AppLocalizations.of(
                                               context,
                                             )!.downloadsTooltip,
-                                            icon: Icon(IosSymbols.downloadOffline(context),
+                                            icon: Icon(
+                                              IosSymbols.downloadOffline(
+                                                context,
+                                              ),
                                               color: cs.outline,
                                               weight: 400,
                                             ),
@@ -2207,7 +2219,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                                             !_shareMode)
                                           const _LockNowButton(),
                                         PopupMenuButton<int>(
-                                          icon: Icon(IosSymbols.ellipsis(context),
+                                          icon: Icon(
+                                            IosSymbols.ellipsis(context),
                                             color: cs.outline,
                                             weight: 400,
                                           ),
@@ -2276,7 +2289,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                                         height: 44,
                                         child: Row(
                                           children: [
-                                            Icon(IosSymbols.search(context),
+                                            Icon(
+                                              IosSymbols.search(context),
                                               color: cs.outline,
                                               size: 20,
                                               weight: 400,
@@ -2381,7 +2395,6 @@ class _ChatListScreenState extends State<ChatListScreen>
     );
   }
 
-
   Widget _chatRowsSliver({
     required SliverChildDelegate delegate,
     double? Function(int index)? itemExtent,
@@ -2435,7 +2448,7 @@ class _ChatListScreenState extends State<ChatListScreen>
           slivers: [
             if (!IosGlass.of(context))
               const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            if (_shouldShowArchiveEntry(pageIndex))
+            if (_shouldShowArchiveEntry(pageIndex) || _collapsingArchive)
               SliverToBoxAdapter(child: _buildRevealableArchiveEntry(cs)),
             if (pageChats.isEmpty && !_isInitialLoading)
               SliverFillRemaining(
@@ -2853,73 +2866,70 @@ class _ChatListScreenState extends State<ChatListScreen>
                     child: ios
                         ? _iosRootPage(pageW, pageH)
                         : OverflowBox(
-                      alignment: Alignment.topLeft,
-                      maxWidth: pageW * 4,
-                      maxHeight: pageH,
-                      child: SizedBox(
-                        width: pageW * 4,
-                        height: pageH,
-                        child: AnimatedBuilder(
-                          animation: Listenable.merge([
-                            _navPageAnimController,
-                            _navDragDx,
-                          ]),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              RepaintBoundary(
-                                child: SizedBox(
-                                  width: pageW,
-                                  height: pageH,
-                                  child: _getChatsBody(),
+                            alignment: Alignment.topLeft,
+                            maxWidth: pageW * 4,
+                            maxHeight: pageH,
+                            child: SizedBox(
+                              width: pageW * 4,
+                              height: pageH,
+                              child: AnimatedBuilder(
+                                animation: Listenable.merge([
+                                  _navPageAnimController,
+                                  _navDragDx,
+                                ]),
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    RepaintBoundary(
+                                      child: SizedBox(
+                                        width: pageW,
+                                        height: pageH,
+                                        child: _getChatsBody(),
+                                      ),
+                                    ),
+                                    RepaintBoundary(
+                                      child: SizedBox(
+                                        width: pageW,
+                                        height: pageH,
+                                        child: const CallsTab(),
+                                      ),
+                                    ),
+                                    RepaintBoundary(
+                                      child: SizedBox(
+                                        width: pageW,
+                                        height: pageH,
+                                        child: const ContactsTab(),
+                                      ),
+                                    ),
+                                    RepaintBoundary(
+                                      child: SizedBox(
+                                        width: pageW,
+                                        height: pageH,
+                                        child: const SettingsTab(),
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                                builder: (context, child) {
+                                  final pageDisplayT = _effectivePageNavRowT(
+                                    inactiveWidth: inactiveWidth,
+                                    bubbleLeftForIndex: bubbleLeftForPageT,
+                                  );
+                                  return Transform.translate(
+                                    offset: Offset(-pageDisplayT * pageW, 0),
+                                    child: child,
+                                  );
+                                },
                               ),
-                              RepaintBoundary(
-                                child: SizedBox(
-                                  width: pageW,
-                                  height: pageH,
-                                  child: const CallsTab(),
-                                ),
-                              ),
-                              RepaintBoundary(
-                                child: SizedBox(
-                                  width: pageW,
-                                  height: pageH,
-                                  child: const ContactsTab(),
-                                ),
-                              ),
-                              RepaintBoundary(
-                                child: SizedBox(
-                                  width: pageW,
-                                  height: pageH,
-                                  child: const SettingsTab(),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                          builder: (context, child) {
-                            final pageDisplayT = _effectivePageNavRowT(
-                              inactiveWidth: inactiveWidth,
-                              bubbleLeftForIndex: bubbleLeftForPageT,
-                            );
-                            return Transform.translate(
-                              offset: Offset(-pageDisplayT * pageW, 0),
-                              child: child,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
                   ),
                 ),
                 ListenableBuilder(
                   listenable: AppIosGlass.chromeListenable,
-                  builder: (context, _) => _buildDockedBottomNav(
-                    cs,
-                    pageW,
-                    navInnerW,
-                    bottomInset,
-                  ),
+                  builder: (context, _) =>
+                      _buildDockedBottomNav(cs, pageW, navInnerW, bottomInset),
                 ),
                 AnimatedBuilder(
                   animation: Listenable.merge([
@@ -2988,24 +2998,28 @@ class _ChatListScreenState extends State<ChatListScreen>
                                           NavPillMaterial.isFrost(navStyle);
                                       return ValueListenableBuilder<bool>(
                                         valueListenable: _listScrollActive,
-                                        builder: (context, scrollActive, pillChild) =>
-                                            GlossyPill(
-                                          onTap: _toggleFab,
-                                          color: frost || liquid
-                                              ? AppFrost.glassTint(cs)
-                                              : cs.primaryContainer,
-                                          blurSigma: frost
-                                              ? AppFrost.sigma
-                                              : null,
-                                          liquid: liquid,
-                                          forceOpaque: scrollActive,
-                                          backdropKey: _frostBackdrop,
-                                          borderRadius:
-                                              BorderRadius.circular(28),
-                                          elevated: true,
-                                          depth: 12,
-                                          child: pillChild!,
-                                        ),
+                                        builder:
+                                            (
+                                              context,
+                                              scrollActive,
+                                              pillChild,
+                                            ) => GlossyPill(
+                                              onTap: _toggleFab,
+                                              color: frost || liquid
+                                                  ? AppFrost.glassTint(cs)
+                                                  : cs.primaryContainer,
+                                              blurSigma: frost
+                                                  ? AppFrost.sigma
+                                                  : null,
+                                              liquid: liquid,
+                                              forceOpaque: scrollActive,
+                                              backdropKey: _frostBackdrop,
+                                              borderRadius:
+                                                  BorderRadius.circular(28),
+                                              elevated: true,
+                                              depth: 12,
+                                              child: pillChild!,
+                                            ),
                                         child: child,
                                       );
                                     },
@@ -3017,7 +3031,8 @@ class _ChatListScreenState extends State<ChatListScreen>
                                 child: Center(
                                   child: Transform.rotate(
                                     angle: val * (pi / 4),
-                                    child: Icon(IosSymbols.add(context),
+                                    child: Icon(
+                                      IosSymbols.add(context),
                                       color: cs.onPrimaryContainer,
                                       size: 28,
                                       weight: 400,
@@ -3146,10 +3161,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     _collapsingArchive = true;
     setState(() {
       _archiveRevealed = false;
-      _archiveRevealAnimates = false;
+      _archiveRevealAnimates = true;
     });
-    c.jumpTo(c.offset - height);
-    _collapsingArchive = false;
   }
 
   Widget _buildRevealableArchiveEntry(ColorScheme cs) {
@@ -3157,16 +3170,23 @@ class _ChatListScreenState extends State<ChatListScreen>
       key: _archiveEntryKey,
       child: _buildArchiveEntry(cs),
     );
-    if (!_archiveRevealAnimates) return entry;
+    final revealed = _archiveRevealed;
+    if (!_archiveRevealAnimates && revealed) return entry;
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 260),
+      key: ValueKey(revealed),
+      tween: Tween(begin: revealed ? 0 : 1, end: revealed ? 1 : 0),
+      duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
-      onEnd: () => _archiveRevealAnimates = false,
+      onEnd: () {
+        _archiveRevealAnimates = false;
+        if (!revealed && mounted) {
+          setState(() => _collapsingArchive = false);
+        }
+      },
       builder: (context, t, child) => ClipRect(
         child: Align(
-          alignment: Alignment.bottomCenter,
-          heightFactor: t,
+          alignment: Alignment.topCenter,
+          heightFactor: t.clamp(0.0, 1.0),
           child: Opacity(opacity: t, child: child),
         ),
       ),
@@ -3187,7 +3207,8 @@ class _ChatListScreenState extends State<ChatListScreen>
             CircleAvatar(
               radius: 24,
               backgroundColor: cs.surfaceContainerHighest,
-              child: Icon(IosSymbols.archive(context),
+              child: Icon(
+                IosSymbols.archive(context),
                 color: cs.onSurfaceVariant,
                 weight: 500,
               ),
@@ -3294,21 +3315,27 @@ class _ChatListScreenState extends State<ChatListScreen>
                   ),
                 IconButton(
                   icon: Icon(
-                    widget.archiveMode ? IosSymbols.archive(context) : IosSymbols.archive(context),
+                    widget.archiveMode
+                        ? IosSymbols.archive(context)
+                        : IosSymbols.archive(context),
                     color: cs.onSurface,
                   ),
                   onPressed: selected.isEmpty ? null : _onArchiveTap,
                 ),
                 IconButton(
                   icon: Icon(
-                    anyPinned ? IosSymbols.pinOff(context) : IosSymbols.keep(context),
+                    anyPinned
+                        ? IosSymbols.pinOff(context)
+                        : IosSymbols.keep(context),
                     color: cs.onSurface,
                   ),
                   onPressed: selected.isEmpty ? null : _onPinTap,
                 ),
                 IconButton(
                   icon: Icon(
-                    anyMuted ? IosSymbols.speaker(context) : IosSymbols.volumeOff(context),
+                    anyMuted
+                        ? IosSymbols.speaker(context)
+                        : IosSymbols.volumeOff(context),
                     color: cs.onSurface,
                   ),
                   onPressed: selected.isEmpty ? null : _onMuteTap,
@@ -3449,10 +3476,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     if (!mounted || picked == null) return;
     await pushSwipeable(
       context,
-      (_) => NativeStoryEditorPage(
-        file: File(picked.path),
-        isVideo: video,
-      ),
+      (_) => NativeStoryEditorPage(file: File(picked.path), isVideo: video),
     );
   }
 
@@ -4189,7 +4213,11 @@ class _ChatListScreenState extends State<ChatListScreen>
   Widget _ownStatusIcon(ColorScheme cs, String status, bool read) {
     final sending = isSendingStatus(status);
     final effective = (read && !sending && status != 'error') ? 'read' : status;
-    final visual = messageStatusVisual(effective, context: context, dimColor: cs.outline);
+    final visual = messageStatusVisual(
+      effective,
+      context: context,
+      dimColor: cs.outline,
+    );
     return Padding(
       padding: const EdgeInsets.only(left: 6),
       child: sending
@@ -4428,12 +4456,16 @@ class _ChatListScreenState extends State<ChatListScreen>
         onTap: () => unawaited(_pinChats([chat])),
       ),
       ChatMenuItem(
-        icon: chat.isMuted ? IosSymbols.notifications(context) : IosSymbols.notificationsOff(context),
+        icon: chat.isMuted
+            ? IosSymbols.notifications(context)
+            : IosSymbols.notificationsOff(context),
         label: chat.isMuted ? l10n.chatActionUnmute : l10n.chatActionMute,
         onTap: () => unawaited(_muteChats([chat])),
       ),
       ChatMenuItem(
-        icon: widget.archiveMode ? IosSymbols.unarchive(context) : IosSymbols.archive(context),
+        icon: widget.archiveMode
+            ? IosSymbols.unarchive(context)
+            : IosSymbols.archive(context),
         label: widget.archiveMode
             ? l10n.chatActionUnarchive
             : l10n.chatActionArchive,
@@ -4598,7 +4630,8 @@ class _ChatListScreenState extends State<ChatListScreen>
             )
           : null,
       child: isSavedMessages
-          ? Icon(IosSymbols.bookmark(context),
+          ? Icon(
+              IosSymbols.bookmark(context),
               fill: 1,
               color: cs.onPrimary,
               size: ios ? 30 : (story == null ? 26 : 22),
@@ -4660,7 +4693,11 @@ class _ChatListScreenState extends State<ChatListScreen>
                   shape: BoxShape.circle,
                   border: Border.all(color: cs.surface, width: 2),
                 ),
-                child: Icon(IosSymbols.check(context), color: cs.onPrimary, size: 14),
+                child: Icon(
+                  IosSymbols.check(context),
+                  color: cs.onPrimary,
+                  size: 14,
+                ),
               ),
             )
           else if (hasCall)
@@ -4681,209 +4718,217 @@ class _ChatListScreenState extends State<ChatListScreen>
     return SpringyTap(
       child: Builder(
         builder: (rowContext) => IosTappable(
-        onTap: () {
-          if (widget.forwardMode) {
-            Navigator.of(context).pop(
-              ForwardTarget(
-                chatId: int.parse(id),
-                name: name,
-                imageUrl: imageUrl,
-                chatType: chatType,
-              ),
-            );
-            return;
-          }
-          if (_shareMode) {
-            _toggleShareTarget(id, name);
-            return;
-          }
-          if (_isSelectionMode) {
-            _toggleSelection(id);
-            return;
-          }
-          _openChatFromList(id, name, imageUrl, chatType);
-        },
-        onLongPress: (widget.forwardMode || _shareMode)
-            ? null
-            : ios && _canPreviewChats
-            ? () => _previewChat(
-                id,
-                name,
-                imageUrl,
-                chatType,
-                sourceRect: _globalRectOf(rowContext),
-              )
-            : () => _toggleSelection(id),
-        child: ios
-            ? IosChatRow(
-                avatar: avatarStack,
-                name: name,
-                time: time,
-                titleIcon: titleIcon,
-                isVerified: isVerified,
-                isMuted: isMuted,
-                isPinned: isPinned,
-                isSelected: isSelected,
-                statusIcon: statusIcon,
-                sender: draft == null ? iosSender : '',
-                body: ActivitySubtitle(
-                  chatId: int.tryParse(id) ?? 0,
-                  group: chatType != 'DIALOG',
-                  child: messageLine,
+          onTap: () {
+            if (widget.forwardMode) {
+              Navigator.of(context).pop(
+                ForwardTarget(
+                  chatId: int.parse(id),
+                  name: name,
+                  imageUrl: imageUrl,
+                  chatType: chatType,
                 ),
-                unreadCount: unreadCount,
-                hasMention: hasMention,
-                miniApp: hasMiniApp
-                    ? _miniAppButton(
-                        cs,
-                        botId: presenceUserId,
-                        chatId: int.tryParse(id) ?? 0,
-                        name: name,
-                      )
-                    : null,
-              )
-            : AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                color: isSelected
-                    ? cs.primary.withValues(alpha: 0.08)
-                    : Colors.transparent,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 6,
+              );
+              return;
+            }
+            if (_shareMode) {
+              _toggleShareTarget(id, name);
+              return;
+            }
+            if (_isSelectionMode) {
+              _toggleSelection(id);
+              return;
+            }
+            _openChatFromList(id, name, imageUrl, chatType);
+          },
+          onLongPress: (widget.forwardMode || _shareMode)
+              ? null
+              : ios && _canPreviewChats
+              ? () => _previewChat(
+                  id,
+                  name,
+                  imageUrl,
+                  chatType,
+                  sourceRect: _globalRectOf(rowContext),
+                )
+              : () => _toggleSelection(id),
+          child: ios
+              ? IosChatRow(
+                  avatar: avatarStack,
+                  name: name,
+                  time: time,
+                  titleIcon: titleIcon,
+                  isVerified: isVerified,
+                  isMuted: isMuted,
+                  isPinned: isPinned,
+                  isSelected: isSelected,
+                  statusIcon: statusIcon,
+                  sender: draft == null ? iosSender : '',
+                  body: ActivitySubtitle(
+                    chatId: int.tryParse(id) ?? 0,
+                    group: chatType != 'DIALOG',
+                    child: messageLine,
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      avatarStack,
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: SizedBox(
-                          height: 48,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 5),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (titleIcon != null) ...[
-                                            Icon(
-                                              IosSymbols.adapt(context, titleIcon),
-                                              color: cs.outline,
-                                              size: 15,
-                                              weight: 500,
-                                              fill: 1,
-                                            ),
-                                            const SizedBox(width: 4),
-                                          ],
-                                          Flexible(
-                                            child: Text(
-                                              name,
-                                              style: TextStyle(
-                                                color: cs.onSurface,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                height: 1.1,
+                  unreadCount: unreadCount,
+                  hasMention: hasMention,
+                  miniApp: hasMiniApp
+                      ? _miniAppButton(
+                          cs,
+                          botId: presenceUserId,
+                          chatId: int.tryParse(id) ?? 0,
+                          name: name,
+                        )
+                      : null,
+                )
+              : AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  color: isSelected
+                      ? cs.primary.withValues(alpha: 0.08)
+                      : Colors.transparent,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        avatarStack,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: SizedBox(
+                            height: 48,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (titleIcon != null) ...[
+                                              Icon(
+                                                IosSymbols.adapt(
+                                                  context,
+                                                  titleIcon,
+                                                ),
+                                                color: cs.outline,
+                                                size: 15,
+                                                weight: 500,
+                                                fill: 1,
                                               ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                              const SizedBox(width: 4),
+                                            ],
+                                            Flexible(
+                                              child: Text(
+                                                name,
+                                                style: TextStyle(
+                                                  color: cs.onSurface,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  height: 1.1,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
-                                          ),
-                                          if (isVerified) ...[
-                                            const SizedBox(width: 4),
-                                            Icon(IosSymbols.verified(context),
-                                              color: cs.primary,
-                                              size: 16,
-                                              weight: 600,
-                                              fill: 1,
-                                            ),
+                                            if (isVerified) ...[
+                                              const SizedBox(width: 4),
+                                              Icon(
+                                                IosSymbols.verified(context),
+                                                color: cs.primary,
+                                                size: 16,
+                                                weight: 600,
+                                                fill: 1,
+                                              ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                    if (isMuted) ...[
-                                      const SizedBox(width: 4),
-                                      Icon(IosSymbols.notifications(context),
-                                        color: cs.outlineVariant,
-                                        size: 14,
-                                        weight: 400,
-                                      ),
-                                    ],
-                                    if (isPinned) ...[
-                                      const SizedBox(width: 4),
-                                      Icon(IosSymbols.keep(context),
-                                        color: cs.outlineVariant,
-                                        size: 14,
-                                        weight: 400,
-                                      ),
-                                    ],
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      time,
-                                      style: TextStyle(
-                                        color: cs.outline,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 2),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Expanded(
-                                      child: ActivitySubtitle(
-                                        chatId: int.tryParse(id) ?? 0,
-                                        group: chatType != 'DIALOG',
-                                        child: messageLine,
-                                      ),
-                                    ),
-                                    ?statusIcon,
-                                    const SizedBox(width: 8),
-                                    if (hasMention) ...[
-                                      _countBadge(cs, '@', muted: isMuted),
-                                      const SizedBox(width: 4),
-                                    ],
-                                    if (unreadCount > 0)
-                                      _countBadge(
-                                        cs,
-                                        unreadCount.toString(),
-                                        muted: isMuted,
-                                      )
-                                    else if (isRead)
-                                      Icon(IosSymbols.doneAll(context),
-                                        color: cs.primary,
-                                        size: 16,
-                                        weight: 400,
-                                      ),
-                                    if (hasMiniApp) ...[
+                                      if (isMuted) ...[
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          IosSymbols.notifications(context),
+                                          color: cs.outlineVariant,
+                                          size: 14,
+                                          weight: 400,
+                                        ),
+                                      ],
+                                      if (isPinned) ...[
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          IosSymbols.keep(context),
+                                          color: cs.outlineVariant,
+                                          size: 14,
+                                          weight: 400,
+                                        ),
+                                      ],
                                       const SizedBox(width: 8),
-                                      _miniAppButton(
-                                        cs,
-                                        botId: presenceUserId,
-                                        chatId: int.tryParse(id) ?? 0,
-                                        name: name,
+                                      Text(
+                                        time,
+                                        style: TextStyle(
+                                          color: cs.outline,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ],
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Expanded(
+                                        child: ActivitySubtitle(
+                                          chatId: int.tryParse(id) ?? 0,
+                                          group: chatType != 'DIALOG',
+                                          child: messageLine,
+                                        ),
+                                      ),
+                                      ?statusIcon,
+                                      const SizedBox(width: 8),
+                                      if (hasMention) ...[
+                                        _countBadge(cs, '@', muted: isMuted),
+                                        const SizedBox(width: 4),
+                                      ],
+                                      if (unreadCount > 0)
+                                        _countBadge(
+                                          cs,
+                                          unreadCount.toString(),
+                                          muted: isMuted,
+                                        )
+                                      else if (isRead)
+                                        Icon(
+                                          IosSymbols.doneAll(context),
+                                          color: cs.primary,
+                                          size: 16,
+                                          weight: 400,
+                                        ),
+                                      if (hasMiniApp) ...[
+                                        const SizedBox(width: 8),
+                                        _miniAppButton(
+                                          cs,
+                                          botId: presenceUserId,
+                                          chatId: int.tryParse(id) ?? 0,
+                                          name: name,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
         ),
       ),
     );
