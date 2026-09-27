@@ -143,17 +143,33 @@ class NativeChatSpan {
 class NativeChatMedia {
   final String url;
   final String kind;
+  final int? width;
+  final int? height;
 
-  const NativeChatMedia({required this.url, required this.kind});
+  const NativeChatMedia({
+    required this.url,
+    required this.kind,
+    this.width,
+    this.height,
+  });
 
-  Map<String, Object?> toMap() => {'url': url, 'kind': kind};
+  Map<String, Object?> toMap() => {
+    'url': url,
+    'kind': kind,
+    if (width != null) 'width': width,
+    if (height != null) 'height': height,
+  };
 
   @override
   bool operator ==(Object other) =>
-      other is NativeChatMedia && other.url == url && other.kind == kind;
+      other is NativeChatMedia &&
+      other.url == url &&
+      other.kind == kind &&
+      other.width == width &&
+      other.height == height;
 
   @override
-  int get hashCode => Object.hash(url, kind);
+  int get hashCode => Object.hash(url, kind, width, height);
 }
 
 @immutable
@@ -233,6 +249,9 @@ class NativeChatItem {
   final List<NativeChatPollChoice> pollChoices;
   final List<NativeChatReaction> reactions;
   final List<NativeChatButton> buttons;
+  final bool wide;
+  final int? mediaWidth;
+  final int? mediaHeight;
 
   const NativeChatItem({
     required this.id,
@@ -277,6 +296,9 @@ class NativeChatItem {
     this.pollChoices = const [],
     this.reactions = const [],
     this.buttons = const [],
+    this.wide = false,
+    this.mediaWidth,
+    this.mediaHeight,
   });
 
   const NativeChatItem.date(String dayId, String label)
@@ -334,6 +356,9 @@ class NativeChatItem {
     pollChoices: pollChoices,
     reactions: reactions,
     buttons: buttons,
+    wide: wide,
+    mediaWidth: mediaWidth,
+    mediaHeight: mediaHeight,
   );
 
   Map<String, Object?> toMap() => {
@@ -380,6 +405,9 @@ class NativeChatItem {
       'pollChoices': [for (final choice in pollChoices) choice.toMap()],
       'reactions': [for (final reaction in reactions) reaction.toMap()],
       'buttons': [for (final button in buttons) button.toMap()],
+      'wide': wide,
+      if (mediaWidth != null) 'mediaWidth': mediaWidth,
+      if (mediaHeight != null) 'mediaHeight': mediaHeight,
     },
   };
 
@@ -427,7 +455,10 @@ class NativeChatItem {
         listEquals(media, other.media) &&
         listEquals(pollChoices, other.pollChoices) &&
         listEquals(reactions, other.reactions) &&
-        listEquals(buttons, other.buttons);
+        listEquals(buttons, other.buttons) &&
+        wide == other.wide &&
+        mediaWidth == other.mediaWidth &&
+        mediaHeight == other.mediaHeight;
   }
 
   @override
@@ -460,6 +491,9 @@ class NativeChatItem {
       Object.hashAll(pollChoices),
       Object.hashAll(reactions),
       Object.hashAll(buttons),
+      wide,
+      mediaWidth,
+      mediaHeight,
     ),
   );
 }

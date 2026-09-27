@@ -43,6 +43,7 @@ List<NativeChatItem> buildNativeChatItems({
   Set<String> selected = const {},
   String? highlightId,
   bool showSenders = false,
+  bool wide = false,
   bool canReply = true,
   bool withSeconds = false,
   int? otherReadMillis,
@@ -104,6 +105,7 @@ List<NativeChatItem> buildNativeChatItems({
       playing: playingId == message.id,
       voiceProgress: progressId == message.id ? voiceProgress : 0,
       pollOf: pollOf,
+      wide: wide,
     );
     if (built != null) {
       times[built.id] = message.time;
@@ -131,6 +133,7 @@ NativeChatItem? _messageItem(
   required bool playing,
   required double voiceProgress,
   required Poll? Function(int pollId)? pollOf,
+  bool wide = false,
 }) {
   final control = message.controlAttachment;
   if (message.isControl) {
@@ -165,6 +168,9 @@ NativeChatItem? _messageItem(
     id: message.id,
     role: NativeChatRole.message,
     kind: kind,
+    wide: wide && !message.isControl,
+    mediaWidth: _primaryMediaSize(message)?.$1,
+    mediaHeight: _primaryMediaSize(message)?.$2,
     outgoing: outgoing,
     text: (kind == NativeChatKind.sticker || kind == NativeChatKind.videoNote) &&
             (message.text == null || message.text!.trim().isEmpty)
@@ -412,8 +418,15 @@ List<NativeChatMedia> _mediaTiles(CachedMessage message) {
   for (final attachment in _attachments(message)) {
     if (attachment is PhotoAttachment) {
       final url = attachment.localPath ?? attachment.baseUrl;
-      if (url != null && (url.startsWith('http') || url.startsWith('file'))) {
-        tiles.add(NativeChatMedia(url: url, kind: 'photo'));
+      if (_usableMediaPath(url) case final path?) {
+        tiles.add(
+          NativeChatMedia(
+            url: path,
+            kind: 'photo',
+            width: attachment.width,
+            height: attachment.height,
+          ),
+        );
       }
     } else if (attachment is VideoAttachment && !attachment.isNote) {
       final url = attachment.thumbnail ?? attachment.previewData;
@@ -492,9 +505,25 @@ String _callLabel(CachedMessage message) {
   return 'Звонок';
 }
 
-String? _remote(String? url) {
-  if (url == null) return null;
-  if (url.startsWith('http') || url.startsWith('file')) return url;
+String? _usableMediaPath(String? url) {
+  if (url == null || url.isEmpty) return null;
+  if (url.startsWith('http') || url.startsWith('file') || url.startsWith('/')) {
+    return url;
+  }
+  return null;
+}
+
+String? _remote(String? url) => _usableMediaPath(url);
+
+(int, int)? _primaryMediaSize(CachedMessage message) {
+  for (final attachment in _attachments(message)) {
+    final size = switch (attachment) {
+      PhotoAttachment(:final width?, :final height?) => (width, height),
+      VideoAttachment(:final width?, :final height?) => (width, height),
+      _ => null,
+    };
+    if (size != null && size.$1 > 0 && size.$2 > 0) return size;
+  }
   return null;
 }
 

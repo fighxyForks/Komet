@@ -30,6 +30,8 @@ struct KometChatSpan {
 struct KometChatMediaTile {
   let url: String
   let kind: String
+  let width: Int
+  let height: Int
 }
 
 struct KometChatPollChoice {
@@ -97,6 +99,9 @@ struct KometChatMessage {
   let pollChoices: [KometChatPollChoice]
   let reactions: [KometChatReaction]
   let buttons: [KometChatButton]
+  let wide: Bool
+  let mediaWidth: Int
+  let mediaHeight: Int
 
   var isService: Bool { role != .message || kind == "control" }
 
@@ -162,7 +167,11 @@ struct KometChatMessage {
       },
       media: mediaMaps.compactMap { raw in
         guard let url = raw["url"] as? String, !url.isEmpty else { return nil }
-        return KometChatMediaTile(url: url, kind: raw["kind"] as? String ?? "photo")
+        return KometChatMediaTile(
+          url: url,
+          kind: raw["kind"] as? String ?? "photo",
+          width: (raw["width"] as? NSNumber)?.intValue ?? 0,
+          height: (raw["height"] as? NSNumber)?.intValue ?? 0)
       },
       pollChoices: choiceMaps.compactMap { raw in
         guard let text = raw["text"] as? String else { return nil }
@@ -182,7 +191,10 @@ struct KometChatMessage {
       buttons: buttonMaps.enumerated().compactMap { offset, raw in
         guard let text = raw["text"] as? String, !text.isEmpty else { return nil }
         return KometChatButton(text: text, index: offset)
-      })
+      },
+      wide: (map["wide"] as? NSNumber)?.boolValue ?? false,
+      mediaWidth: (map["mediaWidth"] as? NSNumber)?.intValue ?? 0,
+      mediaHeight: (map["mediaHeight"] as? NSNumber)?.intValue ?? 0)
   }
 }
 

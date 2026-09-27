@@ -77,12 +77,21 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   private let commentsButton = UIButton(type: .system)
   private let metaLabel = UILabel()
   private let statusView = UIImageView()
-  private let reactionStack = UIStackView()
+  private let reactionStack = KometReactionFlow()
   private let metaRow = UIStackView()
+  private let metaSpacer = UIView()
+  private let commentRule = UIView()
+  private let commentChevron = UIImageView()
   private var bubbleLeading: NSLayoutConstraint?
   private var bubbleTrailing: NSLayoutConstraint?
+  private var wideLeading: NSLayoutConstraint?
+  private var wideTrailing: NSLayoutConstraint?
+  private var bubbleCap: NSLayoutConstraint?
   private var avatarWidth: NSLayoutConstraint?
   private var mediaHeight: NSLayoutConstraint?
+  private var mediaWidth: NSLayoutConstraint?
+  private var selectionWidth: NSLayoutConstraint?
+  private var selectionLeading: NSLayoutConstraint?
   private var dragX: CGFloat = 0
   private var replyArmed = false
 
@@ -141,19 +150,28 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     transcriptLabel.adjustsFontForContentSizeCategory = true
     transcriptLabel.numberOfLines = 0
     commentsButton.contentHorizontalAlignment = .leading
+    commentsButton.setImage(UIImage(systemName: "bubble.left"), for: .normal)
+    commentsButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 20)
     commentsButton.addTarget(self, action: #selector(tapComments), for: .touchUpInside)
+    commentsButton.addSubview(commentChevron)
+    commentChevron.image = UIImage(systemName: "chevron.right")
+    commentChevron.tintColor = .tertiaryLabel
+    commentChevron.contentMode = .scaleAspectFit
+    commentChevron.translatesAutoresizingMaskIntoConstraints = false
+    commentRule.backgroundColor = .separator
     metaLabel.font = UIFont.preferredFont(forTextStyle: .caption2)
     metaLabel.adjustsFontForContentSizeCategory = true
+    metaLabel.setContentHuggingPriority(.required, for: .horizontal)
     statusView.contentMode = .scaleAspectFit
-    reactionStack.axis = .horizontal
-    reactionStack.spacing = 6
+    metaSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
     metaRow.axis = .horizontal
     metaRow.spacing = 4
     metaRow.alignment = .center
+    metaRow.addArrangedSubview(metaSpacer)
     metaRow.addArrangedSubview(metaLabel)
     metaRow.addArrangedSubview(statusView)
-    for view in [playButton, waveView, senderLabel, forwardLabel, replyButton, bodyView, albumStack, mediaView, pollStack, durationLabel,
-                 buttonStack, transcriptPill, transcriptLabel, commentsButton, metaRow, reactionStack] {
+    for view in [mediaView, albumStack, playButton, waveView, senderLabel, forwardLabel, replyButton, bodyView, pollStack, durationLabel,
+                 buttonStack, transcriptPill, transcriptLabel, reactionStack, metaRow, commentRule, commentsButton] {
       stack.addArrangedSubview(view)
     }
     stack.setCustomSpacing(2, after: bodyView)
@@ -175,12 +193,27 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     let mediaH = mediaView.heightAnchor.constraint(equalToConstant: 180)
     mediaHeight = mediaH
     let mediaW = mediaView.widthAnchor.constraint(equalToConstant: 180)
-    mediaW.isActive = false
+    mediaWidth = mediaW
+    mediaView.backgroundColor = .secondarySystemFill
     mediaView.tag = 0
+    let markLead = selectionMark.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10)
+    let markWidth = selectionMark.widthAnchor.constraint(equalToConstant: 22)
+    selectionLeading = markLead
+    selectionWidth = markWidth
+    wideLeading = bubble.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16)
+    wideTrailing = bubble.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
+    bubbleCap = bubble.widthAnchor.constraint(lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.78)
+    bubbleCap?.isActive = true
     NSLayoutConstraint.activate([
-      selectionMark.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
+      markLead,
+      markWidth,
+      commentChevron.trailingAnchor.constraint(equalTo: commentsButton.trailingAnchor),
+      commentChevron.centerYAnchor.constraint(equalTo: commentsButton.centerYAnchor),
+      commentChevron.widthAnchor.constraint(equalToConstant: 13),
+      commentChevron.heightAnchor.constraint(equalToConstant: 16),
+      commentRule.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
+      commentsButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
       selectionMark.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-      selectionMark.widthAnchor.constraint(equalToConstant: 22),
       avatar.leadingAnchor.constraint(equalTo: selectionMark.trailingAnchor, constant: 8),
       avatar.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -2),
       avatarW,
@@ -188,7 +221,6 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
       lead, trail,
       bubble.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 1),
       bubble.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -1),
-      bubble.widthAnchor.constraint(lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.78),
       stack.leadingAnchor.constraint(equalTo: bubble.leadingAnchor, constant: 11),
       stack.trailingAnchor.constraint(equalTo: bubble.trailingAnchor, constant: -11),
       stack.topAnchor.constraint(equalTo: bubble.topAnchor, constant: 7),
@@ -227,7 +259,7 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     dragX = 0
     bubble.transform = .identity
     buttonStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-    reactionStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+    reactionStack.setChips([])
     albumStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
     pollStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
   }
@@ -271,10 +303,9 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     let showsMedia = item.kind == "sticker" || (
       item.kind != "album" && item.mediaUrl != nil &&
       (item.kind == "photo" || item.kind == "video" || item.kind == "videoNote"))
-    var contentWidth = max(120, width * 0.78 - 48)
-    if showsMedia && !roundMedia {
-      contentWidth = max(contentWidth, min(280, max(180, width * 0.72)))
-    }
+    let wide = item.wide
+    let inner = wide ? max(120, width - 54) : max(120, width * 0.78 - 22)
+    var contentWidth = inner
     bodyView.preferredWidth = contentWidth
     if showsText {
       bodyView.attributedText = KometChatText.make(item, foreground: foreground, accent: accent)
@@ -283,16 +314,18 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     fillPoll(item, foreground: foreground, accent: accent)
     mediaView.contentMode = item.kind == "sticker" ? .scaleAspectFit : .scaleAspectFill
     mediaView.isHidden = !showsMedia
-    let roundSide: CGFloat = item.kind == "sticker" ? 150 : 180
-    let mediaSide = roundMedia ? roundSide : contentWidth
-    mediaHeight?.constant = showsMedia ? (roundMedia ? roundSide : min(220, mediaSide * 0.75)) : 0
-    if let widthConstraint = mediaView.constraints.first(where: { $0.firstAttribute == .width }) {
-      widthConstraint.constant = mediaSide
-      widthConstraint.isActive = showsMedia
-    }
-    mediaView.layer.cornerRadius = item.kind == "videoNote" ? roundSide / 2 : 12
+    let fitted = fittedMediaSize(
+      pixelWidth: item.mediaWidth,
+      pixelHeight: item.mediaHeight,
+      maxWidth: wide ? inner : min(width * 0.78, inner),
+      round: roundMedia,
+      sticker: item.kind == "sticker")
+    mediaWidth?.constant = fitted.width
+    mediaWidth?.isActive = showsMedia
+    mediaHeight?.constant = showsMedia ? fitted.height : 0
+    mediaView.layer.cornerRadius = item.kind == "videoNote" ? fitted.width / 2 : (wide ? 0 : 12)
     let token = stickerToken
-    if showsMedia, let url = item.mediaUrl.flatMap(URL.init(string:)) {
+    if showsMedia, let url = mediaURL(item.mediaUrl) {
       KometChatImages.load(url) { [weak self] image in
         guard let self, self.item?.id == item.id, self.stickerToken == token else { return }
         self.mediaView.image = image
@@ -344,12 +377,28 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     }
     commentsButton.isHidden = item.comments == nil
     commentsButton.setTitle(item.comments, for: .normal)
-    metaLabel.text = item.deleted ? "\(item.time)" : item.time
+    commentsButton.setTitleColor(accent, for: .normal)
+    commentsButton.tintColor = accent
+    commentChevron.isHidden = item.comments == nil || !item.wide
+    commentRule.isHidden = commentChevron.isHidden
+    var stamp = item.time
+    if item.edited && !stamp.contains("ред.") { stamp += " ред." }
+    metaLabel.text = item.deleted ? stamp : stamp
     statusView.isHidden = item.delivery == "none"
     statusView.image = UIImage(systemName: statusSymbol(item.delivery))
     fillReactions(item, accent: accent, outgoing: item.outgoing)
-    bubbleLeading?.isActive = !item.outgoing
-    bubbleTrailing?.isActive = item.outgoing
+    selectionLeading?.constant = selecting ? 10 : 0
+    selectionWidth?.constant = selecting ? 22 : 0
+    bubbleLeading?.isActive = !wide && !item.outgoing
+    bubbleTrailing?.isActive = !wide && item.outgoing
+    wideLeading?.isActive = wide
+    wideTrailing?.isActive = wide
+    bubbleCap?.isActive = !wide
+    if wide {
+      bubble.backgroundColor = .secondarySystemBackground
+      bubble.layer.cornerRadius = 18
+    }
+    reactionStack.preferredWidth = contentWidth
     contentView.backgroundColor = item.highlighted ? accent.withAlphaComponent(0.12) : .clear
     setNeedsLayout()
   }
@@ -378,6 +427,7 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
 
   private func fillReactions(_ item: KometChatMessage, accent: UIColor, outgoing: Bool) {
     reactionStack.isHidden = item.reactions.isEmpty
+    var chips: [UIView] = []
     for reaction in item.reactions {
       let view = UIButton(type: .system)
       let count = reaction.count > 1 ? " \(reaction.count)" : ""
@@ -388,12 +438,16 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
         ? accent.withAlphaComponent(outgoing ? 0.35 : 0.18)
         : UIColor.tertiarySystemFill
       view.layer.cornerRadius = 12
+      view.layer.cornerCurve = .continuous
       view.contentEdgeInsets = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+      view.setContentHuggingPriority(.required, for: .horizontal)
+      view.setContentCompressionResistancePriority(.required, for: .horizontal)
       view.accessibilityLabel = reaction.emoji
       view.accessibilityIdentifier = reaction.emoji
       view.addTarget(self, action: #selector(tapReaction(_:)), for: .touchUpInside)
-      reactionStack.addArrangedSubview(view)
+      chips.append(view)
     }
+    reactionStack.setChips(chips)
   }
 
   private func statusSymbol(_ delivery: String) -> String {
@@ -868,6 +922,74 @@ enum KometNotePlayback {
   static func layout(_ view: UIImageView) {
     guard host === view else { return }
     layer?.frame = view.bounds
+  }
+}
+
+private func mediaURL(_ raw: String?) -> URL? {
+  guard let raw, !raw.isEmpty else { return nil }
+  if raw.hasPrefix("/") { return URL(fileURLWithPath: raw) }
+  return URL(string: raw)
+}
+
+private func fittedMediaSize(
+  pixelWidth: Int,
+  pixelHeight: Int,
+  maxWidth: CGFloat,
+  round: Bool,
+  sticker: Bool
+) -> CGSize {
+  if sticker { return CGSize(width: 150, height: 150) }
+  if round { return CGSize(width: 180, height: 180) }
+  let limit = max(150, maxWidth)
+  let aspect: CGFloat = pixelWidth > 0 && pixelHeight > 0
+    ? CGFloat(pixelHeight) / CGFloat(pixelWidth)
+    : 0.75
+  var width = limit
+  var height = width * aspect
+  let maxHeight = width * 1.3
+  if height > maxHeight {
+    height = maxHeight
+    width = height / max(aspect, 0.01)
+  }
+  return CGSize(width: max(150, width), height: max(80, height))
+}
+
+final class KometReactionFlow: UIView {
+  private var chips: [UIView] = []
+  var preferredWidth: CGFloat = 240
+  func setChips(_ views: [UIView]) {
+    chips.forEach { $0.removeFromSuperview() }
+    chips = views
+    views.forEach(addSubview)
+    invalidateIntrinsicContentSize()
+    setNeedsLayout()
+  }
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    place(width: bounds.width > 1 ? bounds.width : preferredWidth)
+  }
+  override var intrinsicContentSize: CGSize {
+    let used = place(width: preferredWidth)
+    return CGSize(width: UIView.noIntrinsicMetric, height: max(1, used))
+  }
+  @discardableResult
+  private func place(width maxW: CGFloat) -> CGFloat {
+    var x: CGFloat = 0
+    var y: CGFloat = 0
+    var row: CGFloat = 0
+    for chip in chips {
+      let size = chip.intrinsicContentSize
+      let w = min(max(1, size.width), maxW)
+      if x > 0, x + w > maxW + 0.5 {
+        x = 0
+        y += row + 6
+        row = 0
+      }
+      chip.frame = CGRect(x: x, y: y, width: w, height: max(28, size.height))
+      x += w + 6
+      row = max(row, chip.frame.height)
+    }
+    return chips.isEmpty ? 0 : y + row
   }
 }
 

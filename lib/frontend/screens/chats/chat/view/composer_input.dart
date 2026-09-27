@@ -21,7 +21,6 @@ import 'package:komet/frontend/widgets/glass/ios_palette.dart';
 import 'package:komet/frontend/widgets/glass/ios_typography.dart';
 import 'package:komet/frontend/widgets/glossy_pill.dart';
 import 'package:komet/frontend/widgets/liquid_glass.dart';
-import 'package:komet/frontend/widgets/lottie_slash_icon.dart';
 import 'package:komet/frontend/widgets/paste_media_scope.dart';
 import 'package:komet/frontend/widgets/reply_preview.dart';
 import 'package:komet/frontend/widgets/rich_message_controller.dart';
@@ -170,9 +169,10 @@ class ComposerInputBar extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            LottieSlashIcon(
-              asset: 'assets/lottie/ic_notifications_on_to_off.json',
-              slashed: isMuted,
+            Icon(
+              isMuted
+                  ? IosSymbols.notificationsOff(context)
+                  : IosSymbols.notifications(context),
               color: cs.onSurface,
               size: 22,
             ),
