@@ -976,7 +976,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               layout: 'settings',
               showClose: false,
               maskPhone: _profile?.phone != 0 && !_isPhoneVisible,
-              bottomInset: MediaQuery.paddingOf(context).bottom + 56,
+              bottomInset: MediaQuery.paddingOf(context).bottom + 72,
               sections: _nativeSettingsSections(context, l10n, others),
               onTap: (id) => _onNativeSettingsTap(context, id),
               onHeader: _onNativeSettingsHeader,

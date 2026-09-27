@@ -33,11 +33,12 @@ class IosNativeTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A custom selected color makes the glass package paint a second plate
+    // behind the system capsule.
     return LiquidGlassTabBar(
       items: tabItems(items, badges),
       currentIndex: currentIndex.clamp(0, items.length - 1),
       onTabSelected: onTap,
-      selectedItemColor: Theme.of(context).colorScheme.primary,
       iosItemPositioning: LiquidGlassTabBarItemPositioning.fill,
     );
   }
