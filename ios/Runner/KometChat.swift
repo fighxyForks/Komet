@@ -222,6 +222,8 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     }
     let wasNearBottom = nearBottom
     let anchor = captureAnchor()
+    let preservedOffset = collectionView.contentOffset.y
+    let preservedHeight = collectionView.contentSize.height
     if let incoming = incoming { order = incoming }
     let present = Set(order)
     contents = contents.filter { present.contains($0.key) }
@@ -242,15 +244,25 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
         KometChatController.debugReloads += 1
         self.collectionView.reloadData()
       }
-      self.finishApply(pinnedToEnd: pinnedToEnd, wasNearBottom: wasNearBottom, anchor: anchor)
+      self.finishApply(
+        pinnedToEnd: pinnedToEnd, wasNearBottom: wasNearBottom, anchor: anchor,
+        preservedOffset: preservedOffset, preservedHeight: preservedHeight)
     }
     DispatchQueue.main.async { [weak self] in
       guard let self = self, generation == self.settleGeneration else { return }
-      self.finishApply(pinnedToEnd: pinnedToEnd, wasNearBottom: wasNearBottom, anchor: anchor)
+      self.finishApply(
+        pinnedToEnd: pinnedToEnd, wasNearBottom: wasNearBottom, anchor: anchor,
+        preservedOffset: preservedOffset, preservedHeight: preservedHeight)
     }
   }
 
-  private func finishApply(pinnedToEnd: Bool, wasNearBottom: Bool, anchor: RowAnchor?) {
+  private func finishApply(
+    pinnedToEnd: Bool,
+    wasNearBottom: Bool,
+    anchor: RowAnchor?,
+    preservedOffset: CGFloat,
+    preservedHeight: CGFloat
+  ) {
     if view.bounds.width > 1 {
       collectionView.frame = view.bounds
     }
@@ -263,8 +275,14 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     let stick = pinnedToEnd || (wasNearBottom && !collectionView.isTracking)
     if stick {
       scrollToEnd(animated: false)
-    } else if let anchor {
-      restore(anchor)
+    } else {
+      let growth = collectionView.contentSize.height - preservedHeight
+      if growth > 0.5 {
+        didPinStart = true
+        collectionView.contentOffset.y = preservedOffset + growth
+      } else if let anchor {
+        restore(anchor)
+      }
     }
     publishVisible()
   }

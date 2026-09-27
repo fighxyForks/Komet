@@ -482,7 +482,9 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     replyButton.setTitle(quote.joined(separator: "\n"), for: .normal)
     replyButton.setTitleColor(item.outgoing ? UIColor.white.withAlphaComponent(0.9) : accent, for: .normal)
     bodyView.isHidden = !showsText
-    bodyView.preferredWidth = contentWidth
+    if bodyView.preferredWidth != contentWidth {
+      bodyView.preferredWidth = contentWidth
+    }
     if showsText {
       let textKey = "\(item.outgoing)\u{1}\(foregroundKey(foreground))\u{1}\(foregroundKey(accent))\u{1}\(item.text)"
       if animojiFrame != nil || textKey != appliedText {
@@ -595,14 +597,12 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   }
 
   func debugLayoutSnapshot() -> (subviews: Int, constraints: Int, height: CGFloat) {
-    let subviews = countSubviews(stack)
-    let constraints = bubble.constraints.count + stack.constraints.count
     let width = bounds.width > 1 ? bounds.width : 320
     let height = contentView.systemLayoutSizeFitting(
       CGSize(width: width, height: 0),
       withHorizontalFittingPriority: .required,
       verticalFittingPriority: .fittingSizeLevel).height
-    return (subviews, constraints, height)
+    return (countSubviews(stack), bubble.constraints.count + stack.constraints.count, height)
   }
 
   private func countSubviews(_ view: UIView) -> Int {
