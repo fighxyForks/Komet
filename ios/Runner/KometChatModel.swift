@@ -2,6 +2,7 @@ import UIKit
 
 struct KometChatChrome {
   var accent = UIColor.systemBlue
+  var topInset: CGFloat = 0
   var bottomInset: CGFloat = 0
   var selecting = false
 
@@ -10,6 +11,9 @@ struct KometChatChrome {
     var chrome = KometChatChrome()
     if let accent = map["accent"] as? NSNumber {
       chrome.accent = UIColor(argb: accent.uint32Value)
+    }
+    if let inset = map["topInset"] as? NSNumber {
+      chrome.topInset = CGFloat(truncating: inset)
     }
     if let inset = map["bottomInset"] as? NSNumber {
       chrome.bottomInset = CGFloat(truncating: inset)
@@ -198,7 +202,7 @@ struct KometChatMessage {
   }
 }
 
-private extension UIColor {
+extension UIColor {
   convenience init(argb: UInt32) {
     let alpha = CGFloat((argb >> 24) & 0xFF) / 255
     self.init(
