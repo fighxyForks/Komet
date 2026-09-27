@@ -131,6 +131,8 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
   private var lastVisible: [String] = []
   private var heights = KometChatHeightCache()
   private var appliedRevision = -1
+  private var highlightOverride: String?
+  private var highlightOverrideSet = false
   static var debugMeasurements = 0
   static var debugReloads = 0
   private struct RowAnchor {
@@ -206,7 +208,6 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     for row in rows {
       guard let item = KometChatMessage.parse(row) else { continue }
       contents[item.id] = item
-      heights.invalidate(id: item.id)
     }
     let wasNearBottom = nearBottom
     let anchor = captureAnchor()
@@ -242,8 +243,15 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
   }
 
   func highlight(_ id: String?) {
-    guard let id = id else { return }
-    scrollTo(id)
+    highlightOverride = id
+    highlightOverrideSet = true
+    let accent = chrome.accent
+    for path in collectionView.indexPathsForVisibleItems {
+      guard path.item < order.count,
+            let cell = collectionView.cellForItem(at: path) as? KometChatMessageCell else { continue }
+      cell.paintHighlight(order[path.item] == id, accent: accent)
+    }
+    if let id, !id.isEmpty { scrollTo(id) }
   }
 
   func scrollTo(_ id: String) {
@@ -304,8 +312,7 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     }
     let category = traitCollection.preferredContentSizeCategory.rawValue
     let key = KometChatHeightCache.Key(
-      id: item.id,
-      revision: KometChatLayout.revision(item),
+      revision: item.rev.isEmpty ? "legacy-\(item.id)-\(KometChatLayout.revision(item))" : item.rev,
       width: Int((itemWidth * 2).rounded()),
       category: category,
       selecting: chrome.selecting)
@@ -436,6 +443,9 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
       cell.apply(
         item, accent: self.chrome.accent, selecting: self.chrome.selecting,
         width: collectionView.bounds.width)
+      if self.highlightOverrideSet {
+        cell.paintHighlight(item.id == self.highlightOverride, accent: self.chrome.accent)
+      }
       if item.kind == "sticker", let frame = self.stickerFrames[id] {
         cell.showStickerFrame(frame, id: id)
       }

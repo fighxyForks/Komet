@@ -135,28 +135,30 @@ enum KometChatLayout {
 
 struct KometChatHeightCache {
   struct Key: Hashable {
-    let id: String
-    let revision: Int
+    let revision: String
     let width: Int
     let category: String
     let selecting: Bool
   }
 
   private var values: [Key: CGFloat] = [:]
+  private var order: [Key] = []
 
   mutating func height(for key: Key, measure: () -> CGFloat) -> CGFloat {
     if let cached = values[key] { return cached }
     let measured = measure()
     values[key] = measured
+    order.append(key)
+    if order.count > 2000 {
+      let dropped = order.removeFirst()
+      values.removeValue(forKey: dropped)
+    }
     return measured
-  }
-
-  mutating func invalidate(id: String) {
-    values = values.filter { $0.key.id != id }
   }
 
   mutating func removeAll() {
     values.removeAll()
+    order.removeAll()
   }
 }
 
