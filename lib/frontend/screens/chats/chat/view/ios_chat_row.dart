@@ -65,8 +65,6 @@ class IosChatRow extends StatelessWidget {
             cs.primary.withValues(alpha: 0.08),
             IosPalette.background(cs),
           )
-        : isPinned
-        ? IosPalette.pinnedRow(cs)
         : IosPalette.background(cs);
     final trailing = _trailing(context, cs, secondary);
     return AnimatedContainer(

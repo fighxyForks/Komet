@@ -17,9 +17,6 @@ class IosPalette {
   static Color settingsCard(ColorScheme cs) =>
       _dark(cs) ? const Color(0xFF2C2C2E) : Colors.white;
 
-  static Color pinnedRow(ColorScheme cs) =>
-      _dark(cs) ? const Color(0xFF111113) : const Color(0xFFF7F7F9);
-
   static Color label(ColorScheme cs) => _dark(cs) ? Colors.white : Colors.black;
 
   static Color secondaryLabel(ColorScheme cs) =>

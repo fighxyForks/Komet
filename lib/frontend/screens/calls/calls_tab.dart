@@ -379,10 +379,10 @@ class _CallsTabState extends State<CallsTab>
         fontSize: ios ? IosTypography.listTitle : 16,
         fontWeight: FontWeight.w500,
       ),
-      maxLines: 1,
-      overflow: ios ? TextOverflow.visible : TextOverflow.ellipsis,
+      maxLines: ios ? null : 1,
+      overflow: ios ? TextOverflow.clip : TextOverflow.ellipsis,
     );
-    return InkWell(
+    return IosTappable(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
@@ -394,17 +394,7 @@ class _CallsTabState extends State<CallsTab>
           children: [
             Icon(icon, color: cs.primary, size: 24),
             const SizedBox(width: 12),
-            Flexible(
-              child: ios
-                  ? FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: alignEnd
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: text,
-                    )
-                  : text,
-            ),
+            Flexible(child: text),
           ],
         ),
       ),
@@ -697,27 +687,45 @@ class _CallsTabState extends State<CallsTab>
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildLinkAction(
-                      cs,
-                      icon: IosSymbols.link(context),
-                      label: ios ? l10n.callsActionCreate : 'Создать звонок',
-                      onTap: _createGroupCall,
+              child: ios
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildLinkAction(
+                          cs,
+                          icon: IosSymbols.link(context),
+                          label: l10n.callsActionCreate,
+                          onTap: _createGroupCall,
+                        ),
+                        _buildLinkAction(
+                          cs,
+                          icon: IosSymbols.personAddGroup(context),
+                          label: l10n.callsActionJoin,
+                          onTap: _joinGroupCall,
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: _buildLinkAction(
+                            cs,
+                            icon: IosSymbols.link(context),
+                            label: 'Создать звонок',
+                            onTap: _createGroupCall,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildLinkAction(
+                            cs,
+                            icon: IosSymbols.personAddGroup(context),
+                            label: 'Присоединиться',
+                            onTap: _joinGroupCall,
+                            alignEnd: true,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Expanded(
-                    child: _buildLinkAction(
-                      cs,
-                      icon: IosSymbols.personAddGroup(context),
-                      label: ios ? l10n.callsActionJoin : 'Присоединиться',
-                      onTap: _joinGroupCall,
-                      alignEnd: true,
-                    ),
-                  ),
-                ],
-              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
