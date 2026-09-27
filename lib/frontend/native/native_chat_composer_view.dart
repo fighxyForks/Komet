@@ -184,8 +184,10 @@ class _NativeChatComposerViewState extends State<NativeChatComposerView> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final home = keyboard > 0 ? 0.0 : MediaQuery.paddingOf(context).bottom;
     return SizedBox(
-      height: (widget.reply.isEmpty ? 20 : 48) + _fieldHeight,
+      height: (widget.reply.isEmpty ? 20 : 48) + _fieldHeight + home,
       child: UiKitView(
         viewType: _type,
         creationParams: _chrome,
