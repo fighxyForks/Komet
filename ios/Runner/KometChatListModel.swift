@@ -389,4 +389,32 @@ enum KometNavigationChrome {
       item.searchBarPlacementAllowsToolbarIntegration = false
     }
   }
+
+  static func flattenSearch(_ bar: UISearchBar) {
+    bar.searchBarStyle = .minimal
+    bar.backgroundImage = UIImage()
+    bar.setBackgroundImage(UIImage(), for: .any, barMetrics: .default)
+    bar.isTranslucent = true
+    bar.tintColor = .label
+    let field = bar.searchTextField
+    field.backgroundColor = .tertiarySystemFill
+    field.borderStyle = .none
+    field.textColor = .label
+    field.font = .systemFont(ofSize: 17)
+    field.layer.cornerRadius = 18
+    field.layer.cornerCurve = .continuous
+    field.clipsToBounds = true
+    if #available(iOS 26.0, *) {
+      for subview in field.subviews where subview is UIVisualEffectView {
+        subview.isHidden = true
+      }
+    }
+  }
+}
+
+final class KometFlatSearchBar: UISearchBar {
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    KometNavigationChrome.flattenSearch(self)
+  }
 }

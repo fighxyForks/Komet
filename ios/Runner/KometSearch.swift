@@ -26,7 +26,7 @@ final class KometSearchPlatformView: NSObject, FlutterPlatformView, UITableViewD
   UITableViewDelegate, UISearchBarDelegate {
   private let channel: FlutterMethodChannel
   private let root = UIView()
-  private let searchBar = UISearchBar()
+  private let searchBar = KometFlatSearchBar()
   private let closeButton = UIButton(type: .system)
   private let table = UITableView(frame: .zero, style: .insetGrouped)
   private let spinner = UIActivityIndicatorView(style: .medium)
@@ -39,7 +39,7 @@ final class KometSearchPlatformView: NSObject, FlutterPlatformView, UITableViewD
     super.init()
     root.frame = frame
     root.backgroundColor = .systemBackground
-    searchBar.searchBarStyle = .minimal
+    KometNavigationChrome.flattenSearch(searchBar)
     searchBar.placeholder = "Поиск"
     searchBar.autocapitalizationType = .none
     searchBar.delegate = self

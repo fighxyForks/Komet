@@ -26,7 +26,7 @@ final class KometEmojiPanelPlatformView: NSObject, FlutterPlatformView,
   UICollectionViewDataSource, UICollectionViewDelegate, UISearchBarDelegate {
   private let channel: FlutterMethodChannel
   private let root = UIView()
-  private let search = UISearchBar()
+  private let search = KometFlatSearchBar()
   private let categories = UIScrollView()
   private let categoryRow = UIStackView()
   private var collection: UICollectionView!
@@ -39,7 +39,7 @@ final class KometEmojiPanelPlatformView: NSObject, FlutterPlatformView,
     super.init()
     root.frame = frame
     root.backgroundColor = .systemBackground
-    search.searchBarStyle = .minimal
+    KometNavigationChrome.flattenSearch(search)
     search.placeholder = "Поиск"
     search.delegate = self
     categoryRow.axis = .horizontal
