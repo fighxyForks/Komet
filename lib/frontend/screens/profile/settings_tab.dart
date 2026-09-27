@@ -20,7 +20,7 @@ import '../../../core/config/komet_settings.dart';
 import '../../../core/config/app_show_extra_info.dart';
 import '../../../core/storage/app_database.dart';
 import '../../../core/utils/format.dart';
-import '../../../core/utils/haptics.dart';
+
 import '../../../core/utils/update_checker.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../main.dart';
@@ -111,7 +111,6 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
   String? _appVersionLabel;
   bool _debugMenuVisible = false;
   bool _isCheckingForUpdates = false;
-  bool _hapticsEnabled = Haptics.enabled;
   int _versionSecretTapCount = 0;
   Timer? _versionSecretTapResetTimer;
   StreamSubscription? _profileUpdateSub;
@@ -425,21 +424,7 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     Navigator.push(
       context,
       iosPageRoute(context, builder: (context) => const NotificationsScreen()),
-    ).then((_) {
-      if (!mounted) return;
-      setState(() => _hapticsEnabled = Haptics.enabled);
-    });
-  }
-
-  Future<void> _setHaptics(bool value) async {
-    if (IosGlass.of(context)) {
-      IosHaptics.toggle();
-    } else {
-      Haptics.selection();
-    }
-    await Haptics.setEnabled(value);
-    if (!mounted) return;
-    setState(() => _hapticsEnabled = value);
+    );
   }
 
   Future<void> _checkForUpdates() async {
@@ -630,24 +615,23 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                         return _buildSection(
                           context,
                           items: [
-                            if (BuildProfile.digitalId)
-                              _SettingsItem(
-                                icon: Symbols.badge,
-                                label: 'Цифровой ID',
-                                onTap: () {
-                                  Navigator.push(
+                            _SettingsItem(
+                              icon: Symbols.badge,
+                              label: 'Цифровой ID',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  iosPageRoute(
                                     context,
-                                    iosPageRoute(
-                                      context,
-                                      builder: (context) =>
-                                          AppDigitalIdNative.current.value ||
-                                              !webViewSupported
-                                          ? const DigitalIdScreen()
-                                          : const DigitalIdWebScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
+                                    builder: (context) =>
+                                        AppDigitalIdNative.current.value ||
+                                            !webViewSupported
+                                        ? const DigitalIdScreen()
+                                        : const DigitalIdWebScreen(),
+                                  ),
+                                );
+                              },
+                            ),
                             _SettingsItem(
                               icon: Symbols.language,
                               label: 'Войти в Сферум',
@@ -724,13 +708,6 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
                     child: _buildSection(
                       context,
                       items: [
-                        _SettingsItem(
-                          icon: Symbols.vibration,
-                          label: 'Тактильный отклик',
-                          subtitle: 'Виброотклик при действиях в приложении',
-                          toggleValue: _hapticsEnabled,
-                          onToggle: (value) => unawaited(_setHaptics(value)),
-                        ),
                         _SettingsItem(
                           icon: Symbols.notifications_active,
                           label: 'Уведомления',
@@ -999,9 +976,6 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               layout: 'settings',
               sections: _nativeSettingsSections(context, l10n, others),
               onTap: (id) => _onNativeSettingsTap(context, id),
-              onToggle: (id, value) {
-                if (id == 'haptics') unawaited(_setHaptics(value));
-              },
               onHeader: _onNativeSettingsHeader,
             ),
           ),
@@ -1040,13 +1014,12 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       NativeSettingsSection(rows: [account]),
       NativeSettingsSection(
         rows: [
-          if (BuildProfile.digitalId)
-            const NativeSettingsRow(
-              id: 'digital-id',
-              title: 'Цифровой ID',
-              symbol: 'person.text.rectangle',
-              keywords: ['удостоверение'],
-            ),
+          const NativeSettingsRow(
+            id: 'digital-id',
+            title: 'Цифровой ID',
+            symbol: 'person.text.rectangle',
+            keywords: ['удостоверение'],
+          ),
           const NativeSettingsRow(
             id: 'security',
             title: 'Безопасность',
@@ -1109,13 +1082,6 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             title: 'Иконка приложения',
             symbol: 'app.badge',
             keywords: ['оформление'],
-          ),
-          NativeSettingsRow(
-            id: 'haptics',
-            title: 'Тактильный отклик',
-            symbol: 'waveform',
-            keywords: const ['вибрация', 'отдача'],
-            switchValue: _hapticsEnabled,
           ),
           const NativeSettingsRow(
             id: 'notifications',
@@ -1965,15 +1931,6 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
     return SettingsCard(
       children: List.generate(items.length, (index) {
         final item = items[index];
-        if (item.onToggle != null && item.toggleValue != null) {
-          return SettingsToggleTile(
-            icon: item.icon ?? Symbols.vibration,
-            label: item.label,
-            subtitle: item.subtitle,
-            value: item.toggleValue!,
-            onChanged: item.onToggle!,
-          );
-        }
         final tile = SettingsNavTile(
           icon: item.icon,
           leading: item.leading,
@@ -2095,10 +2052,7 @@ class _SettingsItem {
   final IconData? icon;
   final Widget? leading;
   final String label;
-  final String? subtitle;
   final VoidCallback? onTap;
-  final bool? toggleValue;
-  final ValueChanged<bool>? onToggle;
   final Color? tintColor;
   final Widget Function(Widget tile)? wrap;
 
@@ -2106,10 +2060,7 @@ class _SettingsItem {
     this.icon,
     this.leading,
     required this.label,
-    this.subtitle,
     this.onTap,
-    this.toggleValue,
-    this.onToggle,
     this.tintColor,
     this.wrap,
   });
