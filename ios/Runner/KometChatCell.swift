@@ -691,7 +691,7 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     guard animated else { return }
     if UIAccessibility.isReduceMotionEnabled, animojiFrame != nil { return }
     animojiFrame = image
-    guard showsText, let item, !UIAccessibility.isVoiceOverRunning else { return }
+    guard let item, !item.text.isEmpty, !UIAccessibility.isVoiceOverRunning else { return }
     bodyView.attributedText = KometChatText.make(
       item, foreground: bodyView.textColor ?? .label, accent: tintColor, animoji: image)
   }
