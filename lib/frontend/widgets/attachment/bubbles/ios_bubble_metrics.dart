@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+import 'package:komet/core/chat/message_cluster.dart';
 
 abstract final class IosBubbleMetrics {
   static const double compactWidthBoundary = 500;
@@ -12,7 +13,7 @@ abstract final class IosBubbleMetrics {
   static const double avatarGap = 4;
   static const double avatarInset = avatarSize + avatarGap;
 
-  static const Duration mergeWindow = Duration(minutes: 10);
+  static const Duration mergeWindow = iosMergeWindow;
   static const double mergedSpacing = 0.5;
   static const double groupSpacing = 2;
 

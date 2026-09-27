@@ -59,6 +59,34 @@ enum ChatFixtures {
           ["text": "Два"],
         ],
       ]),
+      message(id: "contact", extra: [
+        "kind": "contact",
+        "units": [["kind": "contact", "name": "Синтетический контакт", "hasPhone": false, "contactId": 7]],
+      ]),
+      message(id: "file", extra: [
+        "kind": "file",
+        "units": [["kind": "file", "name": "заметка.txt", "size": 128, "extension": "txt"]],
+      ]),
+      message(id: "location", extra: [
+        "kind": "location",
+        "units": [["kind": "location", "latitude": 55.75, "longitude": 37.62]],
+      ]),
+      message(id: "link", extra: [
+        "kind": "share",
+        "units": [["kind": "linkPreview", "title": "Пример", "url": "https://example.test/a"]],
+      ]),
+      message(id: "keyboard-rows", text: "Ряды", extra: [
+        "units": [[
+          "kind": "botKeyboard",
+          "rows": [
+            [["text": "Один"], ["text": "Два"]],
+            [["text": "Три"]],
+          ],
+        ]],
+      ]),
+      message(id: "animoji", text: "😀", extra: [
+        "spans": [["start": 0, "length": 2, "styles": ["animoji"]]],
+      ]),
     ]
   }
 

@@ -106,6 +106,8 @@ struct KometChatMessage {
   let wide: Bool
   let mediaWidth: Int
   let mediaHeight: Int
+  let units: [[String: Any]]
+  let rev: String
 
   var isService: Bool { role != .message || kind == "control" }
 
@@ -198,7 +200,9 @@ struct KometChatMessage {
       },
       wide: (map["wide"] as? NSNumber)?.boolValue ?? false,
       mediaWidth: (map["mediaWidth"] as? NSNumber)?.intValue ?? 0,
-      mediaHeight: (map["mediaHeight"] as? NSNumber)?.intValue ?? 0)
+      mediaHeight: (map["mediaHeight"] as? NSNumber)?.intValue ?? 0,
+      units: map["units"] as? [[String: Any]] ?? [],
+      rev: map["rev"] as? String ?? "")
   }
 }
 

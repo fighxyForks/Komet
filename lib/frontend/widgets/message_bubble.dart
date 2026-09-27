@@ -10,6 +10,7 @@ import 'package:komet/frontend/widgets/glass/ios_symbols.dart';
 import '../../backend/modules/messages.dart';
 import '../screens/webapp/web_app_bridge.dart';
 import '../screens/webapp/web_app_screen.dart';
+import '../../core/chat/message_cluster.dart';
 import '../../core/config/app_bubble_behavior.dart';
 import '../../core/config/app_bubble_shape.dart';
 import '../../core/crypto/message_decryption_cache.dart';
@@ -778,48 +779,42 @@ class MessageBubble extends StatelessWidget {
     return forwarded == null ? message.text : forwarded.originalText;
   }
 
-  bool get _showsSenderName =>
-      !isMe && chatType == "CHAT" && prevMessage?.senderId != message.senderId;
+  bool _showsSenderName(MergePolicy policy) {
+    if (isMe || chatType != 'CHAT') return false;
+    final role = _clusterRole(policy);
+    if (policy == MergePolicy.material) {
+      return materialShowsSender(_neighbor(prevMessage), _neighbor(message)!);
+    }
+    return showsSender(role, incomingGroup: true);
+  }
 
-  bool get _stretchesTextRow => message.replyInfo != null || _showsSenderName;
+  ClusterNeighbor? _neighbor(CachedMessage? source) {
+    if (source == null) return null;
+    return ClusterNeighbor(
+      senderId: source.senderId,
+      outgoing: source.senderId == myId,
+      timeMillis: source.time,
+      control: source.isControl,
+    );
+  }
 
-  bool _sameDay(int a, int b) {
-    final x = DateTime.fromMillisecondsSinceEpoch(a);
-    final y = DateTime.fromMillisecondsSinceEpoch(b);
-    return x.year == y.year && x.month == y.month && x.day == y.day;
+  ClusterRole _clusterRole(MergePolicy policy) {
+    return clusterRole(
+      previous: _neighbor(prevMessage),
+      message: _neighbor(message)!,
+      next: _neighbor(nextMessage),
+      policy: policy,
+    );
   }
 
   BubbleShape _computeShape({bool ios = false}) {
-    if (message.isControl) return BubbleShape.singleMiddle;
-    final window = ios
-        ? IosBubbleMetrics.mergeWindow.inMilliseconds
-        : 300000;
-
-    final hasPrevFromMe =
-        prevMessage?.senderId == message.senderId && !prevMessage!.isControl;
-    final prevTimeDiff = hasPrevFromMe
-        ? message.time - prevMessage!.time
-        : 999999999;
-
-    final hasNextFromMe =
-        nextMessage?.senderId == message.senderId && !nextMessage!.isControl;
-    final nextTimeDiff = hasNextFromMe
-        ? nextMessage!.time - message.time
-        : 999999999;
-
-    final groupedWithPrev =
-        hasPrevFromMe &&
-        prevTimeDiff < window &&
-        (!ios || _sameDay(prevMessage!.time, message.time));
-    final groupedWithNext =
-        hasNextFromMe &&
-        nextTimeDiff < window &&
-        (!ios || _sameDay(message.time, nextMessage!.time));
-
-    if (!groupedWithPrev && !groupedWithNext) return BubbleShape.singleMiddle;
-    if (!groupedWithPrev && groupedWithNext) return BubbleShape.singleTop;
-    if (groupedWithPrev && !groupedWithNext) return BubbleShape.singleBottom;
-    return BubbleShape.groupedMiddle;
+    final role = _clusterRole(ios ? MergePolicy.ios : MergePolicy.material);
+    return switch (role) {
+      ClusterRole.single => BubbleShape.singleMiddle,
+      ClusterRole.top => BubbleShape.singleTop,
+      ClusterRole.bottom => BubbleShape.singleBottom,
+      ClusterRole.middle => BubbleShape.groupedMiddle,
+    };
   }
 
   bool get _hasShareAttachment {
@@ -1197,11 +1192,15 @@ class MessageBubble extends StatelessWidget {
         : _paddingFor(contentType, shape, ios: ios);
 
     final showAvatarSlot = !isMe;
+    final policy = ios ? MergePolicy.ios : MergePolicy.material;
+    final role = _clusterRole(policy);
     final showAvatar =
         showAvatarSlot &&
         chatType == "CHAT" &&
-        nextMessage?.senderId != message.senderId;
-    final showSenderName = _showsSenderName;
+        (policy == MergePolicy.material
+            ? materialShowsAvatar(_neighbor(message)!, _neighbor(nextMessage))
+            : showsAvatar(role, incomingGroup: true));
+    final showSenderName = _showsSenderName(policy);
 
     final keyboard = _inlineKeyboard;
     final isVideoNote = _isVideoNote;
@@ -1294,7 +1293,7 @@ class MessageBubble extends StatelessWidget {
     final Widget innerContent =
         contentType == MessageType.text &&
             jumboAnimoji == null &&
-            _stretchesTextRow
+            (reply != null || showSenderName)
         ? IntrinsicWidth(
             child: Column(
               mainAxisSize: MainAxisSize.min,

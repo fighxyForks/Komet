@@ -254,6 +254,8 @@ class NativeChatItem {
   final bool wide;
   final int? mediaWidth;
   final int? mediaHeight;
+  final List<Map<String, Object?>> units;
+  final String rev;
 
   const NativeChatItem({
     required this.id,
@@ -301,6 +303,8 @@ class NativeChatItem {
     this.wide = false,
     this.mediaWidth,
     this.mediaHeight,
+    this.units = const [],
+    this.rev = '',
   });
 
   const NativeChatItem.date(String dayId, String label)
@@ -315,6 +319,8 @@ class NativeChatItem {
     bool? showSender,
     String? senderName,
     String? playUrl,
+    List<Map<String, Object?>>? units,
+    String? rev,
   }) => NativeChatItem(
     id: id,
     role: role,
@@ -361,6 +367,8 @@ class NativeChatItem {
     wide: wide,
     mediaWidth: mediaWidth,
     mediaHeight: mediaHeight,
+    units: units ?? this.units,
+    rev: rev ?? this.rev,
   );
 
   Map<String, Object?> toMap() => {
@@ -410,6 +418,8 @@ class NativeChatItem {
       'wide': wide,
       if (mediaWidth != null) 'mediaWidth': mediaWidth,
       if (mediaHeight != null) 'mediaHeight': mediaHeight,
+      if (units.isNotEmpty) 'units': units,
+      if (rev.isNotEmpty) 'rev': rev,
     },
   };
 
@@ -460,7 +470,9 @@ class NativeChatItem {
         listEquals(buttons, other.buttons) &&
         wide == other.wide &&
         mediaWidth == other.mediaWidth &&
-        mediaHeight == other.mediaHeight;
+        mediaHeight == other.mediaHeight &&
+        rev == other.rev &&
+        _sameValue(units, other.units);
   }
 
   @override
@@ -496,8 +508,38 @@ class NativeChatItem {
       wide,
       mediaWidth,
       mediaHeight,
+      rev,
+      _canon(units),
     ),
   );
+}
+
+bool _sameValue(Object? a, Object? b) {
+  if (identical(a, b)) return true;
+  if (a is List && b is List) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!_sameValue(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (a is Map && b is Map) {
+    if (a.length != b.length) return false;
+    for (final key in a.keys) {
+      if (!b.containsKey(key) || !_sameValue(a[key], b[key])) return false;
+    }
+    return true;
+  }
+  return a == b;
+}
+
+String _canon(Object? value) {
+  if (value is Map) {
+    final keys = value.keys.map((key) => '$key').toList()..sort();
+    return '{${keys.map((key) => '$key:${_canon(value[key])}').join(',')}}';
+  }
+  if (value is List) return '[${value.map(_canon).join(',')}]';
+  return '$value';
 }
 
 @immutable
@@ -533,6 +575,10 @@ class NativeChatUpdate {
   }
 }
 
+void _ignoreContact(String id, int contactId) {}
+
+void _ignoreId(String id) {}
+
 class NativeChatCallbacks {
   final ValueChanged<String> onOpen;
   final void Function(String id, Rect origin) onLongPress;
@@ -551,6 +597,9 @@ class NativeChatCallbacks {
   final ValueChanged<String> onComments;
   final ValueChanged<String> onSticker;
   final ValueChanged<int> onAvatar;
+  final void Function(String id, int contactId) onContact;
+  final void Function(String id) onFile;
+  final void Function(String id) onLocation;
   final VoidCallback onLoadOlder;
   final VoidCallback onLoadNewer;
   final ValueChanged<bool> onNearBottom;
@@ -574,6 +623,9 @@ class NativeChatCallbacks {
     required this.onComments,
     required this.onSticker,
     required this.onAvatar,
+    this.onContact = _ignoreContact,
+    this.onFile = _ignoreId,
+    this.onLocation = _ignoreId,
     required this.onLoadOlder,
     required this.onLoadNewer,
     required this.onNearBottom,
@@ -763,6 +815,14 @@ class NativeChatController {
       case 'avatar':
         final senderId = args['senderId'];
         if (senderId is int) callbacks.onAvatar(senderId);
+      case 'contact':
+        if (id is String) {
+          callbacks.onContact(id, (args['contactId'] as num?)?.toInt() ?? 0);
+        }
+      case 'file':
+        if (id is String) callbacks.onFile(id);
+      case 'location':
+        if (id is String) callbacks.onLocation(id);
       case 'loadOlder':
         callbacks.onLoadOlder();
       case 'loadNewer':

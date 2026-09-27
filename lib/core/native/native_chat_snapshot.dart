@@ -2,11 +2,15 @@ import '../../backend/modules/messages.dart';
 import '../../models/attachment.dart';
 import '../../models/poll.dart';
 import '../../models/reaction_info.dart';
+import '../chat/chat_content_unit.dart';
+import '../chat/content_unit_mapper.dart';
+import '../chat/layout_revision.dart';
+import '../chat/message_cluster.dart';
 import '../utils/format.dart';
 import '../utils/text_format.dart';
 import 'native_chat_bridge.dart';
 
-const nativeChatMergeWindow = Duration(minutes: 10);
+const nativeChatMergeWindow = iosMergeWindow;
 
 typedef NativeChatName = String Function(int senderId);
 typedef NativeChatTranscript = ({String text, bool expanded})?;
@@ -77,7 +81,7 @@ List<NativeChatItem> buildNativeChatItems({
     final previous = i == 0
         ? null
         : DateTime.fromMillisecondsSinceEpoch(visible[i - 1].time);
-    if (previous == null || !_sameDay(previous, stamp)) {
+    if (needsDateSeparator(previous?.millisecondsSinceEpoch, message.time)) {
       final day = DateTime(stamp.year, stamp.month, stamp.day);
       items.add(
         NativeChatItem.date(
@@ -112,7 +116,56 @@ List<NativeChatItem> buildNativeChatItems({
       items.add(built);
     }
   }
-  return _cluster(items, times: times, showSenders: showSenders, names: names);
+  return _withRevision(
+    _cluster(items, times: times, showSenders: showSenders, names: names),
+  );
+}
+
+List<NativeChatItem> _withRevision(List<NativeChatItem> items) {
+  return [
+    for (final item in items)
+      if (item.role != NativeChatRole.message)
+        item
+      else
+        item.copyWith(
+          rev: layoutRevisionFor(
+            messageId: item.id,
+            text: item.text,
+            units: [
+              for (final raw in item.units)
+                _RevisionUnit(raw['kind'] as String? ?? '', raw),
+            ],
+            clusterRole: item.cluster.name,
+            showSender: item.showSender,
+            showAvatar: item.showAvatar,
+            reply: '${item.replyAuthor ?? ''}|${item.replyText ?? ''}',
+            forward: item.forwardAuthor ?? '',
+            keyboard: '${item.buttons.length}',
+            poll: '${item.pollId ?? ''}:${item.pollVoted}:${item.pollChoices.length}',
+            transcript: item.transcript ?? '',
+            transcriptOpen: item.transcriptOpen,
+            comments: item.comments ?? '',
+            meta: item.time,
+          ),
+        ),
+  ];
+}
+
+class _RevisionUnit extends ChatContentUnit {
+  final String _kind;
+  final Map<String, Object?> _fields;
+
+  _RevisionUnit(this._kind, Map<String, Object?> raw)
+    : _fields = {
+        for (final entry in raw.entries)
+          if (entry.key != 'kind') entry.key: entry.value,
+      };
+
+  @override
+  String get kind => _kind;
+
+  @override
+  Map<String, Object?> get fields => _fields;
 }
 
 NativeChatItem? _messageItem(
@@ -146,13 +199,20 @@ NativeChatItem? _messageItem(
       text: text,
       senderId: control?.userId ?? message.senderId,
       time: '',
+      units: [
+        for (final unit in unitsFor(
+          message,
+          UnitMapContext(names: names),
+        ))
+          unit.toMap(),
+      ],
     );
   }
 
   final outgoing = message.senderId == myId;
   final reply = message.replyInfo;
   final forwarded = message.forwardedAttachment;
-  final kind = _kind(message);
+  final kind = nativeMessageKind(message);
   final transcript = kind == NativeChatKind.voice
       ? transcriptOf?.call(message.id)
       : null;
@@ -227,6 +287,19 @@ NativeChatItem? _messageItem(
     comments: commentsOf?.call(message),
     reactions: _reactions(reactionOf?.call(message) ?? message.payload?['reactionInfo']),
     buttons: _buttons(message),
+    units: [
+      for (final unit in unitsFor(
+        message,
+        UnitMapContext(
+          names: names,
+          comments: commentsOf?.call(message),
+          transcript: transcript?.text,
+          transcriptOpen: transcript?.expanded ?? false,
+          pollOf: pollOf,
+        ),
+      ))
+        unit.toMap(),
+    ],
   );
 }
 
@@ -236,73 +309,50 @@ List<NativeChatItem> _cluster(
   required bool showSenders,
   required NativeChatName names,
 }) {
-  final result = <NativeChatItem>[];
-  var index = 0;
-  while (index < items.length) {
+  ClusterNeighbor? neighborAt(int index) {
     final item = items[index];
-    if (!_clustersWith(item)) {
+    final time = times[item.id];
+    if (item.role != NativeChatRole.message || time == null) return null;
+    return ClusterNeighbor(
+      senderId: item.senderId ?? 0,
+      outgoing: item.outgoing,
+      timeMillis: time,
+      control: item.kind == NativeChatKind.control,
+    );
+  }
+
+  final result = <NativeChatItem>[];
+  for (var index = 0; index < items.length; index++) {
+    final item = items[index];
+    if (item.role != NativeChatRole.message ||
+        item.kind == NativeChatKind.control ||
+        times[item.id] == null) {
       result.add(item);
-      index++;
       continue;
     }
-    var end = index + 1;
-    while (end < items.length &&
-        _sameCluster(items[end - 1], items[end], times)) {
-      end++;
-    }
-    final count = end - index;
-    for (var offset = 0; offset < count; offset++) {
-      final current = items[index + offset];
-      final cluster = count == 1
-          ? NativeChatCluster.single
-          : offset == 0
-          ? NativeChatCluster.top
-          : offset == count - 1
-          ? NativeChatCluster.bottom
-          : NativeChatCluster.middle;
-      final last = offset == count - 1;
-      final first = offset == 0;
-      result.add(
-        current.copyWith(
-          cluster: cluster,
-          showAvatar: showSenders && !current.outgoing && last,
-          showSender: showSenders && !current.outgoing && first,
-          senderName: current.senderName ?? _named(names(current.senderId ?? 0)),
-        ),
-      );
-    }
-    index = end;
+    final role = clusterRole(
+      previous: index == 0 ? null : neighborAt(index - 1),
+      message: neighborAt(index)!,
+      next: index + 1 < items.length ? neighborAt(index + 1) : null,
+      policy: MergePolicy.ios,
+    );
+    final incomingGroup = showSenders && !item.outgoing;
+    result.add(
+      item.copyWith(
+        cluster: switch (role) {
+          ClusterRole.single => NativeChatCluster.single,
+          ClusterRole.top => NativeChatCluster.top,
+          ClusterRole.middle => NativeChatCluster.middle,
+          ClusterRole.bottom => NativeChatCluster.bottom,
+        },
+        showAvatar: showsAvatar(role, incomingGroup: incomingGroup),
+        showSender: showsSender(role, incomingGroup: incomingGroup),
+        senderName: item.senderName ?? _named(names(item.senderId ?? 0)),
+      ),
+    );
   }
   return result;
 }
-
-bool _clustersWith(NativeChatItem item) =>
-    item.role == NativeChatRole.message && item.kind != NativeChatKind.control;
-
-bool _sameCluster(
-  NativeChatItem previous,
-  NativeChatItem next,
-  Map<String, int> times,
-) {
-  if (!_clustersWith(previous) || !_clustersWith(next)) return false;
-  if (previous.senderId == null || previous.senderId != next.senderId) {
-    return false;
-  }
-  if (previous.outgoing != next.outgoing) return false;
-  final previousTime = times[previous.id];
-  final nextTime = times[next.id];
-  if (previousTime == null || nextTime == null) return false;
-  if (nextTime - previousTime > nativeChatMergeWindow.inMilliseconds) {
-    return false;
-  }
-  return _sameDay(
-    DateTime.fromMillisecondsSinceEpoch(previousTime),
-    DateTime.fromMillisecondsSinceEpoch(nextTime),
-  );
-}
-
-bool _sameDay(DateTime a, DateTime b) =>
-    a.year == b.year && a.month == b.month && a.day == b.day;
 
 String _named(String raw) {
   final trimmed = raw.trim();
@@ -338,7 +388,7 @@ String _controlText(
   }
 }
 
-NativeChatKind _kind(CachedMessage message) {
+NativeChatKind nativeMessageKind(CachedMessage message) {
   final forwarded = message.forwardedAttachment;
   final attachments =
       forwarded?.originalAttachments ?? message.attachments ?? const [];
