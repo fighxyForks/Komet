@@ -81,24 +81,24 @@ final class KometChatListHeader: UIView, UICollectionViewDataSource, UICollectio
 
   var showsFolders: Bool { folders.count > 1 }
 
-  var preferredHeight: CGFloat {
+  var preferredHeight: CGFloat { expandedHeight }
+
+  var expandedHeight: CGFloat {
     storyBand + KometChatListHeader.searchHeight
       + (showsFolders ? KometChatListHeader.foldersHeight : 0)
   }
 
   private var storyBand: CGFloat {
-    guard showsStories else { return 0 }
-    return KometChatListHeader.storiesHeight * min(1, max(0, storyProgress))
+    guard showsStories, hasStories else { return 0 }
+    return KometChatListHeader.storiesHeight
   }
 
   func setStoryProgress(_ progress: CGFloat) {
     let next = min(1, max(0, progress))
     storyProgress = next
-    storiesView.isHidden = !showsStories || next <= 0.001
     storiesView.alpha = next
+    storiesView.isHidden = storyBand == 0 || next <= 0.001
     storiesView.clipsToBounds = true
-    setNeedsLayout()
-    layoutIfNeeded()
   }
 
   func setStoriesCollapsed(_ collapsed: Bool) {
