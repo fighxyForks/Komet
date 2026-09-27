@@ -136,6 +136,8 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
   private var olderArmed = false
   private var newerArmed = false
   private var didPinStart = false
+  private var settling = false
+  private var settleGeneration = 0
   private var width: CGFloat = 0
   private var lastVisible: [String] = []
   private var heights = KometChatHeightCache()
@@ -172,12 +174,13 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
     let next = collectionView.bounds.width
-    if abs(next - width) > 0.5 {
+    if next > 1, abs(next - width) > 0.5 {
       width = next
       heights.removeAll()
       collectionView.collectionViewLayout.invalidateLayout()
     }
-    if !didPinStart && !order.isEmpty && next > 0 {
+    if settling || next < 1 { return }
+    if !didPinStart && !order.isEmpty {
       didPinStart = true
       scrollToEnd(animated: false)
     }
@@ -230,24 +233,40 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
       let changed = rows.compactMap { $0["id"] as? String }.filter { present.contains($0) }
       if !changed.isEmpty { snapshot.reconfigureItems(changed) }
     }
+    settleGeneration += 1
+    let generation = settleGeneration
     dataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
-      guard let self = self else { return }
+      guard let self = self, generation == self.settleGeneration else { return }
       if #available(iOS 15.0, *) {
       } else {
         KometChatController.debugReloads += 1
         self.collectionView.reloadData()
       }
-      self.olderArmed = false
-      self.newerArmed = false
-      self.collectionView.layoutIfNeeded()
-      let stick = pinnedToEnd || (wasNearBottom && !self.collectionView.isTracking)
-      if stick {
-        self.scrollToEnd(animated: false)
-      } else if let anchor = anchor {
-        self.restore(anchor)
-      }
-      self.publishVisible()
+      self.finishApply(pinnedToEnd: pinnedToEnd, wasNearBottom: wasNearBottom, anchor: anchor)
     }
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self, generation == self.settleGeneration else { return }
+      self.finishApply(pinnedToEnd: pinnedToEnd, wasNearBottom: wasNearBottom, anchor: anchor)
+    }
+  }
+
+  private func finishApply(pinnedToEnd: Bool, wasNearBottom: Bool, anchor: RowAnchor?) {
+    if view.bounds.width > 1 {
+      collectionView.frame = view.bounds
+    }
+    settling = true
+    collectionView.layoutIfNeeded()
+    collectionView.layoutIfNeeded()
+    settling = false
+    olderArmed = false
+    newerArmed = false
+    let stick = pinnedToEnd || (wasNearBottom && !collectionView.isTracking)
+    if stick {
+      scrollToEnd(animated: false)
+    } else if let anchor {
+      restore(anchor)
+    }
+    publishVisible()
   }
 
   func highlight(_ id: String?) {
@@ -297,6 +316,7 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
 
   func scrollToEnd(animated: Bool) {
     guard !order.isEmpty else { return }
+    didPinStart = true
     collectionView.layoutIfNeeded()
     let bottom = max(
       -collectionView.adjustedContentInset.top,
@@ -366,7 +386,8 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     let offset = scrollView.contentOffset.y
     let visibleBottom = offset + scrollView.bounds.height
     let distance = scrollView.contentSize.height + scrollView.adjustedContentInset.bottom - visibleBottom
-    let atBottom = distance < 140
+    let measurable = scrollView.bounds.height > 1 && scrollView.contentSize.height > 1
+    let atBottom = measurable ? distance < 140 : nearBottom
     if atBottom != nearBottom {
       nearBottom = atBottom
       onEvent?("nearBottom", ["on": atBottom])
@@ -408,6 +429,7 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     guard let index = order.firstIndex(of: anchor.id) else { return }
     let path = IndexPath(item: index, section: 0)
     guard let frame = collectionView.layoutAttributesForItem(at: path)?.frame else { return }
+    didPinStart = true
     collectionView.contentOffset.y = frame.minY - anchor.delta
   }
 

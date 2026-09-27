@@ -104,6 +104,8 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   private var selectionLeading: NSLayoutConstraint?
   private var dragX: CGFloat = 0
   private var replyArmed = false
+  private var appliedButtons = ""
+  private var appliedText = ""
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -293,6 +295,8 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     mediaView.image = nil
     mediaView.contentMode = .scaleAspectFill
     pollSelection.removeAll()
+    appliedButtons = ""
+    appliedText = ""
     dragX = 0
     bubble.transform = .identity
     buttonStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -480,8 +484,12 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     bodyView.isHidden = !showsText
     bodyView.preferredWidth = contentWidth
     if showsText {
-      bodyView.attributedText = KometChatText.make(
-        item, foreground: foreground, accent: accent, animoji: animojiFrame)
+      let textKey = "\(item.outgoing)\u{1}\(foregroundKey(foreground))\u{1}\(foregroundKey(accent))\u{1}\(item.text)"
+      if animojiFrame != nil || textKey != appliedText {
+        appliedText = animojiFrame == nil ? textKey : ""
+        bodyView.attributedText = KometChatText.make(
+          item, foreground: foreground, accent: accent, animoji: animojiFrame)
+      }
     }
     fillAlbum(item, contentWidth: contentWidth)
     fillCards(item)
@@ -601,8 +609,49 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     view.subviews.reduce(0) { $0 + 1 + countSubviews($1) }
   }
 
+  private func resetArranged(_ stack: UIStackView) {
+    let views = stack.arrangedSubviews
+    let attached = stack.constraints.filter { constraint in
+      views.contains { view in
+        constraint.firstItem as? UIView === view || constraint.secondItem as? UIView === view
+      }
+    }
+    NSLayoutConstraint.deactivate(attached)
+    for view in views {
+      NSLayoutConstraint.deactivate(view.constraints)
+      stack.removeArrangedSubview(view)
+      view.removeFromSuperview()
+    }
+  }
+
+  private func buttonKey(for item: KometChatMessage) -> String {
+    if let keyboard = item.units.first(where: { $0["kind"] as? String == "botKeyboard" }),
+       let rows = keyboard["rows"] as? [[[String: Any]]] {
+      let texts = rows.flatMap { row in row.compactMap { $0["text"] as? String } }
+      return "k\u{1}\(item.outgoing)\u{1}\(foregroundKey(accent))\u{1}"
+        + texts.joined(separator: "\u{1}")
+    }
+    return "b\u{1}\(item.outgoing)\u{1}\(foregroundKey(accent))\u{1}"
+      + item.buttons.map(\.text).joined(separator: "\u{1}")
+  }
+
+  private func foregroundKey(_ color: UIColor) -> String {
+    let resolved = color.resolvedColor(with: traitCollection)
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    guard resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+      return "dynamic"
+    }
+    return "\(Int(red * 255))-\(Int(green * 255))-\(Int(blue * 255))-\(Int(alpha * 255))"
+  }
+
   private func fillButtons(_ item: KometChatMessage, foreground: UIColor) {
-    buttonStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+    let key = buttonKey(for: item)
+    if key == appliedButtons { return }
+    appliedButtons = key
+    resetArranged(buttonStack)
     if let keyboard = item.units.first(where: { $0["kind"] as? String == "botKeyboard" }),
        let rows = keyboard["rows"] as? [[[String: Any]]], !rows.isEmpty {
       buttonStack.isHidden = false

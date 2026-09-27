@@ -159,6 +159,7 @@ final class RunnerTests: XCTestCase {
     window.isHidden = false
     controller.loadViewIfNeeded()
     controller.view.frame = window.bounds
+    controller.view.layoutIfNeeded()
     let original = (0..<40).map { index in
       ChatFixtures.message(
         id: "m\(index)",
