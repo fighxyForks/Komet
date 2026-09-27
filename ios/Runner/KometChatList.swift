@@ -155,7 +155,8 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   private var folders: [KometFolderItem] = []
   private var selectedFolder: String?
   private var storiesVisible = false
-  private var lastScrollOffset: CGFloat = 0
+  private var appliedHeaderInset: CGFloat = -1
+  private var archiveAdjusting = false
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -370,87 +371,29 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   }
 
   private func layoutHeader() {
-    let height = header.preferredHeight
+    let height = header.expandedHeight
     let width = collectionView.bounds.width
-    let previousTop = collectionView.contentInset.top
     header.frame = CGRect(x: 0, y: -height, width: width, height: height)
-    guard previousTop != height else { return }
+    guard abs(appliedHeaderInset - height) > 0.5 else { return }
+    let previous = appliedHeaderInset < 0 ? collectionView.contentInset.top : appliedHeaderInset
+    appliedHeaderInset = height
     collectionView.contentInset.top = height
-    collectionView.contentOffset.y -= height - previousTop
-    lastScrollOffset = collectionView.contentOffset.y
-  }
-
-  private var storiesAnimating = false
-  private var storiesLink: CADisplayLink?
-  private var storiesFrom: CGFloat = 1
-  private var storiesTo: CGFloat = 1
-  private var storiesStarted: CFTimeInterval = 0
-  private let storiesDuration: CFTimeInterval = 0.32
-
-  private var storiesAdjusting = false
-
-  private func updateStoriesCollapse(_ scrollView: UIScrollView) {
-    guard storiesVisible, header.hasStories, !storiesAdjusting else { return }
-    if scrollView.isTracking, storiesAnimating {
-      stopStoriesAnimation()
-    } else if storiesAnimating {
-      return
-    }
-    let top = -scrollView.adjustedContentInset.top
-    let offset = scrollView.contentOffset.y
-    let delta = offset - lastScrollOffset
-    lastScrollOffset = offset
-    if abs(delta) < 0.2 { return }
-    if offset <= top + 0.5 {
-      applyStoryProgressLive(1)
-      return
-    }
-    applyStoryProgressLive(header.storyProgress - delta / KometChatListHeader.storiesHeight)
-  }
-
-  private func applyStoryProgressLive(_ value: CGFloat) {
-    let next = min(1, max(0, value))
-    guard abs(next - header.storyProgress) > 0.0005 else { return }
-    storiesAdjusting = true
-    header.setStoryProgress(next)
-    layoutHeader()
-    storiesAdjusting = false
-    lastScrollOffset = collectionView.contentOffset.y
-  }
-
-  func stopStoriesAnimation() {
-    storiesLink?.invalidate()
-    storiesLink = nil
-    storiesAnimating = false
-  }
-
-  private func animateStories(to progress: CGFloat) {
-    let target = min(1, max(0, progress))
-    guard abs(header.storyProgress - target) > 0.01 else { return }
-    storiesFrom = header.storyProgress
-    storiesTo = target
-    storiesStarted = CACurrentMediaTime()
-    storiesAnimating = true
-    if storiesLink == nil {
-      let link = CADisplayLink(target: self, selector: #selector(stepStories))
-      link.add(to: .main, forMode: .common)
-      storiesLink = link
+    collectionView.verticalScrollIndicatorInsets.top = height
+    let interactive = collectionView.isTracking || collectionView.isDecelerating
+    if !interactive {
+      collectionView.contentOffset.y -= height - previous
     }
   }
 
-  @objc private func stepStories() {
-    let raw = min(1, (CACurrentMediaTime() - storiesStarted) / storiesDuration)
-    let eased = 1 - pow(1 - raw, 3)
-    let progress = storiesFrom + (storiesTo - storiesFrom) * CGFloat(eased)
+  func stopStoriesAnimation() {}
+
+  private func syncStoryFade(_ scrollView: UIScrollView) {
+    let band = storiesVisible && header.hasStories ? KometChatListHeader.storiesHeight : 0
+    let progress = StoriesCollapseCoordinator.progress(
+      offsetY: scrollView.contentOffset.y,
+      expandedTop: scrollView.adjustedContentInset.top,
+      band: band)
     header.setStoryProgress(progress)
-    layoutHeader()
-    if raw >= 1 {
-      storiesLink?.invalidate()
-      storiesLink = nil
-      storiesAnimating = false
-      header.setStoryProgress(storiesTo)
-      layoutHeader()
-    }
   }
 
   @objc private func peekChat(_ gesture: UILongPressGestureRecognizer) {
@@ -473,32 +416,34 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
   }
 
   private func revealArchive() {
-    guard archiveAwaitsPull else { return }
+    guard archiveAwaitsPull, !archiveAdjusting else { return }
     archiveRevealed = true
     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-    applySnapshot(changed: [])
+    archiveAdjusting = true
+    let before = collectionView.contentOffset.y
+    applySnapshot(changed: [], animated: false)
+    collectionView.layoutIfNeeded()
+    collectionView.contentOffset.y = before
+    archiveAdjusting = false
   }
 
   private func collapseArchiveIfScrolledPast(_ scrollView: UIScrollView) {
-    guard archiveRevealed, archivePullEnabled, !editingList else { return }
+    guard !archiveAdjusting, archiveRevealed, archivePullEnabled, !editingList else { return }
     let offset = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
     let rowHeight = KometChatListStyle.rowHeight
     guard offset > rowHeight + 8 else { return }
+    archiveAdjusting = true
     archiveRevealed = false
     let target = scrollView.contentOffset.y - rowHeight
-    applySnapshot(changed: [], animated: true)
-    UIView.animate(
-      withDuration: 0.28,
-      delay: 0,
-      options: [.curveEaseOut, .allowUserInteraction, .beginFromCurrentState]
-    ) {
-      scrollView.contentOffset.y = target
-    }
+    applySnapshot(changed: [], animated: false)
+    collectionView.layoutIfNeeded()
+    scrollView.contentOffset.y = target
+    archiveAdjusting = false
   }
 
   func scrollViewDidScroll(_ scrollView: UIScrollView) {
-    if storiesAdjusting { return }
-    updateStoriesCollapse(scrollView)
+    if archiveAdjusting { return }
+    syncStoryFade(scrollView)
     collapseArchiveIfScrolledPast(scrollView)
     guard archiveAwaitsPull, scrollView.isTracking else {
       archiveArmed = false
@@ -514,11 +459,19 @@ final class KometChatListController: UIViewController, UICollectionViewDelegate,
 
   func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint,
                                  targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-    if storiesVisible, header.hasStories, !storiesAnimating {
-      let progress = header.storyProgress
-      if progress > 0.02 && progress < 0.98 {
-        let hide = velocity.y > 0.15 || (velocity.y >= -0.15 && progress < 0.5)
-        animateStories(to: hide ? 0 : 1)
+    if storiesVisible, header.hasStories {
+      let band = KometChatListHeader.storiesHeight
+      let expanded = -scrollView.adjustedContentInset.top
+      let snapped = StoriesCollapseCoordinator.target(
+        forProjected: targetContentOffset.pointee.y,
+        velocity: velocity.y,
+        bandTop: expanded,
+        bandBottom: expanded + band)
+      if UIAccessibility.isReduceMotionEnabled, snapped != targetContentOffset.pointee.y {
+        scrollView.contentOffset.y = snapped
+        targetContentOffset.pointee.y = snapped
+      } else {
+        targetContentOffset.pointee.y = snapped
       }
     }
     guard archiveArmed else { return }

@@ -502,6 +502,7 @@ class ChatController extends ChangeNotifier {
     required void Function() onLoadingFinished,
     required void Function() onPreview,
     required void Function() onSenderNames,
+    void Function()? onFailed,
   }) async {
     final onlyVisible = !KometSettings.viewDeleted.value;
     final cachedRows = await AppDatabase.loadChat(myId, chatId);
@@ -545,6 +546,7 @@ class ChatController extends ChangeNotifier {
       logger.e('Error fetching history: $e');
       if (isMounted()) {
         onLoadingFinished();
+        if (messages.isEmpty) onFailed?.call();
       }
     }
   }

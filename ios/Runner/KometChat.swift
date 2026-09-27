@@ -45,7 +45,7 @@ final class KometChatPlatformView: NSObject, FlutterPlatformView {
     chat.applyChrome(KometChatChrome.parse(map["chrome"] as? [String: Any]))
     let rows = map["items"] as? [[String: Any]] ?? []
     let order = map["order"] as? [String]
-    chat.apply(order: order, rows: rows, pinnedToEnd: true)
+    chat.apply(order: order, rows: rows, pinnedToEnd: true, revision: nil)
     if let highlight = map["highlight"] as? String {
       chat.highlight(highlight)
     }
@@ -70,11 +70,13 @@ final class KometChatPlatformView: NSObject, FlutterPlatformView {
     let arguments = call.arguments as? [String: Any] ?? [:]
     switch call.method {
     case "apply":
+      let revision = (arguments["revision"] as? NSNumber)?.intValue
       chat.apply(
         order: arguments["order"] as? [String],
         rows: arguments["items"] as? [[String: Any]] ?? [],
-        pinnedToEnd: false)
-      result(nil)
+        pinnedToEnd: false,
+        revision: revision)
+      result(revision)
     case "setChrome":
       chat.applyChrome(KometChatChrome.parse(arguments))
       result(nil)
@@ -111,7 +113,7 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     layout.sectionInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
     return layout
   }()
-  private lazy var collectionView: UICollectionView = UICollectionView(
+  lazy var collectionView: UICollectionView = UICollectionView(
     frame: .zero, collectionViewLayout: layout)
   private lazy var dataSource: UICollectionViewDiffableDataSource<Int, String> = makeDataSource()
   private let sizingMessage = KometChatMessageCell(frame: .zero)
@@ -127,6 +129,14 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
   private var didPinStart = false
   private var width: CGFloat = 0
   private var lastVisible: [String] = []
+  private var heights = KometChatHeightCache()
+  private var appliedRevision = -1
+  static var debugMeasurements = 0
+  static var debugReloads = 0
+  private struct RowAnchor {
+    let id: String
+    let delta: CGFloat
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -155,6 +165,7 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     let next = collectionView.bounds.width
     if abs(next - width) > 0.5 {
       width = next
+      heights.removeAll()
       collectionView.collectionViewLayout.invalidateLayout()
     }
     if !didPinStart && !order.isEmpty && next > 0 {
@@ -163,47 +174,68 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
     }
   }
 
-  func applyChrome(_ chrome: KometChatChrome) {
-    self.chrome = chrome
-    view.tintColor = chrome.accent
-    applyInsets()
-    collectionView.reloadData()
+  override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+    super.traitCollectionDidChange(previousTraitCollection)
+    guard previousTraitCollection?.preferredContentSizeCategory
+      != traitCollection.preferredContentSizeCategory else { return }
+    heights.removeAll()
+    collectionView.collectionViewLayout.invalidateLayout()
   }
 
-  func apply(order incoming: [String]?, rows: [[String: Any]], pinnedToEnd: Bool) {
+  func applyChrome(_ chrome: KometChatChrome) {
+    let accentChanged = !chrome.accent.isEqual(self.chrome.accent)
+    let selectingChanged = chrome.selecting != self.chrome.selecting
+    let insetsChanged = chrome.topInset != self.chrome.topInset
+      || chrome.bottomInset != self.chrome.bottomInset
+    let wasNearBottom = nearBottom
+    self.chrome = chrome
+    view.tintColor = chrome.accent
+    if selectingChanged { heights.removeAll() }
+    if insetsChanged {
+      applyInsets()
+      if wasNearBottom && !collectionView.isTracking {
+        scrollToEnd(animated: false)
+      }
+    }
+    if accentChanged || selectingChanged { refreshVisible() }
+  }
+
+  func apply(order incoming: [String]?, rows: [[String: Any]], pinnedToEnd: Bool, revision: Int? = nil) {
+    if let revision = revision, revision < appliedRevision { return }
+    if let revision = revision { appliedRevision = revision }
     for row in rows {
       guard let item = KometChatMessage.parse(row) else { continue }
       contents[item.id] = item
+      heights.invalidate(id: item.id)
     }
     let wasNearBottom = nearBottom
-    let before = collectionView.contentSize.height
-    let offset = collectionView.contentOffset.y
+    let anchor = captureAnchor()
     if let incoming = incoming { order = incoming }
-    contents = contents.filter { order.contains($0.key) }
-    stickerFrames = stickerFrames.filter { order.contains($0.key) }
+    let present = Set(order)
+    contents = contents.filter { present.contains($0.key) }
+    stickerFrames = stickerFrames.filter { present.contains($0.key) }
     var snapshot = NSDiffableDataSourceSnapshot<Int, String>()
     snapshot.appendSections([0])
     snapshot.appendItems(order)
     if #available(iOS 15.0, *) {
-      let changed = rows.compactMap { $0["id"] as? String }.filter { order.contains($0) }
+      let changed = rows.compactMap { $0["id"] as? String }.filter { present.contains($0) }
       if !changed.isEmpty { snapshot.reconfigureItems(changed) }
     }
     dataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
       guard let self = self else { return }
       if #available(iOS 15.0, *) {
       } else {
+        KometChatController.debugReloads += 1
         self.collectionView.reloadData()
       }
       self.olderArmed = false
       self.newerArmed = false
       self.collectionView.layoutIfNeeded()
-      if pinnedToEnd || wasNearBottom {
+      let stick = pinnedToEnd || (wasNearBottom && !self.collectionView.isTracking)
+      if stick {
         self.scrollToEnd(animated: false)
-      } else {
-        let delta = self.collectionView.contentSize.height - before
-        if delta > 0 {
-          self.collectionView.contentOffset.y = offset + delta
-        }
+      } else if let anchor = anchor {
+        self.restore(anchor)
       }
       self.publishVisible()
     }
@@ -270,19 +302,47 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
           let item = contents[order[indexPath.item]] else {
       return CGSize(width: max(itemWidth, 1), height: 44)
     }
-    let cell: UICollectionViewCell
-    if item.isService {
-      sizingService.apply(item, accent: chrome.accent, width: itemWidth)
-      cell = sizingService
-    } else {
-      sizingMessage.apply(item, accent: chrome.accent, selecting: chrome.selecting, width: itemWidth)
-      cell = sizingMessage
+    let category = traitCollection.preferredContentSizeCategory.rawValue
+    let key = KometChatHeightCache.Key(
+      id: item.id,
+      revision: KometChatLayout.revision(item),
+      width: Int((itemWidth * 2).rounded()),
+      category: category,
+      selecting: chrome.selecting)
+    let height = heights.height(for: key) {
+      KometChatController.debugMeasurements += 1
+      let cell: UICollectionViewCell
+      if item.isService {
+        self.sizingService.apply(item, accent: self.chrome.accent, width: itemWidth)
+        cell = self.sizingService
+      } else {
+        self.sizingMessage.configure(
+          layout: item, accent: self.chrome.accent, selecting: self.chrome.selecting, width: itemWidth)
+        cell = self.sizingMessage
+      }
+      return cell.contentView.systemLayoutSizeFitting(
+        CGSize(width: itemWidth, height: 0),
+        withHorizontalFittingPriority: .required,
+        verticalFittingPriority: .fittingSizeLevel).height
     }
-    let height = cell.contentView.systemLayoutSizeFitting(
-      CGSize(width: itemWidth, height: 0),
-      withHorizontalFittingPriority: .required,
-      verticalFittingPriority: .fittingSizeLevel).height
     return CGSize(width: itemWidth, height: max(32, ceil(height)))
+  }
+
+  func collectionView(
+    _ collectionView: UICollectionView,
+    willDisplay cell: UICollectionViewCell,
+    forItemAt indexPath: IndexPath
+  ) {
+    guard let message = cell as? KometChatMessageCell else { return }
+    message.bindContent()
+  }
+
+  func collectionView(
+    _ collectionView: UICollectionView,
+    didEndDisplaying cell: UICollectionViewCell,
+    forItemAt indexPath: IndexPath
+  ) {
+    (cell as? KometChatMessageCell)?.unbindContent()
   }
 
   func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -294,7 +354,8 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
       nearBottom = atBottom
       onEvent?("nearBottom", ["on": atBottom])
     }
-    if offset < 160 && !olderArmed && !order.isEmpty {
+    let fromTop = offset + scrollView.adjustedContentInset.top
+    if fromTop < 160 && !olderArmed && !order.isEmpty {
       olderArmed = true
       onEvent?("loadOlder", nil)
     }
@@ -306,8 +367,42 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
   }
 
   private func applyInsets() {
+    collectionView.contentInset.top = chrome.topInset
     collectionView.contentInset.bottom = chrome.bottomInset
+    collectionView.verticalScrollIndicatorInsets.top = chrome.topInset
     collectionView.verticalScrollIndicatorInsets.bottom = chrome.bottomInset
+  }
+
+  private func captureAnchor() -> RowAnchor? {
+    let visible = collectionView.indexPathsForVisibleItems.sorted { $0.item < $1.item }
+    let origin = collectionView.contentOffset.y
+    for path in visible {
+      guard path.item < order.count,
+            let frame = collectionView.layoutAttributesForItem(at: path)?.frame else { continue }
+      if frame.minY + 0.5 >= origin {
+        return RowAnchor(id: order[path.item], delta: frame.minY - origin)
+      }
+    }
+    return nil
+  }
+
+  private func restore(_ anchor: RowAnchor) {
+    guard let index = order.firstIndex(of: anchor.id) else { return }
+    let path = IndexPath(item: index, section: 0)
+    guard let frame = collectionView.layoutAttributesForItem(at: path)?.frame else { return }
+    collectionView.contentOffset.y = frame.minY - anchor.delta
+  }
+
+  private func refreshVisible() {
+    for path in collectionView.indexPathsForVisibleItems {
+      guard path.item < order.count,
+            let item = contents[order[path.item]],
+            !item.isService,
+            let cell = collectionView.cellForItem(at: path) as? KometChatMessageCell else { continue }
+      cell.apply(
+        item, accent: chrome.accent, selecting: chrome.selecting,
+        width: collectionView.bounds.width)
+    }
   }
 
   private func publishVisible() {

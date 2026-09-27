@@ -6,14 +6,11 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   private let channel: FlutterMethodChannel
   private let root = UIView()
   private let collection: UICollectionView
-  private let searchWrap = UIView()
   private var showsClose = false
   private var tabInset: CGFloat = 0
   private var titleTop: NSLayoutConstraint?
   private var collectionBelowClose: NSLayoutConstraint?
   private var collectionBelowTitle: NSLayoutConstraint?
-  private var searchBottom: NSLayoutConstraint?
-  private let searchField = UITextField()
   private let closeButton = UIButton(type: .system)
   private let titleLabel = UILabel()
   private var sections: [SettingsBlock] = []
@@ -25,7 +22,10 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   private var maskPhone = false
   private var avatarURL = ""
   private var avatarTask: URLSessionDataTask?
-  private var query = ""
+  private var appliedFingerprint: Int?
+  private var sectionShape: [Int] = []
+  private var sectionHeaders: [String] = []
+  static var debugReloads = 0
 
   init(frame: CGRect, viewId: Int64, arguments: Any?, messenger: FlutterBinaryMessenger) {
     channel = FlutterMethodChannel(
@@ -38,10 +38,9 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
     collection.dataSource = self
     collection.delegate = self
     collection.keyboardDismissMode = .onDrag
-    collection.contentInset.bottom = 88
+    collection.contentInsetAdjustmentBehavior = .never
     collection.register(SettingsProfileCell.self, forCellWithReuseIdentifier: "profile")
     collection.register(SettingsRowCell.self, forCellWithReuseIdentifier: "row")
-    collection.register(SettingsEmptyCell.self, forCellWithReuseIdentifier: "empty")
     collection.register(
       SettingsHeader.self,
       forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
@@ -60,32 +59,13 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
     closeButton.accessibilityLabel = "Закрыть"
     closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
     styleGlass(closeButton, radius: 22)
-    searchField.placeholder = "Поиск по настройкам"
-    searchField.font = .preferredFont(forTextStyle: .body)
-    searchField.adjustsFontForContentSizeCategory = true
-    searchField.clearButtonMode = .whileEditing
-    searchField.autocorrectionType = .no
-    searchField.returnKeyType = .search
-    searchField.addTarget(self, action: #selector(queryChanged), for: .editingChanged)
-    let icon = UIImageView(image: UIImage(systemName: "magnifyingglass"))
-    icon.tintColor = .secondaryLabel
-    icon.contentMode = .scaleAspectFit
-    searchField.leftView = icon
-    searchField.leftViewMode = .always
-    searchField.accessibilityLabel = "Поиск по настройкам"
-    searchWrap.backgroundColor = .tertiarySystemFill
-    searchWrap.layer.cornerRadius = 22
-    searchWrap.layer.cornerCurve = .continuous
-    for view in [collection, closeButton, titleLabel, searchWrap] {
+    for view in [collection, closeButton, titleLabel] {
       view.translatesAutoresizingMaskIntoConstraints = false
       root.addSubview(view)
     }
-    searchField.translatesAutoresizingMaskIntoConstraints = false
-    searchWrap.addSubview(searchField)
     titleTop = titleLabel.topAnchor.constraint(equalTo: root.safeAreaLayoutGuide.topAnchor, constant: 12)
     collectionBelowClose = collection.topAnchor.constraint(equalTo: closeButton.bottomAnchor, constant: 8)
     collectionBelowTitle = collection.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8)
-    searchBottom = searchWrap.bottomAnchor.constraint(equalTo: root.safeAreaLayoutGuide.bottomAnchor, constant: -12)
     NSLayoutConstraint.activate([
       closeButton.leadingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.leadingAnchor, constant: 16),
       closeButton.topAnchor.constraint(equalTo: root.safeAreaLayoutGuide.topAnchor, constant: 8),
@@ -98,14 +78,6 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
       collection.leadingAnchor.constraint(equalTo: root.leadingAnchor),
       collection.trailingAnchor.constraint(equalTo: root.trailingAnchor),
       collection.bottomAnchor.constraint(equalTo: root.bottomAnchor),
-      searchWrap.leadingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-      searchWrap.trailingAnchor.constraint(equalTo: root.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-      searchBottom!,
-      searchWrap.heightAnchor.constraint(equalToConstant: 44),
-      searchField.leadingAnchor.constraint(equalTo: searchWrap.leadingAnchor, constant: 12),
-      searchField.trailingAnchor.constraint(equalTo: searchWrap.trailingAnchor, constant: -12),
-      searchField.topAnchor.constraint(equalTo: searchWrap.topAnchor),
-      searchField.bottomAnchor.constraint(equalTo: searchWrap.bottomAnchor),
     ])
     root.backgroundColor = UIColor { traits in
       traits.userInterfaceStyle == .dark ? .black : .systemGroupedBackground
@@ -125,7 +97,14 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   func view() -> UIView { root }
 
   private func apply(_ map: [String: Any]?) {
+    let fingerprint = SettingsFingerprint.of(map)
+    if fingerprint == appliedFingerprint { return }
     let header = map?["header"] as? [String: Any] ?? [:]
+    let nextBlocks = (map?["sections"] as? [[String: Any]] ?? []).compactMap(SettingsBlock.init(map:))
+    let nextShape = nextBlocks.map { $0.rows.count }
+    let nextHeaders = nextBlocks.map(\.header)
+    let structureChanged = nextShape != sectionShape || nextHeaders != sectionHeaders
+    let rowsChanged = structureChanged || nextBlocks.map(\.rows) != all.map(\.rows)
     profileName = header["name"] as? String ?? ""
     profileDetail = header["detail"] as? String ?? ""
     profileStatus = header["status"] as? String ?? ""
@@ -135,9 +114,24 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
     let layout = map?["layout"] as? String ?? "profile"
     showsClose = (header["showClose"] as? NSNumber)?.boolValue ?? (layout != "settings")
     tabInset = CGFloat((header["bottomInset"] as? NSNumber)?.doubleValue ?? 0)
+    if let background = (header["background"] as? NSNumber)?.uint32Value {
+      root.backgroundColor = UIColor(argb: background)
+    }
     applyChrome()
-    all = (map?["sections"] as? [[String: Any]] ?? []).compactMap(SettingsBlock.init(map:))
-    reloadVisible()
+    all = nextBlocks
+    sections = all
+    sectionShape = nextShape
+    sectionHeaders = nextHeaders
+    appliedFingerprint = fingerprint
+    if rowsChanged {
+      if structureChanged {
+        collection.setCollectionViewLayout(makeLayout(headers: true), animated: false)
+      }
+      KometSettingsListPlatformView.debugReloads += 1
+      collection.reloadData()
+    } else if collection.numberOfSections > 0 {
+      collection.reloadSections(IndexSet(integer: 0))
+    }
   }
 
   private func applyChrome() {
@@ -145,40 +139,19 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
     titleTop?.isActive = !showsClose
     collectionBelowClose?.isActive = showsClose
     collectionBelowTitle?.isActive = !showsClose
-    searchBottom?.constant = -(12 + tabInset)
-    let searchSpace = 44 + 16 + tabInset + 12
-    collection.contentInset.bottom = searchSpace
-    collection.verticalScrollIndicatorInsets.bottom = searchSpace
-  }
-
-  private func reloadVisible() {
-    let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-    if needle.isEmpty {
-      sections = all
-    } else {
-      var hits: [SettingsRow] = []
-      for block in all where block.kind == .rows {
-        for row in block.rows where row.matches(needle) {
-          hits.append(row)
-        }
-      }
-      sections = hits.isEmpty
-        ? [SettingsBlock(kind: .empty, header: "", rows: [])]
-        : [SettingsBlock(kind: .rows, header: "", rows: hits)]
-    }
-    collection.setCollectionViewLayout(makeLayout(headers: needle.isEmpty), animated: false)
-    collection.reloadData()
+    collection.contentInset.bottom = tabInset
+    collection.verticalScrollIndicatorInsets.bottom = tabInset
   }
 
   private func isVersionSection(_ index: Int) -> Bool {
-    guard query.isEmpty, index > 0 else { return false }
+    guard index > 0 else { return false }
     let blockIndex = index - 1
     guard sections.indices.contains(blockIndex) else { return false }
     return sections[blockIndex].rows.count == 1 && sections[blockIndex].rows[0].id == "version"
   }
 
   private func showsHeader(at index: Int, headers: Bool) -> Bool {
-    guard headers, query.isEmpty else { return false }
+    guard headers else { return false }
     if index == 0 { return false }
     let blockIndex = index - 1
     guard sections.indices.contains(blockIndex) else { return false }
@@ -215,17 +188,17 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   }
 
   func numberOfSections(in collectionView: UICollectionView) -> Int {
-    (query.isEmpty ? 1 : 0) + sections.count
+    1 + sections.count
   }
 
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    if query.isEmpty && section == 0 { return 1 }
-    let block = sections[section - (query.isEmpty ? 1 : 0)]
-    return block.kind == .empty ? 1 : block.rows.count
+    if section == 0 { return 1 }
+    let block = sections[section - 1]
+    return block.rows.count
   }
 
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-    if query.isEmpty && indexPath.section == 0 {
+    if indexPath.section == 0 {
       let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "profile", for: indexPath) as! SettingsProfileCell
       cell.onReveal = { [weak self] in
         self?.channel.invokeMethod("header", arguments: ["action": "revealPhone"])
@@ -240,15 +213,12 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
         task: &avatarTask)
       return cell
     }
-    let block = sections[indexPath.section - (query.isEmpty ? 1 : 0)]
-    if block.kind == .empty {
-      return collectionView.dequeueReusableCell(withReuseIdentifier: "empty", for: indexPath)
-    }
+    let block = sections[indexPath.section - 1]
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "row", for: indexPath) as! SettingsRowCell
     let row = block.rows[indexPath.item]
     cell.apply(
       row: row,
-      showsSection: !query.isEmpty,
+      showsSection: false,
       isLast: indexPath.item == block.rows.count - 1,
       onToggle: { [weak self] value in
         self?.channel.invokeMethod("toggle", arguments: ["id": row.id, "value": value])
@@ -263,10 +233,10 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   ) -> UICollectionReusableView {
     let header = collectionView.dequeueReusableSupplementaryView(
       ofKind: kind, withReuseIdentifier: "header", for: indexPath) as! SettingsHeader
-    if query.isEmpty && indexPath.section == 0 {
+    if indexPath.section == 0 {
       header.text = ""
     } else {
-      let block = sections[indexPath.section - (query.isEmpty ? 1 : 0)]
+      let block = sections[indexPath.section - 1]
       header.text = block.header
     }
     return header
@@ -274,11 +244,11 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
 
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     collectionView.deselectItem(at: indexPath, animated: true)
-    if query.isEmpty && indexPath.section == 0 {
+    if indexPath.section == 0 {
       channel.invokeMethod("header", arguments: ["action": "profile"])
       return
     }
-    let block = sections[indexPath.section - (query.isEmpty ? 1 : 0)]
+    let block = sections[indexPath.section - 1]
     guard block.kind == .rows else { return }
     let row = block.rows[indexPath.item]
     if row.switchValue != nil || !row.enabled { return }
@@ -287,11 +257,6 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
 
   @objc private func closeTapped() {
     channel.invokeMethod("header", arguments: ["action": "close"])
-  }
-
-  @objc private func queryChanged() {
-    query = searchField.text ?? ""
-    reloadVisible()
   }
 
   private func styleGlass(_ view: UIView, radius: CGFloat) {
@@ -308,23 +273,17 @@ final class KometSettingsListPlatformView: NSObject, FlutterPlatformView,
   }
 }
 
-private enum SettingsKind { case rows, empty }
+private enum SettingsKind { case rows }
 
-private struct SettingsRow {
+private struct SettingsRow: Equatable {
   let id: String
   let title: String
   let symbol: String
   let section: String
   let trailing: String
-  let keywords: String
   let destructive: Bool
   let enabled: Bool
   let switchValue: Bool?
-
-  func matches(_ needle: String) -> Bool {
-    let hay = "\(title) \(section) \(keywords)".lowercased()
-    return hay.contains(needle)
-  }
 }
 
 private struct SettingsBlock {
@@ -340,14 +299,12 @@ private struct SettingsBlock {
 
   init?(map: [String: Any]) {
     let rows = (map["rows"] as? [[String: Any]] ?? []).map { row -> SettingsRow in
-      let words = (row["keywords"] as? [String])?.joined(separator: " ") ?? ""
-      return SettingsRow(
+      SettingsRow(
         id: row["id"] as? String ?? "",
         title: row["title"] as? String ?? "",
         symbol: row["symbol"] as? String ?? "circle",
         section: map["header"] as? String ?? "",
         trailing: row["trailing"] as? String ?? "",
-        keywords: words,
         destructive: (row["destructive"] as? NSNumber)?.boolValue ?? false,
         enabled: (row["enabled"] as? NSNumber)?.boolValue ?? true,
         switchValue: (row["switchValue"] as? NSNumber)?.boolValue)
@@ -591,23 +548,29 @@ private final class SettingsRowCell: UICollectionViewCell {
   }
 }
 
-private final class SettingsEmptyCell: UICollectionViewCell {
-  private let label = UILabel()
-  override init(frame: CGRect) {
-    super.init(frame: frame)
-    label.text = "Ничего не найдено"
-    label.font = .preferredFont(forTextStyle: .body)
-    label.adjustsFontForContentSizeCategory = true
-    label.textColor = .secondaryLabel
-    label.textAlignment = .center
-    label.translatesAutoresizingMaskIntoConstraints = false
-    contentView.addSubview(label)
-    NSLayoutConstraint.activate([
-      label.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-      label.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-      label.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
-      label.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
-    ])
+enum SettingsFingerprint {
+  static func of(_ map: [String: Any]?) -> Int {
+    var hasher = Hasher()
+    hash(map, into: &hasher)
+    return hasher.finalize()
   }
-  required init?(coder: NSCoder) { nil }
+
+  private static func hash(_ value: Any?, into hasher: inout Hasher) {
+    switch value {
+    case let map as [String: Any]:
+      for key in map.keys.sorted() {
+        hasher.combine(key)
+        hash(map[key], into: &hasher)
+      }
+    case let list as [Any]:
+      hasher.combine(list.count)
+      for item in list { hash(item, into: &hasher) }
+    case let number as NSNumber:
+      hasher.combine(number.stringValue)
+    case let text as String:
+      hasher.combine(text)
+    default:
+      hasher.combine(0)
+    }
+  }
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -17,7 +16,6 @@ class NativeSettingsRow {
   final bool enabled;
   final bool? switchValue;
   final String trailing;
-  final List<String> keywords;
 
   const NativeSettingsRow({
     required this.id,
@@ -27,7 +25,6 @@ class NativeSettingsRow {
     this.enabled = true,
     this.switchValue,
     this.trailing = '',
-    this.keywords = const [],
   });
 
   Map<String, Object?> toMap() => {
@@ -38,11 +35,14 @@ class NativeSettingsRow {
     'enabled': enabled,
     if (switchValue != null) 'switchValue': switchValue,
     if (trailing.isNotEmpty) 'trailing': trailing,
-    if (keywords.isNotEmpty) 'keywords': keywords,
   };
 }
 
 class NativeSettingsView extends StatefulWidget {
+  @visibleForTesting
+  static MethodChannel? debugChannel;
+
+  static void debugResetChannel() => debugChannel = null;
   final String name;
   final String status;
   final bool online;
@@ -61,6 +61,7 @@ class NativeSettingsView extends StatefulWidget {
   final bool showClose;
   final bool maskPhone;
   final double bottomInset;
+  final int? background;
   final List<NativeSettingsSection> sections;
   final void Function(String id) onTap;
   final void Function(String id, bool value)? onToggle;
@@ -85,6 +86,7 @@ class NativeSettingsView extends StatefulWidget {
     this.showClose = false,
     this.maskPhone = false,
     this.bottomInset = 0,
+    this.background,
     this.layout = 'profile',
     required this.sections,
     required this.onTap,
@@ -100,35 +102,7 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
   static const _type = 'ru.komet.app/native_settings';
   MethodChannel? _channel;
 
-  Map<String, Object?> get _payload => {
-    'header': {
-      'name': widget.name,
-      'status': widget.status,
-      'online': widget.online,
-      'phone': widget.phone,
-      'detail': widget.detail,
-      'bio': widget.bio,
-      'avatarUrl': widget.avatarUrl,
-      'canEditAvatar': widget.canEditAvatar,
-      'topInset': widget.topInset,
-      'showBack': widget.showBack,
-      'showQr': widget.showQr,
-      'showEdit': widget.showEdit,
-      'showMenu': widget.showMenu,
-      'showClose': widget.showClose,
-      'maskPhone': widget.maskPhone,
-      'bottomInset': widget.bottomInset,
-    },
-    'version': widget.version,
-    'layout': widget.layout,
-    'sections': [
-      for (final section in widget.sections)
-        {
-          'header': section.header,
-          'rows': [for (final row in section.rows) row.toMap()],
-        },
-    ],
-  };
+  Map<String, Object?> get _payload => nativeSettingsPayload(widget);
 
   void _created(int viewId) {
     final channel = MethodChannel('$_type/$viewId');
@@ -160,8 +134,9 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
   }
 
   Future<void> _push() async {
+    final channel = NativeSettingsView.debugChannel ?? _channel;
     try {
-      await _channel?.invokeMethod<void>('apply', _payload);
+      await channel?.invokeMethod<void>('apply', _payload);
     } on MissingPluginException {
       return;
     } on PlatformException {
@@ -172,38 +147,13 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
   @override
   void didUpdateWidget(NativeSettingsView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!mapEquals(_payloadOf(oldWidget), _payload)) _push();
+    if (!nativeSettingsDeepEquals(
+      nativeSettingsPayload(oldWidget),
+      _payload,
+    )) {
+      _push();
+    }
   }
-
-  Map<String, Object?> _payloadOf(NativeSettingsView view) => {
-    'header': {
-      'name': view.name,
-      'status': view.status,
-      'online': view.online,
-      'phone': view.phone,
-      'detail': view.detail,
-      'bio': view.bio,
-      'avatarUrl': view.avatarUrl,
-      'canEditAvatar': view.canEditAvatar,
-      'topInset': view.topInset,
-      'showBack': view.showBack,
-      'showQr': view.showQr,
-      'showEdit': view.showEdit,
-      'showMenu': view.showMenu,
-      'showClose': view.showClose,
-      'maskPhone': view.maskPhone,
-      'bottomInset': view.bottomInset,
-    },
-    'version': view.version,
-    'layout': view.layout,
-    'sections': [
-      for (final section in view.sections)
-        {
-          'header': section.header,
-          'rows': [for (final row in section.rows) row.toMap()],
-        },
-    ],
-  };
 
   @override
   void dispose() {
@@ -220,4 +170,56 @@ class _NativeSettingsViewState extends State<NativeSettingsView> {
       onPlatformViewCreated: _created,
     );
   }
+}
+
+Map<String, Object?> nativeSettingsPayload(NativeSettingsView view) => {
+  'header': {
+    'name': view.name,
+    'status': view.status,
+    'online': view.online,
+    'phone': view.phone,
+    'detail': view.detail,
+    'bio': view.bio,
+    'avatarUrl': view.avatarUrl,
+    'canEditAvatar': view.canEditAvatar,
+    'topInset': view.topInset,
+    'showBack': view.showBack,
+    'showQr': view.showQr,
+    'showEdit': view.showEdit,
+    'showMenu': view.showMenu,
+    'showClose': view.showClose,
+    'maskPhone': view.maskPhone,
+    'bottomInset': view.bottomInset,
+    if (view.background != null) 'background': view.background,
+  },
+  'version': view.version,
+  'layout': view.layout,
+  'sections': [
+    for (final section in view.sections)
+      {
+        'header': section.header,
+        'rows': [for (final row in section.rows) row.toMap()],
+      },
+  ],
+};
+
+bool nativeSettingsDeepEquals(Object? a, Object? b) {
+  if (identical(a, b)) return true;
+  if (a is List && b is List) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (!nativeSettingsDeepEquals(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (a is Map && b is Map) {
+    if (a.length != b.length) return false;
+    for (final key in a.keys) {
+      if (!b.containsKey(key) || !nativeSettingsDeepEquals(a[key], b[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return a == b;
 }
