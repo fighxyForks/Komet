@@ -21,7 +21,7 @@ Rules for Flutter-drawn chrome when `IosGlass` is on. Goal: keep scroll jank low
 
 ## Glass rules
 
-1. **There is no per-screen limit on native glass.** Floating chrome uses a separate native capsule per object — in a chat: back, title, header actions, composer field, composer action (send / mic / video), scroll-down, pinned banner, channel bar, selection buttons. Never put a platform view in a list row or message bubble: it scrolls with the content and is created again for every row.
+1. **There is no per-screen limit on native glass.** The chat message list is exactly one platform view, and rows contain none. Header and composer platform views are allowed. Floating chrome uses a separate native capsule per object — in a chat: back, title, header actions, composer field, composer action (send / mic / video), scroll-down, pinned banner, channel bar, selection buttons. Never put a platform view in a list row or message bubble: it scrolls with the content and is created again for every row.
 2. **No live `BackdropFilter` / `ImageFilter.blur` over scrolling content.** On iOS the Flutter glass fallback stays opaque, including after the scroll settles. `forceOpaque` only applies to that fallback: a capsule already showing native glass keeps it while the chat scrolls, instead of tearing the platform view down on every drag.
 3. Prefer opaque fills during drag and ballistic scroll. Material chrome may still restore a blur after scroll settles; iOS style chrome does not.
 4. Use hysteresis for header / stories open-close thresholds so slow drags around the boundary do not flip-flop layout.
