@@ -88,6 +88,7 @@ import 'chat/view/chat_body_layout.dart';
 import 'chat/view/shimmer_loading.dart';
 import '../../../core/config/app_ios_glass.dart';
 import '../../../core/config/app_message_actions_style.dart';
+import '../../../core/chat/native_parity.dart';
 import '../../../core/native/native_chat_bridge.dart';
 import '../../../core/native/native_chat_snapshot.dart';
 import '../../../core/utils/link_opener.dart';
@@ -720,6 +721,7 @@ class _ChatScreenState extends State<ChatScreen>
       onSelected: _onMentionSelected,
     );
     _composerHeight.addListener(_pushNativeChrome);
+    MessageDecryptionCache.instance.revision.addListener(_onNativeDecryption);
     _pinnedBannerHeight.addListener(_pushNativeChrome);
     _mentionPanel.anim.addListener(_pushNativeChrome);
     _commandPanel.anim.addListener(_pushNativeChrome);
@@ -1024,7 +1026,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool get _usesNativeTranscript =>
-      _iosFastPath && NativeChatBridge.isEligible && !widget.preview;
+      NativeChatBridge.replacesChatSurface &&
+      _iosFastPath &&
+      NativeChatBridge.isEligible &&
+      !widget.preview;
 
   String? _firstUnreadMessageId() {
     final anchor = _unreadAnchorTime;
@@ -2285,6 +2290,9 @@ class _ChatScreenState extends State<ChatScreen>
     AppComposerStyle.current.removeListener(_onVisualStyleChanged);
     AppComposerBackground.current.removeListener(_onVisualStyleChanged);
     _composerHeight.removeListener(_pushNativeChrome);
+    MessageDecryptionCache.instance.revision.removeListener(
+      _onNativeDecryption,
+    );
     _pinnedBannerHeight.removeListener(_pushNativeChrome);
     _mentionPanel.anim.removeListener(_pushNativeChrome);
     _commandPanel.anim.removeListener(_pushNativeChrome);
@@ -2831,7 +2839,8 @@ class _ChatScreenState extends State<ChatScreen>
       onForwardSelected: _forwardSelected,
       forwardDisabled: chat?.forwardDisabled ?? false,
       replyDisabled: !_canReply,
-      useNativeComposer: NativeChatBridge.isEligible,
+      useNativeComposer:
+          NativeChatBridge.replacesChatSurface && NativeChatBridge.isEligible,
       composerFrosted: _composerFrosted,
       scrollOpaque: _chatScrollActive,
     );
@@ -4843,7 +4852,9 @@ class _ChatScreenState extends State<ChatScreen>
                     onOpenSearchResult: _openSearchResult,
                     searchSenderName: _searchSenderName,
                     searchSenderAvatar: _searchSenderAvatar,
-                    useNativeSearch: NativeChatBridge.isEligible,
+                    useNativeSearch:
+                        NativeChatBridge.replacesChatSurface &&
+                        NativeChatBridge.isEligible,
                     chromeVignette: _chromeVignette,
                     composerPaintsSurface: _composerPaintsSurface,
                     pinnedBannerTop: _pinnedBannerTop(),
@@ -4890,6 +4901,7 @@ class _ChatScreenState extends State<ChatScreen>
                       onCall: _startCall,
                       onMenu: _commentsMode ? (_) {} : _openChatMenu,
                       useNativeHeader:
+                          NativeChatBridge.replacesChatSurface &&
                           NativeChatBridge.isEligible &&
                           AppIosGlass.active.value,
                       onMenuAt: _commentsMode ? null : _openChatMenuAt,
@@ -5041,7 +5053,8 @@ class _ChatScreenState extends State<ChatScreen>
     return ListenableBuilder(
       listenable: NativeChatBridge.eligibility,
       builder: (context, _) {
-        if (!IosGlass.of(context) ||
+        if (!NativeChatBridge.replacesChatSurface ||
+            !IosGlass.of(context) ||
             !NativeChatBridge.isEligible ||
             widget.preview) {
           return _messageListWidget ??= _ChatMessageList(
@@ -5064,7 +5077,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool get _nativeTranscriptOn =>
-      IosGlass.of(context) && NativeChatBridge.isEligible && !widget.preview;
+      NativeChatBridge.replacesChatSurface &&
+      IosGlass.of(context) &&
+      NativeChatBridge.isEligible &&
+      !widget.preview;
 
   bool get _showNativeHistoryError =>
       _nativeTranscriptOn && _historyFailed && _messages.isEmpty && !_isLoading;
@@ -5201,6 +5217,10 @@ class _ChatScreenState extends State<ChatScreen>
         },
         onSticker: _openNativeSticker,
         onAvatar: _openSenderProfile,
+        onForwardSource: (id) {
+          final forwarded = _chatController.byId(id)?.forwardedAttachment;
+          if (forwarded != null) _openForwardedSource(forwarded);
+        },
         onLoadOlder: _nativeLoadOlder,
         onLoadNewer: () {
           if (_chatController.hasNewer && !_chatController.isLoadingNewer) {
@@ -5687,7 +5707,9 @@ class _ChatScreenState extends State<ChatScreen>
     if (index >= 0 &&
         index < visuals.length &&
         visuals[index] is VideoAttachment) {
-      unawaited(_openNativeVideo(message));
+      unawaited(
+        _openNativeVideo(message, visuals[index] as VideoAttachment),
+      );
       return;
     }
     final photos = visuals.whereType<PhotoAttachment>().toList(growable: false);
@@ -5736,7 +5758,19 @@ class _ChatScreenState extends State<ChatScreen>
       final url = attachment.lottieUrl;
       if (url != null && url.isNotEmpty) return url;
     }
+    for (final range in [
+      ...message.formatRanges,
+      ...?message.forwardedAttachment?.originalFormatRanges,
+    ]) {
+      final url = range.animojiUrl;
+      if (url != null && url.isNotEmpty) return url;
+    }
     return null;
+  }
+
+  void _onNativeDecryption() {
+    if (!mounted || widget.preview || !NativeChatBridge.isEligible) return;
+    _bumpMessageRows();
   }
 
   VideoAttachment? _videoNoteAttachment(CachedMessage message) {
@@ -5800,16 +5834,26 @@ class _ChatScreenState extends State<ChatScreen>
 
   void _scheduleNativePollFetches(List<CachedMessage> messages) {
     for (final message in messages) {
-      for (final attachment
-          in message.attachments ?? const <MessageAttachment>[]) {
+      final target = nativePollTarget(message);
+      final source =
+          message.forwardedAttachment?.originalAttachments ??
+          message.attachments ??
+          const <MessageAttachment>[];
+      for (final attachment in source) {
         if (attachment is! PollAttachment || attachment.pollId == 0) continue;
         if (pollsModule.get(attachment.pollId) != null) continue;
         unawaited(
-          pollsModule.fetch(widget.chatId, message.id, attachment.pollId),
+          pollsModule.fetch(
+            target.chatId,
+            target.messageId,
+            attachment.pollId,
+          ),
         );
       }
     }
   }
+
+  final Set<String> _nativePollVotes = {};
 
   Future<void> _voteNativePoll(String id, List<int> answers) async {
     if (answers.isEmpty) return;
@@ -5820,7 +5864,16 @@ class _ChatScreenState extends State<ChatScreen>
       if (attachment is PollAttachment) poll = attachment;
     }
     if (poll == null) return;
-    final ok = await pollsModule.vote(widget.chatId, id, poll.pollId, answers);
+    final key = '${nativePollTarget(message).messageId}:${poll.pollId}';
+    if (!_nativePollVotes.add(key)) return;
+    final target = nativePollTarget(message);
+    final ok = await pollsModule.vote(
+      target.chatId,
+      target.messageId,
+      poll.pollId,
+      answers,
+    );
+    _nativePollVotes.remove(key);
     if (!ok && mounted) {
       showCustomNotification(context, 'Не удалось проголосовать');
     }
@@ -5865,7 +5918,10 @@ class _ChatScreenState extends State<ChatScreen>
     }
     _nativeVoiceProgress = next;
     _nativeVoicePlaying = playing;
-    _bumpMessageRows();
+    if (id == null) return;
+    unawaited(
+      _nativeChatCommands.setPlayback(id, playing: playing, progress: next),
+    );
   }
 
   void _seekNativeVoice(String id, double fraction) {
@@ -5925,20 +5981,21 @@ class _ChatScreenState extends State<ChatScreen>
     ...?message.forwardedAttachment?.originalAttachments,
   ];
 
-  Future<void> _openNativeVideo(CachedMessage message) async {
-    VideoAttachment? video;
-    for (final attachment in _nativeAttachments(message)) {
-      if (attachment is VideoAttachment) video = attachment;
-    }
+  Future<void> _openNativeVideo(
+    CachedMessage message, [
+    VideoAttachment? selected,
+  ]) async {
+    final video = selected ?? nativeSelectedVideo(message, 0);
     final token = video?.videoToken;
     final videoId = video?.videoId;
     if (video == null || token == null || videoId == null) {
       if (mounted) showCustomNotification(context, 'Не удалось открыть видео');
       return;
     }
+    final target = nativeMediaTarget(message, video);
     final sources = await messagesModule.getVideoSources(
-      messageId: message.id,
-      chatId: message.chatId,
+      messageId: target.messageId,
+      chatId: target.chatId,
       token: token,
       videoId: videoId,
     );
@@ -5952,7 +6009,7 @@ class _ChatScreenState extends State<ChatScreen>
         context,
         fullscreenDialog: true,
         builder: (_) => PhotoViewerScreen.video(
-          attachment: video!,
+          attachment: video,
           initialVideoSources: sources,
           chatId: message.chatId,
           message: message,

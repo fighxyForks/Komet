@@ -212,7 +212,9 @@ class PinnedMessageBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final ios = IosGlass.of(context);
-    if (ios && NativeChatBridge.isEligible) {
+    if (ios &&
+        NativeChatBridge.replacesChatSurface &&
+        NativeChatBridge.isEligible) {
       final title = AppLocalizations.of(context)?.pinnedMessageTitle ?? 'Закреплённое';
       final body = (text == null || text!.trim().isEmpty) ? '' : text!.trim();
       return NativePinnedBanner(

@@ -2,6 +2,7 @@ import '../../backend/modules/messages.dart';
 import '../../models/attachment.dart';
 import '../../models/poll.dart';
 import 'chat_content_unit.dart';
+import 'native_parity.dart';
 
 const albumTileLimit = 10;
 
@@ -73,13 +74,19 @@ List<ChatContentUnit> unitsFor(CachedMessage message, UnitMapContext context) {
     if (unit != null) units.add(unit);
   }
 
-  final own = message.text?.trim();
-  final forwardedText = forwarded?.originalText?.trim();
-  final text = (own != null && own.isNotEmpty)
-      ? own
-      : (forwardedText != null && forwardedText.isNotEmpty)
-      ? forwardedText
-      : '';
+  final own = nativeVisibleText(
+    accountId: message.accountId,
+    chatId: message.chatId,
+    messageId: message.id,
+    stored: message.text,
+  ).text.trim();
+  final forwardedText = nativeVisibleText(
+    accountId: message.accountId,
+    chatId: forwarded?.originalChatId ?? message.chatId,
+    messageId: forwarded?.originalMessageId,
+    stored: forwarded?.originalText,
+  ).text.trim();
+  final text = own.isNotEmpty ? own : forwardedText;
   if (text.isNotEmpty && !_hidesCaption(attachments)) {
     units.add(TextUnit(text));
   }

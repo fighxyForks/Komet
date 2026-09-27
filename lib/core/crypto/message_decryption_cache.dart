@@ -48,10 +48,13 @@ class MessageDecryptionCache {
   final LinkedHashMap<String, ValueNotifier<MessageDecryption?>> _entries =
       LinkedHashMap();
   final Map<String, Future<void>> _inFlight = {};
+  final ValueNotifier<int> revision = ValueNotifier(0);
 
   // #***! пузырь подписывается сюда и перерисуется когда текст расшифруется
   ValueListenable<MessageDecryption?> listenableFor(String messageId) =>
       _entryFor(messageId);
+
+  MessageDecryption? peek(String messageId) => _entries[messageId]?.value;
 
   ValueNotifier<MessageDecryption?> _entryFor(String messageId) =>
       _entries[messageId] ??= ValueNotifier<MessageDecryption?>(null);
@@ -66,13 +69,25 @@ class MessageDecryptionCache {
 
   // #***! известный текст кладём сразу, например своё только что отправленное
   void seed(String messageId, String plaintext) {
-    _entryFor(messageId).value = MessageDecryption.decrypted(plaintext);
+    _store(messageId, MessageDecryption.decrypted(plaintext));
+  }
+
+  void _store(String messageId, MessageDecryption value) {
+    final entry = _entryFor(messageId);
+    final current = entry.value;
+    if (current != null &&
+        current.state == value.state &&
+        current.plaintext == value.plaintext) {
+      return;
+    }
+    entry.value = value;
+    revision.value++;
   }
 
   // #***! поменяли временный id на настоящий, переносим расшифровку
   void adopt(String fromMessageId, String toMessageId) {
     final value = _entries[fromMessageId]?.value;
-    if (value != null) _entryFor(toMessageId).value = value;
+    if (value != null) _store(toMessageId, value);
   }
 
   // #***! _inFlight чтоб не расшифровывать одно сообщение дважды
@@ -152,17 +167,20 @@ class MessageDecryptionCache {
         chatId,
         sealed,
       );
-      _entryFor(messageId).value = text == null
-          ? const MessageDecryption.unavailable()
-          : MessageDecryption.decrypted(text);
+      _store(
+        messageId,
+        text == null
+            ? const MessageDecryption.unavailable()
+            : MessageDecryption.decrypted(text),
+      );
       return;
     }
     if (flag == CachedMessage.e2eeFailed) {
-      _entryFor(messageId).value = const MessageDecryption.wrongKey();
+      _store(messageId, const MessageDecryption.wrongKey());
       return;
     }
     if (flag == CachedMessage.e2eeFile) {
-      _entryFor(messageId).value = const MessageDecryption.decrypted('');
+      _store(messageId, const MessageDecryption.decrypted(''));
       return;
     }
     if (flag != CachedMessage.e2eeNone || !E2eeService.instance.available) {
@@ -170,11 +188,12 @@ class MessageDecryptionCache {
     }
     switch (KometCrypto.classifyText(cipherText)) {
       case TextClass.session:
-        _entryFor(messageId).value = const MessageDecryption.unavailable();
+        _store(messageId, const MessageDecryption.unavailable());
       case TextClass.offer:
       case TextClass.answer:
-        _entryFor(messageId).value = MessageDecryption.decrypted(
-          cipherText.split('\n').first,
+        _store(
+          messageId,
+          MessageDecryption.decrypted(cipherText.split('\n').first),
         );
       case TextClass.legacy:
         if (ChatCryptoService.instance.isEnabled(accountId, chatId)) {
@@ -194,16 +213,16 @@ class MessageDecryptionCache {
     final crypto = ChatCryptoService.instance;
     final result = await crypto.decrypt(accountId, chatId, cipherText);
     if (result.isOk) {
-      _entryFor(messageId).value = MessageDecryption.decrypted(result.text!);
+      _store(messageId, MessageDecryption.decrypted(result.text!));
       return;
     }
     // #***! ключа нет показываем как неверный ключ только если текст правда похож на шифр
     switch (result.failure) {
       case CryptoFailure.wrongKey:
-        _entryFor(messageId).value = const MessageDecryption.wrongKey();
+        _store(messageId, const MessageDecryption.wrongKey());
       case CryptoFailure.noKey:
         if (crypto.looksEncrypted(cipherText)) {
-          _entryFor(messageId).value = const MessageDecryption.wrongKey();
+          _store(messageId, const MessageDecryption.wrongKey());
         }
       case CryptoFailure.notEncrypted:
       case CryptoFailure.malformed:
@@ -216,5 +235,6 @@ class MessageDecryptionCache {
   void clear() {
     _entries.clear();
     _inFlight.clear();
+    revision.value++;
   }
 }

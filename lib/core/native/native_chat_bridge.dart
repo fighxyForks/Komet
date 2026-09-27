@@ -575,6 +575,8 @@ class NativeChatUpdate {
   }
 }
 
+void _ignoreForward(String id) {}
+
 class NativeChatCallbacks {
   final ValueChanged<String> onOpen;
   final void Function(String id, Rect origin) onLongPress;
@@ -596,6 +598,7 @@ class NativeChatCallbacks {
   final void Function(String id, int index) onContact;
   final void Function(String id, int index) onFile;
   final void Function(String id, int index) onLocation;
+  final void Function(String id) onForwardSource;
   final VoidCallback onLoadOlder;
   final VoidCallback onLoadNewer;
   final ValueChanged<bool> onNearBottom;
@@ -622,6 +625,7 @@ class NativeChatCallbacks {
     required this.onContact,
     required this.onFile,
     required this.onLocation,
+    this.onForwardSource = _ignoreForward,
     required this.onLoadOlder,
     required this.onLoadNewer,
     required this.onNearBottom,
@@ -648,6 +652,12 @@ class NativeChatCommands {
 
   Future<void> setChrome(Map<String, Object?> chrome) async =>
       _controller?.setChrome(chrome);
+
+  Future<void> setPlayback(
+    String id, {
+    required bool playing,
+    required double progress,
+  }) async => _controller?.setPlayback(id, playing: playing, progress: progress);
 
   Future<void> stickerFrame(
     String id,
@@ -733,6 +743,16 @@ class NativeChatController {
 
   Future<void> setChrome(Map<String, Object?> chrome) =>
       _invoke('setChrome', chrome);
+
+  Future<void> setPlayback(
+    String id, {
+    required bool playing,
+    required double progress,
+  }) => _invoke('playback', {
+    'id': id,
+    'playing': playing,
+    'progress': progress,
+  });
 
   Future<void> highlight(String? id) => _invoke('highlight', {'id': id});
 
@@ -823,6 +843,8 @@ class NativeChatController {
         if (id is String) {
           callbacks.onLocation(id, (args['index'] as num?)?.toInt() ?? 0);
         }
+      case 'forwardSource':
+        if (id is String) callbacks.onForwardSource(id);
       case 'loadOlder':
         callbacks.onLoadOlder();
       case 'loadNewer':
@@ -876,6 +898,9 @@ class NativeChatBridge {
     }
     return AppIosGlass.active.value;
   }
+
+  // #***! список сообщений, шапка и поле ввода остаются виджетами Flutter
+  static const bool replacesChatSurface = false;
 
   @visibleForTesting
   static void debugReset() {
