@@ -73,7 +73,8 @@ Future<void> showAttachmentSheet(
   ValueChanged<CachedContact>? onSendContact,
   Rect? sourceFrame,
 }) async {
-  if (NativeSheetBridge.isEligibleWithContext(context)) {
+  if (NativeSheetBridge.replacesAttachmentSheet &&
+      NativeSheetBridge.isEligibleWithContext(context)) {
     final source = sourceFrame ?? globalRectOf(context);
     final presented = await NativeSheetBridge.present(
       sourceFrame: source == Rect.zero ? null : source,

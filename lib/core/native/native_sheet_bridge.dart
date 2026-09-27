@@ -20,6 +20,9 @@ class NativeSheetBridge {
   static StreamSubscription<dynamic>? _sub;
   static Completer<Object?>? _result;
 
+  // #***! выбор вложений остаётся листом Flutter
+  static const bool replacesAttachmentSheet = false;
+
   static bool get isEligible {
     if (debugAvailable == false) return false;
     if (debugAvailable != true) {

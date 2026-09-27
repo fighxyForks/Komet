@@ -899,6 +899,9 @@ class NativeChatBridge {
     return AppIosGlass.active.value;
   }
 
+  // #***! список сообщений, шапка и поле ввода остаются виджетами Flutter
+  static const bool replacesChatSurface = false;
+
   @visibleForTesting
   static void debugReset() {
     debugAvailable = null;

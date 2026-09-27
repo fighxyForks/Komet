@@ -500,5 +500,6 @@ void main() {
     expect(NativeChatBridge.isEligible, isFalse);
     AppIosGlass.debugSetSupported(true);
     expect(NativeChatBridge.isEligible, isTrue);
+    expect(NativeChatBridge.replacesChatSurface, isFalse);
   });
 }

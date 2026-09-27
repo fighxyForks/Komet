@@ -268,22 +268,27 @@ class _StickerPanelState extends State<StickerPanel>
           child: Column(
             children: [
               if (widget.onResize != null) _buildResizeHandle(cs),
-              Expanded(
-                child: _mode == _modeEmoji && widget.onEmojiTap != null
-                    ? NativeChatBridge.isEligible && widget.onPlainEmojiTap != null
-                        ? NativeEmojiPanel(onPick: widget.onPlainEmojiTap!)
-                        : EmojiPanel(
-                            onEmojiTap: widget.onEmojiTap!,
-                            onPlainEmojiTap: widget.onPlainEmojiTap,
-                          )
-                    : _buildStickerBody(cs),
-              ),
+              Expanded(child: _emojiOrStickers(cs)),
               if (widget.onEmojiTap != null) _buildToggleBar(cs),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _emojiOrStickers(ColorScheme cs) {
+    final onEmojiTap = widget.onEmojiTap;
+    if (_mode == _modeEmoji && onEmojiTap != null) {
+      final plain = widget.onPlainEmojiTap;
+      if (NativeChatBridge.replacesChatSurface &&
+          NativeChatBridge.isEligible &&
+          plain != null) {
+        return NativeEmojiPanel(onPick: plain);
+      }
+      return EmojiPanel(onEmojiTap: onEmojiTap, onPlainEmojiTap: plain);
+    }
+    return _buildStickerBody(cs);
   }
 
   Widget _buildResizeHandle(ColorScheme cs) {

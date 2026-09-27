@@ -1026,7 +1026,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool get _usesNativeTranscript =>
-      _iosFastPath && NativeChatBridge.isEligible && !widget.preview;
+      NativeChatBridge.replacesChatSurface &&
+      _iosFastPath &&
+      NativeChatBridge.isEligible &&
+      !widget.preview;
 
   String? _firstUnreadMessageId() {
     final anchor = _unreadAnchorTime;
@@ -2836,7 +2839,8 @@ class _ChatScreenState extends State<ChatScreen>
       onForwardSelected: _forwardSelected,
       forwardDisabled: chat?.forwardDisabled ?? false,
       replyDisabled: !_canReply,
-      useNativeComposer: NativeChatBridge.isEligible,
+      useNativeComposer:
+          NativeChatBridge.replacesChatSurface && NativeChatBridge.isEligible,
       composerFrosted: _composerFrosted,
       scrollOpaque: _chatScrollActive,
     );
@@ -4848,7 +4852,9 @@ class _ChatScreenState extends State<ChatScreen>
                     onOpenSearchResult: _openSearchResult,
                     searchSenderName: _searchSenderName,
                     searchSenderAvatar: _searchSenderAvatar,
-                    useNativeSearch: NativeChatBridge.isEligible,
+                    useNativeSearch:
+                        NativeChatBridge.replacesChatSurface &&
+                        NativeChatBridge.isEligible,
                     chromeVignette: _chromeVignette,
                     composerPaintsSurface: _composerPaintsSurface,
                     pinnedBannerTop: _pinnedBannerTop(),
@@ -4895,6 +4901,7 @@ class _ChatScreenState extends State<ChatScreen>
                       onCall: _startCall,
                       onMenu: _commentsMode ? (_) {} : _openChatMenu,
                       useNativeHeader:
+                          NativeChatBridge.replacesChatSurface &&
                           NativeChatBridge.isEligible &&
                           AppIosGlass.active.value,
                       onMenuAt: _commentsMode ? null : _openChatMenuAt,
@@ -5046,7 +5053,8 @@ class _ChatScreenState extends State<ChatScreen>
     return ListenableBuilder(
       listenable: NativeChatBridge.eligibility,
       builder: (context, _) {
-        if (!IosGlass.of(context) ||
+        if (!NativeChatBridge.replacesChatSurface ||
+            !IosGlass.of(context) ||
             !NativeChatBridge.isEligible ||
             widget.preview) {
           return _messageListWidget ??= _ChatMessageList(
@@ -5069,7 +5077,10 @@ class _ChatScreenState extends State<ChatScreen>
   }
 
   bool get _nativeTranscriptOn =>
-      IosGlass.of(context) && NativeChatBridge.isEligible && !widget.preview;
+      NativeChatBridge.replacesChatSurface &&
+      IosGlass.of(context) &&
+      NativeChatBridge.isEligible &&
+      !widget.preview;
 
   bool get _showNativeHistoryError =>
       _nativeTranscriptOn && _historyFailed && _messages.isEmpty && !_isLoading;
