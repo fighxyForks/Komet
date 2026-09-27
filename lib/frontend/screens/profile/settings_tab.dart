@@ -9,7 +9,7 @@ import '../../widgets/glass/ios_typography.dart';
 import '../../widgets/glass/ios_palette.dart';
 import '../../widgets/glass/ios_glass.dart';
 import '../../widgets/glass/ios_alert.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
+import 'package:flutter/services.dart' show HapticFeedback, SystemUiOverlayStyle;
 import '../../motion/ios_haptics.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -67,6 +67,7 @@ import 'profile_qr_sheet.dart';
 import 'security_screen.dart';
 import 'spoof_screen.dart';
 import '../../native/native_settings_view.dart';
+import '../../widgets/glass/ios_native_tab_bar.dart';
 import '../../widgets/media_playback_pill.dart';
 import 'app_icon_screen.dart';
 import 'appearance_screen.dart';
@@ -78,6 +79,14 @@ import '../../../core/config/app_fonts.dart';
 import '../../widgets/glass/ios_sheet.dart';
 import '../../widgets/glass/ios_route.dart';
 import '../../widgets/glass/ios_symbols.dart';
+
+List<String> nativeSettingsIdentityIds({required bool showExtra}) => [
+  'digital-id',
+  'sferum',
+  'security',
+  'devices',
+  if (showExtra) 'info',
+];
 
 class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key});
@@ -956,8 +965,14 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       for (final account in _accounts)
         if (account.id != _profile?.id) account,
     ];
-    return Scaffold(
-      backgroundColor: IosPalette.grouped(cs),
+    final background = IosPalette.systemGrouped(cs);
+    final overlay = background.computeLuminance() < 0.5
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlay.copyWith(statusBarColor: background),
+      child: Scaffold(
+      backgroundColor: background,
       body: Column(
         children: [
           const MediaPlaybackPill(margin: EdgeInsets.fromLTRB(16, 8, 16, 0)),
@@ -976,7 +991,10 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
               layout: 'settings',
               showClose: false,
               maskPhone: _profile?.phone != 0 && !_isPhoneVisible,
-              bottomInset: MediaQuery.paddingOf(context).bottom + 72,
+              background: background.toARGB32(),
+              bottomInset:
+                  MediaQuery.viewPaddingOf(context).bottom +
+                  IosNativeTabBar.height,
               sections: _nativeSettingsSections(context, l10n, others),
               onTap: (id) => _onNativeSettingsTap(context, id),
               onHeader: _onNativeSettingsHeader,
@@ -984,7 +1002,38 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
           ),
         ],
       ),
+    ),
     );
+  }
+
+  NativeSettingsRow _identityRow(String id, AppLocalizations l10n) {
+    return switch (id) {
+      'digital-id' => const NativeSettingsRow(
+        id: 'digital-id',
+        title: 'Цифровой ID',
+        symbol: 'person.text.rectangle',
+      ),
+      'sferum' => const NativeSettingsRow(
+        id: 'sferum',
+        title: 'Войти в Сферум',
+        symbol: 'globe',
+      ),
+      'security' => const NativeSettingsRow(
+        id: 'security',
+        title: 'Безопасность',
+        symbol: 'lock',
+      ),
+      'devices' => const NativeSettingsRow(
+        id: 'devices',
+        title: 'Устройства',
+        symbol: 'iphone',
+      ),
+      _ => NativeSettingsRow(
+        id: 'info',
+        title: l10n.infoTitle,
+        symbol: 'info.circle',
+      ),
+    };
   }
 
   List<NativeSettingsSection> _nativeSettingsSections(
@@ -1017,35 +1066,8 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
       NativeSettingsSection(rows: [account]),
       NativeSettingsSection(
         rows: [
-          const NativeSettingsRow(
-            id: 'digital-id',
-            title: 'Цифровой ID',
-            symbol: 'person.text.rectangle',
-            keywords: ['удостоверение'],
-          ),
-          const NativeSettingsRow(
-            id: 'security',
-            title: 'Безопасность',
-            symbol: 'lock',
-            keywords: ['пароль', 'код'],
-          ),
-          const NativeSettingsRow(
-            id: 'devices',
-            title: 'Устройства',
-            symbol: 'iphone',
-            keywords: ['сессии'],
-          ),
-          const NativeSettingsRow(
-            id: 'sferum',
-            title: 'Войти в Сферум',
-            symbol: 'globe',
-          ),
-          if (showExtra)
-            NativeSettingsRow(
-              id: 'info',
-              title: l10n.infoTitle,
-              symbol: 'info.circle',
-            ),
+          for (final id in nativeSettingsIdentityIds(showExtra: showExtra))
+            _identityRow(id, l10n),
         ],
       ),
       NativeSettingsSection(
@@ -1055,25 +1077,21 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             id: 'theme',
             title: 'Тема',
             symbol: 'moon',
-            keywords: ['оформление', 'тёмная'],
           ),
           const NativeSettingsRow(
             id: 'appearance',
             title: 'Внешний вид',
             symbol: 'paintbrush',
-            keywords: ['оформление'],
           ),
           const NativeSettingsRow(
             id: 'wallpaper',
             title: 'Фон чатов',
             symbol: 'photo',
-            keywords: ['оформление'],
           ),
           const NativeSettingsRow(
             id: 'fonts',
             title: 'Шрифты',
             symbol: 'textformat',
-            keywords: ['оформление'],
           ),
           const NativeSettingsRow(
             id: 'actions',
@@ -1084,25 +1102,21 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             id: 'icon',
             title: 'Иконка приложения',
             symbol: 'app.badge',
-            keywords: ['оформление'],
           ),
           const NativeSettingsRow(
             id: 'notifications',
             title: 'Уведомления',
             symbol: 'bell',
-            keywords: ['пуш', 'звук'],
           ),
           const NativeSettingsRow(
             id: 'media',
             title: 'Камера и микрофон',
             symbol: 'video',
-            keywords: ['данные', 'память'],
           ),
           const NativeSettingsRow(
             id: 'cloud',
             title: 'Облачное хранилище [BETA]',
             symbol: 'cloud',
-            keywords: ['данные'],
           ),
           const NativeSettingsRow(
             id: 'proxy',
@@ -1124,7 +1138,6 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             id: 'folders',
             title: 'Папки',
             symbol: 'folder',
-            keywords: ['чаты'],
           ),
         ],
       ),
@@ -1150,7 +1163,6 @@ class _SettingsTabState extends State<SettingsTab> with SpectrumSurface {
             id: 'komet',
             title: 'Komet',
             symbol: 'sparkles',
-            keywords: ['версия', 'о приложении'],
           ),
         ],
       ),

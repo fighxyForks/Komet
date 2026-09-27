@@ -4,6 +4,9 @@ import 'package:native_liquid_glass/native_liquid_glass.dart';
 import '../sliding_pill_nav.dart';
 
 class IosNativeTabBar extends StatelessWidget {
+  /// Height of the floating tab capsule, shared with screens that pad for it.
+  static const double height = SlidingPillNav.iosHeight;
+
   final List<PillNavItem> items;
   final int currentIndex;
   final List<String?> badges;

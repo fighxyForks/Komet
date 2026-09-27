@@ -10,6 +10,10 @@ class IosPalette {
   static Color grouped(ColorScheme cs) =>
       _dark(cs) ? const Color(0xFF1C1C1E) : const Color(0xFFF2F2F7);
 
+  /// iOS `systemGroupedBackground`: black in dark mode, grouped gray in light.
+  static Color systemGrouped(ColorScheme cs) =>
+      _dark(cs) ? const Color(0xFF000000) : const Color(0xFFF2F2F7);
+
   static Color settingsCard(ColorScheme cs) =>
       _dark(cs) ? const Color(0xFF2C2C2E) : Colors.white;
 
