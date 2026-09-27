@@ -49,6 +49,9 @@ NativeChatCallbacks _callbacks(List<Object> log) => NativeChatCallbacks(
   onVoiceSeek: (id, fraction) => log.add('seek $id $fraction'),
   onComments: (id) => log.add('comments $id'),
   onSticker: (id) => log.add('sticker $id'),
+  onContact: (id, index) => log.add('contact $id $index'),
+  onFile: (id, index) => log.add('file $id $index'),
+  onLocation: (id, index) => log.add('location $id $index'),
   onAvatar: (id) => log.add('avatar $id'),
   onLoadOlder: () => log.add('older'),
   onLoadNewer: () => log.add('newer'),
@@ -470,6 +473,9 @@ void main() {
       await send('open', {'id': 'm'});
       await send('reaction', {'id': 'm', 'emoji': '👍'});
       await send('keyboard', {'id': 'm', 'index': 1});
+      await send('contact', {'id': 'm', 'index': 1});
+      await send('file', {'id': 'm', 'index': 2});
+      await send('location', {'id': 'm', 'index': 1});
       await send('nearBottom', {'on': false});
       await send('visible', {
         'ids': ['m', 'n'],
@@ -479,6 +485,9 @@ void main() {
         'open m',
         'react m 👍',
         'key m 1',
+        'contact m 1',
+        'file m 2',
+        'location m 1',
         'bottom false',
         'visible [m, n]',
         'older',

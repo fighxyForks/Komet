@@ -106,6 +106,8 @@ import '../../widgets/rich_message_controller.dart';
 import '../../../core/utils/text_format.dart';
 import '../../widgets/call_link_handler.dart';
 import '../../widgets/connection_status.dart';
+import '../../widgets/attachment/bubbles/bubble_context.dart';
+import '../../widgets/attachment/bubbles/contact_bubble.dart';
 import '../../widgets/message_bubble.dart';
 import '../../widgets/photo_viewer.dart';
 import '../../native/native_chat_view.dart';
@@ -5188,6 +5190,15 @@ class _ChatScreenState extends State<ChatScreen>
           final message = _chatController.byId(id);
           if (message != null) _openComments(message);
         },
+        onContact: _openNativeContact,
+        onFile: (id, index) {
+          final message = _chatController.byId(id);
+          if (message != null) unawaited(_openNativeFile(message, index));
+        },
+        onLocation: (id, index) {
+          final message = _chatController.byId(id);
+          if (message != null) _openNativeLocation(message, index);
+        },
         onSticker: _openNativeSticker,
         onAvatar: _openSenderProfile,
         onLoadOlder: _nativeLoadOlder,
@@ -5953,13 +5964,12 @@ class _ChatScreenState extends State<ChatScreen>
     );
   }
 
-  Future<void> _openNativeFile(CachedMessage message) async {
-    FileAttachment? file;
-    for (final attachment in _nativeAttachments(message)) {
-      if (attachment is FileAttachment) file = attachment;
-    }
-    final fileId = file?.fileId;
-    if (file == null || fileId == null) {
+  Future<void> _openNativeFile(CachedMessage message, [int index = 0]) async {
+    final files = _nativeAttachments(message).whereType<FileAttachment>().toList();
+    if (index < 0 || index >= files.length) return;
+    final file = files[index];
+    final fileId = file.fileId;
+    if (fileId == null) {
       if (mounted)
         showCustomNotification(context, 'Не удалось определить файл');
       return;
@@ -5988,17 +5998,54 @@ class _ChatScreenState extends State<ChatScreen>
     }
   }
 
-  void _openNativeLocation(CachedMessage message) {
-    for (final attachment in _nativeAttachments(message)) {
-      if (attachment is! LocationAttachment) continue;
-      final latitude = attachment.latitude;
-      final longitude = attachment.longitude;
-      if (latitude == null || longitude == null) return;
-      unawaited(
-        openLocationOnMap(context, latitude, longitude, zoom: attachment.zoom),
-      );
-      return;
-    }
+  void _openNativeContact(String id, int index) {
+    final message = _chatController.byId(id);
+    if (message == null) return;
+    final contacts = _nativeAttachments(message)
+        .whereType<ContactAttachment>()
+        .toList();
+    if (index < 0 || index >= contacts.length) return;
+    showIosSheet<void>(
+      context: context,
+      builder: (context) {
+        final colors = Theme.of(context).colorScheme;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: ContactBubble(
+              contact: contacts[index],
+              ctx: BubbleContext(
+                context: context,
+                cs: colors,
+                text: colors.onSurface,
+                shape: BubbleShape.singleTop,
+                contentType: MessageType.attachment,
+                hasPhotoWithCaption: false,
+                hasMultiplePhotosNoCaption: false,
+                message: message,
+                isMe: false,
+                myId: _myId,
+                chatType: widget.chatType,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _openNativeLocation(CachedMessage message, [int index = 0]) {
+    final locations = _nativeAttachments(message)
+        .whereType<LocationAttachment>()
+        .toList();
+    if (index < 0 || index >= locations.length) return;
+    final attachment = locations[index];
+    final latitude = attachment.latitude;
+    final longitude = attachment.longitude;
+    if (latitude == null || longitude == null) return;
+    unawaited(
+      openLocationOnMap(context, latitude, longitude, zoom: attachment.zoom),
+    );
   }
 
   Future<void> _nativeTranscribe(String id) async {

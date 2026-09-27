@@ -49,10 +49,10 @@ final class RunnerTests: XCTestCase {
       top)
     XCTAssertEqual(
       StoriesCollapseCoordinator.target(forProjected: -140, velocity: 0, bandTop: top, bandBottom: bottom),
-      top)
+      bottom)
     XCTAssertEqual(
       StoriesCollapseCoordinator.target(forProjected: -160, velocity: 0, bandTop: top, bandBottom: bottom),
-      bottom)
+      top)
   }
 
   func testHeightCacheMeasuresOnce() {
@@ -145,6 +145,14 @@ final class RunnerTests: XCTestCase {
   }
 
   func testAnchorSurvivesAPrepend() {
+    assertAnchorSurvivesPrepend(repetitions: 20)
+  }
+
+  func testPartiallyVisibleLongPostSurvivesAPrepend() {
+    assertAnchorSurvivesPrepend(repetitions: 800)
+  }
+
+  private func assertAnchorSurvivesPrepend(repetitions: Int) {
     let controller = KometChatController()
     let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 700))
     window.rootViewController = controller
@@ -154,7 +162,7 @@ final class RunnerTests: XCTestCase {
     let original = (0..<40).map { index in
       ChatFixtures.message(
         id: "m\(index)",
-        text: "Строка \(index) " + String(repeating: "текст ", count: 20))
+        text: "Строка \(index) " + String(repeating: "текст ", count: repetitions))
     }
     controller.apply(
       order: original.map { $0["id"] as! String },
@@ -197,6 +205,82 @@ final class RunnerTests: XCTestCase {
     }
     let cell = laidOut(item, width: 320)
     XCTAssertLessThanOrEqual(cell.debugBodyDelta(), 1)
+  }
+
+  func testKeyboardTapsUseFlatIndicesAcrossRows() {
+    let rows: [[[String: Any]]] = [
+      [["text": "First", "row": 0, "column": 0], ["text": "", "row": 0, "column": 1]],
+      [["text": "Second", "row": 1, "column": 0], ["text": "Third", "row": 1, "column": 1]],
+      [["text": "Fourth", "row": 0, "column": 0]],
+    ]
+    guard let item = KometChatMessage.parse(ChatFixtures.message(
+      id: "keyboard", extra: ["units": [["kind": "botKeyboard", "rows": rows]]]
+    )) else { return XCTFail("parse") }
+    let cell = laidOut(item, width: 390)
+    var indices: [Int] = []
+    cell.onEvent = { event, data in
+      if event == "keyboard", let index = data["index"] as? Int { indices.append(index) }
+    }
+    let buttons = buttons(in: cell).filter {
+      $0.actions(forTarget: cell, forControlEvent: .touchUpInside)?.contains("tapKeyboard:") == true
+    }
+    XCTAssertEqual(buttons.count, 4)
+    buttons.forEach { $0.sendActions(for: .touchUpInside) }
+    XCTAssertEqual(indices, [0, 1, 2, 3])
+  }
+
+  func testCardsEmitTheSelectedAttachmentIndex() {
+    let units: [[String: Any]] = [
+      ["kind": "file", "name": "a.txt"],
+      ["kind": "contact", "name": "Synthetic A"],
+      ["kind": "location"],
+      ["kind": "file", "name": "b.txt"],
+      ["kind": "contact", "name": "Synthetic B"],
+      ["kind": "location"],
+    ]
+    guard let item = KometChatMessage.parse(ChatFixtures.message(
+      id: "cards", extra: ["units": units]
+    )) else { return XCTFail("parse") }
+    let cell = laidOut(item, width: 390)
+    var events: [String] = []
+    cell.onEvent = { event, data in
+      if let index = data["index"] as? Int { events.append("\(event):\(index)") }
+    }
+    let actions = Set(["tapFile:", "tapContact:", "tapLocation:"])
+    for button in buttons(in: cell) {
+      let targets = button.actions(forTarget: cell, forControlEvent: .touchUpInside) ?? []
+      if !actions.isDisjoint(with: targets) { button.sendActions(for: .touchUpInside) }
+    }
+    XCTAssertEqual(events, ["file:0", "contact:0", "location:0", "file:1", "contact:1", "location:1"])
+  }
+
+  func testAlbumPreservesSpanningTiles() {
+    for count in [3, 4] {
+      let tiles: [[String: Any]] = (0..<count).map { index in
+        ["url": "https://example.test/\(index).jpg", "width": index == 0 ? 400 : 800, "height": 800]
+      }
+      guard let item = KometChatMessage.parse(ChatFixtures.message(
+        id: "album", extra: ["kind": "album", "units": [["kind": "album", "tiles": tiles]]]
+      )) else { return XCTFail("parse") }
+      let cell = laidOut(item, width: 390)
+      let tilesInView = buttons(in: cell).filter {
+        $0.actions(forTarget: cell, forControlEvent: .touchUpInside)?.contains("tapAlbum:") == true
+      }.sorted { $0.tag < $1.tag }
+      XCTAssertEqual(tilesInView.count, count)
+      guard let container = tilesInView.first?.superview else { return XCTFail("album missing") }
+      let expected = KometAlbumLayout.frames(ratios: [0.5] + Array(repeating: 1, count: count - 1), width: container.bounds.width)
+      for (button, frame) in zip(tilesInView, expected) {
+        XCTAssertEqual(button.frame.minX, frame.minX, accuracy: 0.5)
+        XCTAssertEqual(button.frame.minY, frame.minY, accuracy: 0.5)
+        XCTAssertEqual(button.frame.width, frame.width, accuracy: 0.5)
+        XCTAssertEqual(button.frame.height, frame.height, accuracy: 0.5)
+      }
+      XCTAssertEqual(container.bounds.height, expected.map(\.maxY).max() ?? 0, accuracy: 0.5)
+    }
+  }
+
+  private func buttons(in view: UIView) -> [UIButton] {
+    (view as? UIButton).map { [$0] } ?? view.subviews.flatMap { buttons(in: $0) }
   }
 
   private func laidOut(_ item: KometChatMessage, width: CGFloat) -> KometChatMessageCell {

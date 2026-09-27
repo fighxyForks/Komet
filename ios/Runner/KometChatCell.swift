@@ -65,7 +65,9 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   private let replyButton = UIButton(type: .system)
   private let bodyView = KometChatTextView()
   private let mediaView = UIImageView()
-  private let albumStack = UIStackView()
+  private let albumStack = UIView()
+  private var albumHeight: NSLayoutConstraint?
+  private var albumTiles: [[String: Any]] = []
   private let cardStack = UIStackView()
   private let pollStack = UIStackView()
   private var pollSelection = Set<Int>()
@@ -128,8 +130,6 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     replyButton.addTarget(self, action: #selector(tapReply), for: .touchUpInside)
     bodyView.delegate = self
     bodyView.preferredWidth = 240
-    albumStack.axis = .vertical
-    albumStack.spacing = 2
     cardStack.axis = .vertical
     cardStack.spacing = 6
     pollStack.axis = .vertical
@@ -292,7 +292,7 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     bubble.transform = .identity
     buttonStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
     reactionStack.setChips([])
-    albumStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+    albumStack.subviews.forEach { $0.removeFromSuperview() }
     pollStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
   }
 
@@ -350,9 +350,8 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     } else {
       KometNotePlayback.stop(ifHost: mediaView)
     }
-    guard item.kind == "album" else { return }
     for (offset, button) in albumButtons.enumerated() {
-      guard offset < item.media.count, let url = URL(string: item.media[offset].url) else { continue }
+      guard offset < albumTiles.count, let url = mediaURL(albumTiles[offset]["url"] as? String) else { continue }
       KometChatImages.load(url) { [weak self, weak button] image in
         guard let self, self.item?.id == item.id, self.stickerToken == token else { return }
         button?.setImage(image, for: .normal)
@@ -565,6 +564,7 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
        let rows = keyboard["rows"] as? [[[String: Any]]], !rows.isEmpty {
       buttonStack.isHidden = false
       buttonStack.axis = .vertical
+      var index = 0
       for row in rows {
         let line = UIStackView()
         line.axis = .horizontal
@@ -572,7 +572,8 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
         line.distribution = .fillEqually
         for raw in row {
           guard let text = raw["text"] as? String, !text.isEmpty else { continue }
-          let view = keyboardButton(text, item: item, row: (raw["row"] as? NSNumber)?.intValue ?? 0, column: (raw["column"] as? NSNumber)?.intValue ?? 0)
+          let view = keyboardButton(text, item: item, index: index)
+          index += 1
           line.addArrangedSubview(view)
         }
         if !line.arrangedSubviews.isEmpty {
@@ -683,9 +684,9 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     }
   }
 
-  private func keyboardButton(_ text: String, item: KometChatMessage, row: Int, column: Int) -> UIButton {
+  private func keyboardButton(_ text: String, item: KometChatMessage, index: Int) -> UIButton {
     let view = UIButton(type: .system)
-    view.tag = row * 100 + column
+    view.tag = index
     view.setTitle(text, for: .normal)
     view.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
     view.titleLabel?.adjustsFontForContentSizeCategory = true
@@ -702,13 +703,17 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   }
 
   private func fillAlbum(_ item: KometChatMessage, contentWidth: CGFloat) {
-    albumStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+    albumStack.subviews.forEach { $0.removeFromSuperview() }
     albumButtons.removeAll()
+    albumTiles.removeAll()
+    albumHeight?.isActive = false
+    albumHeight = nil
     let album = item.units.first { $0["kind"] as? String == "album" }
     let rawTiles = album?["tiles"] as? [[String: Any]]
     let tiles = rawTiles ?? item.media.prefix(10).map { tile in
       ["url": tile.url, "kind": tile.kind, "width": tile.width, "height": tile.height]
     }
+    albumTiles = tiles
     let extra = (album?["extra"] as? NSNumber)?.intValue ?? max(0, item.media.count - tiles.count)
     albumStack.isHidden = tiles.isEmpty || (album == nil && item.kind != "album")
     guard !albumStack.isHidden else { return }
@@ -718,21 +723,11 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
       return width > 0 && height > 0 ? width / height : 1
     }
     let frames = KometAlbumLayout.frames(ratios: ratios, width: max(contentWidth, 1))
-    var rowTop: CGFloat = -1
-    var line: UIStackView?
-    for (offset, raw) in tiles.enumerated() {
-      let frame = offset < frames.count ? frames[offset] : CGRect(x: 0, y: rowTop + 1, width: contentWidth, height: 80)
-      if abs(frame.minY - rowTop) > 0.5 {
-        line = UIStackView()
-        line?.axis = .horizontal
-        line?.spacing = 0
-        line?.distribution = .fill
-        let height = line!.heightAnchor.constraint(equalToConstant: max(48, frame.height))
-        height.identifier = "chat.album.row"
-        height.isActive = true
-        albumStack.addArrangedSubview(line!)
-        rowTop = frame.minY
-      }
+    albumHeight = albumStack.heightAnchor.constraint(equalToConstant: frames.map(\.maxY).max() ?? 0)
+    albumHeight?.isActive = true
+    for (offset, _) in tiles.enumerated() {
+      guard offset < frames.count else { continue }
+      let frame = frames[offset]
       let button = UIButton(type: .custom)
       button.tag = offset
       button.imageView?.contentMode = .scaleAspectFill
@@ -744,16 +739,14 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = UIColor.black.withAlphaComponent(0.45)
       }
-      line?.addArrangedSubview(button)
-      let nextY = offset + 1 < frames.count ? frames[offset + 1].minY : frame.minY + 1
-      let lastInRow = abs(nextY - frame.minY) > 0.5
-      if !lastInRow, let line = line {
-        let fraction = max(0.05, min(0.95, frame.width / max(contentWidth, 1)))
-        let width = button.widthAnchor.constraint(equalTo: line.widthAnchor, multiplier: fraction)
-        width.priority = UILayoutPriority(999)
-        width.identifier = "chat.album.tile"
-        width.isActive = true
-      }
+      button.translatesAutoresizingMaskIntoConstraints = false
+      albumStack.addSubview(button)
+      NSLayoutConstraint.activate([
+        button.leadingAnchor.constraint(equalTo: albumStack.leadingAnchor, constant: frame.minX),
+        button.topAnchor.constraint(equalTo: albumStack.topAnchor, constant: frame.minY),
+        button.widthAnchor.constraint(equalToConstant: frame.width),
+        button.heightAnchor.constraint(equalToConstant: frame.height),
+      ])
       albumButtons.append(button)
     }
   }
@@ -761,23 +754,27 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
   private func fillCards(_ item: KometChatMessage) {
     cardStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
     var cards: [UIView] = []
+    var indices: [String: Int] = [:]
     for unit in item.units {
       guard let kind = unit["kind"] as? String else { continue }
+      let index = indices[kind, default: 0]
+      indices[kind] = index + 1
       switch kind {
       case "contact":
-        cards.append(cardLabel(unit["name"] as? String ?? "Контакт", symbol: "person.crop.circle", action: #selector(tapContact)))
+        cards.append(cardLabel(unit["name"] as? String ?? "Контакт", symbol: "person.crop.circle", action: #selector(tapContact(_:))))
       case "file":
         let name = unit["name"] as? String ?? "Файл"
         let size = (unit["size"] as? NSNumber)?.intValue ?? 0
-        cards.append(cardLabel(size > 0 ? "\(name) — \(size)" : name, symbol: "doc", action: #selector(tapFile)))
+        cards.append(cardLabel(size > 0 ? "\(name) — \(size)" : name, symbol: "doc", action: #selector(tapFile(_:))))
       case "location":
-        cards.append(cardLabel("Геолокация", symbol: "mappin.and.ellipse", action: #selector(tapLocation)))
+        cards.append(cardLabel("Геолокация", symbol: "mappin.and.ellipse", action: #selector(tapLocation(_:))))
       case "linkPreview":
         let title = (unit["title"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "Ссылка"
-        cards.append(cardLabel(title, symbol: "link", action: #selector(tapLinkCard)))
+        cards.append(cardLabel(title, symbol: "link", action: #selector(tapLinkCard(_:))))
       default:
-        break
+        continue
       }
+      cards.last?.tag = index
     }
     cardStack.isHidden = cards.isEmpty
     cards.forEach(cardStack.addArrangedSubview)
@@ -795,26 +792,28 @@ final class KometChatMessageCell: UICollectionViewCell, UIGestureRecognizerDeleg
     return view
   }
 
-  @objc private func tapContact() {
-    guard let id = item?.id else { return }
-    let contact = item?.units.first { $0["kind"] as? String == "contact" }
-    onEvent?("contact", ["id": id, "contactId": (contact?["contactId"] as? NSNumber)?.intValue ?? 0])
+  @objc private func tapContact(_ sender: UIButton) {
+    emitCard("contact", index: sender.tag)
   }
 
-  @objc private func tapFile() {
-    guard let id = item?.id else { return }
-    onEvent?("file", ["id": id])
+  @objc private func tapFile(_ sender: UIButton) {
+    emitCard("file", index: sender.tag)
   }
 
-  @objc private func tapLocation() {
-    guard let id = item?.id else { return }
-    onEvent?("location", ["id": id])
+  @objc private func tapLocation(_ sender: UIButton) {
+    emitCard("location", index: sender.tag)
   }
 
-  @objc private func tapLinkCard() {
+  private func emitCard(_ kind: String, index: Int) {
     guard let id = item?.id else { return }
-    let link = item?.units.first { $0["kind"] as? String == "linkPreview" }
-    onEvent?("link", ["id": id, "url": link?["url"] as? String ?? ""])
+    onEvent?(kind, ["id": id, "index": index])
+  }
+
+  @objc private func tapLinkCard(_ sender: UIButton) {
+    guard let item else { return }
+    let links = item.units.filter { $0["kind"] as? String == "linkPreview" }
+    guard links.indices.contains(sender.tag), let url = links[sender.tag]["url"] as? String else { return }
+    onEvent?("link", ["id": item.id, "url": url])
   }
 
   private func fillPoll(_ item: KometChatMessage, foreground: UIColor, accent: UIColor) {

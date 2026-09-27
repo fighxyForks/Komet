@@ -575,10 +575,6 @@ class NativeChatUpdate {
   }
 }
 
-void _ignoreContact(String id, int contactId) {}
-
-void _ignoreId(String id) {}
-
 class NativeChatCallbacks {
   final ValueChanged<String> onOpen;
   final void Function(String id, Rect origin) onLongPress;
@@ -597,9 +593,9 @@ class NativeChatCallbacks {
   final ValueChanged<String> onComments;
   final ValueChanged<String> onSticker;
   final ValueChanged<int> onAvatar;
-  final void Function(String id, int contactId) onContact;
-  final void Function(String id) onFile;
-  final void Function(String id) onLocation;
+  final void Function(String id, int index) onContact;
+  final void Function(String id, int index) onFile;
+  final void Function(String id, int index) onLocation;
   final VoidCallback onLoadOlder;
   final VoidCallback onLoadNewer;
   final ValueChanged<bool> onNearBottom;
@@ -623,9 +619,9 @@ class NativeChatCallbacks {
     required this.onComments,
     required this.onSticker,
     required this.onAvatar,
-    this.onContact = _ignoreContact,
-    this.onFile = _ignoreId,
-    this.onLocation = _ignoreId,
+    required this.onContact,
+    required this.onFile,
+    required this.onLocation,
     required this.onLoadOlder,
     required this.onLoadNewer,
     required this.onNearBottom,
@@ -817,12 +813,16 @@ class NativeChatController {
         if (senderId is int) callbacks.onAvatar(senderId);
       case 'contact':
         if (id is String) {
-          callbacks.onContact(id, (args['contactId'] as num?)?.toInt() ?? 0);
+          callbacks.onContact(id, (args['index'] as num?)?.toInt() ?? 0);
         }
       case 'file':
-        if (id is String) callbacks.onFile(id);
+        if (id is String) {
+          callbacks.onFile(id, (args['index'] as num?)?.toInt() ?? 0);
+        }
       case 'location':
-        if (id is String) callbacks.onLocation(id);
+        if (id is String) {
+          callbacks.onLocation(id, (args['index'] as num?)?.toInt() ?? 0);
+        }
       case 'loadOlder':
         callbacks.onLoadOlder();
       case 'loadNewer':

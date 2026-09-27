@@ -376,10 +376,11 @@ final class KometChatController: UIViewController, UICollectionViewDelegate {
   private func captureAnchor() -> RowAnchor? {
     let visible = collectionView.indexPathsForVisibleItems.sorted { $0.item < $1.item }
     let origin = collectionView.contentOffset.y
+    let visibleTop = origin + collectionView.adjustedContentInset.top
     for path in visible {
       guard path.item < order.count,
             let frame = collectionView.layoutAttributesForItem(at: path)?.frame else { continue }
-      if frame.minY + 0.5 >= origin {
+      if frame.maxY > visibleTop {
         return RowAnchor(id: order[path.item], delta: frame.minY - origin)
       }
     }
