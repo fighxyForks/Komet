@@ -59,15 +59,40 @@ final class RunnerTests: XCTestCase {
     var cache = KometChatHeightCache()
     var measures = 0
     let key = KometChatHeightCache.Key(
-      id: "m", revision: 1, width: 780, category: "large", selecting: false)
+      revision: "abc", width: 780, category: "large", selecting: false)
     let first = cache.height(for: key) { measures += 1; return 48 }
     let second = cache.height(for: key) { measures += 1; return 90 }
     XCTAssertEqual(first, 48)
     XCTAssertEqual(second, 48)
     XCTAssertEqual(measures, 1)
-    cache.invalidate(id: "m")
-    _ = cache.height(for: key) { measures += 1; return 50 }
+    let changed = KometChatHeightCache.Key(
+      revision: "def", width: 780, category: "large", selecting: false)
+    _ = cache.height(for: changed) { measures += 1; return 50 }
     XCTAssertEqual(measures, 2)
+    cache.removeAll()
+    let afterReset = cache.height(for: key) { measures += 1; return 12 }
+    XCTAssertEqual(afterReset, 12)
+    XCTAssertEqual(measures, 3)
+    let selecting = KometChatHeightCache.Key(
+      revision: "abc", width: 780, category: "large", selecting: true)
+    _ = cache.height(for: selecting) { measures += 1; return 20 }
+    XCTAssertEqual(measures, 4)
+  }
+
+  func testAlbumFramesStayInsideWidth() {
+    for count in 1...10 {
+      for width in [CGFloat(240), 300, 360] {
+        let ratios = (0..<count).map { CGFloat(($0 % 3) + 1) / CGFloat(($0 % 2) + 1) }
+        let frames = KometAlbumLayout.frames(ratios: ratios, width: width)
+        XCTAssertEqual(frames.count, count, "\(count) @ \(width)")
+        for frame in frames {
+          XCTAssertGreaterThan(frame.width, 0)
+          XCTAssertGreaterThan(frame.height, 0)
+          XCTAssertGreaterThanOrEqual(frame.minX, -0.5)
+          XCTAssertLessThanOrEqual(frame.maxX, width + 1.5, "\(frame) width \(width)")
+        }
+      }
+    }
   }
 
   func testConfigureDoesNotLoadOrPlay() {
