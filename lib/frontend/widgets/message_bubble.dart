@@ -43,6 +43,8 @@ import 'attachment/bubbles/photo_bubble.dart';
 import 'attachment/bubbles/video_bubble.dart';
 import 'attachment/bubbles/file_bubble.dart';
 import 'attachment/bubbles/forwarded_bubble.dart';
+import 'attachment/bubbles/ios_bubble_metrics.dart';
+import '../../core/config/ios_release.dart';
 import 'lottie_image.dart';
 import 'text_with_meta.dart';
 
@@ -991,6 +993,9 @@ class MessageBubble extends StatelessWidget {
 
   static const double _groupAvatarSize = 30;
 
+  static double _avatarSize(bool ios) =>
+      ios ? IosBubbleMetrics.avatarSize : _groupAvatarSize;
+
   Widget _buildLeadingAvatar(ColorScheme cs) {
     final senderAvatar =
         senderAvatarOverride ?? ContactCache.getAvatar(message.senderId);
@@ -999,7 +1004,7 @@ class MessageBubble extends StatelessWidget {
     final Widget avatar;
     if (senderAvatar != null && senderAvatar.isNotEmpty) {
       avatar = CircleAvatar(
-        radius: _groupAvatarSize / 2,
+        radius: _avatarSize(IosRelease.isIOS) / 2,
         backgroundImage: CachedNetworkImageProvider(
           senderAvatar,
           maxWidth: 96,
@@ -1009,7 +1014,7 @@ class MessageBubble extends StatelessWidget {
       );
     } else {
       avatar = CircleAvatar(
-        radius: _groupAvatarSize / 2,
+        radius: _avatarSize(IosRelease.isIOS) / 2,
         backgroundColor: cs.primaryContainer,
         child: Text(
           displaySender != null && displaySender.isNotEmpty
@@ -1090,6 +1095,7 @@ class MessageBubble extends StatelessWidget {
     MessageType contentType,
     double availableWidth,
   ) {
+    final ios = IosRelease.isIOS;
     final shape = _computeShape();
     final hasReactions = _hasReactions();
     final hasPhotoCap =
@@ -1121,6 +1127,11 @@ class MessageBubble extends StatelessWidget {
     final screenWidth = availableWidth;
     final maxBubbleWidth = isVideoNote
         ? math.min(screenWidth - 24, 560.0)
+        : ios
+        ? IosBubbleMetrics.maxBubbleWidth(
+            screenWidth,
+            avatarSlot: showAvatarSlot && chatType == "CHAT",
+          )
         : math.min(screenWidth * 0.75, 760.0);
     final noBubbleBackground =
         isVideoNote || _isSticker || jumboAnimoji != null;
@@ -1262,7 +1273,7 @@ class MessageBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: maxBubbleWidth,
           minHeight: showAvatarSlot && chatType == "CHAT"
-              ? _groupAvatarSize
+              ? _avatarSize(ios)
               : 0,
         ),
         decoration: BoxDecoration(
@@ -1291,8 +1302,8 @@ class MessageBubble extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        left: 8,
-        right: 8,
+        left: ios ? IosBubbleMetrics.edgeInset : 8,
+        right: ios ? IosBubbleMetrics.edgeInset : 8,
         top: topMargin,
         bottom: bottomMargin,
       ),
@@ -1301,13 +1312,13 @@ class MessageBubble extends StatelessWidget {
           mainAxisAlignment: isMe
               ? MainAxisAlignment.end
               : MainAxisAlignment.start,
-          spacing: 8,
+          spacing: ios ? IosBubbleMetrics.avatarGap : 8,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (showAvatar)
               _buildLeadingAvatar(cs)
             else if (showAvatarSlot && chatType == "CHAT")
-              const SizedBox(width: _groupAvatarSize),
+              SizedBox(width: _avatarSize(ios)),
             Column(
               crossAxisAlignment: isMe
                   ? CrossAxisAlignment.end
