@@ -36,6 +36,7 @@ import '../../../backend/modules/share_sender.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/utils/chat_list_time.dart';
 import '../../../core/config/ios_release.dart';
+import '../../../core/config/ios_typography.dart';
 import '../../../core/utils/format.dart';
 import '../../../models/shared_payload.dart';
 import '../../widgets/rich_message_controller.dart';
@@ -3231,7 +3232,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                   style: TextStyle(
                     color: isSelected ? cs.onPrimaryContainer : cs.primary,
                     fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: IosTypography.title(FontWeight.w500),
                   ),
                 ),
               ),
@@ -3324,10 +3325,10 @@ class _ChatListScreenState extends State<ChatListScreen>
               style: TextStyle(color: cs.outline),
             ),
           ],
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            fontStyle: FontStyle.italic,
+            fontStyle: IosTypography.upright(FontStyle.italic),
             height: 1.2,
           ),
         ),
@@ -4014,7 +4015,7 @@ class _ChatListScreenState extends State<ChatListScreen>
               style: TextStyle(
                 color: cs.onSurface,
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: IosTypography.body(FontWeight.w500),
               ),
             ),
           ],
@@ -4158,7 +4159,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             style: TextStyle(
               color: cs.onSurface,
               fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontWeight: IosTypography.body(FontWeight.w500),
             ),
           ),
         ],

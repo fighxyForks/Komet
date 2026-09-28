@@ -45,6 +45,7 @@ import 'attachment/bubbles/file_bubble.dart';
 import 'attachment/bubbles/forwarded_bubble.dart';
 import 'attachment/bubbles/ios_bubble_metrics.dart';
 import '../../core/config/ios_release.dart';
+import '../../core/config/ios_typography.dart';
 import 'lottie_image.dart';
 import 'text_with_meta.dart';
 
@@ -1365,7 +1366,7 @@ class MessageBubble extends StatelessWidget {
                       label,
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: IosTypography.title(FontWeight.w500),
                         color: accent,
                       ),
                     ),
@@ -1734,10 +1735,10 @@ class MessageBubble extends StatelessWidget {
         children: [
           Text(
             ctx.clockText,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 11,
-              fontWeight: FontWeight.w500,
+              fontWeight: IosTypography.body(FontWeight.w500),
             ),
           ),
           if (ctx.isMe) ...[
@@ -1932,9 +1933,8 @@ class MessageBubble extends StatelessWidget {
       fontSize: 16,
       height: 1.3,
       fontFamily: activeFontFamily,
-      fontVariations: activeFontFamily == 'Inter'
-          ? const [FontVariation('wght', 300)]
-          : null,
+      fontWeight: IosTypography.messageBodyWeight(),
+      fontVariations: IosTypography.messageBodyVariations(activeFontFamily),
     );
     final ranges = message.formatRanges;
     final decryptedText = decryption?.plaintext;
