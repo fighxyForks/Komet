@@ -27,6 +27,7 @@ import 'composer_input.dart';
 import 'frosted_panel.dart';
 import 'selection_bar.dart';
 import 'sticker_panel_view.dart';
+import '../../../../../core/config/ios_release.dart';
 
 class ComposerArea extends StatelessWidget {
   final Animation<double> selectionAnim;
@@ -357,7 +358,10 @@ class ComposerArea extends StatelessWidget {
       );
     }
 
-    final base = wrapChrome(content);
+    final base = TextFieldTapRegion(
+      enabled: IosRelease.isIOS,
+      child: wrapChrome(content),
+    );
     return AnimatedBuilder(
       animation: searchAnim,
       builder: (context, _) {
