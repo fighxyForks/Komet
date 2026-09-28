@@ -1062,9 +1062,7 @@ class _ChatListScreenState extends State<ChatListScreen>
       final foldersFuture = reloadMetadata
           ? FoldersModule.loadFolders(p.id)
           : Future.value(_folders);
-      final foldersKnownFuture = reloadMetadata
-          ? FoldersModule.hasReceivedFoldersList(p.id)
-          : Future.value(_foldersListKnown ?? false);
+      final foldersKnownFuture = FoldersModule.hasReceivedFoldersList(p.id);
       final contactIdsFuture = reloadMetadata
           ? ContactsModule.getContacts(
               p.id,
