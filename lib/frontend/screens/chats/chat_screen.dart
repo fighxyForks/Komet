@@ -721,7 +721,9 @@ class _ChatScreenState extends State<ChatScreen>
                 e.chatId == widget.chatId && e.postId == widget.commentPostId,
           )
           .listen(_onLiveComment);
-    } else if (widget.chatType == 'CHANNEL') {
+    } else {
+      // #***! тип из маршрута бывает запасным (CHAT/DIALOG), а канал
+      // #***! узнаём позже из chat; счётчики слушаем в любом чате
       _commentsInfoSub = commentsModule.infoStream.listen(_onCommentsInfo);
     }
     ChatActivityStore.instance
@@ -730,8 +732,10 @@ class _ChatScreenState extends State<ChatScreen>
     ChatMembersStore.instance
         .listenable(widget.chatId)
         .addListener(_recomputeHeaderStatus);
-    _connSub = api.stateStream.listen((_) {
-      if (mounted) _recomputeHeaderStatus();
+    _connSub = api.stateStream.listen((state) {
+      if (!mounted) return;
+      _recomputeHeaderStatus();
+      if (state == SessionState.online) _requestCommentCounts();
     });
     debugForceOffline.addListener(_recomputeHeaderStatus);
     PresenceFetch.revision.addListener(_onPresenceChanged);
@@ -1945,17 +1949,28 @@ class _ChatScreenState extends State<ChatScreen>
       pending.add(m.id);
     }
     if (pending.isEmpty) return;
-    unawaited(
-      commentsModule.fetchInfo(
-        accountId: _myId,
-        chatId: widget.chatId,
-        postIds: pending,
-      ),
+    unawaited(_fetchCommentCounts(pending));
+  }
+
+  // #***! запрос не дошёл (нет сети, таймаут, реконнект) — снимаем отметку,
+  // #***! иначе посты так и останутся без счётчика до переоткрытия чата
+  Future<void> _fetchCommentCounts(List<String> postIds) async {
+    final info = await commentsModule.fetchInfo(
+      accountId: _myId,
+      chatId: widget.chatId,
+      postIds: postIds,
     );
+    if (!mounted) return;
+    if (info == null) {
+      _commentCountsRequested.removeAll(postIds);
+      return;
+    }
+    _onCommentsInfo(commentsModule.infoSnapshot);
   }
 
   void _onCommentsInfo(Map<String, CommentsInfo> info) {
     if (!mounted) return;
+    if (_commentsMode) return;
     var changed = false;
     for (final m in _messages) {
       final count = info[m.id]?.totalCount;
