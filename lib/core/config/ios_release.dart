@@ -22,4 +22,9 @@ abstract final class IosRelease {
   /// and login entry points are hidden; the connect handshake still sends
   /// the stored device profile.
   static bool get spoofSettings => !isIOS;
+
+  /// Plugins run downloaded JavaScript, which App Review does not allow
+  /// for code that changes app behavior. iOS neither loads plugins nor
+  /// offers their settings; built-in slash commands stay.
+  static bool get plugins => !isIOS;
 }
