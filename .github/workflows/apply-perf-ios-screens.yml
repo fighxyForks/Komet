@@ -4,7 +4,7 @@ on:
   push:
     branches: [perf/ios-flutter-baseline]
     paths:
-      - 'patches/perf-ios/**'
+      - 'patches/perf-ios-flutter-baseline/**'
       - '.github/workflows/apply-perf-ios-screens.yml'
   workflow_dispatch:
 
@@ -19,16 +19,22 @@ jobs:
         with:
           ref: perf/ios-flutter-baseline
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Apply patches and push
+      - name: Apply screen patches and push
         run: |
           set -euo pipefail
-          if ! git apply --check patches/perf-ios/chat_screen.patch patches/perf-ios/chat_list_screen.patch; then
-            echo "Patches already applied or do not match; skipping"
-            exit 0
-          fi
-          git apply patches/perf-ios/chat_screen.patch patches/perf-ios/chat_list_screen.patch
           git config user.name "Ivan K"
           git config user.email "57476075+fighxy@users.noreply.github.com"
-          git add lib/frontend/screens/chats/chat_screen.dart lib/frontend/screens/chats/chat_list_screen.dart
-          git commit -m "perf(ios): apply chat-list ticker/reload skip and shared local-history Future"
-          git push origin HEAD:perf/ios-flutter-baseline
+          if git apply --check patches/perf-ios-flutter-baseline/chat_screen.patch \
+             && git apply --check patches/perf-ios-flutter-baseline/chat_list_screen.patch; then
+            git apply patches/perf-ios-flutter-baseline/chat_screen.patch
+            git apply patches/perf-ios-flutter-baseline/chat_list_screen.patch
+            git add lib/frontend/screens/chats/chat_screen.dart \
+                    lib/frontend/screens/chats/chat_list_screen.dart
+            git commit -m "perf(ios): apply chat-list ticker/reload skip and shared local-history Future"
+            git push origin HEAD:perf/ios-flutter-baseline
+          else
+            echo "Patches already applied or context mismatch"
+            git apply --check patches/perf-ios-flutter-baseline/chat_screen.patch || true
+            git apply --check patches/perf-ios-flutter-baseline/chat_list_screen.patch || true
+            exit 0
+          fi
