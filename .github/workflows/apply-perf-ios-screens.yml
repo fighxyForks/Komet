@@ -1,0 +1,34 @@
+name: Apply perf iOS screen patches
+
+on:
+  push:
+    branches: [perf/ios-flutter-baseline]
+    paths:
+      - 'patches/perf-ios/**'
+      - '.github/workflows/apply-perf-ios-screens.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: perf/ios-flutter-baseline
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Apply patches and push
+        run: |
+          set -euo pipefail
+          if ! git apply --check patches/perf-ios/chat_screen.patch patches/perf-ios/chat_list_screen.patch; then
+            echo "Patches already applied or do not match; skipping"
+            exit 0
+          fi
+          git apply patches/perf-ios/chat_screen.patch patches/perf-ios/chat_list_screen.patch
+          git config user.name "Ivan K"
+          git config user.email "57476075+fighxy@users.noreply.github.com"
+          git add lib/frontend/screens/chats/chat_screen.dart lib/frontend/screens/chats/chat_list_screen.dart
+          git commit -m "perf(ios): apply chat-list ticker/reload skip and shared local-history Future"
+          git push origin HEAD:perf/ios-flutter-baseline
