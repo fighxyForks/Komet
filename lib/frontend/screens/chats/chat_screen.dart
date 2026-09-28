@@ -52,6 +52,7 @@ import '../../../core/crypto/e2ee_service.dart';
 import '../../../core/crypto/message_decryption_cache.dart';
 import '../../../core/storage/chat_encryption_store.dart';
 import '../../../core/crypto/encryption_policy.dart';
+import '../../../core/utils/channel_comments.dart';
 import '../../../core/storage/chat_wallpaper_store.dart';
 import '../../../core/storage/draft_store.dart';
 import '../../../core/storage/archived_chats_store.dart';
@@ -1928,9 +1929,14 @@ class _ChatScreenState extends State<ChatScreen>
     });
   }
 
+  bool get _channelShowsComments => showsCommentsButton(
+    isChannelPost: (chat?.type ?? widget.chatType) == 'CHANNEL',
+    chatOptions: chat?.options ?? const {},
+  );
+
   void _requestCommentCounts() {
     if (_commentsMode) return;
-    if ((chat?.type ?? widget.chatType) != 'CHANNEL') return;
+    if (!_channelShowsComments) return;
     final pending = <String>[];
     for (final m in _messages) {
       if (m.isControl) continue;
@@ -4704,6 +4710,10 @@ class _ChatScreenState extends State<ChatScreen>
                                   (chat?.type ?? widget.chatType) ==
                                       'CHANNEL' &&
                                   !message.isControl;
+                              final bool showsComments = showsCommentsButton(
+                                isChannelPost: isChannelPost,
+                                chatOptions: chat?.options ?? const {},
+                              );
                               final bool isCommentedPost =
                                   _commentsMode &&
                                   message.id == widget.commentPostId;
@@ -4753,10 +4763,10 @@ class _ChatScreenState extends State<ChatScreen>
                                 textSelection: _textSelection,
                                 textSelectionDrag: _textSelectionDrag,
                                 onExitTextSelection: _exitTextSelection,
-                                commentsLabel: isChannelPost
+                                commentsLabel: showsComments
                                     ? _commentsLabelFor(message.id)
                                     : null,
-                                onCommentsTap: isChannelPost
+                                onCommentsTap: showsComments
                                     ? () => _openComments(message)
                                     : null,
                               );
