@@ -17,4 +17,9 @@ abstract final class IosRelease {
   /// message, as context menus do in iOS; the radial style and its setting
   /// are not offered.
   static bool get messageActionsStyleChoice => !isIOS;
+
+  /// The device spoofing screen is not offered on iOS. Only the settings
+  /// and login entry points are hidden; the connect handshake still sends
+  /// the stored device profile.
+  static bool get spoofSettings => !isIOS;
 }
