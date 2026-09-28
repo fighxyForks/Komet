@@ -32,4 +32,30 @@ void main() {
     expect(_headers('https://cdn-1.vkuser.net/v.mp4', agent: null), isEmpty);
     expect(_headers('https://cdn-1.vkuser.net/v.mp4', agent: '  '), isEmpty);
   });
+
+  test('агент iOS-устройства не уходит в CDN целиком', () {
+    const iosAgent =
+        'OKMessages/26.31.0 (18.6; iPhone15,2; 420dpi 420dpi 1080x2340)';
+    expect(
+      _headers(
+        'https://maxvd665.okcdn.ru/?srcAg=UNKNOWN_ANDROID&expires=1',
+        agent: iosAgent,
+      ),
+      {'User-Agent': 'OKMessages/26.31.0 (Android)'},
+    );
+  });
+
+  test('агент с Android уходит без изменений', () {
+    const androidAgent =
+        'OKMessages/26.31.0 (Android 14; Samsung Galaxy S24 Ultra; '
+        'xxhdpi 450dpi 1440x3120)';
+    expect(cdnUserAgent(androidAgent), androidAgent);
+  });
+
+  test('агент без продукта заменяется на OKMessages', () {
+    expect(
+      cdnUserAgent('(iPhone; CPU OS 18_6 like Mac OS X)'),
+      'OKMessages (Android)',
+    );
+  });
 }
