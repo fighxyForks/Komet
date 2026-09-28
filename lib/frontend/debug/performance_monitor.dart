@@ -171,7 +171,9 @@ class PerformanceMonitor {
       final buildMs = t.buildDuration.inMicroseconds / 1000;
       final rasterMs = t.rasterDuration.inMicroseconds / 1000;
       final totalMs = t.totalSpan.inMicroseconds / 1000;
-      _samples.addLast(PerfSample(now, buildMs, rasterMs, totalMs, _currentContext));
+      _samples.addLast(
+        PerfSample(now, buildMs, rasterMs, totalMs, _currentContext),
+      );
       if (totalMs > jankThresholdMs) _jankCount++;
       if (totalMs > bigJankThresholdMs) _bigJankCount++;
     }
@@ -246,12 +248,16 @@ class PerformanceMonitor {
     buffer.writeln('buffer build: ${stats.build.summary}');
     buffer.writeln('buffer raster: ${stats.raster.summary}');
     buffer.writeln('buffer totalSpan: ${stats.total.summary}');
-    buffer.writeln('Threshold counts are timing samples, not measured display FPS.');
+    buffer.writeln(
+      'Threshold counts are timing samples, not measured display FPS.',
+    );
     final worst = worstContexts();
     if (worst.isNotEmpty) {
       buffer.writeln('worst contexts by jank-time:');
       for (final e in worst) {
-        buffer.writeln('  ${e.key}: ${e.value.toStringAsFixed(1)}ms over budget');
+        buffer.writeln(
+          '  ${e.key}: ${e.value.toStringAsFixed(1)}ms over budget',
+        );
       }
     }
     if (_marks.isNotEmpty) {

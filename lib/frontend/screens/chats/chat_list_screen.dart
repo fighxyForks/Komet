@@ -1066,8 +1066,10 @@ class _ChatListScreenState extends State<ChatListScreen>
           ? FoldersModule.hasReceivedFoldersList(p.id)
           : Future.value(_foldersListKnown ?? false);
       final contactIdsFuture = reloadMetadata
-          ? ContactsModule.getContacts(p.id, includeDeleted: true)
-              .then((contacts) => contacts.map((contact) => contact.id).toSet())
+          ? ContactsModule.getContacts(
+              p.id,
+              includeDeleted: true,
+            ).then((contacts) => contacts.map((contact) => contact.id).toSet())
           : Future.value(_contactIds);
       await ensureLoadedFuture;
       final loadedChats = chats.chatsSnapshot(
@@ -2584,8 +2586,10 @@ class _ChatListScreenState extends State<ChatListScreen>
                                   height: pageH,
                                   child: VisiblePageTickers(
                                     index: 0,
-                                    enabled: !kIsWeb &&
-                                        defaultTargetPlatform == TargetPlatform.iOS,
+                                    enabled:
+                                        !kIsWeb &&
+                                        defaultTargetPlatform ==
+                                            TargetPlatform.iOS,
                                     positionChanges: Listenable.merge([
                                       _navPageAnimController,
                                       _navDragDx,
@@ -2604,8 +2608,10 @@ class _ChatListScreenState extends State<ChatListScreen>
                                   height: pageH,
                                   child: VisiblePageTickers(
                                     index: 1,
-                                    enabled: !kIsWeb &&
-                                        defaultTargetPlatform == TargetPlatform.iOS,
+                                    enabled:
+                                        !kIsWeb &&
+                                        defaultTargetPlatform ==
+                                            TargetPlatform.iOS,
                                     positionChanges: Listenable.merge([
                                       _navPageAnimController,
                                       _navDragDx,
@@ -2624,8 +2630,10 @@ class _ChatListScreenState extends State<ChatListScreen>
                                   height: pageH,
                                   child: VisiblePageTickers(
                                     index: 2,
-                                    enabled: !kIsWeb &&
-                                        defaultTargetPlatform == TargetPlatform.iOS,
+                                    enabled:
+                                        !kIsWeb &&
+                                        defaultTargetPlatform ==
+                                            TargetPlatform.iOS,
                                     positionChanges: Listenable.merge([
                                       _navPageAnimController,
                                       _navDragDx,
@@ -2644,8 +2652,10 @@ class _ChatListScreenState extends State<ChatListScreen>
                                   height: pageH,
                                   child: VisiblePageTickers(
                                     index: 3,
-                                    enabled: !kIsWeb &&
-                                        defaultTargetPlatform == TargetPlatform.iOS,
+                                    enabled:
+                                        !kIsWeb &&
+                                        defaultTargetPlatform ==
+                                            TargetPlatform.iOS,
                                     positionChanges: Listenable.merge([
                                       _navPageAnimController,
                                       _navDragDx,
