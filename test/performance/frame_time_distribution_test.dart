@@ -3,7 +3,7 @@ import 'package:komet/frontend/debug/performance_monitor.dart';
 
 void main() {
   test('reports tail latency instead of hiding it in an average', () {
-    final values = List<double>.filled(98, 4)..addAll([40, 120]);
+    final values = List<double>.filled(98, 4).toList()..addAll([40, 120]);
     final stats = FrameTimeDistribution.fromValues(values.reversed);
     expect(stats.p50, 4);
     expect(stats.p95, 4);
