@@ -50,6 +50,7 @@ class ComposerArea extends StatelessWidget {
   final int chatId;
   final String peerName;
   final VoidCallback onOpenEncryption;
+  final bool encryptionAllowed;
   final ChatChromeStyle chrome;
   final bool chromeVignette;
   final BackdropKey? pillBackdrop;
@@ -124,6 +125,7 @@ class ComposerArea extends StatelessWidget {
     required this.chatId,
     required this.peerName,
     required this.onOpenEncryption,
+    this.encryptionAllowed = true,
     required this.chrome,
     required this.chromeVignette,
     required this.pillBackdrop,
@@ -173,7 +175,7 @@ class ComposerArea extends StatelessWidget {
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (chatType == 'DIALOG' && myId != 0)
+        if (chatType == 'DIALOG' && myId != 0 && encryptionAllowed)
           E2eeBanner(
             accountId: myId,
             chatId: chatId,
