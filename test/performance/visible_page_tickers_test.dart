@@ -27,7 +27,7 @@ void main() {
       ),
     );
     List<bool> active() => [
-      for (final key in keys) TickerMode.of(key.currentContext!),
+      for (final key in keys) TickerMode.valuesOf(key.currentContext!).enabled,
     ];
     final original = keys[0].currentContext;
     expect(active(), [true, false, false]);
@@ -58,6 +58,6 @@ void main() {
         child: SizedBox(key: key),
       ),
     );
-    expect(TickerMode.of(key.currentContext!), isTrue);
+    expect(TickerMode.valuesOf(key.currentContext!).enabled, isTrue);
   });
 }
