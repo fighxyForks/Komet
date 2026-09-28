@@ -965,7 +965,22 @@ class _ChatScreenState extends State<ChatScreen>
     _routeSettle.run(_kickoffHistory);
   }
 
-  List<CachedMessage>? _fastLocalDecoded;
+  Future<List<CachedMessage>>? _localHistoryLoad;
+
+  Future<List<CachedMessage>> _readLocalHistory() =>
+      _localHistoryLoad ??= _loadLocalHistoryOnce();
+
+  Future<List<CachedMessage>> _loadLocalHistoryOnce() async {
+    try {
+      return await _chatController.loadLocalHistory(
+        onApplyMerged: _applyMergedMessages,
+      );
+    } catch (_) {
+      _localHistoryLoad = null;
+      rethrow;
+    }
+  }
+
   bool _fastLocalStarted = false;
 
   // #***! читаем сообщения из локальной БД сразу, не дожидаясь конца
@@ -979,9 +994,11 @@ class _ChatScreenState extends State<ChatScreen>
       _myId = activeProfile?.id ?? 0;
     }
     if (!mounted) return;
-    _fastLocalDecoded = await _chatController.loadLocalHistory(
-      onApplyMerged: _applyMergedMessages,
-    );
+    try {
+      await _readLocalHistory();
+    } catch (error) {
+      logger.w('Local history preload failed: $error');
+    }
   }
 
   void _kickoffHistory() {
@@ -1615,11 +1632,7 @@ class _ChatScreenState extends State<ChatScreen>
       unawaited(_loadOtherPresence());
     }
     unawaited(_refreshScheduledCount());
-    final localDecoded =
-        _fastLocalDecoded ??
-        await _chatController.loadLocalHistory(
-          onApplyMerged: _applyMergedMessages,
-        );
+    final localDecoded = await _readLocalHistory();
     if (!mounted) return;
     await _chatController.loadRemainingHistory(
       localDecoded: localDecoded,
