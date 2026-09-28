@@ -13,6 +13,7 @@ import '../../../../core/utils/format.dart';
 import '../../../../core/utils/logger.dart';
 import '../../custom_notification.dart';
 import '../../small_spinner.dart';
+import '../../text_with_meta.dart';
 
 class VoiceMessageBubble extends StatefulWidget {
   final int duration;
@@ -72,6 +73,9 @@ const double _kIosWaveHitHeight = 28;
 const double _kIosWaveBarWidth = 2.5;
 const double _kIosWaveBarGap = 1.75;
 const double _kIosTimeSize = 11;
+// #***! кнопка расшифровки: одна капсула акцентного цвета
+const double _kIosTranscribeWidth = 40;
+const double _kIosTranscribeHeight = 28;
 const List<FontFeature> _kTabularDigits = [FontFeature.tabularFigures()];
 
 class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
@@ -481,6 +485,84 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
     );
   }
 
+  // #***! свёрнуто «→Т», развёрнуто шеврон вверх, смена плавная
+  Widget _buildIosTranscribeChip() {
+    final accent = _accent;
+    final Widget glyph;
+    if (_transcriptionLoading) {
+      glyph = SmallSpinner(
+        key: const ValueKey('voice-transcribe-loading'),
+        size: 14,
+        color: accent,
+      );
+    } else if (_transcriptionVisible) {
+      glyph = Icon(
+        Symbols.keyboard_arrow_up,
+        key: const ValueKey('voice-transcribe-expanded'),
+        size: 22,
+        color: accent,
+      );
+    } else {
+      glyph = Text(
+        '→Т',
+        key: const ValueKey('voice-transcribe-collapsed'),
+        style: TextStyle(
+          color: accent,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          height: 1,
+        ),
+      );
+    }
+    return Semantics(
+      button: true,
+      label: _transcriptionVisible ? 'Скрыть расшифровку' : 'Расшифровать',
+      child: GestureDetector(
+        key: const ValueKey('voice-transcribe'),
+        behavior: HitTestBehavior.opaque,
+        onTap: _requestTranscription,
+        child: Container(
+          width: _kIosTranscribeWidth,
+          height: _kIosTranscribeHeight,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: accent.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(_kIosTranscribeHeight / 2),
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween(begin: 0.8, end: 1.0).animate(animation),
+                child: child,
+              ),
+            ),
+            child: glyph,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // #***! текст расшифровки во всю ширину, время в конце последней строки
+  Widget _buildIosTranscriptionBody() {
+    final text = Text(
+      _transcriptionText ?? '',
+      style: TextStyle(color: widget.textColor, fontSize: 16, height: 1.3),
+    );
+    if (!widget.showMeta) return text;
+    return TextWithMeta(
+      text: text,
+      meta: Padding(
+        padding: const EdgeInsets.only(bottom: 1),
+        child: _buildIosMetaRow(),
+      ),
+    );
+  }
+
   // #***! iOS: кнопка слева, под волной длительность, время справа внизу
   Widget _buildIos(BuildContext context) {
     return SizedBox(
@@ -515,7 +597,7 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
               ),
               if (widget.audioId != null) ...[
                 const SizedBox(width: 8),
-                _buildTranscribeButton(),
+                _buildIosTranscribeChip(),
               ],
             ],
           ),
@@ -526,11 +608,11 @@ class _VoiceMessageBubbleState extends State<VoiceMessageBubble> {
             child: _transcriptionVisible
                 ? Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: _buildTranscriptionBox(),
+                    child: _buildIosTranscriptionBody(),
                   )
                 : const SizedBox.shrink(),
           ),
-          if (widget.showMeta)
+          if (!_transcriptionVisible && widget.showMeta)
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Align(

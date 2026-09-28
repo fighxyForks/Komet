@@ -71,4 +71,60 @@ void main() {
     expect(find.byKey(const ValueKey('voice-play')), findsNothing);
     expect(find.text(_clock), findsOneWidget);
   }, variant: _android);
+
+  testWidgets('iOS: the collapsed transcription pill shows «→Т»', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_bubble(audioId: 7));
+    expect(find.text('→Т'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('voice-transcribe-expanded')),
+      findsNothing,
+    );
+    final pill = find.byKey(const ValueKey('voice-transcribe'));
+    expect(tester.getSize(pill).height, 28);
+    final box = tester.widget<Container>(
+      find.descendant(of: pill, matching: find.byType(Container)).first,
+    );
+    final decoration = box.decoration! as BoxDecoration;
+    expect(decoration.borderRadius, BorderRadius.circular(14));
+  }, variant: _ios);
+
+  testWidgets('iOS: expanding shows a chevron and the full-width text', (
+    tester,
+  ) async {
+    TranscriptionCache.put(
+      '1',
+      TranscriptionResult(status: 1, text: 'синтетическая расшифровка'),
+    );
+    await tester.pumpWidget(_bubble(audioId: 7));
+    await tester.tap(find.byKey(const ValueKey('voice-transcribe')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('voice-transcribe-expanded')),
+      findsOneWidget,
+    );
+    expect(find.text('→Т'), findsNothing);
+    expect(find.text('синтетическая расшифровка'), findsOneWidget);
+    expect(find.text(_clock), findsOneWidget);
+    expect(find.byType(SingleChildScrollView), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('voice-transcribe')));
+    await tester.pumpAndSettle();
+    expect(find.text('→Т'), findsOneWidget);
+    expect(find.text('синтетическая расшифровка'), findsNothing);
+  }, variant: _ios);
+
+  testWidgets('iOS: no transcription pill without an audio id', (tester) async {
+    await tester.pumpWidget(_bubble(audioId: null));
+    expect(find.byKey(const ValueKey('voice-transcribe')), findsNothing);
+  }, variant: _ios);
+
+  testWidgets('Android keeps the plain «Т» transcription button', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_bubble(audioId: 7));
+    expect(find.text('→Т'), findsNothing);
+    expect(find.text('Т'), findsOneWidget);
+  }, variant: _android);
 }
