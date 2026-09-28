@@ -34,6 +34,8 @@ import '../../widgets/chat_row_press.dart';
 import '../../widgets/informer_banner_tile.dart';
 import '../../../backend/modules/share_sender.dart';
 import '../../../core/utils/logger.dart';
+import '../../../core/utils/chat_list_time.dart';
+import '../../../core/config/ios_release.dart';
 import '../../../core/utils/format.dart';
 import '../../../models/shared_payload.dart';
 import '../../widgets/rich_message_controller.dart';
@@ -307,6 +309,9 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   List<CachedChat> _chats = [];
   List<CachedChat> _chatsWithArchived = [];
+  Timer? _dayRolloverTimer;
+  DateTime? _labelsDay;
+  late final AppLifecycleListener _lifecycle;
   Set<int> _archivedIds = const {};
   int _archivedCount = 0;
   bool _archiveHadChats = false;
@@ -803,6 +808,8 @@ class _ChatListScreenState extends State<ChatListScreen>
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
+    if (IosRelease.isIOS) _scheduleDayRollover();
+    _lifecycle = AppLifecycleListener(onResume: _onResumed);
     _navPageAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -1489,7 +1496,45 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   String _formatTime(int? timestamp) {
     if (timestamp == null || timestamp == 0) return '';
-    return formatClock(DateTime.fromMillisecondsSinceEpoch(timestamp));
+    if (!IosRelease.isIOS) {
+      return formatClock(DateTime.fromMillisecondsSinceEpoch(timestamp));
+    }
+    final l10n = AppLocalizations.of(context)!;
+    return formatChatListTime(
+      DateTime.fromMillisecondsSinceEpoch(timestamp),
+      now: DateTime.now(),
+      labels: ChatListTimeLabels(
+        locale: Localizations.localeOf(context).toString(),
+        yesterday: l10n.chatListYesterday,
+        datePattern: l10n.chatListDatePattern,
+      ),
+    );
+  }
+
+  void _scheduleDayRollover() {
+    _dayRolloverTimer?.cancel();
+    final now = DateTime.now();
+    _labelsDay = DateTime(now.year, now.month, now.day);
+    _dayRolloverTimer = Timer(
+      untilNextMidnight(now) + const Duration(seconds: 1),
+      _onDayRollover,
+    );
+  }
+
+  void _onDayRollover() {
+    if (!mounted) return;
+    _scheduleDayRollover();
+    setState(() {});
+  }
+
+  void _onResumed() {
+    if (!IosRelease.isIOS) return;
+    final now = DateTime.now();
+    if (DateTime(now.year, now.month, now.day) != _labelsDay) {
+      _onDayRollover();
+    } else {
+      _scheduleDayRollover();
+    }
   }
 
   void _onStoriesRevealTick() {
@@ -1619,6 +1664,8 @@ class _ChatListScreenState extends State<ChatListScreen>
   @override
   void dispose() {
     if (ChatListScreen._root == this) ChatListScreen._root = null;
+    _dayRolloverTimer?.cancel();
+    _lifecycle.dispose();
     _shareCaption?.dispose();
     appRouteObserver.unsubscribe(this);
     _settleTimer?.cancel();
