@@ -30,10 +30,13 @@ import '../../widgets/glossy_pill.dart';
 import '../../widgets/sheet_helpers.dart';
 import '../../widgets/swipe_route.dart';
 import '../../widgets/sliding_pill_nav.dart';
-import '../../widgets/springy_tap.dart';
+import '../../widgets/chat_row_press.dart';
 import '../../widgets/informer_banner_tile.dart';
 import '../../../backend/modules/share_sender.dart';
 import '../../../core/utils/logger.dart';
+import '../../../core/utils/chat_list_time.dart';
+import '../../../core/config/ios_release.dart';
+import '../../../core/config/ios_typography.dart';
 import '../../../core/utils/format.dart';
 import '../../../models/shared_payload.dart';
 import '../../widgets/rich_message_controller.dart';
@@ -82,6 +85,7 @@ import '../../../core/storage/draft_store.dart';
 import '../../../core/storage/archived_chats_store.dart';
 import '../../../core/crypto/e2ee_service.dart';
 import '../../../core/storage/chat_encryption_store.dart';
+import '../../../core/crypto/encryption_policy.dart';
 import '../../../core/storage/token_storage.dart';
 import '../../../core/storage/chat_activity_store.dart';
 import '../../../main.dart'
@@ -307,6 +311,9 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   List<CachedChat> _chats = [];
   List<CachedChat> _chatsWithArchived = [];
+  Timer? _dayRolloverTimer;
+  DateTime? _labelsDay;
+  late final AppLifecycleListener _lifecycle;
   Set<int> _archivedIds = const {};
   int _archivedCount = 0;
   bool _archiveHadChats = false;
@@ -803,6 +810,8 @@ class _ChatListScreenState extends State<ChatListScreen>
       vsync: this,
       duration: const Duration(milliseconds: 350),
     );
+    if (IosRelease.isIOS) _scheduleDayRollover();
+    _lifecycle = AppLifecycleListener(onResume: _onResumed);
     _navPageAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 350),
@@ -1489,7 +1498,45 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   String _formatTime(int? timestamp) {
     if (timestamp == null || timestamp == 0) return '';
-    return formatClock(DateTime.fromMillisecondsSinceEpoch(timestamp));
+    if (!IosRelease.isIOS) {
+      return formatClock(DateTime.fromMillisecondsSinceEpoch(timestamp));
+    }
+    final l10n = AppLocalizations.of(context)!;
+    return formatChatListTime(
+      DateTime.fromMillisecondsSinceEpoch(timestamp),
+      now: DateTime.now(),
+      labels: ChatListTimeLabels(
+        locale: Localizations.localeOf(context).toString(),
+        yesterday: l10n.chatListYesterday,
+        datePattern: l10n.chatListDatePattern,
+      ),
+    );
+  }
+
+  void _scheduleDayRollover() {
+    _dayRolloverTimer?.cancel();
+    final now = DateTime.now();
+    _labelsDay = DateTime(now.year, now.month, now.day);
+    _dayRolloverTimer = Timer(
+      untilNextMidnight(now) + const Duration(seconds: 1),
+      _onDayRollover,
+    );
+  }
+
+  void _onDayRollover() {
+    if (!mounted) return;
+    _scheduleDayRollover();
+    setState(() {});
+  }
+
+  void _onResumed() {
+    if (!IosRelease.isIOS) return;
+    final now = DateTime.now();
+    if (DateTime(now.year, now.month, now.day) != _labelsDay) {
+      _onDayRollover();
+    } else {
+      _scheduleDayRollover();
+    }
   }
 
   void _onStoriesRevealTick() {
@@ -1619,6 +1666,8 @@ class _ChatListScreenState extends State<ChatListScreen>
   @override
   void dispose() {
     if (ChatListScreen._root == this) ChatListScreen._root = null;
+    _dayRolloverTimer?.cancel();
+    _lifecycle.dispose();
     _shareCaption?.dispose();
     appRouteObserver.unsubscribe(this);
     _settleTimer?.cancel();
@@ -3183,7 +3232,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                   style: TextStyle(
                     color: isSelected ? cs.onPrimaryContainer : cs.primary,
                     fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: IosTypography.title(FontWeight.w500),
                   ),
                 ),
               ),
@@ -3276,10 +3325,10 @@ class _ChatListScreenState extends State<ChatListScreen>
               style: TextStyle(color: cs.outline),
             ),
           ],
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            fontStyle: FontStyle.italic,
+            fontStyle: IosTypography.upright(FontStyle.italic),
             height: 1.2,
           ),
         ),
@@ -3439,11 +3488,15 @@ class _ChatListScreenState extends State<ChatListScreen>
       int.tryParse(id) ?? 0,
     );
     final isEncrypted =
-        ChatEncryptionStore.instance.isEnabled(
-          _profile?.id ?? 0,
-          int.tryParse(id) ?? 0,
-        ) ||
-        E2eeService.instance.isOn(_profile?.id ?? 0, int.tryParse(id) ?? 0);
+        chatAllowsEncryption(chatType: chatType) &&
+        (ChatEncryptionStore.instance.isEnabled(
+              _profile?.id ?? 0,
+              int.tryParse(id) ?? 0,
+            ) ||
+            E2eeService.instance.isOn(
+              _profile?.id ?? 0,
+              int.tryParse(id) ?? 0,
+            ));
     final isVerified =
         e2eeInfo?.phase == E2eePhase.established && e2eeInfo!.verified;
     final Widget? statusIcon = (ownStatus != null && draft == null)
@@ -3566,228 +3619,223 @@ class _ChatListScreenState extends State<ChatListScreen>
               ),
             ),
           );
-    return SpringyTap(
+    return ChatRowPress(
       key: ValueKey('chat_$id'),
-      child: InkWell(
-        onTap: () {
-          if (widget.forwardMode) {
-            Navigator.of(context).pop(
-              ForwardTarget(
-                chatId: int.parse(id),
-                name: name,
-                imageUrl: imageUrl,
-                chatType: chatType,
+      onTap: () {
+        if (widget.forwardMode) {
+          Navigator.of(context).pop(
+            ForwardTarget(
+              chatId: int.parse(id),
+              name: name,
+              imageUrl: imageUrl,
+              chatType: chatType,
+            ),
+          );
+          return;
+        }
+        if (_shareMode) {
+          _toggleShareTarget(id, name);
+          return;
+        }
+        if (_isSelectionMode) {
+          _toggleSelection(id);
+          return;
+        }
+        _openChatFromList(id, name, imageUrl, chatType);
+      },
+      onLongPress: (widget.forwardMode || _shareMode)
+          ? null
+          : () => _toggleSelection(id),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        color: isSelected
+            ? cs.primary.withValues(alpha: 0.08)
+            : Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onLongPress: _canPreviewChats
+                    ? () => _previewChat(id, name, imageUrl, chatType)
+                    : null,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    avatarCircle,
+                    if (isEncrypted)
+                      Positioned(
+                        left: -2,
+                        bottom: -2,
+                        child: EncryptionLockBadge(
+                          size: 18,
+                          verified: isVerified,
+                        ),
+                      ),
+                    if (isSelected)
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: cs.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cs.surface, width: 2),
+                          ),
+                          child: Icon(
+                            Symbols.check,
+                            color: cs.onPrimary,
+                            size: 14,
+                          ),
+                        ),
+                      )
+                    else if (hasCall)
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: ChatCallBadge(borderColor: cs.surface),
+                      )
+                    else if (presenceUserId != 0)
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: OnlineDot(
+                          userId: presenceUserId,
+                          borderColor: cs.surface,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            );
-            return;
-          }
-          if (_shareMode) {
-            _toggleShareTarget(id, name);
-            return;
-          }
-          if (_isSelectionMode) {
-            _toggleSelection(id);
-            return;
-          }
-          _openChatFromList(id, name, imageUrl, chatType);
-        },
-        onLongPress: (widget.forwardMode || _shareMode)
-            ? null
-            : () => _toggleSelection(id),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          color: isSelected
-              ? cs.primary.withValues(alpha: 0.08)
-              : Colors.transparent,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onLongPress: _canPreviewChats
-                      ? () => _previewChat(id, name, imageUrl, chatType)
-                      : null,
-                  child: Stack(
-                    clipBehavior: Clip.none,
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      avatarCircle,
-                      if (isEncrypted)
-                        Positioned(
-                          left: -2,
-                          bottom: -2,
-                          child: EncryptionLockBadge(
-                            size: 18,
-                            verified: isVerified,
-                          ),
-                        ),
-                      if (isSelected)
-                        Positioned(
-                          right: -2,
-                          bottom: -2,
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: cs.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: cs.surface, width: 2),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (titleIcon != null) ...[
+                                    Icon(
+                                      titleIcon,
+                                      color: cs.outline,
+                                      size: 15,
+                                      weight: 500,
+                                      fill: 1,
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ],
+                                  Flexible(
+                                    child: Text(
+                                      name,
+                                      style: TextStyle(
+                                        color: cs.onSurface,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.1,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (isVerified) ...[
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Symbols.verified,
+                                      color: cs.primary,
+                                      size: 16,
+                                      weight: 600,
+                                      fill: 1,
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ),
-                            child: Icon(
-                              Symbols.check,
-                              color: cs.onPrimary,
-                              size: 14,
+                            if (isMuted) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                Symbols.notifications_off,
+                                color: cs.outlineVariant,
+                                size: 14,
+                                weight: 400,
+                              ),
+                            ],
+                            if (isPinned) ...[
+                              const SizedBox(width: 4),
+                              Icon(
+                                Symbols.keep,
+                                color: cs.outlineVariant,
+                                size: 14,
+                                weight: 400,
+                              ),
+                            ],
+                            const SizedBox(width: 8),
+                            Text(
+                              time,
+                              style: TextStyle(color: cs.outline, fontSize: 12),
                             ),
-                          ),
-                        )
-                      else if (hasCall)
-                        Positioned(
-                          right: -2,
-                          bottom: -2,
-                          child: ChatCallBadge(borderColor: cs.surface),
-                        )
-                      else if (presenceUserId != 0)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: OnlineDot(
-                            userId: presenceUserId,
-                            borderColor: cs.surface,
-                          ),
+                          ],
                         ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: ActivitySubtitle(
+                                chatId: int.tryParse(id) ?? 0,
+                                group: chatType != 'DIALOG',
+                                child: messageLine,
+                              ),
+                            ),
+                            ?statusIcon,
+                            const SizedBox(width: 8),
+                            if (hasMention) ...[
+                              _countBadge(cs, '@', muted: isMuted),
+                              const SizedBox(width: 4),
+                            ],
+                            if (unreadCount > 0)
+                              _countBadge(
+                                cs,
+                                unreadCount.toString(),
+                                muted: isMuted,
+                              )
+                            else if (isRead)
+                              Icon(
+                                Symbols.done_all,
+                                color: cs.primary,
+                                size: 16,
+                                weight: 400,
+                              ),
+                            if (hasMiniApp) ...[
+                              const SizedBox(width: 8),
+                              _miniAppButton(
+                                cs,
+                                botId: presenceUserId,
+                                chatId: int.tryParse(id) ?? 0,
+                                name: name,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 5),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (titleIcon != null) ...[
-                                      Icon(
-                                        titleIcon,
-                                        color: cs.outline,
-                                        size: 15,
-                                        weight: 500,
-                                        fill: 1,
-                                      ),
-                                      const SizedBox(width: 4),
-                                    ],
-                                    Flexible(
-                                      child: Text(
-                                        name,
-                                        style: TextStyle(
-                                          color: cs.onSurface,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.1,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (isVerified) ...[
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Symbols.verified,
-                                        color: cs.primary,
-                                        size: 16,
-                                        weight: 600,
-                                        fill: 1,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              if (isMuted) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Symbols.notifications_off,
-                                  color: cs.outlineVariant,
-                                  size: 14,
-                                  weight: 400,
-                                ),
-                              ],
-                              if (isPinned) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Symbols.keep,
-                                  color: cs.outlineVariant,
-                                  size: 14,
-                                  weight: 400,
-                                ),
-                              ],
-                              const SizedBox(width: 8),
-                              Text(
-                                time,
-                                style: TextStyle(
-                                  color: cs.outline,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: ActivitySubtitle(
-                                  chatId: int.tryParse(id) ?? 0,
-                                  group: chatType != 'DIALOG',
-                                  child: messageLine,
-                                ),
-                              ),
-                              ?statusIcon,
-                              const SizedBox(width: 8),
-                              if (hasMention) ...[
-                                _countBadge(cs, '@', muted: isMuted),
-                                const SizedBox(width: 4),
-                              ],
-                              if (unreadCount > 0)
-                                _countBadge(
-                                  cs,
-                                  unreadCount.toString(),
-                                  muted: isMuted,
-                                )
-                              else if (isRead)
-                                Icon(
-                                  Symbols.done_all,
-                                  color: cs.primary,
-                                  size: 16,
-                                  weight: 400,
-                                ),
-                              if (hasMiniApp) ...[
-                                const SizedBox(width: 8),
-                                _miniAppButton(
-                                  cs,
-                                  botId: presenceUserId,
-                                  chatId: int.tryParse(id) ?? 0,
-                                  name: name,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -3967,7 +4015,7 @@ class _ChatListScreenState extends State<ChatListScreen>
               style: TextStyle(
                 color: cs.onSurface,
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: IosTypography.body(FontWeight.w500),
               ),
             ),
           ],
@@ -4111,7 +4159,7 @@ class _ChatListScreenState extends State<ChatListScreen>
             style: TextStyle(
               color: cs.onSurface,
               fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontWeight: IosTypography.body(FontWeight.w500),
             ),
           ),
         ],
