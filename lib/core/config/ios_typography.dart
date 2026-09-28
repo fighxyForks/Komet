@@ -10,6 +10,12 @@ abstract final class IosTypography {
   static const FontWeight emphasis = FontWeight.w600;
   static const FontWeight strong = FontWeight.w700;
 
+  /// Count inside an iOS reaction capsule.
+  static const double reactionCount = 15;
+
+  /// Digits of equal width, so counts do not jitter as they change.
+  static const List<FontFeature> tabularDigits = [FontFeature.tabularFigures()];
+
   /// Body text, previews, meta and menu rows.
   static FontWeight body(FontWeight other) =>
       IosRelease.isIOS ? regular : other;

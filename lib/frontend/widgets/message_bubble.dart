@@ -279,22 +279,28 @@ class _RenderStackMatchTopWidth extends RenderBox
 }
 
 class _ReactionsFlow extends MultiChildRenderObjectWidget {
-  _ReactionsFlow({required List<Widget> chips, Widget? meta})
-    : hasMeta = meta != null,
-      super(children: [...chips, ?meta]);
+  _ReactionsFlow({
+    required List<Widget> chips,
+    Widget? meta,
+    this.gap = MessageBubble._reactionGap,
+  }) : hasMeta = meta != null,
+       super(children: [...chips, ?meta]);
 
   final bool hasMeta;
+  final double gap;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderReactionsFlow(hasMeta);
+      _RenderReactionsFlow(hasMeta, gap);
 
   @override
   void updateRenderObject(
     BuildContext context,
     _RenderReactionsFlow renderObject,
   ) {
-    renderObject.hasMeta = hasMeta;
+    renderObject
+      ..hasMeta = hasMeta
+      ..gap = gap;
   }
 }
 
@@ -304,11 +310,19 @@ class _RenderReactionsFlow extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _ReactionsFlowParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _ReactionsFlowParentData> {
-  _RenderReactionsFlow(this._hasMeta);
+  _RenderReactionsFlow(this._hasMeta, this._gap);
 
-  static const double _spacing = 4;
-  static const double _runSpacing = 4;
   static const double _metaGap = 8;
+
+  double _gap;
+  set gap(double value) {
+    if (value == _gap) return;
+    _gap = value;
+    markNeedsLayout();
+  }
+
+  double get _spacing => _gap;
+  double get _runSpacing => _gap;
 
   bool _hasMeta;
   set hasMeta(bool value) {
@@ -474,6 +488,8 @@ class _ReactionAnimojiGlyph extends StatefulWidget {
   final String emoji;
   final Animoji animoji;
   final ValueListenable<ReactionAnimationEvent?>? animation;
+  final double size;
+  final double textSize;
 
   const _ReactionAnimojiGlyph({
     super.key,
@@ -481,6 +497,8 @@ class _ReactionAnimojiGlyph extends StatefulWidget {
     required this.emoji,
     required this.animoji,
     this.animation,
+    this.size = MessageBubble._reactionEmojiSize,
+    this.textSize = MessageBubble._reactionEmojiTextSize,
   });
 
   @override
@@ -488,8 +506,8 @@ class _ReactionAnimojiGlyph extends StatefulWidget {
 }
 
 class _ReactionAnimojiGlyphState extends State<_ReactionAnimojiGlyph> {
-  static const double _size = 18;
-  static const double _effectSize = _size * 2;
+  double get _size => widget.size;
+  double get _effectSize => _size * 2;
 
   int? _playingToken;
   bool _bodyPlaying = false;
@@ -592,7 +610,7 @@ class _ReactionAnimojiGlyphState extends State<_ReactionAnimojiGlyph> {
         repeat: false,
       );
     } else {
-      body = Text(widget.emoji, style: const TextStyle(fontSize: 13));
+      body = Text(widget.emoji, style: TextStyle(fontSize: widget.textSize));
     }
 
     return SizedBox(
@@ -631,6 +649,22 @@ class MessageBubble extends StatelessWidget {
   static const BorderRadius _reactionChipRadius = BorderRadius.all(
     Radius.circular(10),
   );
+  static const double _reactionGap = 4;
+  static const double _reactionEmojiSize = 18;
+  static const double _reactionEmojiTextSize = 13;
+  static const double _reactionAvatarSize = 17;
+
+  // #***! iOS: капсулы 30pt, эмодзи 22pt, счётчик 15pt, шаг 6pt
+  static const double _iosReactionGap = 6;
+  static const double _iosReactionChipHeight = 30;
+  static const double _iosReactionEmojiSize = 22;
+  static const double _iosReactionAvatarSize = 20;
+  static const BorderRadius _iosReactionChipRadius = BorderRadius.all(
+    Radius.circular(_iosReactionChipHeight / 2),
+  );
+
+  static double get _reactionFlowGap =>
+      IosRelease.isIOS ? _iosReactionGap : _reactionGap;
 
   static Color bubbleTextColor(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
@@ -1635,6 +1669,7 @@ class MessageBubble extends StatelessWidget {
       child: _ReactionsFlow(
         chips: chips,
         meta: carriesMeta ? ctx.footerMeta() : null,
+        gap: _reactionFlowGap,
       ),
     );
 
@@ -1766,7 +1801,11 @@ class MessageBubble extends StatelessWidget {
     if (chips.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: inset,
-      child: Wrap(spacing: 4, runSpacing: 4, children: chips),
+      child: Wrap(
+        spacing: _reactionFlowGap,
+        runSpacing: _reactionFlowGap,
+        children: chips,
+      ),
     );
   }
 
@@ -1774,6 +1813,7 @@ class MessageBubble extends StatelessWidget {
     if (info == null) return const [];
     final yourReaction = info.yourReaction;
     final isDialog = chatType == 'DIALOG';
+    final ios = IosRelease.isIOS;
 
     final chips = <Widget>[];
     for (final c in info.counters) {
@@ -1791,40 +1831,44 @@ class MessageBubble extends StatelessWidget {
               );
       }
 
-      Widget chip = Container(
-        padding: EdgeInsets.fromLTRB(7, 2, avatar != null ? 3 : 7, 2),
-        decoration: BoxDecoration(
-          color: isYours ? cs.primary.withValues(alpha: 0.22) : _reactionChipBg,
-          borderRadius: _reactionChipRadius,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_resolveReactionAnimoji(c.reaction) case final animoji?)
-              _ReactionAnimojiGlyph(
-                key: ValueKey((message.id, c.reaction)),
-                messageId: message.id,
-                emoji: c.reaction,
-                animoji: animoji,
-                animation: reactionAnimation,
-              )
-            else
-              Text(c.reaction, style: const TextStyle(fontSize: 13)),
-            if (c.count > 1) ...[
-              const SizedBox(width: 3),
-              Text(
-                c.count.toString(),
-                style: TextStyle(
-                  color: isYours ? cs.primary : cs.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+      Widget chip = ios
+          ? _iosReactionChip(cs, c, isYours: isYours, avatar: avatar)
+          : Container(
+              padding: EdgeInsets.fromLTRB(7, 2, avatar != null ? 3 : 7, 2),
+              decoration: BoxDecoration(
+                color: isYours
+                    ? cs.primary.withValues(alpha: 0.22)
+                    : _reactionChipBg,
+                borderRadius: _reactionChipRadius,
               ),
-            ],
-            if (avatar != null) ...[const SizedBox(width: 5), avatar],
-          ],
-        ),
-      );
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_resolveReactionAnimoji(c.reaction) case final animoji?)
+                    _ReactionAnimojiGlyph(
+                      key: ValueKey((message.id, c.reaction)),
+                      messageId: message.id,
+                      emoji: c.reaction,
+                      animoji: animoji,
+                      animation: reactionAnimation,
+                    )
+                  else
+                    Text(c.reaction, style: const TextStyle(fontSize: 13)),
+                  if (c.count > 1) ...[
+                    const SizedBox(width: 3),
+                    Text(
+                      c.count.toString(),
+                      style: TextStyle(
+                        color: isYours ? cs.primary : cs.onSurfaceVariant,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                  if (avatar != null) ...[const SizedBox(width: 5), avatar],
+                ],
+              ),
+            );
 
       final onTap = onReactionTap;
       if (onTap != null) {
@@ -1840,11 +1884,74 @@ class MessageBubble extends StatelessWidget {
     return chips;
   }
 
+  // #***! iOS-капсула: своя реакция залита accent, чужие полупрозрачные
+  Widget _iosReactionChip(
+    ColorScheme cs,
+    ReactionCounter c, {
+    required bool isYours,
+    Widget? avatar,
+  }) {
+    final darkSurface =
+        ThemeData.estimateBrightnessForColor(cs.surface) == Brightness.dark;
+    final fill = isYours
+        ? cs.primary
+        : darkSurface
+        ? Colors.white.withValues(alpha: 0.10)
+        : cs.primary.withValues(alpha: 0.12);
+    return Container(
+      key: ValueKey('reaction-chip-${c.reaction}'),
+      height: _iosReactionChipHeight,
+      padding: EdgeInsets.fromLTRB(8, 0, avatar != null ? 4 : 10, 0),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: _iosReactionChipRadius,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_resolveReactionAnimoji(c.reaction) case final animoji?)
+            _ReactionAnimojiGlyph(
+              key: ValueKey((message.id, c.reaction)),
+              messageId: message.id,
+              emoji: c.reaction,
+              animoji: animoji,
+              animation: reactionAnimation,
+              size: _iosReactionEmojiSize,
+              textSize: _iosReactionEmojiSize * 0.72,
+            )
+          else
+            Text(
+              c.reaction,
+              style: const TextStyle(
+                fontSize: _iosReactionEmojiSize,
+                height: 1,
+              ),
+            ),
+          if (c.count > 1) ...[
+            const SizedBox(width: 4),
+            Text(
+              c.count.toString(),
+              style: TextStyle(
+                color: isYours ? cs.onPrimary : cs.onSurfaceVariant,
+                fontSize: IosTypography.reactionCount,
+                fontWeight: IosTypography.regular,
+                fontFeatures: IosTypography.tabularDigits,
+                height: 1,
+              ),
+            ),
+          ],
+          if (avatar != null) ...[const SizedBox(width: 4), avatar],
+        ],
+      ),
+    );
+  }
+
   Animoji? _resolveReactionAnimoji(String emoji) =>
       reactionAnimojiResolver?.call(emoji) ?? animojiModule.findByEmoji(emoji);
 
   Widget _reactionAvatar(ColorScheme cs, String? url, String? name) {
-    const double diameter = 17;
+    final ios = IosRelease.isIOS;
+    final double diameter = ios ? _iosReactionAvatarSize : _reactionAvatarSize;
     if (url != null && url.isNotEmpty) {
       return CircleAvatar(
         radius: diameter / 2,
@@ -1864,7 +1971,11 @@ class MessageBubble extends StatelessWidget {
       backgroundColor: cs.primaryContainer,
       child: Text(
         letter,
-        style: TextStyle(fontSize: 9, color: cs.onPrimaryContainer),
+        style: TextStyle(
+          fontSize: ios ? 11 : 9,
+          height: ios ? 1 : null,
+          color: cs.onPrimaryContainer,
+        ),
       ),
     );
   }
@@ -1999,6 +2110,7 @@ class MessageBubble extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 2),
                 child: metaRow,
               ),
+              gap: _reactionFlowGap,
             ),
           ],
         ),
