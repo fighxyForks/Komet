@@ -9,7 +9,7 @@ abstract final class BuildProfile {
   // #***! store сборка урезана, без самообновления дев инструментов и спуфа
   static const bool isStore = appFlavor == storeFlavor;
 
-  static const bool selfUpdate = !isStore;
+  static bool get selfUpdate => !isStore && IosRelease.selfUpdate;
   static const bool firebasePush = appFlavor == 'oneme';
   // #***! на iOS экран подмены скрыт, хендшейк при этом как у остальных
   static bool get spoofUi => !isStore && IosRelease.spoofSettings;

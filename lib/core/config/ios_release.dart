@@ -27,4 +27,8 @@ abstract final class IosRelease {
   /// for code that changes app behavior. iOS neither loads plugins nor
   /// offers their settings; built-in slash commands stay.
   static bool get plugins => !isIOS;
+
+  /// Apps from the App Store are updated by the App Store, so iOS has no
+  /// update check, settings button or update dialog.
+  static bool get selfUpdate => !isIOS;
 }
